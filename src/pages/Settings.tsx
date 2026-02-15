@@ -27,12 +27,14 @@ import {
     ToggleRight,
     Send,
     Tag,
+    Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
+import Team from './settings/Team'
 
 // Get the Supabase URL for webhook display
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -40,6 +42,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 const tabs = [
     { id: 'profile', label: 'Mi Perfil', icon: User },
     { id: 'clinic', label: 'Clínica', icon: Building2 },
+    { id: 'team', label: 'Equipo', icon: Users },
     { id: 'subscription', label: 'Plan', icon: CreditCard },
     { id: 'schedule', label: 'Horarios', icon: Clock },
     { id: 'integrations', label: 'Integraciones', icon: Key },
@@ -74,10 +77,18 @@ const dayNames: Record<string, string> = {
 }
 
 export default function Settings() {
-    const { user, profile } = useAuth()
+    const { user, profile, member } = useAuth()
     const [searchParams] = useSearchParams()
 
-    const [activeTab, setActiveTab] = useState('clinic')
+    const availableTabs = tabs.filter(tab => {
+        if (!member || member.role === 'owner') return true
+
+        // Allowed tabs for non-owners
+        const allowedTabs = ['profile', 'schedule', 'team', 'notifications']
+        return allowedTabs.includes(tab.id)
+    })
+
+    const [activeTab, setActiveTab] = useState('profile') // Default to profile for non-owners safety
     const [clinicName, setClinicName] = useState('Clínica Estética Demo')
     const [clinicAddress, setClinicAddress] = useState('')
     const [services, setServices] = useState<any[]>([])
@@ -214,7 +225,7 @@ export default function Settings() {
     // Read tab from URL params (for deep linking)
     useEffect(() => {
         const tabParam = searchParams.get('tab')
-        if (tabParam && ['profile', 'clinic', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
+        if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
             setActiveTab(tabParam)
         }
     }, [searchParams])
@@ -833,7 +844,7 @@ export default function Settings() {
                 {/* Sidebar Navigation */}
                 <div className="w-64 flex-shrink-0">
                     <div className="card-soft p-2">
-                        {tabs.map((tab) => (
+                        {availableTabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
@@ -1431,6 +1442,11 @@ export default function Settings() {
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* Team Settings */}
+                    {activeTab === 'team' && (
+                        <Team />
                     )}
 
                     {/* Schedule Settings */}

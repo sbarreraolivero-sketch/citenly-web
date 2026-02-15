@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database'
+import { teamService, type ClinicMember } from '@/services/teamService'
 
 interface UserProfile {
     id: string
@@ -17,6 +18,7 @@ type Subscription = Database['public']['Tables']['subscriptions']['Row']
 interface AuthContextType {
     user: User | null
     profile: UserProfile | null
+    member: ClinicMember | null
     subscription: Subscription | null
     session: Session | null
     loading: boolean
@@ -32,6 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [profile, setProfile] = useState<UserProfile | null>(null)
+    const [member, setMember] = useState<ClinicMember | null>(null)
     const [subscription, setSubscription] = useState<Subscription | null>(null)
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
@@ -124,10 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Listen for auth changes
+    // Listen for auth changes
     useEffect(() => {
         let mounted = true
 
-        // Failsafe: Force loading to false after 6 seconds (enough time for slow connections but fast enough to not hang)
+        // Failsafe: Force loading to false after 6 seconds
         const loadingTimeout = setTimeout(() => {
             console.warn('Auth initialization timeout - forcing loading to false')
             setLoading(false)
@@ -182,55 +186,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setSession(session)
                     setUser(session.user)
 
-                    // AGGRESSIVE TOKEN CAPTURE: Check if provider_token exists on initial load
                     if (session?.provider_token) {
-                        console.log('💾 Found provider_token on INITIAL LOAD! Invoking store-google-tokens...')
                         supabase.functions.invoke('store-google-tokens', {
                             body: {
                                 access_token: session.provider_token,
                                 refresh_token: session.provider_refresh_token || null,
                                 expires_in: 3600,
                             },
-                        })
-                            .then(({ data, error }) => {
-                                console.log('✅ store-google-tokens response (init):', data)
-                                if (error) console.error('❌ store-google-tokens function error (init):', error)
-                            })
-                            .catch(err => console.error('❌ Error storing Google tokens (init):', err))
+                        }).catch(err => console.error('Error storing tokens:', err))
                     }
 
-                    // CRITICAL: If we have cache for BOTH, stop loading immediately
-                    // If we only have profile but not subscription, we MUST wait, otherwise SubscriptionGuard will redirect
                     if (hasCachedProfile && hasCachedSub && mounted) {
                         setLoading(false)
-                        // Clear timeout as we are done loading
                         clearTimeout(loadingTimeout)
                     }
 
-                    // 4. Re-fetch fresh profile (background update)
-                    // We don't await this if we have cache, ensuring instant load
                     const profilePromise = fetchProfile(session.user.id)
 
-                    // If no cache, we MUST await to ensure valid auth state
                     if (!hasCachedProfile) {
                         try {
                             const data = await profilePromise
                             if (mounted && data) {
                                 setProfile(data)
                                 if (data.clinic_id) {
-                                    const sub = await fetchSubscription(data.clinic_id)
-                                    if (mounted) setSubscription(sub)
-
-                                    // If we didn't have cached sub, we can stop loading now
-                                    if (!hasCachedSub && mounted) {
-                                        setLoading(false)
-                                        clearTimeout(loadingTimeout)
-                                    }
-                                } else {
-                                    // No clinic ID, stop loading
-                                    if (!hasCachedSub && mounted) {
-                                        setLoading(false)
-                                        clearTimeout(loadingTimeout)
+                                    const [sub, mem] = await Promise.all([
+                                        fetchSubscription(data.clinic_id),
+                                        teamService.getCurrentMember()
+                                    ])
+                                    if (mounted) {
+                                        setSubscription(sub)
+                                        setMember(mem)
                                     }
                                 }
                             }
@@ -238,19 +223,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             console.error('Error fetching profile during init:', e)
                         }
                     } else {
-                        // Background update handling
                         profilePromise.then(async (data) => {
                             if (mounted && data) {
                                 setProfile(data)
                                 if (data?.clinic_id) {
-                                    const sub = await fetchSubscription(data.clinic_id)
-                                    if (mounted) setSubscription(sub)
+                                    const [sub, mem] = await Promise.all([
+                                        fetchSubscription(data.clinic_id),
+                                        teamService.getCurrentMember()
+                                    ])
+                                    if (mounted) {
+                                        setSubscription(sub)
+                                        setMember(mem)
+                                    }
                                 }
                             }
                         }).catch(err => console.error('Background profile refresh failed', err))
                     }
                 } else {
-                    // No session, clear cache
                     localStorage.removeItem(PROFILE_STORAGE_KEY)
                     localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
                 }
@@ -258,9 +247,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.error('Auth initialization exception:', error)
             } finally {
                 if (mounted) {
-                    // Ensure loading is false (if not already set by cache path)
-                    // Logic: If hasCachedProfile is true, we already set loading false.
-                    // If not, we set it here. Redundant set is fine.
                     setLoading(false)
                     clearTimeout(loadingTimeout)
                 }
@@ -275,80 +261,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (!mounted) return
 
                 console.log('🔐 Auth state change:', _event)
-                // Log partial token to avoid leaking full secret but verify existence
-                console.log('🔐 Session provider_token:', session?.provider_token ? `Present (${session.provider_token.substring(0, 10)}...)` : 'Missing')
-                console.log('🔐 Session provider_refresh_token:', session?.provider_refresh_token ? 'Present' : 'Missing')
-
                 setSession(session)
                 setUser(session?.user ?? null)
 
-                // AGGRESSIVE TOKEN CAPTURE:
-                // Capture if provider_token exists, regardless of event type.
-                // This covers INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED, and any edge cases.
-                if (session?.provider_token) {
-                    console.log('💾 Found provider_token! Invoking store-google-tokens...')
-
-                    supabase.functions.invoke('store-google-tokens', {
-                        body: {
-                            access_token: session.provider_token,
-                            refresh_token: session.provider_refresh_token || null,
-                            expires_in: 3600,
-                        },
-                    })
-                        .then(({ data, error }) => {
-                            console.log('✅ store-google-tokens response:', data)
-                            if (error) console.error('❌ store-google-tokens function error:', error)
-                        })
-                        .catch(err => console.error('❌ Error storing Google tokens:', err))
-                } else if (_event === 'SIGNED_IN' || _event === 'USER_UPDATED') {
-                    // Check if we can find tokens in the URL hash as a fallback (though Supabase usually handles this)
-                    console.log('⚠️ No provider_token in session during SIGNED_IN/USER_UPDATED. Checking URL...')
-                    const hash = window.location.hash
-                    if (hash && hash.includes('provider_token=')) {
-                        console.log('🔎 Found provider_token in URL hash! Manually extracting...')
-                        try {
-                            // Remove the leading #
-                            const hashParams = new URLSearchParams(hash.substring(1));
-                            const providerToken = hashParams.get('provider_token');
-                            const providerRefreshToken = hashParams.get('provider_refresh_token');
-
-                            if (providerToken) {
-                                console.log('💾 Extracted provider_token manually! Invoking store-google-tokens...')
-                                supabase.functions.invoke('store-google-tokens', {
-                                    body: {
-                                        access_token: providerToken,
-                                        refresh_token: providerRefreshToken || null,
-                                        expires_in: 3600,
-                                    },
-                                })
-                                    .then(({ data, error }) => {
-                                        console.log('✅ store-google-tokens response (manual):', data)
-                                        if (error) console.error('❌ store-google-tokens function error (manual):', error)
-                                    })
-                                    .catch(err => console.error('❌ Error storing Google tokens (manual):', err))
-                            }
-                        } catch (e) {
-                            console.error('Error parsing hash:', e);
-                        }
-                    }
-                }
-
                 if (session?.user) {
                     try {
-                        // On auth change, try to use cache first if available (for page transitions)
-                        // But usually onAuthStateChange is for fresh events.
-                        // Let's just do the fetch.
                         const data = await fetchProfile(session.user.id)
-                        if (mounted) {
-                            if (data) {
-                                setProfile(data)
-                                if (data?.clinic_id) {
-                                    const sub = await fetchSubscription(data.clinic_id)
-                                    if (mounted) setSubscription(sub)
+                        if (mounted && data) {
+                            setProfile(data)
+                            if (data?.clinic_id) {
+                                const [sub, mem] = await Promise.all([
+                                    fetchSubscription(data.clinic_id),
+                                    teamService.getCurrentMember()
+                                ])
+                                if (mounted) {
+                                    setSubscription(sub)
+                                    setMember(mem)
                                 }
-                            } else {
-                                // Keep existing profile if fetch fails (same logic as before)
-                                console.warn('Failed to refresh profile data on auth change, keeping state')
                             }
                         }
                     } catch (err) {
@@ -356,8 +285,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     }
                 } else {
                     setProfile(null)
+                    setMember(null)
                     setSubscription(null)
                     localStorage.removeItem(PROFILE_STORAGE_KEY)
+                    localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
                 }
 
                 if (mounted) {
@@ -492,6 +423,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const value: AuthContextType = {
         user,
         profile,
+        member,
         subscription,
         session,
         loading,

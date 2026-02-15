@@ -8,6 +8,7 @@ import Settings from './pages/Settings'
 import KnowledgeBase from './pages/KnowledgeBase'
 import CRM from './pages/CRM'
 import Campaigns from './pages/Campaigns'
+import Finance from './pages/Finance'
 import Pricing from './pages/Pricing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -17,6 +18,7 @@ import UpdatePassword from './pages/UpdatePassword'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import { SubscriptionGuard } from './components/auth/SubscriptionGuard'
+import { RoleGuard } from './components/auth/RoleGuard'
 
 function App() {
     return (
@@ -88,6 +90,13 @@ function App() {
                         <Route path="campaigns" element={
                             <SubscriptionGuard>
                                 <Campaigns />
+                            </SubscriptionGuard>
+                        } />
+                        <Route path="finance" element={
+                            <SubscriptionGuard>
+                                <RoleGuard allowedRoles={['owner']}>
+                                    <Finance />
+                                </RoleGuard>
                             </SubscriptionGuard>
                         } />
                         <Route path="settings" element={<Settings />} />

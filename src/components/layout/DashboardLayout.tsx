@@ -19,6 +19,9 @@ import {
     BookOpen,
     Target,
     Megaphone,
+    DollarSign,
+    Menu,
+    X,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -39,6 +42,7 @@ const navigation = [
     { name: 'Pacientes', href: '/app/patients', icon: Users },
     { name: 'Citas', href: '/app/appointments', icon: Calendar },
     { name: 'Campañas', href: '/app/campaigns', icon: Megaphone },
+    { name: 'Finanzas', href: '/app/finance', icon: DollarSign },
     { name: 'CRM', href: '/app/crm', icon: Target },
     { name: 'Conocimiento', href: '/app/knowledge-base', icon: BookOpen },
     { name: 'Configuración', href: '/app/settings', icon: Settings },
@@ -66,7 +70,7 @@ const getNotificationIcon = (type: string) => {
 export default function DashboardLayout() {
     const location = useLocation()
     const navigate = useNavigate()
-    const { profile, signOut } = useAuth()
+    const { profile, member, signOut } = useAuth()
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
@@ -146,29 +150,58 @@ export default function DashboardLayout() {
     const clinicName = 'Clínica Demo' // Will come from clinic_settings later
     const userRole = profile?.role === 'admin' ? 'Administrador' : 'Staff'
 
+    const [showMobileMenu, setShowMobileMenu] = useState(false)
+
     return (
-        <div className="flex h-screen bg-ivory">
+        <div className="flex h-screen bg-ivory overflow-hidden">
+            {/* Mobile Sidebar Overlay */}
+            {showMobileMenu && (
+                <div
+                    className="fixed inset-0 bg-charcoal/50 z-40 md:hidden"
+                    onClick={() => setShowMobileMenu(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 border-r border-silk-beige flex flex-col">
+            <aside className={cn(
+                "fixed inset-y-0 left-0 z-50 w-64 bg-ivory border-r border-silk-beige flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+                showMobileMenu ? "translate-x-0" : "-translate-x-full"
+            )}>
                 {/* Logo */}
-                <div className="h-16 flex items-center gap-3 px-6 border-b border-silk-beige">
-                    <div className="w-10 h-10 bg-hero-gradient rounded-soft flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-white" />
+                <div className="h-16 flex items-center justify-between px-6 border-b border-silk-beige">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-hero-gradient rounded-soft flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-semibold text-charcoal">Citenly</h1>
+                            <p className="text-xs text-charcoal/50 -mt-0.5">IA Assistant</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-lg font-semibold text-charcoal">Citenly</h1>
-                        <p className="text-xs text-charcoal/50 -mt-0.5">IA Assistant</p>
-                    </div>
+                    {/* Close Mobile Menu Button */}
+                    <button
+                        onClick={() => setShowMobileMenu(false)}
+                        className="md:hidden p-2 -mr-2 text-charcoal/60 hover:text-charcoal"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-1">
-                    {navigation.map((item) => {
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                    {navigation.filter(item => {
+                        // Hide Finance for non-owners
+                        if (item.name === 'Finanzas' && member?.role !== 'owner') {
+                            return false
+                        }
+                        return true
+                    }).map((item) => {
                         const isActive = location.pathname === item.href
                         return (
                             <NavLink
                                 key={item.name}
                                 to={item.href}
+                                onClick={() => setShowMobileMenu(false)}
                                 className={cn(
                                     'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
                                     isActive
@@ -200,11 +233,19 @@ export default function DashboardLayout() {
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col w-full min-w-0">
                 {/* Header */}
-                <header className="h-16 border-b border-silk-beige flex items-center justify-between px-6">
-                    <div>
-                        <h2 className="text-lg font-semibold text-charcoal">
+                <header className="h-16 border-b border-silk-beige flex items-center justify-between px-4 md:px-6 bg-ivory">
+                    <div className="flex items-center gap-3">
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setShowMobileMenu(true)}
+                            className="p-2 -ml-2 text-charcoal/60 hover:text-charcoal hover:bg-silk-beige/50 rounded-soft md:hidden"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+
+                        <h2 className="text-lg font-semibold text-charcoal truncate">
                             {navigation.find((n) => n.href === location.pathname)?.name || 'Dashboard'}
                         </h2>
                     </div>
