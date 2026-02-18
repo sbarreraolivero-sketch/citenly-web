@@ -105,6 +105,8 @@ Deno.serve(async (req: Request) => {
             .from("clinic_settings")
             .insert({
                 clinic_name: clinic_name,
+                subscription_plan: selected_plan,
+                max_users: selected_plan === 'prestige' ? 10000 : (selected_plan === 'radiance' ? 5 : 2),
                 services: [
                     { id: "svc-1", name: "Consulta General", duration: 30, price: 500 },
                 ],
@@ -130,7 +132,7 @@ Deno.serve(async (req: Request) => {
                 email: email,
                 full_name: full_name,
                 clinic_id: clinicData.id,
-                role: "admin",
+                role: "owner",
             });
 
         if (profileError) {
@@ -140,6 +142,30 @@ Deno.serve(async (req: Request) => {
             await supabaseAdmin.auth.admin.deleteUser(userId);
             return new Response(
                 JSON.stringify({ error: "Error creating profile" }),
+                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        // 4. Insert into clinic_members (Fix: Ensure user is Owner)
+        const { error: memberError } = await supabaseAdmin
+            .from("clinic_members")
+            .insert({
+                clinic_id: clinicData.id,
+                user_id: userId,
+                email: email,
+                role: "owner",
+                status: "active",
+                first_name: full_name.split(' ')[0]
+            });
+
+        if (memberError) {
+            console.error("Member error:", memberError);
+            // Rollback everything
+            await supabaseAdmin.from("user_profiles").delete().eq("id", userId);
+            await supabaseAdmin.from("clinic_settings").delete().eq("id", clinicData.id);
+            await supabaseAdmin.auth.admin.deleteUser(userId);
+            return new Response(
+                JSON.stringify({ error: "Error adding member to clinic" }),
                 { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }

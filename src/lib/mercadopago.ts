@@ -103,17 +103,18 @@ export async function cancelSubscription(subscriptionId: string) {
  * Plan configuration with features
  */
 export const PLANS = {
-    essence: {
+    item: {
         id: 'essence',
         name: 'Essence',
         price: 79,
         currency: 'USD',
         monthlyAppointments: 50,
         features: [
-            '1 Agente de IA con personalidad Soft Luxury',
+            'Hasta 2 usuarios',
+            '1 Agente de IA (Soft Luxury)',
             'Hasta 50 citas mensuales',
-            'Dashboard básico (Citas + Mensajes)',
-            'Integración con 1 número de WhatsApp',
+            'Dashboard básico',
+            'Integración 1 WhatsApp',
         ],
     },
     radiance: {
@@ -125,12 +126,14 @@ export const PLANS = {
         popular: true,
         features: [
             'Todo lo de Essence, más:',
+            'Hasta 5 usuarios (Invitaciones seguras)',
+            'CRM Gestión de prospectos',
+            'Campañas de Marketing (WhatsApp masivo)',
+            'Módulo de Finanzas',
+            'Gestión de Servicios + Upselling',
             'Citas ilimitadas',
-            'IA Avanzada con resolución de dudas',
-            'Historial clínico digital en chat',
-            'Ranking de servicios más vendidos',
-            'Encuestas de satisfacción automáticas',
-            'Tasa de conversión de citas',
+            'IA Avanzada + Historial Clínico',
+            'Analítica de conversaciones',
         ],
     },
     prestige: {
@@ -141,9 +144,11 @@ export const PLANS = {
         monthlyAppointments: -1, // Unlimited
         features: [
             'Todo lo de Radiance, más:',
-            'Multi-sucursal: un dashboard para todo',
-            'IA Personalizada con tu manual de ventas',
-            'Reportes mensuales avanzados',
+            'Usuarios ilimitados',
+            'Multi-sucursal',
+            'IA Personalizada (Manual de ventas)',
+            'Reportes avanzados',
+            'Concierge Onboarding',
         ],
     },
 } as const

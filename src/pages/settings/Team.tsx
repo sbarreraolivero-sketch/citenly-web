@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Mail, Shield, User, Clock, CheckCircle } from 'lucide-react'
+import { Plus, Trash2, Mail, Shield, User, Clock, Copy } from 'lucide-react'
 import { teamService, type ClinicMember } from '@/services/teamService'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
 
 export default function Team() {
-    const { member } = useAuth()
+    const { member, profile } = useAuth()
     const [members, setMembers] = useState<ClinicMember[]>([])
     const [loading, setLoading] = useState(true)
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
@@ -16,25 +17,95 @@ export default function Team() {
     const [maxUsers, setMaxUsers] = useState(3) // Default to 3
     const [planName, setPlanName] = useState('freemium')
 
-    const isOwner = member?.role === 'owner'
+    // Fallback to profile check if member context is missing
+    const isOwner = member?.role === 'owner' || profile?.role === 'owner'
+    const clinicId = member?.clinic_id || profile?.clinic_id
+
     const canInvite = isOwner && members.filter(m => m.status !== 'disabled').length < maxUsers
 
     useEffect(() => {
-        loadData()
-    }, [member?.clinic_id])
+        console.log('Team Page - Clinic ID Changed:', clinicId)
+        if (clinicId) loadData()
+    }, [clinicId])
 
     const loadData = async () => {
-        if (!member?.clinic_id) return
+        if (!clinicId) {
+            setLoading(false)
+            return
+        }
+
         try {
-            const [membersData, settingsData] = await Promise.all([
-                teamService.getMembers(member.clinic_id),
-                teamService.getClinicSettings(member.clinic_id)
-            ])
-            setMembers(membersData)
-            if (settingsData) {
+            console.log('Loading team data for clinic:', clinicId)
+
+            // 1. Get Members (Try RPC, fallback to direct)
+            let membersData: ClinicMember[] = []
+            try {
+                membersData = await teamService.getMembers(clinicId)
+            } catch (rpcError) {
+                console.warn('RPC check failed, fetching directly:', rpcError)
+            }
+
+            // If RPC returned empty or failed, try direct fetch (Safety Net)
+            if (!membersData || membersData.length === 0) {
+                const { data: directMembers, error: directError } = await supabase
+                    .from('clinic_members')
+                    .select('*')
+                    .eq('clinic_id', clinicId)
+
+                if (!directError && directMembers) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    membersData = directMembers as any[]
+                }
+            }
+
+            console.log('Final Members List:', membersData)
+
+            // Sort: Owner first, then by date
+            const sortedMembers = (membersData || []).sort((a, b) => {
+                if (a.role === 'owner' && b.role !== 'owner') return -1
+                if (a.role !== 'owner' && b.role === 'owner') return 1
+                return 0
+            })
+            setMembers(sortedMembers)
+
+            // 2. Get Settings & Subscription (Source of Truth)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let settingsData: any = null
+            try {
+                settingsData = await teamService.getClinicSettings(clinicId)
+            } catch (e) {
+                console.warn('getClinicSettings RPC failed:', e)
+            }
+
+            if (!settingsData) {
+                const { data: directSettings } = await supabase.from('clinic_settings').select('*').eq('id', clinicId).single()
+                if (directSettings) settingsData = directSettings
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: subData, error: subError } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('clinic_id', clinicId)
+                .single() as any
+
+            console.log('Settings:', settingsData, 'Sub:', subData, 'SubError:', subError)
+
+            if (subData) {
+                // Subscription table is the ultimate authority
+                setPlanName(subData.plan)
+                if (subData.plan === 'prestige' || subData.plan === 'radiance_plus') {
+                    setMaxUsers(10000)
+                } else {
+                    // Fallback to settings or default
+                    setMaxUsers(settingsData?.max_users || 3)
+                }
+            } else if (settingsData) {
+                // Fallback to clinic_settings
                 setMaxUsers(settingsData.max_users || 3)
                 setPlanName(settingsData.subscription_plan || 'freemium')
             }
+
         } catch (error) {
             console.error('Error loading team data:', error)
             toast.error('Error al cargar el equipo')
@@ -45,7 +116,7 @@ export default function Team() {
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!member?.clinic_id) return
+        if (!clinicId) return
 
         if (!canInvite) {
             toast.error(`Has alcanzado el límite de ${maxUsers} usuarios de tu plan ${planName}.`)
@@ -53,7 +124,7 @@ export default function Team() {
         }
 
         try {
-            await teamService.inviteMember(member.clinic_id, inviteEmail, inviteRole, inviteName)
+            await teamService.inviteMember(clinicId, inviteEmail, inviteRole, inviteName)
             toast.success('Invitación creada correctamente')
             setIsInviteModalOpen(false)
             setInviteEmail('')
@@ -86,23 +157,36 @@ export default function Team() {
                     <p className="text-gray-500">Administra los miembros de tu clínica y sus permisos.</p>
                     {!loading && (
                         <p className="text-sm mt-2 font-medium text-purple-600 bg-purple-50 inline-block px-3 py-1 rounded-full">
-                            {members.filter(m => m.status !== 'disabled').length} / {maxUsers} usuarios activos
+                            {members.filter(m => m.status !== 'disabled').length} / {maxUsers > 100 ? 'Ilimitados' : maxUsers} usuarios activos
                         </p>
                     )}
                 </div>
                 {isOwner && (
-                    <button
-                        onClick={() => setIsInviteModalOpen(true)}
-                        disabled={!canInvite}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${canInvite
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/register?mode=join&clinic=${clinicId}`)
+                                toast.success('Enlace de registro copiado al portapapeles')
+                            }}
+                            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                            title="Copiar enlace para que los miembros se registren ellos mismos"
+                        >
+                            <Copy size={20} />
+                            Copiar Enlace
+                        </button>
+                        <button
+                            onClick={() => setIsInviteModalOpen(true)}
+                            disabled={!canInvite}
+                            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${canInvite
                                 ? 'bg-purple-600 text-white hover:bg-purple-700'
                                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
-                        title={!canInvite ? 'Límite de usuarios alcanzado' : ''}
-                    >
-                        <Plus size={20} />
-                        Invitar Miembro
-                    </button>
+                                }`}
+                            title={!canInvite ? 'Límite de usuarios alcanzado' : ''}
+                        >
+                            <Plus size={20} />
+                            Invitar Miembro
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -144,7 +228,7 @@ export default function Team() {
                                             {m.role === 'owner' && <Shield size={12} />}
                                             {m.role === 'professional' && <User size={12} />}
                                             {m.role === 'receptionist' && <Clock size={12} />}
-                                            {m.role === 'owner' ? 'Dueño' : m.role === 'professional' ? 'Profesional' : 'Recepción'}
+                                            {m.role === 'owner' ? 'Administrador' : m.role === 'professional' ? 'Profesional' : 'Recepción'}
                                         </span>
                                     </td>
                                     <td className="py-4 px-6">
@@ -249,6 +333,7 @@ export default function Team() {
                     </div>
                 </div>
             )}
+
         </div>
     )
 }

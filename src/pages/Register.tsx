@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Sparkles, Mail, Lock, User, Building2, ArrowRight, Loader2, Check } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 const plans = [
     { id: 'essence', name: 'Essence', price: 79, popular: false },
@@ -10,8 +11,13 @@ const plans = [
 ]
 
 export default function Register() {
+    const [searchParams] = useSearchParams()
+    const isJoinMode = searchParams.get('mode') === 'join'
+    const inviteEmail = searchParams.get('email')
+    const joinClinicId = searchParams.get('clinic')
+
     const [step, setStep] = useState(1)
-    const [email, setEmail] = useState('')
+    const [email, setEmail] = useState(inviteEmail || '')
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
     const [clinicName, setClinicName] = useState('')
@@ -35,6 +41,30 @@ export default function Register() {
                 setError('La contraseña debe tener al menos 6 caracteres')
                 return
             }
+
+            // Check if invite exists if in join mode
+            if (isJoinMode) {
+                if (!email) {
+                    setError('Por favor ingresa tu correo electrónico.')
+                    return
+                }
+                setLoading(true)
+                const { data: hasInvite } = await supabase.rpc('check_pending_invite', {
+                    p_email: email,
+                    p_clinic_id: joinClinicId || null
+                })
+                setLoading(false)
+
+                if (!hasInvite) {
+                    setError('No encontramos una invitación pendiente para este correo.')
+                    return
+                }
+
+                // Skip to creation
+                handleJoin()
+                return
+            }
+
             setError('')
             setStep(2)
             return
@@ -52,6 +82,43 @@ export default function Register() {
         }
 
         // Step 3 - Create account
+        handleCreate()
+    }
+
+    const handleJoin = async () => {
+        setError('')
+        setLoading(true)
+
+        // Direct Supabase signup for joining members
+        // Trigger handle_new_user_invite will take care of linking
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    ...(joinClinicId ? { join_clinic_id: joinClinicId } : {})
+                }
+            }
+        })
+
+        if (error) {
+            setError(error.message)
+            setLoading(false)
+            return
+        }
+
+        // Auto login might happen or not depending on email confirmation settings
+        // If auto login success, redirect
+        if (data.session) {
+            navigate('/app/dashboard?welcome=joined')
+        } else {
+            // Maybe email confirmation needed
+            navigate('/login?message=check_email')
+        }
+    }
+
+    const handleCreate = async () => {
         setError('')
         setLoading(true)
 
@@ -80,37 +147,43 @@ export default function Register() {
                         <span className="text-2xl font-semibold text-charcoal">Citenly AI</span>
                     </div>
 
-                    {/* Progress Indicator */}
-                    <div className="flex items-center gap-2 mb-8">
-                        {[1, 2, 3].map((s) => (
-                            <div key={s} className="flex items-center">
-                                <div
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${s < step
-                                        ? 'bg-primary-500 text-white'
-                                        : s === step
+                    {/* Progress Indicator (Hidden in Join Mode) */}
+                    {!isJoinMode && (
+                        <div className="flex items-center gap-2 mb-8">
+                            {[1, 2, 3].map((s) => (
+                                <div key={s} className="flex items-center">
+                                    <div
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${s < step
                                             ? 'bg-primary-500 text-white'
-                                            : 'bg-silk-beige text-charcoal/40'
-                                        }`}
-                                >
-                                    {s < step ? <Check className="w-4 h-4" /> : s}
+                                            : s === step
+                                                ? 'bg-primary-500 text-white'
+                                                : 'bg-silk-beige text-charcoal/40'
+                                            }`}
+                                    >
+                                        {s < step ? <Check className="w-4 h-4" /> : s}
+                                    </div>
+                                    {s < 3 && (
+                                        <div className={`w-12 h-0.5 mx-1 ${s < step ? 'bg-primary-500' : 'bg-silk-beige'}`} />
+                                    )}
                                 </div>
-                                {s < 3 && (
-                                    <div className={`w-12 h-0.5 mx-1 ${s < step ? 'bg-primary-500' : 'bg-silk-beige'}`} />
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Header */}
                     <h1 className="text-h2 text-charcoal mb-2">
-                        {step === 1 && 'Crea tu cuenta'}
-                        {step === 2 && 'Sobre tu clínica'}
-                        {step === 3 && 'Elige tu plan'}
+                        {isJoinMode ? 'Únete a tu equipo' : (
+                            step === 1 ? 'Crea tu cuenta' :
+                                step === 2 ? 'Sobre tu clínica' :
+                                    'Elige tu plan'
+                        )}
                     </h1>
                     <p className="text-charcoal/60 mb-8">
-                        {step === 1 && 'Comienza tu prueba gratuita de 14 días'}
-                        {step === 2 && 'Configura los datos básicos de tu negocio'}
-                        {step === 3 && 'Selecciona el plan que mejor se adapte a ti'}
+                        {isJoinMode ? 'Ingresa tus datos para aceptar la invitación' : (
+                            step === 1 ? 'Comienza tu prueba gratuita de 14 días' :
+                                step === 2 ? 'Configura los datos básicos de tu negocio' :
+                                    'Selecciona el plan que mejor se adapte a ti'
+                        )}
                     </p>
 
                     {/* Error Message */}

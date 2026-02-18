@@ -60,6 +60,45 @@ const Finance = () => {
         }).format(amount)
     }
 
+    const handleAddExpense = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!profile?.clinic_id) return
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const form = e.target as any
+        const description = form.description.value
+        const amount = parseFloat(form.amount.value)
+        const category = form.category.value
+        const date = form.date.value
+
+        try {
+            await financeService.addExpense({
+                clinic_id: profile.clinic_id,
+                description,
+                amount,
+                category,
+                date: new Date(date).toISOString()
+            })
+            toast.success('Gasto registrado exitosamente')
+            setShowExpenseModal(false)
+            loadData()
+        } catch (error) {
+            console.error('Error adding expense:', error)
+            toast.error('Error al registrar el gasto')
+        }
+    }
+
+    const handleRegisterPayment = async (appointmentId: string) => {
+        try {
+            await financeService.updatePaymentStatus(appointmentId, 'paid')
+            toast.success('Pago registrado')
+            loadData()
+        } catch (error) {
+            console.error('Error registering payment:', error)
+            toast.error('Error al registrar el pago')
+        }
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -90,9 +129,11 @@ const Finance = () => {
                         <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
                             <TrendingUp className="w-5 h-5 text-emerald-600" />
                         </div>
+                        {/* 
                         <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                             +12.5%
                         </span>
+                        */}
                     </div>
                     <p className="text-sm text-charcoal/60">Ingresos (Mes)</p>
                     <p className="text-2xl font-bold text-charcoal mt-1">
@@ -105,9 +146,6 @@ const Finance = () => {
                         <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                             <TrendingDown className="w-5 h-5 text-red-600" />
                         </div>
-                        <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
-                            +4.2%
-                        </span>
                     </div>
                     <p className="text-sm text-charcoal/60">Gastos (Mes)</p>
                     <p className="text-2xl font-bold text-charcoal mt-1">
@@ -275,7 +313,7 @@ const Finance = () => {
                                                 {tx.payment_status === 'pending' && (
                                                     <button
                                                         className="text-xs text-primary-600 font-medium hover:underline"
-                                                        onClick={() => {/* Update status logic */ }}
+                                                        onClick={() => handleRegisterPayment(tx.id)}
                                                     >
                                                         Registrar Pago
                                                     </button>
@@ -351,7 +389,7 @@ const Finance = () => {
                 )}
             </div>
 
-            {/* Modal de Gastos (Placeholder) */}
+            {/* Modal de Gastos */}
             {showExpenseModal && (
                 <div className="fixed inset-0 bg-charcoal/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-soft w-full max-w-md p-6">
@@ -361,20 +399,72 @@ const Finance = () => {
                                 <X className="w-5 h-5 text-charcoal/50 hover:text-charcoal" />
                             </button>
                         </div>
-                        {/* Form would go here */}
-                        <p className="text-charcoal/60 mb-6">El formulario de registro de gastos se implementará aquí.</p>
 
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowExpenseModal(false)}
-                                className="btn-secondary"
-                            >
-                                Cancelar
-                            </button>
-                            <button className="btn-primary">
-                                Guardar
-                            </button>
-                        </div>
+                        <form onSubmit={handleAddExpense} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-1">Descripción</label>
+                                <input
+                                    name="description"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Ej. Compra de insumos"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal mb-1">Monto</label>
+                                    <input
+                                        name="amount"
+                                        type="number"
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal mb-1">Fecha</label>
+                                    <input
+                                        name="date"
+                                        type="date"
+                                        required
+                                        defaultValue={new Date().toISOString().split('T')[0]}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-1">Categoría</label>
+                                <select
+                                    name="category"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                >
+                                    <option value="supplies">Insumos</option>
+                                    <option value="rent">Alquiler</option>
+                                    <option value="payroll">Nómina</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="utilities">Servicios Básicos</option>
+                                    <option value="other">Otro</option>
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowExpenseModal(false)}
+                                    className="btn-secondary"
+                                >
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn-primary">
+                                    Guardar Gasto
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -26,6 +26,7 @@ import {
 import { cn, getInitials } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import BranchSwitcher from './BranchSwitcher'
 
 interface Notification {
     id: string
@@ -70,7 +71,8 @@ const getNotificationIcon = (type: string) => {
 export default function DashboardLayout() {
     const location = useLocation()
     const navigate = useNavigate()
-    const { profile, member, signOut } = useAuth()
+    const { profile, member, user, signOut } = useAuth()
+    console.log('DashboardLayout Member State:', member)
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
@@ -190,9 +192,11 @@ export default function DashboardLayout() {
                 {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     {navigation.filter(item => {
-                        // Hide Finance for non-owners
-                        if (item.name === 'Finanzas' && member?.role !== 'owner') {
-                            return false
+                        // Hide Finance, CRM, and Campaigns for non-owners
+                        if (['Finanzas', 'CRM', 'Campañas'].includes(item.name)) {
+                            // Check both member role and profile role to be safe
+                            const isOwner = member?.role === 'owner' || profile?.role === 'owner'
+                            if (!isOwner) return false
                         }
                         return true
                     }).map((item) => {
@@ -332,13 +336,18 @@ export default function DashboardLayout() {
                         </div>
 
                         {/* User Menu */}
-                        <div className="relative z-50">
+                        <div className="relative z-50 flex items-center gap-4">
+                            {/* Branch Switcher (Desktop) */}
+                            <div className="hidden md:block w-56">
+                                <BranchSwitcher />
+                            </div>
+
                             <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                                 className="flex items-center gap-3 pl-4 border-l border-silk-beige hover:bg-silk-beige/30 rounded-soft p-2 transition-colors"
                             >
-                                <div className="text-right">
-                                    <p className="text-sm font-medium text-charcoal">{clinicName}</p>
+                                <div className="text-right hidden md:block">
+                                    <p className="text-sm font-medium text-charcoal">{userName}</p>
                                     <p className="text-xs text-charcoal/50">{userRole}</p>
                                 </div>
                                 <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white font-medium">
@@ -352,11 +361,17 @@ export default function DashboardLayout() {
 
                             {/* Dropdown Menu */}
                             {showUserMenu && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-soft shadow-soft-lg border border-silk-beige py-1 z-50">
-                                    <div className="px-4 py-3 border-b border-silk-beige">
+                                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-soft shadow-soft-lg border border-silk-beige py-1 z-50">
+                                    <div className="px-4 py-3 border-b border-silk-beige md:hidden">
                                         <p className="text-sm font-medium text-charcoal">{userName}</p>
-                                        <p className="text-xs text-charcoal/50">{profile?.email || 'demo@citenly.com'}</p>
+                                        <p className="text-xs text-charcoal/50">{profile?.email}</p>
                                     </div>
+
+                                    {/* Mobile Branch Switcher */}
+                                    <div className="md:hidden px-2 py-2 border-b border-silk-beige">
+                                        <BranchSwitcher />
+                                    </div>
+
                                     <Link
                                         to="/app/settings?tab=profile"
                                         onClick={() => setShowUserMenu(false)}

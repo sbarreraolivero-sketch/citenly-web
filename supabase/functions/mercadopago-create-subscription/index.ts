@@ -8,17 +8,17 @@ const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-// Plan prices in ARS (Argentine Pesos) - adjust based on your needs
+// Plan prices in ARS (Argentine Pesos) - using fixed exchange rate for demo (approx 1000:1)
 const PLAN_PRICES: Record<string, number> = {
-    essence: 79000, // ~$79 USD
-    radiance: 159000, // ~$159 USD
-    prestige: 299000, // ~$299 USD
+    essence: 79000,
+    radiance: 159000,
+    prestige: 299000,
 };
 
 const PLAN_DESCRIPTIONS: Record<string, string> = {
-    essence: "Citenly AI - Plan Essence",
-    radiance: "Citenly AI - Plan Radiance",
-    prestige: "Citenly AI - Plan Prestige",
+    essence: "Citenly AI - Plan Essence (2 Usuarios + Soft Luxury Agent)",
+    radiance: "Citenly AI - Plan Radiance (5 Usuarios + Finanzas + Servicios)",
+    prestige: "Citenly AI - Plan Prestige (Usuarios Ilimitados + Multi-sucursal)",
 };
 
 interface RequestBody {

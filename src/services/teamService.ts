@@ -20,18 +20,23 @@ export interface ClinicMember {
 
 export const teamService = {
     async getMembers(clinicId: string) {
-        const { data, error } = await supabase
-            .from('clinic_members')
-            .select('*')
-            .eq('clinic_id', clinicId)
-            .order('created_at', { ascending: false })
+        // Use RPC to bypass potential RLS issues and ensure consistent data access
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_clinic_members_secure', {
+            p_clinic_id: clinicId
+        })
 
-        if (error) throw error
+        if (error) {
+            console.error('Error fetching members via RPC:', error)
+            throw error
+        }
+
         return data as ClinicMember[]
     },
 
     async inviteMember(clinicId: string, email: string, role: UserRole, firstName?: string) {
-        const { data, error } = await supabase.rpc('invite_member_v2', {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('invite_member_v2', {
             p_clinic_id: clinicId,
             p_email: email,
             p_role: role,
@@ -43,8 +48,8 @@ export const teamService = {
     },
 
     async updateMember(id: string, updates: Partial<ClinicMember>) {
-        const { data, error } = await supabase
-            .from('clinic_members')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase.from('clinic_members') as any)
             .update(updates)
             .eq('id', id)
             .select()
@@ -65,28 +70,43 @@ export const teamService = {
 
     // Get current user's member profile
     async getCurrentMember() {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return null
+        try {
+            // Use RPC to bypass potential RLS complexity and ensure correct retrieval
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await (supabase as any).rpc('get_myself_clinical_member')
 
-        const { data, error } = await supabase
-            .from('clinic_members')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('status', 'active')
-            .single()
+            if (error) {
+                console.error('Error fetching member via RPC:', error)
+                return null
+            }
 
-        // If no member found, it might be an issue or first login after migration without trigger.
-        // We handle null gracefully.
-        if (error && error.code !== 'PGRST116') throw error
-        return data as ClinicMember | null
+            return data as ClinicMember | null
+        } catch (err) {
+            console.error('getCurrentMember exception:', err)
+            return null
+        }
     },
 
     async getClinicSettings(clinicId: string) {
-        const { data, error } = await supabase
-            .from('clinic_settings')
-            .select('*')
-            .eq('id', clinicId)
-            .single()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_clinic_settings_secure', {
+            p_clinic_id: clinicId
+        })
+
+        if (error) {
+            console.error('Error fetching settings via RPC:', error)
+            throw error
+        }
+
+        // RPC returns array (SETOF), take first
+        return data && data.length > 0 ? data[0] : null
+    },
+
+    async createBranch(name: string, address?: string) {
+        const { data, error } = await supabase.rpc('create_clinic_branch', {
+            p_name: name,
+            p_address: address
+        })
 
         if (error) throw error
         return data

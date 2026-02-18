@@ -2,15 +2,24 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database'
-import { teamService, type ClinicMember } from '@/services/teamService'
+import { type ClinicMember } from '@/services/teamService'
 
 interface UserProfile {
     id: string
     email: string
     full_name: string
     clinic_id: string
-    role: 'admin' | 'staff' | 'super_admin'
+    role: 'owner' | 'admin' | 'staff' | 'super_admin'
     avatar_url?: string
+}
+
+export interface Clinic {
+    clinic_id: string
+    clinic_name: string
+    role: 'owner' | 'professional' | 'receptionist'
+    status: 'active' | 'invited' | 'disabled'
+    plan: string
+    address?: string
 }
 
 type Subscription = Database['public']['Tables']['subscriptions']['Row']
@@ -20,12 +29,14 @@ interface AuthContextType {
     profile: UserProfile | null
     member: ClinicMember | null
     subscription: Subscription | null
+    clinics: Clinic[]
     session: Session | null
     loading: boolean
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
     signUp: (email: string, password: string, fullName: string, clinicName: string, selectedPlan: string) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
     connectGoogleCalendar: () => Promise<{ error: Error | null }>
+    switchClinic: (clinicId: string) => Promise<void>
     isAuthenticated: boolean
 }
 
@@ -36,12 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [member, setMember] = useState<ClinicMember | null>(null)
     const [subscription, setSubscription] = useState<Subscription | null>(null)
+    const [clinics, setClinics] = useState<Clinic[]>([])
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
 
     // Constants
     const PROFILE_STORAGE_KEY = 'citenly_user_profile'
     const SUBSCRIPTION_STORAGE_KEY = 'citenly_user_subscription'
+    const CLINICS_STORAGE_KEY = 'citenly_user_clinics'
 
     // Fetch user profile from database with retry logic
     const fetchProfile = async (userId: string, retries = 3, delay = 500) => {
@@ -54,7 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         .eq('id', userId)
                         .single()
 
-                    // Reduced timeout to 3s per attempt (fast failure is better than hanging)
                     const timeoutPromise = new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
                     )
@@ -63,36 +75,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any
 
                     if (!error && data) {
-                        // Cache successful profile
                         localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data))
                         return data as UserProfile
                     }
 
-                    // If error is not a connection error (e.g. Row not found), don't retry
                     if (error && error.code === 'PGRST116') {
                         console.error('Profile not found for user:', userId)
                         return null
                     }
-
-                    console.warn(`Attempt ${i + 1} failed to fetch profile. Retrying in ${delay}ms...`)
                 } catch (err) {
-                    console.warn(`Attempt ${i + 1} exception:`, err)
+                    console.warn(`Attempt ${i + 1} failed to fetch profile. Retrying...`)
                 }
 
-                // Wait before next retry
                 if (i < retries - 1) {
                     await new Promise(resolve => setTimeout(resolve, delay))
-                    // Exponential backoff
                     delay *= 2
                 }
             }
-
-            console.error('All retry attempts failed to fetch profile')
             return null
         } catch (error) {
             console.error('Fetch profile exception:', error)
             return null
         }
+    }
+
+    // Fetch user's clinics (for multi-branch)
+    const fetchUserClinics = async () => {
+        try {
+            const { data, error } = await supabase.rpc('get_user_clinics')
+            if (error) throw error
+            if (data) {
+                setClinics(data)
+                localStorage.setItem(CLINICS_STORAGE_KEY, JSON.stringify(data))
+                return data
+            }
+        } catch (error) {
+            console.error('Error fetching user clinics:', error)
+        }
+        return []
     }
 
     // Fetch subscription status
@@ -111,11 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any
 
             if (error) {
+                // If checking subscription fails, user might not have one yet (new branch?)
                 console.error('Error fetching subscription:', error)
                 return null
             }
 
             if (!error && data) {
+                console.log('✅ Fresh Subscription Loaded:', data)
                 localStorage.setItem(SUBSCRIPTION_STORAGE_KEY, JSON.stringify(data))
                 return data as Subscription
             }
@@ -126,61 +148,107 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Listen for auth changes
+    // Switch active clinic
+    const switchClinic = async (clinicId: string) => {
+        if (!user || !profile) return
+
+        try {
+            // 1. Verify locally if user is member of this clinic
+            let targetClinic = clinics.find(c => c.clinic_id === clinicId)
+
+            // If not found locally, try refreshing the list (e.g. just created a branch)
+            if (!targetClinic) {
+                console.log('Clinic not found locally, refreshing list...')
+                const updatedClinics = await fetchUserClinics()
+                targetClinic = updatedClinics.find(c => c.clinic_id === clinicId)
+            }
+
+            if (!targetClinic) {
+                throw new Error('No tienes acceso a esta clínica')
+            }
+
+            // 2. Update user_profiles in DB to persist choice
+            const { error: updateError } = await supabase
+                .from('user_profiles')
+                .update({ clinic_id: clinicId })
+                .eq('id', user.id)
+
+            if (updateError) throw updateError
+
+            // 3. Update local state
+            const newProfile = { ...profile, clinic_id: clinicId }
+            setProfile(newProfile)
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(newProfile))
+
+            // 4. Fetch details for new clinic
+            // We need to fetch the member details for THIS clinic context
+            // Currently teamService.getCurrentMember() uses auth.uid() and current context...
+            // BUT RLS depends on current user. 
+            // We need to make sure we fetch the member row for THIS clinic.
+
+            // Let's refactor fetching member to be explicit about clinicId if needed, 
+            // but usually getCurrentMember queries 'clinic_members' where user_id=me AND clinic_id=profile.clinic_id
+            // Since we just updated profile, we need to wait/ensure consistency.
+
+            // Let's manually fetch the specific member row
+            const { data: memberData } = await supabase
+                .from('clinic_members')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('clinic_id', clinicId)
+                .single()
+
+            if (memberData) setMember(memberData)
+
+            const sub = await fetchSubscription(clinicId)
+            setSubscription(sub)
+
+            // Optionally reload page to ensure all components fetch fresh data
+            window.location.reload()
+
+        } catch (error) {
+            console.error('Error switching clinic:', error)
+            alert('Error al cambiar de sucursal. Intenta nuevamente.')
+        }
+    }
+
     // Listen for auth changes
     useEffect(() => {
         let mounted = true
 
-        // Failsafe: Force loading to false after 6 seconds
         const loadingTimeout = setTimeout(() => {
             console.warn('Auth initialization timeout - forcing loading to false')
             setLoading(false)
         }, 6000)
 
-        // Initial session check
         const initializeAuth = async () => {
             try {
-                // 1. Try to load from cache FIRST for instant UI
+                // 1. Try to load from cache
                 const cachedProfile = localStorage.getItem(PROFILE_STORAGE_KEY)
-                let hasCachedProfile = false
+                // const cachedSub = localStorage.getItem(SUBSCRIPTION_STORAGE_KEY)
+                const cachedClinics = localStorage.getItem(CLINICS_STORAGE_KEY)
 
-                if (cachedProfile) {
+                if (cachedProfile && mounted) {
                     try {
-                        const parsed = JSON.parse(cachedProfile)
-                        if (mounted) {
-                            setProfile(parsed)
-                            hasCachedProfile = true
-                        }
-                    } catch (e) {
-                        console.error('Error parsing cached profile', e)
-                        localStorage.removeItem(PROFILE_STORAGE_KEY)
-                    }
+                        setProfile(JSON.parse(cachedProfile))
+                    } catch (e) { localStorage.removeItem(PROFILE_STORAGE_KEY) }
                 }
 
-                // 2. Load cached subscription
-                const cachedSub = localStorage.getItem(SUBSCRIPTION_STORAGE_KEY)
-                let hasCachedSub = false
+                // if (cachedSub && mounted) {
+                //     try {
+                //         setSubscription(JSON.parse(cachedSub))
+                //     } catch (e) { localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY) }
+                // }
 
-                if (cachedSub) {
+                if (cachedClinics && mounted) {
                     try {
-                        const parsed = JSON.parse(cachedSub)
-                        if (mounted) {
-                            setSubscription(parsed)
-                            hasCachedSub = true
-                        }
-                    } catch (e) {
-                        console.error('Error parsing cached subscription', e)
-                        localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
-                    }
+                        setClinics(JSON.parse(cachedClinics))
+                    } catch (e) { localStorage.removeItem(CLINICS_STORAGE_KEY) }
                 }
 
-                // 3. Check actual Supabase session (Fast, local)
-                const { data: { session }, error } = await supabase.auth.getSession()
+                // 2. Check Supabase session
+                const { data: { session } } = await supabase.auth.getSession()
                 if (!mounted) return
-
-                if (error) {
-                    console.error('Error getting session:', error)
-                }
 
                 if (session?.user) {
                     setSession(session)
@@ -196,52 +264,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         }).catch(err => console.error('Error storing tokens:', err))
                     }
 
-                    if (hasCachedProfile && hasCachedSub && mounted) {
-                        setLoading(false)
-                        clearTimeout(loadingTimeout)
-                    }
+                    // Fetch fresh data
+                    const profileData = await fetchProfile(session.user.id)
+                    if (mounted && profileData) {
+                        setProfile(profileData)
 
-                    const profilePromise = fetchProfile(session.user.id)
+                        // Parallel fetch of dependencies
+                        // 1. Always fetch clinics
+                        const clinicsData = await fetchUserClinics()
 
-                    if (!hasCachedProfile) {
-                        try {
-                            const data = await profilePromise
-                            if (mounted && data) {
-                                setProfile(data)
-                                if (data.clinic_id) {
-                                    const [sub, mem] = await Promise.all([
-                                        fetchSubscription(data.clinic_id),
-                                        teamService.getCurrentMember()
-                                    ])
-                                    if (mounted) {
-                                        setSubscription(sub)
-                                        setMember(mem)
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error fetching profile during init:', e)
+                        let subData = null
+                        let memberData = null
+
+                        if (profileData.clinic_id) {
+                            // 2. Fetch Subscription
+                            try {
+                                subData = await fetchSubscription(profileData.clinic_id)
+                            } catch (e) { console.error('Sub fetch error:', e) }
+
+                            // 3. Fetch Member
+                            try {
+                                const { data } = await supabase
+                                    .from('clinic_members')
+                                    .select('*')
+                                    .eq('user_id', session.user.id)
+                                    .eq('clinic_id', profileData.clinic_id)
+                                    .single()
+                                memberData = data
+                            } catch (e) { console.error('Member fetch error:', e) }
                         }
-                    } else {
-                        profilePromise.then(async (data) => {
-                            if (mounted && data) {
-                                setProfile(data)
-                                if (data?.clinic_id) {
-                                    const [sub, mem] = await Promise.all([
-                                        fetchSubscription(data.clinic_id),
-                                        teamService.getCurrentMember()
-                                    ])
-                                    if (mounted) {
-                                        setSubscription(sub)
-                                        setMember(mem)
-                                    }
-                                }
-                            }
-                        }).catch(err => console.error('Background profile refresh failed', err))
+
+                        if (mounted) {
+                            if (subData) setSubscription(subData)
+                            if (memberData) setMember(memberData)
+
+                            // Debug roles match
+                            console.log('Role Check:', {
+                                profileRole: profileData.role,
+                                memberRole: memberData?.role,
+                                userId: session.user.id
+                            })
+
+                            console.log('AuthContext initialized with:', {
+                                clinicsCount: clinicsData?.length,
+                                hasSub: !!subData,
+                                hasMember: !!memberData,
+                                memberRole: memberData?.role
+                            })
+                        }
                     }
                 } else {
                     localStorage.removeItem(PROFILE_STORAGE_KEY)
                     localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+                    localStorage.removeItem(CLINICS_STORAGE_KEY)
                 }
             } catch (error) {
                 console.error('Auth initialization exception:', error)
@@ -255,46 +330,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         initializeAuth()
 
-        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
                 if (!mounted) return
-
                 console.log('🔐 Auth state change:', _event)
                 setSession(session)
                 setUser(session?.user ?? null)
 
                 if (session?.user) {
-                    try {
-                        const data = await fetchProfile(session.user.id)
-                        if (mounted && data) {
-                            setProfile(data)
-                            if (data?.clinic_id) {
-                                const [sub, mem] = await Promise.all([
-                                    fetchSubscription(data.clinic_id),
-                                    teamService.getCurrentMember()
-                                ])
-                                if (mounted) {
-                                    setSubscription(sub)
-                                    setMember(mem)
-                                }
-                            }
+                    const data = await fetchProfile(session.user.id)
+                    if (mounted && data) {
+                        setProfile(data)
+                        fetchUserClinics() // Background refresh
+                        if (data.clinic_id) {
+                            fetchSubscription(data.clinic_id).then(sub => mounted && setSubscription(sub))
+                            supabase.from('clinic_members')
+                                .select('*')
+                                .eq('user_id', session.user.id)
+                                .eq('clinic_id', data.clinic_id)
+                                .single()
+                                .then(({ data }) => mounted && setMember(data))
                         }
-                    } catch (err) {
-                        console.error('Error fetching profile:', err)
                     }
                 } else {
                     setProfile(null)
                     setMember(null)
                     setSubscription(null)
-                    localStorage.removeItem(PROFILE_STORAGE_KEY)
-                    localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+                    setClinics([])
+                    localStorage.clear() // Clear all auth data
                 }
 
-                if (mounted) {
-                    setLoading(false)
-                    clearTimeout(loadingTimeout)
-                }
+                if (mounted) setLoading(false)
             }
         )
 
@@ -305,118 +371,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [])
 
-    // Sign in with email and password
     const signIn = async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        })
-
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) return { error: error as Error | null }
-
         if (data.user) {
-            // Verify profile exists before declaring success
-            // This prevents "stuck on loading" state if user exists but profile is missing
-            const userProfile = await fetchProfile(data.user.id)
-
-            if (!userProfile) {
-                // If no profile, sign out immediately to prevent partial auth state
-                await signOut()
-                return { error: new Error('No se encontró el perfil de usuario. Contacta a soporte.') }
-            }
-
-            // Manually update state to ensure instant UI feedback and avoid race conditions
-            // This bridges the gap while onAuthStateChange fires
-            setUser(data.user)
-            setSession(data.session)
-            setProfile(userProfile) // storage already triggered in fetchProfile
-
-            if (userProfile.clinic_id) {
-                const sub = await fetchSubscription(userProfile.clinic_id)
-                setSubscription(sub)
-            }
+            // Let useEffect handle state update or explicitly fetch here for speed
+            // For now rely on onAuthStateChange + cached profile fetch above
         }
-
         return { error: null }
     }
 
-    // Sign up - uses Edge Function to create user, clinic, and profile
-    const signUp = async (
-        email: string,
-        password: string,
-        fullName: string,
-        clinicName: string,
-        selectedPlan: string
-    ) => {
+    const signUp = async (email: string, password: string, fullName: string, clinicName: string, selectedPlan: string) => {
         try {
-            // Call the signup handler Edge Function
             const { data, error: functionError } = await supabase.functions.invoke('signup-handler', {
-                body: {
-                    email,
-                    password,
-                    full_name: fullName,
-                    clinic_name: clinicName,
-                    selected_plan: selectedPlan,
-                }
+                body: { email, password, full_name: fullName, clinic_name: clinicName, selected_plan: selectedPlan }
             })
+            if (functionError) return { error: new Error(functionError.message || 'Error al crear la cuenta') }
+            if (data?.error) return { error: new Error(data.error) }
 
-            if (functionError) {
-                console.error('Signup function error:', functionError)
-                return { error: new Error(functionError.message || 'Error al crear la cuenta') }
-            }
-
-            if (data?.error) {
-                return { error: new Error(data.error) }
-            }
-
-            // Account created successfully, now sign in
-            const { error: signInError } = await signIn(email, password)
-
-            if (signInError) {
-                console.error('Auto sign-in error:', signInError)
-                // Account was created but auto-login failed
-                // User can still log in manually
-                return { error: null }
-            }
-
+            const { error: signInError } = await authSignIn(email, password)
+            if (signInError) return { error: null }
             return { error: null }
-        } catch (err) {
-            console.error('Signup error:', err)
-            return { error: err as Error }
-        }
+        } catch (err) { return { error: err as Error } }
     }
 
-    // Sign out
+    // Wrap original signIn to avoid recursion in signUp
+    const authSignIn = async (email: string, password: string) => {
+        return supabase.auth.signInWithPassword({ email, password })
+    }
+
     const signOut = async () => {
         await supabase.auth.signOut()
         setUser(null)
         setProfile(null)
         setSubscription(null)
         setSession(null)
-        localStorage.removeItem(PROFILE_STORAGE_KEY)
-        localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+        setClinics([])
+        localStorage.clear()
     }
 
-    // Connect Google Calendar
     const connectGoogleCalendar = async () => {
-        console.log('Initiating signInWithOAuth for Google Calendar...')
-        // We use signInWithOAuth instead of linkIdentity because it handles redirects better
-        // and Supabase automatically links accounts with the same email.
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 scopes: 'https://www.googleapis.com/auth/calendar',
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                },
+                queryParams: { access_type: 'offline', prompt: 'consent' },
                 redirectTo: `${window.location.origin}/app/appointments?provider_token=true`
             },
         })
-
-        if (error) console.error('signInWithOAuth error:', error)
-        if (data) console.log('signInWithOAuth data:', data)
-
         return { error: error as Error | null }
     }
 
@@ -425,26 +427,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         member,
         subscription,
+        clinics,
         session,
         loading,
         signIn,
         signUp,
         signOut,
         connectGoogleCalendar,
+        switchClinic,
         isAuthenticated: !!user && !!profile,
     }
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    )
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
     const context = useContext(AuthContext)
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider')
-    }
+    if (context === undefined) throw new Error('useAuth must be used within an AuthProvider')
     return context
 }

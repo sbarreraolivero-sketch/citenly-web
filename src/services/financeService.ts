@@ -35,25 +35,27 @@ export const financeService = {
 
     // Expenses CRUD
     async getExpenses(clinicId: string) {
-        const { data, error } = await (supabase as any)
-            .from('expenses')
-            .select('*')
-            .eq('clinic_id', clinicId)
-            .order('date', { ascending: false })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_clinic_expenses_secure', {
+            p_clinic_id: clinicId
+        })
 
         if (error) throw error
         return data as Expense[]
     },
 
     async addExpense(expense: Omit<Expense, 'id' | 'created_at'>) {
-        const { data, error } = await (supabase as any)
-            .from('expenses')
-            .insert(expense)
-            .select()
-            .single()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('create_clinic_expense', {
+            p_clinic_id: expense.clinic_id,
+            p_description: expense.description,
+            p_amount: expense.amount,
+            p_category: expense.category,
+            p_date: expense.date
+        })
 
         if (error) throw error
-        return data as Expense
+        return data?.[0] as Expense
     },
 
     async updateExpense(id: string, updates: Partial<Expense>) {
@@ -79,30 +81,23 @@ export const financeService = {
 
     // Transactions (Completed Appointments)
     async getTransactions(clinicId: string) {
-        const { data, error } = await supabase
-            .from('appointments')
-            .select('*')
-            .eq('clinic_id', clinicId)
-            .in('status', ['completed', 'confirmed']) // Confirmed might be paid too
-            .order('appointment_date', { ascending: false })
-            .limit(50)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_clinic_transactions_secure', {
+            p_clinic_id: clinicId
+        })
 
         if (error) throw error
         return data
     },
 
     async updatePaymentStatus(appointmentId: string, status: string, method?: string) {
-        const updates: any = { payment_status: status }
-        if (method) updates.payment_method = method
-
-        const { data, error } = await (supabase as any)
-            .from('appointments')
-            .update(updates)
-            .eq('id', appointmentId)
-            .select()
-            .single()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('update_appointment_payment_status', {
+            p_appointment_id: appointmentId,
+            p_status: status
+        })
 
         if (error) throw error
-        return data
+        return data?.[0]
     }
 }

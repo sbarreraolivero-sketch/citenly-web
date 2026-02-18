@@ -84,12 +84,16 @@ function App() {
                         } />
                         <Route path="crm" element={
                             <SubscriptionGuard>
-                                <CRM />
+                                <RoleGuard allowedRoles={['owner']}>
+                                    <CRM />
+                                </RoleGuard>
                             </SubscriptionGuard>
                         } />
                         <Route path="campaigns" element={
                             <SubscriptionGuard>
-                                <Campaigns />
+                                <RoleGuard allowedRoles={['owner']}>
+                                    <Campaigns />
+                                </RoleGuard>
                             </SubscriptionGuard>
                         } />
                         <Route path="finance" element={

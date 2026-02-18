@@ -311,11 +311,9 @@ export default function Settings() {
 
                 // Fetch services
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: servicesData } = await (supabase as any)
-                    .from('services')
-                    .select('*')
-                    .eq('clinic_id', profile.clinic_id)
-                    .order('created_at', { ascending: true })
+                const { data: servicesData } = await (supabase as any).rpc('get_clinic_services_secure', {
+                    p_clinic_id: profile.clinic_id
+                })
 
                 if (servicesData) {
                     setServices(servicesData.map((s: any) => ({
@@ -1356,7 +1354,9 @@ export default function Settings() {
                                 <div className="grid md:grid-cols-3 gap-4">
                                     {(Object.keys(PLANS) as PlanId[]).map((planId) => {
                                         const plan = PLANS[planId]
-                                        const isCurrentPlan = planId === 'radiance'
+                                        // Debug plan comparison
+                                        if (planId === 'radiance') console.log('Settings Plan Check:', { planId, currentPlan: subscription?.plan, match: planId === subscription?.plan })
+                                        const isCurrentPlan = planId === subscription?.plan
 
                                         return (
                                             <div
