@@ -25,6 +25,8 @@ export default function Register() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
+    const [jobTitle, setJobTitle] = useState('')
+
     const { signUp } = useAuth()
     const navigate = useNavigate()
 
@@ -37,6 +39,11 @@ export default function Register() {
                 setError('Completa todos los campos')
                 return
             }
+            if (isJoinMode && !jobTitle) {
+                setError('Por favor indica tu cargo en la clínica (ej: Odontóloga, Asistente)')
+                return
+            }
+
             if (password.length < 6) {
                 setError('La contraseña debe tener al menos 6 caracteres')
                 return
@@ -49,19 +56,25 @@ export default function Register() {
                     return
                 }
                 setLoading(true)
-                const { data: hasInvite } = await supabase.rpc('check_pending_invite', {
+                // Use new RPC that returns clinic details
+                const { data } = await supabase.rpc('check_pending_invite_details', {
                     p_email: email,
                     p_clinic_id: joinClinicId || null
                 })
                 setLoading(false)
 
-                if (!hasInvite) {
+                // The RPC returns { valid, clinic_name }
+                const result = data && data.length > 0 ? data[0] : null; // Handle if it returns array
+
+                if (!result || !result.valid) {
                     setError('No encontramos una invitación pendiente para este correo.')
                     return
                 }
 
-                // Skip to creation
-                handleJoin()
+                // Confirm join with clinic name
+                if (confirm(`Te estás uniendo a  "${result.clinic_name}". ¿Es correcto?`)) {
+                    handleJoin()
+                }
                 return
             }
 
@@ -89,14 +102,14 @@ export default function Register() {
         setError('')
         setLoading(true)
 
-        // Direct Supabase signup for joining members
-        // Trigger handle_new_user_invite will take care of linking
+        // Metadata for trigger to pick up
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
                     full_name: fullName,
+                    job_title: jobTitle, // Trigger will use this
                     ...(joinClinicId ? { join_clinic_id: joinClinicId } : {})
                 }
             }
@@ -108,12 +121,9 @@ export default function Register() {
             return
         }
 
-        // Auto login might happen or not depending on email confirmation settings
-        // If auto login success, redirect
         if (data.session) {
             navigate('/app/dashboard?welcome=joined')
         } else {
-            // Maybe email confirmation needed
             navigate('/login?message=check_email')
         }
     }
@@ -215,6 +225,26 @@ export default function Register() {
                                         />
                                     </div>
                                 </div>
+
+                                {isJoinMode && (
+                                    <div>
+                                        <label htmlFor="jobTitle" className="block text-sm font-medium text-charcoal mb-2">
+                                            Cargo / Rol
+                                        </label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-charcoal/40" />
+                                            <input
+                                                id="jobTitle"
+                                                type="text"
+                                                value={jobTitle}
+                                                onChange={(e) => setJobTitle(e.target.value)}
+                                                className="input-soft pl-12 w-full"
+                                                placeholder="Ej: Odontóloga General"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-charcoal mb-2">

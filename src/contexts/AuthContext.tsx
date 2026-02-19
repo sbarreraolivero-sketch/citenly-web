@@ -37,6 +37,7 @@ interface AuthContextType {
     signOut: () => Promise<void>
     connectGoogleCalendar: () => Promise<{ error: Error | null }>
     switchClinic: (clinicId: string) => Promise<void>
+    refreshClinics: () => Promise<Clinic[]>
     isAuthenticated: boolean
 }
 
@@ -435,6 +436,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         connectGoogleCalendar,
         switchClinic,
+        refreshClinics: fetchUserClinics,
         isAuthenticated: !!user && !!profile,
     }
 

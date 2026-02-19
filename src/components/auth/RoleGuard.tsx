@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 interface RoleGuardProps {
     children: ReactNode
-    allowedRoles: ('owner' | 'professional' | 'receptionist')[]
+    allowedRoles: ('owner' | 'admin' | 'professional' | 'receptionist')[]
     fallbackPath?: string
 }
 
@@ -17,7 +17,8 @@ export function RoleGuard({ children, allowedRoles, fallbackPath = '/app/dashboa
         return <div className="flex h-screen items-center justify-center"><LoadingSpinner /></div>
     }
 
-    if (!member || !allowedRoles.includes(member.role)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!member || !allowedRoles.includes(member.role as any)) {
         return <Navigate to={fallbackPath} replace />
     }
 

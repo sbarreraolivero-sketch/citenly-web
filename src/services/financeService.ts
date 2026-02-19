@@ -34,10 +34,12 @@ export const financeService = {
     },
 
     // Expenses CRUD
-    async getExpenses(clinicId: string) {
+    async getExpenses(clinicId: string, startDate: Date, endDate: Date) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any).rpc('get_clinic_expenses_secure', {
-            p_clinic_id: clinicId
+            p_clinic_id: clinicId,
+            p_start_date: startDate.toISOString(),
+            p_end_date: endDate.toISOString()
         })
 
         if (error) throw error
@@ -80,17 +82,26 @@ export const financeService = {
     },
 
     // Transactions (Completed Appointments)
-    async getTransactions(clinicId: string) {
+    async getTransactions(clinicId: string, startDate?: Date, endDate?: Date) {
+        // Default to last 30 days if no range provided, or handle in component?
+        // Let's require them or default them to something reasonable to avoid breaking existing calls if any
+        // But for now, we'll assume they will be passed.
+
+        const start = startDate ? startDate.toISOString() : new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString()
+        const end = endDate ? endDate.toISOString() : new Date().toISOString()
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any).rpc('get_clinic_transactions_secure', {
-            p_clinic_id: clinicId
+            p_clinic_id: clinicId,
+            p_start_date: start,
+            p_end_date: end
         })
 
         if (error) throw error
         return data
     },
 
-    async updatePaymentStatus(appointmentId: string, status: string, method?: string) {
+    async updatePaymentStatus(appointmentId: string, status: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any).rpc('update_appointment_payment_status', {
             p_appointment_id: appointmentId,

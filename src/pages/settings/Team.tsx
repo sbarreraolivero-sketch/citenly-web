@@ -12,16 +12,17 @@ export default function Team() {
     const [loading, setLoading] = useState(true)
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const [inviteEmail, setInviteEmail] = useState('')
-    const [inviteRole, setInviteRole] = useState<'professional' | 'receptionist'>('professional')
+    const [inviteRole, setInviteRole] = useState<'admin' | 'professional' | 'receptionist'>('professional')
     const [inviteName, setInviteName] = useState('')
     const [maxUsers, setMaxUsers] = useState(3) // Default to 3
     const [planName, setPlanName] = useState('freemium')
 
     // Fallback to profile check if member context is missing
     const isOwner = member?.role === 'owner' || profile?.role === 'owner'
+    const isAdmin = isOwner || member?.role === 'admin' || profile?.role === 'admin'
     const clinicId = member?.clinic_id || profile?.clinic_id
 
-    const canInvite = isOwner && members.filter(m => m.status !== 'disabled').length < maxUsers
+    const canInvite = isAdmin && members.filter(m => m.status !== 'disabled').length < maxUsers
 
     useEffect(() => {
         console.log('Team Page - Clinic ID Changed:', clinicId)
@@ -137,7 +138,10 @@ export default function Team() {
         }
     }
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (e: React.MouseEvent, id: string) => {
+        e.preventDefault()
+        e.stopPropagation()
+
         if (!confirm('¿Estás seguro de eliminar este miembro?')) return
         try {
             await teamService.deleteMember(id)
@@ -161,7 +165,7 @@ export default function Team() {
                         </p>
                     )}
                 </div>
-                {isOwner && (
+                {isAdmin && (
                     <div className="flex gap-3">
                         <button
                             onClick={() => {
@@ -223,12 +227,13 @@ export default function Team() {
                                     <td className="py-4 px-6">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                                             ${m.role === 'owner' ? 'bg-indigo-100 text-indigo-700' :
-                                                m.role === 'professional' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-green-100 text-green-700'}`}>
-                                            {m.role === 'owner' && <Shield size={12} />}
+                                                m.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                                    m.role === 'professional' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-green-100 text-green-700'}`}>
+                                            {(m.role === 'owner' || m.role === 'admin') && <Shield size={12} />}
                                             {m.role === 'professional' && <User size={12} />}
                                             {m.role === 'receptionist' && <Clock size={12} />}
-                                            {m.role === 'owner' ? 'Administrador' : m.role === 'professional' ? 'Profesional' : 'Recepción'}
+                                            {m.role === 'owner' ? 'Dueño' : m.role === 'admin' ? 'Administrador' : m.role === 'professional' ? 'Profesional' : 'Recepción'}
                                         </span>
                                     </td>
                                     <td className="py-4 px-6">
@@ -246,7 +251,7 @@ export default function Team() {
                                         <td className="py-4 px-6 text-right">
                                             {m.role !== 'owner' && (
                                                 <button
-                                                    onClick={() => handleDelete(m.id)}
+                                                    onClick={(e) => handleDelete(e, m.id)}
                                                     className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
                                                     title="Eliminar miembro"
                                                 >
@@ -294,14 +299,24 @@ export default function Team() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
+                                    {isOwner && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setInviteRole('admin')}
+                                            className={`p-3 rounded-lg border text-left transition-all ${inviteRole === 'admin' ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : 'border-gray-200 hover:border-gray-300'}`}
+                                        >
+                                            <div className="font-medium text-gray-900 mb-1">Admin</div>
+                                            <div className="text-xs text-gray-500">Gestiona equipo y calendarios. Máx 2.</div>
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => setInviteRole('professional')}
                                         className={`p-3 rounded-lg border text-left transition-all ${inviteRole === 'professional' ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : 'border-gray-200 hover:border-gray-300'}`}
                                     >
                                         <div className="font-medium text-gray-900 mb-1">Profesional</div>
-                                        <div className="text-xs text-gray-500">Maneja su agenda y pacientes assigned.</div>
+                                        <div className="text-xs text-gray-500">Maneja su agenda y pacientes.</div>
                                     </button>
                                     <button
                                         type="button"

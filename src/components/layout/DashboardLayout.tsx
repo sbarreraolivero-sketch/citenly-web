@@ -150,7 +150,13 @@ export default function DashboardLayout() {
     // For demo purposes, show placeholder if not authenticated
     const userName = profile?.full_name || 'Usuario Demo'
     const clinicName = 'Clínica Demo' // Will come from clinic_settings later
-    const userRole = profile?.role === 'admin' ? 'Administrador' : 'Staff'
+    const userRole = member?.job_title || (
+        profile?.role === 'owner' ? 'Dueño' :
+            profile?.role === 'admin' ? 'Administrador' :
+                profile?.role === 'professional' ? 'Profesional' :
+                    profile?.role === 'receptionist' ? 'Recepción' :
+                        'Staff'
+    )
 
     const [showMobileMenu, setShowMobileMenu] = useState(false)
 

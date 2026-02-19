@@ -35,6 +35,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
 import Team from './settings/Team'
+import MyProfile from './settings/MyProfile'
 
 // Get the Supabase URL for webhook display
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -77,7 +78,7 @@ const dayNames: Record<string, string> = {
 }
 
 export default function Settings() {
-    const { user, profile, member } = useAuth()
+    const { user, profile, member, refreshClinics } = useAuth()
     const [searchParams] = useSearchParams()
 
     const availableTabs = tabs.filter(tab => {
@@ -104,6 +105,11 @@ export default function Settings() {
     const [newUpsellEnabled, setNewUpsellEnabled] = useState(false)
     const [newUpsellDays, setNewUpsellDays] = useState<string>('7')
     const [newUpsellMessage, setNewUpsellMessage] = useState('')
+
+    // Professional assignment state for service modal
+    const [clinicProfessionals, setClinicProfessionals] = useState<any[]>([])
+    const [assignedProfessionals, setAssignedProfessionals] = useState<Record<string, boolean>>({})
+    const [primaryProfessional, setPrimaryProfessional] = useState<string>('')
 
     // Currency setting
     const [currency, setCurrency] = useState('MXN')
@@ -327,6 +333,15 @@ export default function Settings() {
                             message: s.upselling_message || ''
                         }
                     })))
+                }
+
+                // Fetch clinic professionals for service assignment
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data: profData } = await (supabase as any).rpc('get_clinic_professionals', {
+                    p_clinic_id: profile.clinic_id
+                })
+                if (profData) {
+                    setClinicProfessionals(profData)
                 }
             } catch (error) {
                 console.error('Error loading settings:', error)
@@ -644,6 +659,9 @@ export default function Settings() {
 
             if (error) throw error
 
+            // Refresh clinics context to update header
+            await refreshClinics()
+
             setClinicSaved(true)
             setTimeout(() => setClinicSaved(false), 3000)
         } catch (error) {
@@ -731,7 +749,7 @@ export default function Settings() {
 
     const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
 
-    const handleEditService = (service: any) => {
+    const handleEditService = async (service: any) => {
         setEditingServiceId(service.id)
         setNewServiceName(service.name)
         setNewServiceDuration(service.duration.toString())
@@ -740,6 +758,27 @@ export default function Settings() {
         setNewUpsellDays(service.upselling?.daysAfter?.toString() || '7')
         setNewUpsellMessage(service.upselling?.message || '')
         setShowServiceModal(true)
+
+        // Load assigned professionals for this service
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data } = await (supabase as any)
+                .from('service_professionals')
+                .select('member_id, is_primary')
+                .eq('service_id', service.id)
+            if (data) {
+                const assigned: Record<string, boolean> = {}
+                let primary = ''
+                data.forEach((sp: any) => {
+                    assigned[sp.member_id] = true
+                    if (sp.is_primary) primary = sp.member_id
+                })
+                setAssignedProfessionals(assigned)
+                setPrimaryProfessional(primary)
+            }
+        } catch (err) {
+            console.error('Error loading service professionals:', err)
+        }
     }
 
     const handleSaveService = async () => {
@@ -755,6 +794,8 @@ export default function Settings() {
                 upselling_days_after: parseInt(newUpsellDays) || 0,
                 upselling_message: newUpsellMessage
             }
+
+            let savedServiceId = editingServiceId
 
             if (editingServiceId) {
                 // Update existing service
@@ -788,6 +829,8 @@ export default function Settings() {
 
                 if (error) throw error
 
+                savedServiceId = data.id
+
                 setServices([...services, {
                     id: data.id,
                     name: data.name,
@@ -801,6 +844,36 @@ export default function Settings() {
                 }])
             }
 
+            // Save professional assignments before resetting state
+            if (savedServiceId) {
+                try {
+                    // Delete existing assignments
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    await (supabase as any)
+                        .from('service_professionals')
+                        .delete()
+                        .eq('service_id', savedServiceId)
+
+                    // Insert new assignments
+                    const assignments = Object.entries(assignedProfessionals)
+                        .filter(([, isAssigned]) => isAssigned)
+                        .map(([memberId]) => ({
+                            service_id: savedServiceId,
+                            member_id: memberId,
+                            is_primary: memberId === primaryProfessional
+                        }))
+
+                    if (assignments.length > 0) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        await (supabase as any)
+                            .from('service_professionals')
+                            .insert(assignments)
+                    }
+                } catch (err) {
+                    console.error('Error saving professional assignments:', err)
+                }
+            }
+
             // Reset form
             setNewServiceName('')
             setNewServiceDuration('30')
@@ -808,6 +881,8 @@ export default function Settings() {
             setNewUpsellEnabled(false)
             setNewUpsellDays('7')
             setNewUpsellMessage('')
+            setAssignedProfessionals({})
+            setPrimaryProfessional('')
             setEditingServiceId(null)
             setShowServiceModal(false)
 
@@ -871,36 +946,7 @@ export default function Settings() {
                     {/* Profile Settings */}
                     {activeTab === 'profile' && (
                         <div className="space-y-6 animate-fade-in">
-                            <div>
-                                <h2 className="text-lg font-semibold text-charcoal mb-1">Mi Perfil</h2>
-                                <p className="text-sm text-charcoal/50">Gestiona tu información personal y seguridad.</p>
-                            </div>
-
-                            <div className="card-soft p-6 space-y-4">
-                                <h3 className="font-medium text-charcoal">Información Personal</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">Nombre Completo</label>
-                                        <input
-                                            type="text"
-                                            value={profile?.full_name || ''}
-                                            disabled
-                                            className="input-soft bg-gray-50 text-charcoal/60 cursor-not-allowed"
-                                        />
-                                        <p className="text-xs text-charcoal/40 mt-1">Para cambiar tu nombre, contacta a soporte.</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">Email</label>
-                                        <input
-                                            type="email"
-                                            value={profile?.email || ''}
-                                            disabled
-                                            className="input-soft bg-gray-50 text-charcoal/60 cursor-not-allowed"
-                                        />
-                                        <p className="text-xs text-charcoal/40 mt-1">El email no se puede modificar.</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <MyProfile />
 
                             <div className="card-soft p-6 space-y-4">
                                 <h3 className="font-medium text-charcoal">Seguridad</h3>
@@ -1100,7 +1146,11 @@ export default function Settings() {
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-lg font-semibold text-charcoal">Servicios</h2>
                                     <button
-                                        onClick={() => setShowServiceModal(true)}
+                                        onClick={() => {
+                                            setAssignedProfessionals({})
+                                            setPrimaryProfessional('')
+                                            setShowServiceModal(true)
+                                        }}
                                         className="btn-ghost flex items-center gap-2 text-primary-500"
                                     >
                                         <Plus className="w-4 h-4" />
@@ -1255,6 +1305,73 @@ export default function Settings() {
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* Professional Assignment Section */}
+                                        {clinicProfessionals.length > 0 && (
+                                            <div className="border-t border-silk-beige pt-4 mt-4">
+                                                <p className="text-sm font-medium text-charcoal flex items-center gap-2 mb-3">
+                                                    <Users className="w-4 h-4 text-primary-500" />
+                                                    Profesionales Asignados
+                                                </p>
+                                                <p className="text-xs text-charcoal/50 mb-3">Selecciona quién realiza este servicio. Marca ⭐ al profesional principal.</p>
+                                                <div className="space-y-2">
+                                                    {clinicProfessionals.map((prof: any) => {
+                                                        const isAssigned = assignedProfessionals[prof.member_id] || false
+                                                        const isPrimary = primaryProfessional === prof.member_id
+                                                        return (
+                                                            <div
+                                                                key={prof.member_id}
+                                                                className={cn(
+                                                                    "flex items-center gap-3 p-2.5 rounded-lg transition-colors cursor-pointer",
+                                                                    isAssigned ? "bg-primary-50 border border-primary-200" : "bg-gray-50 border border-transparent hover:border-gray-200"
+                                                                )}
+                                                                onClick={() => {
+                                                                    setAssignedProfessionals(prev => ({
+                                                                        ...prev,
+                                                                        [prof.member_id]: !prev[prof.member_id]
+                                                                    }))
+                                                                    // Clear primary if unassigning
+                                                                    if (isAssigned && isPrimary) {
+                                                                        setPrimaryProfessional('')
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isAssigned}
+                                                                    readOnly
+                                                                    className="accent-primary-500 w-4 h-4 pointer-events-none"
+                                                                />
+                                                                <div
+                                                                    className="w-3 h-3 rounded-full flex-shrink-0"
+                                                                    style={{ backgroundColor: prof.color || '#8B5CF6' }}
+                                                                />
+                                                                <span className={cn("text-sm flex-1", isAssigned ? "text-charcoal font-medium" : "text-charcoal/60")}>
+                                                                    {prof.first_name || ''} {prof.last_name || ''}
+                                                                    {prof.job_title ? ` · ${prof.job_title}` : ''}
+                                                                </span>
+                                                                {isAssigned && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            setPrimaryProfessional(isPrimary ? '' : prof.member_id)
+                                                                        }}
+                                                                        className={cn(
+                                                                            "text-sm transition-colors",
+                                                                            isPrimary ? "text-amber-500" : "text-charcoal/20 hover:text-amber-400"
+                                                                        )}
+                                                                        title={isPrimary ? 'Profesional principal' : 'Marcar como principal'}
+                                                                    >
+                                                                        ⭐
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="flex gap-3 mt-6">
                                             <button
@@ -2266,6 +2383,6 @@ export default function Settings() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     )
 }

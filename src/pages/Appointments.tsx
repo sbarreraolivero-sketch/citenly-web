@@ -44,6 +44,19 @@ interface Appointment {
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
     notes: string | null
     google_event_id?: string | null
+    professional_id?: string | null
+}
+
+interface ClinicProfessional {
+    member_id: string
+    first_name: string | null
+    last_name: string | null
+    email: string
+    role: string
+    job_title: string | null
+    specialty: string | null
+    color: string | null
+    working_hours: Record<string, { enabled: boolean; start: string; end: string }> | null
 }
 
 const tabs = [
@@ -73,9 +86,12 @@ export default function Appointments() {
         service: '',
         appointment_date: '',
         appointment_time: '',
-        notes: ''
+        notes: '',
+        professional_id: ''
     })
     const [services, setServices] = useState<any[]>([])
+    const [professionals, setProfessionals] = useState<ClinicProfessional[]>([])
+    const [professionalFilter, setProfessionalFilter] = useState<string>('all')
 
     // CRM Integration State
     const [showRecordModal, setShowRecordModal] = useState(false)
@@ -83,7 +99,7 @@ export default function Appointments() {
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
     const [foundPatient, setFoundPatient] = useState<Patient | null>(null)
 
-    // Fetch services
+    // Fetch services and professionals
     useEffect(() => {
         const fetchServices = async () => {
             if (!profile?.clinic_id) return
@@ -94,7 +110,16 @@ export default function Appointments() {
                 .order('name', { ascending: true })
             if (data) setServices(data)
         }
+        const fetchProfessionals = async () => {
+            if (!profile?.clinic_id) return
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data } = await (supabase as any).rpc('get_clinic_professionals', {
+                p_clinic_id: profile.clinic_id
+            })
+            if (data) setProfessionals(data)
+        }
         fetchServices()
+        fetchProfessionals()
     }, [profile?.clinic_id])
 
     // Date filter state
@@ -327,6 +352,7 @@ export default function Appointments() {
                             appointment_date: appointmentDate,
                             status: 'confirmed',
                             notes: newAppointment.notes,
+                            professional_id: newAppointment.professional_id || null,
                         },
                     ])
                     .select()
@@ -401,7 +427,8 @@ export default function Appointments() {
                 service: '',
                 appointment_date: '',
                 appointment_time: '',
-                notes: ''
+                notes: '',
+                professional_id: ''
             })
             setEditingId(null)
 
@@ -454,6 +481,9 @@ export default function Appointments() {
 
         const matchesTab = activeTab === 'all' || appointment.status === activeTab
 
+        // Professional filter
+        const matchesProfessional = professionalFilter === 'all' || appointment.professional_id === professionalFilter
+
         // Date filter logic
         const appointmentDate = new Date(appointment.appointment_date)
         const today = new Date()
@@ -476,7 +506,7 @@ export default function Appointments() {
             matchesDate = appointmentDate >= today && appointmentDate <= weekEnd
         }
 
-        return matchesSearch && matchesTab && matchesDate
+        return matchesSearch && matchesTab && matchesDate && matchesProfessional
     })
 
     const getTabCount = (tabId: string) => {
@@ -564,12 +594,20 @@ export default function Appointments() {
         const duration = service ? service.duration : 60
         const end = new Date(start.getTime() + (duration * 60 * 1000))
 
+        // Get professional color
+        const prof = apt.professional_id ? professionals.find(p => p.member_id === apt.professional_id) : null
+
         return {
             id: apt.id,
             title: `${apt.patient_name} - ${apt.service}`,
             start,
             end,
-            resource: { type: 'local', ...apt }
+            resource: {
+                type: 'local',
+                ...apt,
+                professionalColor: prof?.color || undefined,
+                professionalName: prof ? `${prof.first_name || ''} ${prof.last_name || ''}`.trim() : undefined
+            }
         }
     }).filter(Boolean) as CalendarEvent[]
 
@@ -592,7 +630,8 @@ export default function Appointments() {
                             service: '',
                             appointment_date: format(now, 'yyyy-MM-dd'),
                             appointment_time: '09:00',
-                            notes: ''
+                            notes: '',
+                            professional_id: ''
                         })
                         setShowModal(true)
                     }}
@@ -787,6 +826,42 @@ export default function Appointments() {
                     </div>
                 )}
             </div>
+
+            {/* Professional Filter Pills */}
+            {professionals.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wide mr-1">Profesional:</span>
+                    <button
+                        onClick={() => setProfessionalFilter('all')}
+                        className={cn(
+                            'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                            professionalFilter === 'all'
+                                ? 'bg-charcoal text-white border-charcoal'
+                                : 'bg-ivory text-charcoal/60 border-silk-beige hover:border-charcoal/30'
+                        )}
+                    >
+                        Todos
+                    </button>
+                    {professionals.map((prof) => (
+                        <button
+                            key={prof.member_id}
+                            onClick={() => setProfessionalFilter(prof.member_id)}
+                            className={cn(
+                                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                                professionalFilter === prof.member_id
+                                    ? 'bg-charcoal text-white border-charcoal'
+                                    : 'bg-ivory text-charcoal/60 border-silk-beige hover:border-charcoal/30'
+                            )}
+                        >
+                            <div
+                                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: prof.color || '#8B5CF6' }}
+                            />
+                            {prof.first_name || prof.email}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {viewMode === 'calendar' ? (
                 <CalendarView
@@ -1163,6 +1238,47 @@ export default function Appointments() {
                                         </select>
                                         <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40 rotate-90 pointer-events-none" />
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                        Profesional
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={newAppointment.professional_id}
+                                            onChange={(e) => {
+                                                setNewAppointment({
+                                                    ...newAppointment,
+                                                    professional_id: e.target.value
+                                                })
+                                            }}
+                                            className="input-soft w-full appearance-none"
+                                        >
+                                            <option value="">Sin asignar</option>
+                                            {professionals.map((prof) => (
+                                                <option key={prof.member_id} value={prof.member_id}>
+                                                    {prof.first_name || ''} {prof.last_name || ''} {prof.job_title ? `(${prof.job_title})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40 rotate-90 pointer-events-none" />
+                                    </div>
+                                    {newAppointment.professional_id && (
+                                        <div className="mt-1.5 flex items-center gap-2">
+                                            {(() => {
+                                                const prof = professionals.find(p => p.member_id === newAppointment.professional_id)
+                                                return prof ? (
+                                                    <>
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: prof.color || '#8B5CF6' }} />
+                                                        <span className="text-xs text-charcoal/60">
+                                                            {prof.job_title || prof.specialty || prof.role}
+                                                        </span>
+                                                    </>
+                                                ) : null
+                                            })()}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">

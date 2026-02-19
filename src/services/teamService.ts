@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase'
 
-export type UserRole = 'owner' | 'professional' | 'receptionist'
+export type UserRole = 'owner' | 'admin' | 'professional' | 'receptionist'
 export type MemberStatus = 'active' | 'invited' | 'disabled'
 
 export interface ClinicMember {
@@ -15,6 +15,8 @@ export interface ClinicMember {
     last_name?: string
     specialty?: string
     color?: string
+    job_title?: string
+    working_hours?: Record<string, { enabled: boolean; start: string; end: string }>
     created_at: string
 }
 
@@ -44,6 +46,30 @@ export const teamService = {
         })
 
         if (error) throw error
+
+        // Trigger Send Email Edge Function
+        try {
+            const { data: settings } = await supabase
+                .from('clinic_settings')
+                .select('clinic_name')
+                .eq('id', clinicId)
+                .single()
+
+            const clinicName = settings?.clinic_name || 'tu clínica'
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.citenly.com'
+            const inviteLink = `${origin}/register?mode=join&clinic=${clinicId}&email=${encodeURIComponent(email)}`
+
+            await supabase.functions.invoke('send-invite-email', {
+                body: {
+                    email,
+                    clinicName,
+                    inviteLink,
+                }
+            })
+        } catch (emailErr) {
+            console.error('Error triggering invite email:', emailErr)
+        }
+
         return data
     },
 
@@ -60,10 +86,10 @@ export const teamService = {
     },
 
     async deleteMember(id: string) {
-        const { error } = await supabase
-            .from('clinic_members')
-            .delete()
-            .eq('id', id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase as any).rpc('delete_clinic_member', {
+            p_member_id: id
+        })
 
         if (error) throw error
     },
@@ -110,5 +136,34 @@ export const teamService = {
 
         if (error) throw error
         return data
+    },
+
+    async getClinicProfessionals(clinicId: string) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_clinic_professionals', {
+            p_clinic_id: clinicId
+        })
+
+        if (error) throw error
+        return data as ClinicMember[]
+    },
+
+    async updateMemberProfile(id: string, updates: {
+        first_name?: string
+        last_name?: string
+        job_title?: string
+        specialty?: string
+        color?: string
+        working_hours?: Record<string, { enabled: boolean; start: string; end: string }>
+    }) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase.from('clinic_members') as any)
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data as ClinicMember
     }
 }

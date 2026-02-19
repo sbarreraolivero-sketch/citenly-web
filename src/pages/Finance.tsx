@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
     DollarSign,
     TrendingUp,
@@ -7,16 +7,53 @@ import {
     CreditCard,
     Plus,
     Download,
-    X
+    X,
+    FileText,
+    ChevronDown,
+    Trash2
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { useAuth } from '@/contexts/AuthContext'
+import { useClinicTimezone } from '@/hooks/useClinicTimezone'
 import { financeService, type FinanceStats, type Expense } from '@/services/financeService'
 import { cn } from '@/lib/utils'
+import { toast } from 'react-hot-toast'
 
+// ── Helpers ──────────────────────────────────────────────────────────
+const CATEGORY_LABELS: Record<string, string> = {
+    rent: 'Alquiler',
+    supplies: 'Insumos',
+    payroll: 'Nómina',
+    marketing: 'Marketing',
+    utilities: 'Servicios Básicos',
+    other: 'Otro',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+    paid: 'Pagado',
+    pending: 'Pendiente',
+    partial: 'Parcial',
+    refunded: 'Reembolsado',
+}
+
+const translateCategory = (cat: string) => CATEGORY_LABELS[cat] ?? cat
+const translateStatus = (st: string) => STATUS_LABELS[st] ?? st
+
+// parseLocalDate now comes from useClinicTimezone hook
+
+// ── Component ────────────────────────────────────────────────────────
 const Finance = () => {
-    const { profile } = useAuth()
+    const { profile, member } = useAuth()
+    const clinicId = member?.clinic_id || profile?.clinic_id
+    const clinicName = (member as any)?.clinic_name || (profile as any)?.clinic_name || 'Clínica'
+
+    // Timezone-aware date utilities from clinic settings
+    const {
+        timezone,
+        formatInTz,
+        getDateRange,
+        getDateRangeLabel,
+    } = useClinicTimezone()
+
     const [stats, setStats] = useState<FinanceStats | null>(null)
     const [expenses, setExpenses] = useState<Expense[]>([])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,23 +61,48 @@ const Finance = () => {
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'expenses'>('dashboard')
     const [showExpenseModal, setShowExpenseModal] = useState(false)
+    const [filterType, setFilterType] = useState<'day' | 'week' | 'month' | 'year'>('month')
+    const [showExportMenu, setShowExportMenu] = useState(false)
 
+    const exportMenuRef = useRef<HTMLDivElement>(null)
+
+    // ── Close export dropdown on click-outside ──
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+                setShowExportMenu(false)
+            }
+        }
+        if (showExportMenu) {
+            document.addEventListener('mousedown', handler)
+        }
+        return () => document.removeEventListener('mousedown', handler)
+    }, [showExportMenu])
+
+    const getFilterLabel = () => {
+        switch (filterType) {
+            case 'day': return 'Hoy'
+            case 'week': return 'Semana'
+            case 'month': return 'Mes'
+            case 'year': return 'Año'
+        }
+    }
+
+    // ── Data loading ──
     useEffect(() => {
         loadData()
-    }, [profile?.clinic_id])
+    }, [clinicId, filterType, timezone])
 
     const loadData = async () => {
-        if (!profile?.clinic_id) return
+        if (!clinicId) return
         setLoading(true)
         try {
-            const now = new Date()
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+            const { start, end } = getDateRange(filterType)
 
             const [statsData, expensesData, transactionsData] = await Promise.all([
-                financeService.getStats(profile.clinic_id, startOfMonth, endOfMonth),
-                financeService.getExpenses(profile.clinic_id),
-                financeService.getTransactions(profile.clinic_id)
+                financeService.getStats(clinicId, start, end),
+                financeService.getExpenses(clinicId, start, end),
+                financeService.getTransactions(clinicId, start, end)
             ])
 
             setStats(statsData)
@@ -53,6 +115,7 @@ const Finance = () => {
         }
     }
 
+    // ── Currency formatter ──
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('es-MX', {
             style: 'currency',
@@ -60,9 +123,129 @@ const Finance = () => {
         }).format(amount)
     }
 
+    // ── Export handlers ──
+    const downloadBlob = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 100)
+    }
+
+    const handleExport = (type: 'csv' | 'json') => {
+        try {
+            const periodLabel = getDateRangeLabel(filterType)
+            const dateStamp = formatInTz(new Date(), 'yyyy-MM-dd')
+
+            if (type === 'json') {
+                const data = {
+                    reporte: {
+                        clinica: clinicName,
+                        periodo: periodLabel,
+                        filtro: getFilterLabel(),
+                        generado: formatInTz(new Date(), 'dd/MM/yyyy HH:mm')
+                    },
+                    resumen: {
+                        ingresos: stats?.total_income ?? 0,
+                        gastos: stats?.total_expenses ?? 0,
+                        ganancia_neta: stats?.net_profit ?? 0,
+                        por_cobrar: stats?.pending_payments ?? 0,
+                        total_citas: stats?.appointments_count ?? 0
+                    },
+                    transacciones: transactions.map(tx => ({
+                        fecha: formatInTz(tx.appointment_date, 'dd/MM/yyyy HH:mm'),
+                        paciente: tx.patient_name,
+                        servicio: tx.service || '-',
+                        monto: tx.price ?? 0,
+                        estado: translateStatus(tx.payment_status),
+                        metodo_pago: tx.payment_method || 'N/A'
+                    })),
+                    gastos: expenses.map(exp => ({
+                        fecha: formatInTz(exp.date, 'dd/MM/yyyy'),
+                        descripcion: exp.description,
+                        categoria: translateCategory(exp.category),
+                        monto: exp.amount
+                    }))
+                }
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                downloadBlob(blob, `reporte_finanzas_${dateStamp}.json`)
+            } else {
+                // ── CSV generation ──
+                const lines: string[] = []
+                const sep = ','
+
+                // Report header
+                lines.push(`REPORTE FINANCIERO - ${clinicName}`)
+                lines.push(`Período: ${periodLabel}`)
+                lines.push(`Generado: ${formatInTz(new Date(), 'dd/MM/yyyy HH:mm')}`)
+                lines.push('')
+
+                // Summary
+                lines.push('RESUMEN')
+                lines.push(`Ingresos${sep}${formatCurrency(stats?.total_income ?? 0)}`)
+                lines.push(`Gastos${sep}${formatCurrency(stats?.total_expenses ?? 0)}`)
+                lines.push(`Ganancia Neta${sep}${formatCurrency(stats?.net_profit ?? 0)}`)
+                lines.push(`Por Cobrar${sep}${formatCurrency(stats?.pending_payments ?? 0)}`)
+                lines.push(`Total Citas${sep}${stats?.appointments_count ?? 0}`)
+                lines.push('')
+
+                // Transactions
+                lines.push('TRANSACCIONES')
+                lines.push(`Fecha${sep}Paciente${sep}Servicio${sep}Monto${sep}Estado${sep}Método de Pago`)
+                if (transactions.length > 0) {
+                    transactions.forEach(tx => {
+                        lines.push([
+                            formatInTz(tx.appointment_date, 'dd/MM/yyyy HH:mm'),
+                            `"${(tx.patient_name || '').replace(/"/g, '""')}"`,
+                            `"${(tx.service || '-').replace(/"/g, '""')}"`,
+                            formatCurrency(tx.price ?? 0),
+                            translateStatus(tx.payment_status),
+                            tx.payment_method || 'N/A'
+                        ].join(sep))
+                    })
+                } else {
+                    lines.push('Sin transacciones en este período')
+                }
+                lines.push('')
+
+                // Expenses
+                lines.push('GASTOS')
+                lines.push(`Fecha${sep}Descripción${sep}Categoría${sep}Monto`)
+                if (expenses.length > 0) {
+                    expenses.forEach(exp => {
+                        lines.push([
+                            formatInTz(exp.date, 'dd/MM/yyyy'),
+                            `"${exp.description.replace(/"/g, '""')}"`,
+                            translateCategory(exp.category),
+                            formatCurrency(exp.amount)
+                        ].join(sep))
+                    })
+                } else {
+                    lines.push('Sin gastos en este período')
+                }
+
+                const csvContent = '\uFEFF' + lines.join('\n') // BOM for Excel compatibility
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+                downloadBlob(blob, `reporte_finanzas_${filterType}_${dateStamp}.csv`)
+            }
+            setShowExportMenu(false)
+            toast.success('Exportación completada')
+        } catch (error) {
+            console.error('Export error:', error)
+            toast.error('Error al exportar datos')
+        }
+    }
+
+    // ── Expense handlers ──
     const handleAddExpense = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!profile?.clinic_id) return
+        if (!clinicId) {
+            toast.error('No se pudo identificar la clínica')
+            return
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const form = e.target as any
@@ -73,11 +256,11 @@ const Finance = () => {
 
         try {
             await financeService.addExpense({
-                clinic_id: profile.clinic_id,
+                clinic_id: clinicId,
                 description,
                 amount,
                 category,
-                date: new Date(date).toISOString()
+                date
             })
             toast.success('Gasto registrado exitosamente')
             setShowExpenseModal(false)
@@ -85,6 +268,19 @@ const Finance = () => {
         } catch (error) {
             console.error('Error adding expense:', error)
             toast.error('Error al registrar el gasto')
+        }
+    }
+
+    const handleDeleteExpense = async (expenseId: string, description: string) => {
+        if (!confirm(`¿Estás seguro de que deseas eliminar el gasto "${description}"?`)) return
+
+        try {
+            await financeService.deleteExpense(expenseId)
+            toast.success('Gasto eliminado')
+            loadData()
+        } catch (error) {
+            console.error('Error deleting expense:', error)
+            toast.error('Error al eliminar el gasto')
         }
     }
 
@@ -99,6 +295,7 @@ const Finance = () => {
         }
     }
 
+    // ── Render ──
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -107,11 +304,63 @@ const Finance = () => {
                     <h1 className="text-2xl font-bold text-charcoal">Finanzas</h1>
                     <p className="text-charcoal/60">Gestiona los ingresos y gastos de tu clínica</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="btn-secondary flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        <span className="hidden sm:inline">Exportar</span>
-                    </button>
+                <div className="flex items-center gap-3 flex-wrap">
+                    {/* Export dropdown */}
+                    <div className="relative" ref={exportMenuRef}>
+                        <button
+                            onClick={() => setShowExportMenu(!showExportMenu)}
+                            className="btn-secondary flex items-center gap-2"
+                        >
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Exportar</span>
+                            <ChevronDown className={cn("w-3 h-3 transition-transform", showExportMenu && "rotate-180")} />
+                        </button>
+
+                        {showExportMenu && (
+                            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                                <p className="px-4 py-2 text-xs font-medium text-charcoal/40 uppercase tracking-wide">Formato de archivo</p>
+                                <button
+                                    onClick={() => handleExport('csv')}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-gray-50 flex items-center gap-3"
+                                >
+                                    <FileText className="w-4 h-4 text-green-600" />
+                                    <div>
+                                        <p className="font-medium">CSV</p>
+                                        <p className="text-xs text-charcoal/50">Compatible con Excel</p>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => handleExport('json')}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-gray-50 flex items-center gap-3"
+                                >
+                                    <FileText className="w-4 h-4 text-orange-600" />
+                                    <div>
+                                        <p className="font-medium">JSON</p>
+                                        <p className="text-xs text-charcoal/50">Datos estructurados</p>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Date filter pills */}
+                    <div className="flex bg-white rounded-lg border border-gray-200 p-1">
+                        {(['day', 'week', 'month', 'year'] as const).map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setFilterType(f)}
+                                className={cn(
+                                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                                    filterType === f
+                                        ? "bg-primary-50 text-primary-700"
+                                        : "text-charcoal/60 hover:text-charcoal"
+                                )}
+                            >
+                                {f === 'day' ? 'Día' : f === 'week' ? 'Semana' : f === 'month' ? 'Mes' : 'Año'}
+                            </button>
+                        ))}
+                    </div>
+
                     <button
                         onClick={() => setShowExpenseModal(true)}
                         className="btn-primary flex items-center gap-2"
@@ -122,6 +371,11 @@ const Finance = () => {
                 </div>
             </div>
 
+            {/* Active date range label */}
+            <div className="text-sm text-charcoal/50 capitalize -mt-3">
+                📅 {getDateRangeLabel(filterType)}
+            </div>
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="card-soft p-4 flex flex-col">
@@ -129,13 +383,8 @@ const Finance = () => {
                         <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
                             <TrendingUp className="w-5 h-5 text-emerald-600" />
                         </div>
-                        {/* 
-                        <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                            +12.5%
-                        </span>
-                        */}
                     </div>
-                    <p className="text-sm text-charcoal/60">Ingresos (Mes)</p>
+                    <p className="text-sm text-charcoal/60">Ingresos ({getFilterLabel()})</p>
                     <p className="text-2xl font-bold text-charcoal mt-1">
                         {loading ? '...' : formatCurrency(stats?.total_income || 0)}
                     </p>
@@ -147,7 +396,7 @@ const Finance = () => {
                             <TrendingDown className="w-5 h-5 text-red-600" />
                         </div>
                     </div>
-                    <p className="text-sm text-charcoal/60">Gastos (Mes)</p>
+                    <p className="text-sm text-charcoal/60">Gastos ({getFilterLabel()})</p>
                     <p className="text-2xl font-bold text-charcoal mt-1">
                         {loading ? '...' : formatCurrency(stats?.total_expenses || 0)}
                     </p>
@@ -250,7 +499,7 @@ const Finance = () => {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-charcoal">{tx.patient_name}</p>
-                                                <p className="text-xs text-charcoal/50">{format(new Date(tx.appointment_date), 'd MMM')}</p>
+                                                <p className="text-xs text-charcoal/50">{formatInTz(tx.appointment_date, 'd MMM')}</p>
                                             </div>
                                         </div>
                                         <span className={cn(
@@ -287,7 +536,7 @@ const Finance = () => {
                                     {transactions.map((tx) => (
                                         <tr key={tx.id} className="hover:bg-ivory/50">
                                             <td className="px-6 py-3 text-charcoal/80">
-                                                {format(new Date(tx.appointment_date), 'dd/MM/yyyy HH:mm')}
+                                                {formatInTz(tx.appointment_date, 'dd/MM/yyyy HH:mm')}
                                             </td>
                                             <td className="px-6 py-3 font-medium text-charcoal">
                                                 {tx.patient_name}
@@ -305,8 +554,7 @@ const Finance = () => {
                                                         tx.payment_status === 'pending' ? "bg-amber-100 text-amber-700" :
                                                             "bg-gray-100 text-gray-600"
                                                 )}>
-                                                    {tx.payment_status === 'paid' ? 'Pagado' :
-                                                        tx.payment_status === 'pending' ? 'Pendiente' : tx.payment_status}
+                                                    {translateStatus(tx.payment_status)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3 text-right">
@@ -324,7 +572,7 @@ const Finance = () => {
                                     {transactions.length === 0 && (
                                         <tr>
                                             <td colSpan={6} className="px-6 py-8 text-center text-charcoal/50">
-                                                No se encontraron transacciones
+                                                No se encontraron transacciones en este período
                                             </td>
                                         </tr>
                                     )}
@@ -351,25 +599,25 @@ const Finance = () => {
                                     {expenses.map((expense) => (
                                         <tr key={expense.id} className="hover:bg-ivory/50">
                                             <td className="px-6 py-3 text-charcoal/80">
-                                                {format(new Date(expense.date), 'dd/MM/yyyy', { locale: es })}
+                                                {formatInTz(expense.date, 'dd/MM/yyyy')}
                                             </td>
                                             <td className="px-6 py-3 font-medium text-charcoal">
                                                 {expense.description}
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className="bg-gray-100 text-charcoal/70 px-2 py-1 rounded text-xs capitalize">
-                                                    {expense.category === 'rent' ? 'Alquiler' :
-                                                        expense.category === 'supplies' ? 'Insumos' :
-                                                            expense.category === 'payroll' ? 'Nómina' :
-                                                                expense.category === 'marketing' ? 'Marketing' :
-                                                                    expense.category}
+                                                    {translateCategory(expense.category)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3 font-medium text-right text-red-600">
                                                 -{formatCurrency(expense.amount)}
                                             </td>
                                             <td className="px-6 py-3 text-right">
-                                                <button className="text-charcoal/40 hover:text-red-500">
+                                                <button
+                                                    onClick={() => handleDeleteExpense(expense.id, expense.description)}
+                                                    className="text-charcoal/40 hover:text-red-500 transition-colors inline-flex items-center gap-1 text-xs"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                     Eliminar
                                                 </button>
                                             </td>
@@ -378,7 +626,7 @@ const Finance = () => {
                                     {expenses.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8 text-center text-charcoal/50">
-                                                No hay gastos registrados
+                                                No hay gastos registrados en este período
                                             </td>
                                         </tr>
                                     )}

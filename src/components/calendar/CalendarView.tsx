@@ -131,8 +131,23 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
 const eventPropGetter = (event: CalendarEvent) => {
     const isGoogle = event.resource?.type === 'google'
     const status = event.resource?.status || 'pending'
+    const professionalColor = event.resource?.professionalColor
 
     let className = "border-l-4 text-xs rounded transition-all hover:brightness-95"
+
+    // If professional has a color, use it for the border
+    if (professionalColor && !isGoogle) {
+        return {
+            className: className + " text-charcoal",
+            style: {
+                border: 'none',
+                borderLeftWidth: '4px',
+                borderLeftStyle: 'solid' as const,
+                borderLeftColor: professionalColor,
+                backgroundColor: professionalColor + '15', // 15 = ~8% opacity in hex
+            }
+        }
+    }
 
     if (isGoogle) {
         className += " bg-blue-50 border-blue-500 text-blue-700"

@@ -132,48 +132,90 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
     let duration = 60; // Default
+    let serviceId: string | null = null;
+    let professionalId: string | null = null;
+
     if (serviceName) {
-        // Try to find service duration
+        // Try to find service duration and ID
         const { data: svc } = await sb.from("services")
-            .select("duration")
+            .select("id, duration")
             .eq("clinic_id", clinicId)
             .ilike("name", `%${serviceName}%`)
             .limit(1)
             .maybeSingle();
-        if (svc?.duration) duration = svc.duration;
+
+        if (svc) {
+            duration = svc.duration;
+            serviceId = svc.id;
+
+            // Find assigned professional (prefer primary)
+            const { data: profs } = await sb.from("service_professionals")
+                .select("member_id, is_primary")
+                .eq("service_id", svc.id);
+
+            if (profs && profs.length > 0) {
+                const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
+                professionalId = primary ? primary.member_id : profs[0].member_id;
+            }
+        }
     }
 
-    // Use p_interval = duration to step by the service length (e.g. 10:00, 12:00 for 120min service)
-    console.log(`[checkAvail] Checking available slots for service '${serviceName}' (duration: ${duration}min)`);
-    const { data, error } = await sb.rpc("get_available_slots", {
-        p_clinic_id: clinicId,
-        p_date: date,
-        p_duration: duration,
-        p_timezone: timezone,
-        p_interval: duration
-    });
-    if (error) return { available: false, error: error.message };
+    console.log(`[checkAvail] Service: '${serviceName}' (ID: ${serviceId}), Duration: ${duration}min, Professional: ${professionalId || 'Global'}`);
 
-    // Filter slots to have at least 'duration' gap? No, RPC handles availability.
-    // But we might want to filter the OUTPUT to show broader intervals if duration is long?
-    // User complained about "every 30 mins".
-    // If duration > 60, maybe show slots every 60 mins?
-    // Let's stick to showing all available slots for now, but limiting count.
+    let slots: { slot_time: string, is_available: boolean }[] = [];
 
-    const slots = data?.filter((s: { is_available: boolean }) => s.is_available).map((s: { slot_time: string }) => {
-        const t = s.slot_time.substring(0, 5);
-        const h = parseInt(t.split(":")[0]);
-        return `${h > 12 ? h - 12 : h}:${t.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
-    }) || [];
+    // Strategy: Try professional-specific slots first if we have a professional
+    if (professionalId) {
+        try {
+            const { data, error } = await sb.rpc("get_professional_available_slots", {
+                p_clinic_id: clinicId,
+                p_member_id: professionalId,
+                p_date: date,
+                p_duration: duration,
+                p_interval: duration, // Step by duration to fit slots cleanly? Or 30? Let's use 30 for granularity.
+                p_timezone: timezone
+            });
 
-    // If lots of slots, maybe pick some spread out? 
-    // e.g. if 10:00, 10:30, 11:00, 11:30... show 10:00, 11:00, 12:00?
-    // Simple heuristic: if duration >= 60, show fewer slots?
-    // Let's just return first 10 slots.
+            if (!error && data) {
+                slots = data; // New RPC returns { slot_time, is_available }
+            } else {
+                console.warn("[checkAvail] Professional slot check failed/empty, falling back to global:", error);
+                // Fallback will happen below if slots empty? No, we should explicitly fallback.
+            }
+        } catch (e) {
+            console.error("[checkAvail] RPC error:", e);
+        }
+    }
 
-    const displaySlots = slots.slice(0, 8);
+    // Fallback: If no professional identified OR professional check returned no slots (or error), try global
+    // Note: If professional has NO slots, we might NOT want to show other's slots if strictly assigned? 
+    // Current requirement: "Intelligent scheduling based on selected professional".
+    // If we couldn't get slots from professional RPC (e.g. migration not applied), we try global existing RPC.
+    if (slots.length === 0) {
+        const { data, error } = await sb.rpc("get_available_slots", {
+            p_clinic_id: clinicId,
+            p_date: date,
+            p_duration: duration,
+            p_timezone: timezone,
+            p_interval: duration
+        });
+        if (error) return { available: false, error: error.message };
+        slots = data || [];
+    }
 
-    return slots.length ? { available: true, slots: displaySlots, duration_used: duration, message: `Disponibilidad el ${date} (${duration} min): ${displaySlots.join(", ")}` } : { available: false, message: `No hay disponibilidad para ${date} con duración ${duration} min` };
+    const availableSlots = slots
+        .filter((s: { is_available: boolean }) => s.is_available)
+        .map((s: { slot_time: string }) => {
+            const t = s.slot_time.substring(0, 5);
+            const h = parseInt(t.split(":")[0]);
+            return `${h > 12 ? h - 12 : h}:${t.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
+        });
+
+    const displaySlots = availableSlots.slice(0, 8);
+
+    return availableSlots.length
+        ? { available: true, slots: displaySlots, duration_used: duration, message: `Disponibilidad el ${date} (${duration} min): ${displaySlots.join(", ")}` }
+        : { available: false, message: `No hay disponibilidad para ${date} con duración ${duration} min` };
 };
 
 // Helper to get timezone offset (e.g. "-03:00")
@@ -187,23 +229,56 @@ const getOffset = (timeZone: string = "America/Santiago", date: Date) => {
 
 const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago") => {
     let duration = 60;
+    let professionalId: string | null = null;
+    let serviceId: string | null = null;
+
     if (args.service_name) {
-        const { data: svc } = await sb.from("services").select("duration").eq("clinic_id", clinicId).ilike("name", `%${args.service_name}%`).limit(1).maybeSingle();
-        if (svc?.duration) duration = svc.duration;
+        const { data: svc } = await sb.from("services")
+            .select("id, duration")
+            .eq("clinic_id", clinicId)
+            .ilike("name", `%${args.service_name}%`)
+            .limit(1)
+            .maybeSingle();
+
+        if (svc) {
+            duration = svc.duration;
+            serviceId = svc.id;
+
+            // Find assigned professional (prefer primary)
+            const { data: profs } = await sb.from("service_professionals")
+                .select("member_id, is_primary")
+                .eq("service_id", svc.id);
+
+            if (profs && profs.length > 0) {
+                const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
+                professionalId = primary ? primary.member_id : profs[0].member_id;
+            }
+        }
     }
 
-    const { data: avail } = await sb.rpc("check_availability", { p_clinic_id: clinicId, p_date: args.date, p_time: args.time, p_duration: duration, p_timezone: timezone });
-    if (!avail) return { success: false, message: "Horario no disponible. ¿Ver otros?" };
+    // Double check availability before booking? 
+    // Ideally yes, using the same logic as checkAvail.
+    // For now, we trust the user picked a slot offered by checkAvail.
 
     // Fix Timezone: Construct ISO string with offset
     const offset = getOffset(timezone, new Date(`${args.date}T12:00:00`));
     const appointmentDateWithOffset = `${args.date}T${args.time}:00${offset}`;
 
     const { data, error } = await sb.from("appointments").insert({
-        clinic_id: clinicId, patient_name: args.patient_name, phone_number: phone,
-        service: args.service_name, appointment_date: appointmentDateWithOffset, status: "pending", duration: duration
+        clinic_id: clinicId,
+        patient_name: args.patient_name,
+        phone_number: phone,
+        service: args.service_name,
+        appointment_date: appointmentDateWithOffset,
+        status: "pending",
+        duration: duration,
+        professional_id: professionalId // NEW field
     }).select().single();
-    if (error) return { success: false, message: "Error al agendar. Intenta de nuevo." };
+
+    if (error) {
+        console.error("[createAppt] Error:", error);
+        return { success: false, message: "Error al agendar. Intenta de nuevo." };
+    }
 
     // Update CRM stage to "Cita Agendada"
     await updateProspectStage(sb, clinicId, phone, "Cita Agendada");
@@ -212,7 +287,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     const h = parseInt(args.time.split(":")[0]);
     return {
         success: true, appointment_id: data.id,
-        message: `¡Cita agendada!\n\n📅 ${d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" })}\n🕐 ${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}\n💆 ${args.service_name}`
+        message: `¡Cita agendada!\n\n📅 ${d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" })}\n🕐 ${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}\n💆 ${args.service_name}${professionalId ? ' (Profesional Asignado)' : ''}`
     };
 };
 

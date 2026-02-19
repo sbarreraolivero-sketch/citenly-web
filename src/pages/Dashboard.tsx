@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useClinicTimezone } from '@/hooks/useClinicTimezone'
 import { Link } from 'react-router-dom'
 
 interface DashboardStats {
@@ -72,16 +73,19 @@ export default function Dashboard() {
         average: 0
     })
 
+    const { getDateRange, toUTC, now: clinicNow } = useClinicTimezone()
+
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user || !profile?.clinic_id) return
 
             try {
-                const today = new Date()
-                // Start of month for analytics
-                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString()
-                const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString()
-                const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString()
+                // Use clinic timezone for all date boundaries
+                const { start: dayStart, end: dayEnd } = getDateRange('day')
+                const { start: monthStart } = getDateRange('month')
+                const startOfDay = dayStart.toISOString()
+                const endOfDay = dayEnd.toISOString()
+                const startOfMonth = monthStart.toISOString()
 
                 // Fetch Stats (Today)
                 const { count: appointmentsCount } = await supabase
