@@ -168,11 +168,11 @@ export default function Landing() {
             <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md border-b border-silk-beige z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-charcoal rounded-soft flex items-center justify-center shadow-lg">
-                                <Sparkles className="w-5 h-5 text-primary-300" />
+                        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-charcoal rounded-soft flex items-center justify-center shadow-lg">
+                                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary-300" />
                             </div>
-                            <span className="text-xl font-extrabold tracking-tight text-charcoal">Citenly AI</span>
+                            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-charcoal whitespace-nowrap">Citenly AI</span>
                         </div>
 
                         <div className="hidden md:flex items-center gap-8 text-sm font-bold">
@@ -182,12 +182,13 @@ export default function Landing() {
                             <a href="#pricing" className="text-charcoal/80 hover:text-primary-600 transition-colors">Planes</a>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <Link to="/login" className="hidden sm:block text-sm font-bold text-charcoal/80 hover:text-primary-600 transition-colors">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                            <Link to="/login" className="hidden sm:block text-sm font-bold text-charcoal/80 hover:text-primary-600 transition-colors whitespace-nowrap">
                                 Iniciar Sesión
                             </Link>
-                            <Link to="/register" className="btn-primary px-5 py-2.5 text-sm shadow-xl shadow-primary-500/20 hover:scale-105 transition-all">
-                                Agendar Implementación Gratuita
+                            <Link to="/register" className="btn-primary px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm shadow-xl shadow-primary-500/20 hover:scale-105 transition-all text-center whitespace-nowrap">
+                                <span className="hidden sm:inline">Agendar Implementación</span>
+                                <span className="sm:hidden">Agendar Gratis</span>
                             </Link>
                         </div>
                     </div>
@@ -213,12 +214,12 @@ export default function Landing() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link to="/register" className="w-full sm:w-auto btn-primary px-8 py-4 text-lg font-bold flex items-center justify-center gap-2 shadow-2xl shadow-primary-500/30 hover:-translate-y-1 transition-all group">
-                            Agendar Implementación Estratégica Gratis
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        <Link to="/register" className="w-full sm:w-auto btn-primary px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold flex items-center justify-center gap-2 shadow-2xl shadow-primary-500/30 hover:-translate-y-1 transition-all group text-center">
+                            Agendar Implementación Gratis
+                            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                         </Link>
-                        <button className="w-full sm:w-auto btn-ghost px-8 py-4 text-lg font-bold flex items-center justify-center gap-2 border-2 border-silk-beige bg-white hover:bg-gray-50 hover:shadow-lg transition-all text-charcoal/80">
-                            <Play className="w-5 h-5" />
+                        <button className="w-full sm:w-auto btn-ghost px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold flex items-center justify-center gap-2 border-2 border-silk-beige bg-white hover:bg-gray-50 hover:shadow-lg transition-all text-charcoal/80">
+                            <Play className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                             Ver Cómo Funciona
                         </button>
                     </div>
@@ -381,8 +382,8 @@ export default function Landing() {
                     </div>
 
                     <div className="text-center mt-12 relative z-20">
-                        <Link to="/register" className="btn-primary px-10 py-5 text-xl font-bold shadow-2xl shadow-primary-500/30 hover:-translate-y-2 transition-transform">
-                            Agendar Implementación Estratégica Gratis
+                        <Link to="/register" className="btn-primary px-6 py-3 sm:px-10 sm:py-5 text-base sm:text-xl font-bold shadow-2xl shadow-primary-500/30 hover:-translate-y-2 transition-transform inline-block">
+                            Agendar Implementación Gratis
                         </Link>
                     </div>
                 </div>
@@ -759,16 +760,16 @@ export default function Landing() {
                         Operan con inteligencia.
                     </h2>
 
-                    <p className="text-2xl text-blue-100/70 mb-16 max-w-3xl mx-auto font-medium leading-relaxed">
-                        La agenda está abierta. Reserva una sesión exploratoria de 15 minutos: analizaremos tu flujo actual y te mostraremos, con números reales, cuánto revenue podrías rescatar este mes.
+                    <p className="text-lg sm:text-2xl text-blue-100/70 mb-16 max-w-3xl mx-auto font-medium leading-relaxed">
+                        La agenda está abierta. Reserva una sesión exploratoria de 30 minutos: analizaremos tu flujo actual y te mostraremos, con números reales, cuánto revenue podrías rescatar este mes.
                     </p>
 
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-6 relative">
                         {/* Glow Behind Button */}
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-24 bg-primary-500/30 blur-[40px] rounded-full z-0"></div>
 
-                        <Link to="/register" className="relative z-10 inline-flex items-center justify-center w-full sm:w-auto bg-white text-charcoal px-12 py-6 rounded-2xl font-black text-xl shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-all hover:-translate-y-2 hover:bg-gradient-to-r hover:from-white hover:to-primary-50 border border-white/50">
-                            Agendar Implementación Gratuita - <span className="text-primary-600 ml-2">15 min</span>
+                        <Link to="/register" className="relative z-10 inline-flex items-center justify-center w-full sm:w-auto bg-white text-charcoal px-8 py-4 sm:px-12 sm:py-6 rounded-2xl font-black text-lg sm:text-xl shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-all hover:-translate-y-2 hover:bg-gradient-to-r hover:from-white hover:to-primary-50 border border-white/50 text-center">
+                            Agendar Implementación Gratuita
                         </Link>
                     </div>
                 </div>
