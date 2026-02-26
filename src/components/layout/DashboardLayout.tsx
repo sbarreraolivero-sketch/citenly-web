@@ -20,9 +20,12 @@ import {
     Target,
     Megaphone,
     DollarSign,
+    ShieldAlert,
     Menu,
     X,
+    FileText,
 } from 'lucide-react'
+import { AIChatWidget } from '../AIChatWidget'
 import { cn, getInitials } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -40,10 +43,12 @@ interface Notification {
 const navigation = [
     { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
     { name: 'Mensajes', href: '/app/messages', icon: MessageSquare },
+    { name: 'Plantillas', href: '/app/templates', icon: FileText },
     { name: 'Pacientes', href: '/app/patients', icon: Users },
     { name: 'Citas', href: '/app/appointments', icon: Calendar },
     { name: 'Campañas', href: '/app/campaigns', icon: Megaphone },
     { name: 'Finanzas', href: '/app/finance', icon: DollarSign },
+    { name: 'Retención', href: '/app/retention', icon: ShieldAlert },
     { name: 'CRM', href: '/app/crm', icon: Target },
     { name: 'Conocimiento', href: '/app/knowledge-base', icon: BookOpen },
     { name: 'Configuración', href: '/app/settings', icon: Settings },
@@ -76,6 +81,13 @@ export default function DashboardLayout() {
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
+
+    // Check activation status and redirect
+    useEffect(() => {
+        if (profile?.activation_status === 'pending_activation') {
+            navigate('/pending-activation', { replace: true });
+        }
+    }, [profile?.activation_status, navigate]);
 
     // Fetch notifications
     useEffect(() => {
@@ -199,7 +211,7 @@ export default function DashboardLayout() {
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     {navigation.filter(item => {
                         // Hide Finance, CRM, and Campaigns for non-owners
-                        if (['Finanzas', 'CRM', 'Campañas'].includes(item.name)) {
+                        if (['Finanzas', 'Retención', 'CRM', 'Campañas'].includes(item.name)) {
                             // Check both member role and profile role to be safe
                             const isOwner = member?.role === 'owner' || profile?.role === 'owner'
                             if (!isOwner) return false
@@ -422,6 +434,9 @@ export default function DashboardLayout() {
                     onClick={() => setShowUserMenu(false)}
                 />
             )}
+
+            {/* AI Support Agent Widget */}
+            <AIChatWidget variant="support" />
         </div>
     )
 }

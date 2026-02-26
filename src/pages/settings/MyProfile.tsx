@@ -148,7 +148,7 @@ export default function MyProfile() {
                             value={jobTitle}
                             onChange={(e) => setJobTitle(e.target.value)}
                             className="input-soft w-full"
-                            placeholder="Ej: Odontóloga, Fisioterapeuta"
+                            placeholder="Ej: Administrador"
                         />
                     </div>
                     <div>

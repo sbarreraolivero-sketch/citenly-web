@@ -28,6 +28,13 @@ export interface Database {
                     reminders_hours_before: number
                     created_at: string
                     updated_at: string
+                    activation_status: 'pending_activation' | 'active' | 'inactive'
+                    trial_status: 'not_started' | 'running' | 'converted' | 'cancelled'
+                    billing_status: 'none' | 'card_verified' | 'active_subscription' | 'payment_failed'
+                    trial_start_date: string | null
+                    trial_end_date: string | null
+                    mercadopago_customer_id: string | null
+                    mercadopago_card_id: string | null
                 }
                 Insert: {
                     id?: string
@@ -47,6 +54,13 @@ export interface Database {
                     reminders_hours_before?: number
                     created_at?: string
                     updated_at?: string
+                    activation_status?: 'pending_activation' | 'active' | 'inactive'
+                    trial_status?: 'not_started' | 'running' | 'converted' | 'cancelled'
+                    billing_status?: 'none' | 'card_verified' | 'active_subscription' | 'payment_failed'
+                    trial_start_date?: string | null
+                    trial_end_date?: string | null
+                    mercadopago_customer_id?: string | null
+                    mercadopago_card_id?: string | null
                 }
                 Update: {
                     id?: string
@@ -66,6 +80,13 @@ export interface Database {
                     reminders_hours_before?: number
                     created_at?: string
                     updated_at?: string
+                    activation_status?: 'pending_activation' | 'active' | 'inactive'
+                    trial_status?: 'not_started' | 'running' | 'converted' | 'cancelled'
+                    billing_status?: 'none' | 'card_verified' | 'active_subscription' | 'payment_failed'
+                    trial_start_date?: string | null
+                    trial_end_date?: string | null
+                    mercadopago_customer_id?: string | null
+                    mercadopago_card_id?: string | null
                 }
             }
             appointments: {
@@ -342,6 +363,52 @@ export interface Database {
                     clinic_id?: string | null
                     name?: string
                     color?: string
+                    created_at?: string
+                }
+            }
+            activation_logs: {
+                Row: {
+                    id: string
+                    clinic_id: string
+                    activated_by: string
+                    activation_timestamp: string
+                    notes: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    clinic_id: string
+                    activated_by: string
+                    activation_timestamp?: string
+                    notes?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    clinic_id?: string
+                    activated_by?: string
+                    activation_timestamp?: string
+                    notes?: string | null
+                    created_at?: string
+                }
+            }
+            platform_admins: {
+                Row: {
+                    id: string
+                    email: string
+                    role: string
+                    created_at: string
+                }
+                Insert: {
+                    id: string
+                    email: string
+                    role?: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    email?: string
+                    role?: string
                     created_at?: string
                 }
             }

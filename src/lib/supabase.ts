@@ -8,7 +8,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
     console.error('CRITICAL: Supabase keys are missing! Check your environment variables.')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'implicit',
+    },
+})
 
 // Helper functions for common queries
 export async function getClinicSettings() {

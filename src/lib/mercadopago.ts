@@ -56,11 +56,8 @@ export async function redirectToCheckout(params: CreateSubscriptionParams) {
         throw new Error('Failed to create payment preference')
     }
 
-    // In production, use init_point; in sandbox, use sandbox_init_point
-    // @ts-ignore - Vite's import.meta.env is available at runtime
-    const checkoutUrl = import.meta.env.DEV
-        ? preference.sandbox_init_point
-        : preference.init_point
+    // Connect directly to the production endpoint since we're using production keys
+    const checkoutUrl = preference.init_point
 
     window.location.href = checkoutUrl
 }

@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Sparkles, Mail, Lock, User, Building2, ArrowRight, Loader2, Check } from 'lucide-react'
+import { Sparkles, Mail, Lock, User, Building2, ArrowRight, Loader2, Check, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react'
+
+// Initialize MercadoPago outside the component
+const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-61b727c4-a571-46c2-833a-89e68836e5db'
+initMercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' })
 
 const plans = [
     { id: 'essence', name: 'Essence', price: 79, popular: false },
@@ -40,7 +45,7 @@ export default function Register() {
                 return
             }
             if (isJoinMode && !jobTitle) {
-                setError('Por favor indica tu cargo en la clínica (ej: Odontóloga, Asistente)')
+                setError('Por favor indica tu cargo en la clínica (ej: Administrador, Asistente)')
                 return
             }
 
@@ -94,7 +99,13 @@ export default function Register() {
             return
         }
 
-        // Step 3 - Create account
+        if (step === 3) {
+            // Move to payment step
+            setStep(4)
+            return
+        }
+
+        // Step 4 - Create account
         handleCreate()
     }
 
@@ -128,14 +139,14 @@ export default function Register() {
         }
     }
 
-    const handleCreate = async () => {
+    const handleCreate = async (cardToken?: string) => {
         setError('')
         setLoading(true)
 
-        const { error } = await signUp(email, password, fullName, clinicName, selectedPlan)
+        const { error } = await signUp(email, password, fullName, clinicName, selectedPlan, cardToken)
 
         if (error) {
-            setError('Error al crear la cuenta. Intenta con otro email.')
+            setError('Error al crear la cuenta. Intenta con otro email o revisa tu tarjeta.')
             setLoading(false)
             return
         }
@@ -160,7 +171,7 @@ export default function Register() {
                     {/* Progress Indicator (Hidden in Join Mode) */}
                     {!isJoinMode && (
                         <div className="flex items-center gap-2 mb-8">
-                            {[1, 2, 3].map((s) => (
+                            {[1, 2, 3, 4].map((s) => (
                                 <div key={s} className="flex items-center">
                                     <div
                                         className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${s < step
@@ -172,7 +183,7 @@ export default function Register() {
                                     >
                                         {s < step ? <Check className="w-4 h-4" /> : s}
                                     </div>
-                                    {s < 3 && (
+                                    {s < 4 && (
                                         <div className={`w-12 h-0.5 mx-1 ${s < step ? 'bg-primary-500' : 'bg-silk-beige'}`} />
                                     )}
                                 </div>
@@ -183,14 +194,14 @@ export default function Register() {
                     {/* Header */}
                     <h1 className="text-h2 text-charcoal mb-2">
                         {isJoinMode ? 'Únete a tu equipo' : (
-                            step === 1 ? 'Crea tu cuenta' :
+                            step === 1 ? 'Reserva tu Implementación Estratégica' :
                                 step === 2 ? 'Sobre tu clínica' :
                                     'Elige tu plan'
                         )}
                     </h1>
                     <p className="text-charcoal/60 mb-8">
                         {isJoinMode ? 'Ingresa tus datos para aceptar la invitación' : (
-                            step === 1 ? 'Comienza tu prueba gratuita de 14 días' :
+                            step === 1 ? 'Crea tu cuenta para agendar tu sesión de implementación gratuita de 14 días.' :
                                 step === 2 ? 'Configura los datos básicos de tu negocio' :
                                     'Selecciona el plan que mejor se adapte a ti'
                         )}
@@ -239,7 +250,7 @@ export default function Register() {
                                                 value={jobTitle}
                                                 onChange={(e) => setJobTitle(e.target.value)}
                                                 className="input-soft pl-12 w-full"
-                                                placeholder="Ej: Odontóloga General"
+                                                placeholder="Ej: Administrador"
                                                 required
                                             />
                                         </div>
@@ -358,39 +369,95 @@ export default function Register() {
                             </div>
                         )}
 
+                        {/* Step 4: Payment Info */}
+                        {step === 4 && !isJoinMode && (
+                            <div className="space-y-4">
+                                <div className="bg-primary-50 rounded-soft p-4 mb-6">
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1 bg-white p-1 rounded">
+                                            <ShieldCheck className="w-4 h-4 text-primary-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-charcoal text-sm">Prueba de 14 días sin costo</p>
+                                            <p className="text-xs text-charcoal/70 mt-1">
+                                                No se realizará ningún cargo hoy. Tu tarjeta es solo para garantizar tu sesión de activación estratégica. Cancela cuando quieras antes de los 14 días.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="border border-gray-200 rounded-soft p-4 bg-white min-h-[400px]">
+                                    <CardPayment
+                                        initialization={{
+                                            amount: plans.find(p => p.id === selectedPlan)?.price || 159
+                                        }}
+                                        customization={{
+                                            visual: {
+                                                style: {
+                                                    theme: 'default'
+                                                },
+                                                texts: {
+                                                    formSubmit: 'Comenzar Prueba Gratis'
+                                                }
+                                            },
+                                            paymentMethods: {
+                                                maxInstallments: 1
+                                            }
+                                        }}
+                                        onSubmit={async (formData) => {
+                                            // Handle the token generated by Mercado Pago
+                                            // console.log("Card Token Generated:", formData.token)
+                                            await handleCreate(formData.token);
+                                        }}
+                                        onError={(error) => {
+                                            console.error("Mercado Pago Error:", error);
+                                            setError('Error al procesar la tarjeta. Revisa los datos ingresados.');
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Navigation Buttons */}
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 mt-8">
                             {step > 1 && (
                                 <button
                                     type="button"
                                     onClick={() => setStep(step - 1)}
                                     className="btn-ghost flex-1 py-3"
+                                    disabled={loading}
                                 >
                                     Atrás
                                 </button>
                             )}
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="btn-primary flex-1 py-3 flex items-center justify-center gap-2"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        Creando cuenta...
-                                    </>
-                                ) : step < 3 ? (
-                                    <>
-                                        Continuar
-                                        <ArrowRight className="w-5 h-5" />
-                                    </>
-                                ) : (
-                                    <>
-                                        Comenzar Prueba Gratis
-                                        <ArrowRight className="w-5 h-5" />
-                                    </>
-                                )}
-                            </button>
+                            {step !== 4 && (
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="btn-primary flex-1 py-3 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Cargando...
+                                        </>
+                                    ) : step < 3 || (isJoinMode && step < 1) ? (
+                                        <>
+                                            Continuar
+                                            <ArrowRight className="w-5 h-5" />
+                                        </>
+                                    ) : step === 3 && !isJoinMode ? (
+                                        <>
+                                            Agregar Método de Pago
+                                            <ArrowRight className="w-5 h-5" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            {isJoinMode ? 'Unirme al Equipo' : 'Comenzar Prueba Gratis'}
+                                            <ArrowRight className="w-5 h-5" />
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </form>
 

@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN") || "";
 
 // CORS headers for Supabase client
 const corsHeaders = {
@@ -21,6 +22,7 @@ interface SignupRequest {
     full_name: string;
     clinic_name: string;
     selected_plan?: string;
+    card_token?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -38,7 +40,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body: SignupRequest = await req.json();
-        const { email, password, full_name, clinic_name, selected_plan = "radiance" } = body;
+        const { email, password, full_name, clinic_name, selected_plan = "radiance", card_token } = body;
 
         // Validate required fields
         if (!email || !password || !full_name || !clinic_name) {
@@ -55,6 +57,65 @@ Deno.serve(async (req: Request) => {
                 { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
+
+        // --- MERCADO PAGO INTEGRATION ---
+        let mpCustomerId: string | null = null;
+        let mpCardId: string | null = null;
+
+        if (card_token && MERCADOPAGO_ACCESS_TOKEN) {
+            try {
+                // 1. Search for existing customer
+                const searchRes = await fetch(`https://api.mercadopago.com/v1/customers/search?email=${email}`, {
+                    headers: { "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}` }
+                });
+                const searchData = await searchRes.json();
+
+                if (searchData.results && searchData.results.length > 0) {
+                    mpCustomerId = searchData.results[0].id;
+                } else {
+                    // 2. Create customer
+                    const createRes = await fetch(`https://api.mercadopago.com/v1/customers`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ email })
+                    });
+                    const createData = await createRes.json();
+                    if (createData.id) {
+                        mpCustomerId = createData.id;
+                    } else {
+                        throw new Error("Failed to create Mercado Pago customer");
+                    }
+                }
+
+                // 3. Attach card
+                if (mpCustomerId) {
+                    const cardRes = await fetch(`https://api.mercadopago.com/v1/customers/${mpCustomerId}/cards`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ token: card_token })
+                    });
+                    const cardData = await cardRes.json();
+                    if (cardData.id) {
+                        mpCardId = cardData.id;
+                    } else {
+                        throw new Error(cardData.message || "Failed to save card");
+                    }
+                }
+            } catch (error) {
+                console.error("Mercado Pago error:", error);
+                return new Response(
+                    JSON.stringify({ error: "Error de pago: No se pudo verificar la tarjeta" }),
+                    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
+        }
+        // ---------------------------------
 
         // Create admin client with service role
         const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -110,6 +171,10 @@ Deno.serve(async (req: Request) => {
                 services: [
                     { id: "svc-1", name: "Consulta General", duration: 30, price: 500 },
                 ],
+                mercadopago_customer_id: mpCustomerId,
+                mercadopago_card_id: mpCardId,
+                activation_status: 'pending_activation',
+                billing_status: mpCardId ? 'card_verified' : 'none'
             })
             .select()
             .single();

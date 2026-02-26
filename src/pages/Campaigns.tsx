@@ -8,10 +8,12 @@ import {
     FileText,
     X,
     Loader2,
-    BarChart3
+    BarChart3,
+    Trash2
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { retentionService } from '@/services/retentionService'
 
 interface Campaign {
     id: string
@@ -32,19 +34,20 @@ interface Tag {
     count?: number
 }
 
-// Predefined safe templates for now
-const WHATSAPP_TEMPLATES = [
-    { id: 'appointment_reminder', name: 'Recordatorio de Cita', description: 'Recordatorio estándar de cita próxima.' },
-    { id: 'satisfaction_survey', name: 'Encuesta de Satisfacción', description: 'Solicitud de feedback post-atención.' },
-    { id: 'general_notification', name: 'Notificación General', description: 'Avisos importantes o cambios de horario.' },
-    { id: 'promo_monthly', name: 'Promoción Mensual', description: 'Ofertas y descuentos del mes.' }, // New
-    { id: 'reactivation', name: 'Reactivación', description: 'Para pacientes que no vienen hace tiempo.' } // New
-]
+interface YCloudTemplate {
+    id: string
+    name: string
+    language: string
+    status: string
+    category: string
+    body: string
+}
 
 export default function Campaigns() {
     const { profile } = useAuth()
     const [campaigns, setCampaigns] = useState<Campaign[]>([])
     const [tags, setTags] = useState<Tag[]>([])
+    const [templates, setTemplates] = useState<YCloudTemplate[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false)
 
@@ -60,7 +63,20 @@ export default function Campaigns() {
         if (!profile?.clinic_id) return
         fetchCampaigns()
         fetchTags()
+        fetchTemplates()
     }, [profile?.clinic_id])
+
+    const fetchTemplates = async () => {
+        try {
+            if (profile?.clinic_id) {
+                const fetchedTemplates = await retentionService.getRemoteTemplates(profile.clinic_id)
+                // Filter only approved templates for campaigns
+                setTemplates(fetchedTemplates.filter(t => t.status === 'APPROVED' || t.status === 'Activo-Calidad pendiente'))
+            }
+        } catch (error) {
+            console.error('Error fetching templates:', error)
+        }
+    }
 
     useEffect(() => {
         if (selectedTag && profile?.clinic_id) {
@@ -203,6 +219,25 @@ export default function Campaigns() {
         }
     }
 
+    const handleDeleteCampaign = async (campaignId: string) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar esta campaña?')) return
+
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any)
+                .from('campaigns')
+                .delete()
+                .eq('id', campaignId)
+
+            if (error) throw error
+
+            setCampaigns(campaigns.filter(c => c.id !== campaignId))
+        } catch (error) {
+            console.error('Error deleting campaign:', error)
+            alert('Error al eliminar la campaña')
+        }
+    }
+
     const resetForm = () => {
         setStep(1)
         setNewCampaignName('')
@@ -268,15 +303,24 @@ export default function Campaigns() {
                                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
                                     {getStatusLabel(campaign.status)}
                                 </div>
-                                <div className="text-xs text-charcoal/40">
-                                    {new Date(campaign.created_at).toLocaleDateString()}
+                                <div className="flex items-center gap-2">
+                                    <div className="text-xs text-charcoal/40">
+                                        {new Date(campaign.created_at).toLocaleDateString()}
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteCampaign(campaign.id)}
+                                        className="text-charcoal/40 hover:text-red-500 transition-colors"
+                                        title="Eliminar campaña"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
 
                             <h3 className="font-semibold text-charcoal text-lg mb-1">{campaign.name}</h3>
                             <p className="text-sm text-charcoal/60 mb-4 flex items-center gap-2">
                                 <FileText className="w-3 h-3" />
-                                {WHATSAPP_TEMPLATES.find(t => t.id === campaign.template_name)?.name || campaign.template_name}
+                                {templates.find(t => t.id === campaign.template_name)?.name || campaign.template_name}
                             </p>
 
                             <div className="flex items-center gap-4 text-sm text-charcoal/70 mb-6 bg-gray-50 p-3 rounded-soft">
@@ -380,23 +424,29 @@ export default function Campaigns() {
                             {step === 2 && (
                                 <div className="space-y-4">
                                     <label className="label">Plantilla de WhatsApp</label>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {WHATSAPP_TEMPLATES.map(template => (
-                                            <div
-                                                key={template.id}
-                                                className={`
-                                                    p-3 rounded-soft border cursor-pointer transition-all
-                                                    ${selectedTemplate === template.id
-                                                        ? 'border-primary-500 bg-primary-50'
-                                                        : 'border-silk-beige hover:border-primary-200'
-                                                    }
-                                                `}
-                                                onClick={() => setSelectedTemplate(template.id)}
-                                            >
-                                                <div className="font-medium text-charcoal">{template.name}</div>
-                                                <div className="text-xs text-charcoal/60 mt-1">{template.description}</div>
+                                    <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-2">
+                                        {templates.length === 0 ? (
+                                            <div className="text-sm text-charcoal/50 text-center py-4 bg-gray-50 rounded-soft border border-dashed">
+                                                No hay plantillas aprobadas disponibles.
                                             </div>
-                                        ))}
+                                        ) : (
+                                            templates.map(template => (
+                                                <div
+                                                    key={template.id}
+                                                    className={`
+                                                        p-3 rounded-soft border cursor-pointer transition-all
+                                                        ${selectedTemplate === template.id
+                                                            ? 'border-primary-500 bg-primary-50'
+                                                            : 'border-silk-beige hover:border-primary-200'
+                                                        }
+                                                    `}
+                                                    onClick={() => setSelectedTemplate(template.id)}
+                                                >
+                                                    <div className="font-medium text-charcoal truncate">{template.name}</div>
+                                                    <div className="text-xs text-charcoal/60 mt-1 line-clamp-2">{template.body || '(Sin cuerpo)'}</div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             )}

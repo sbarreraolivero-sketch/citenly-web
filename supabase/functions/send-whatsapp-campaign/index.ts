@@ -87,35 +87,61 @@ serve(async (req) => {
         const ycloudKey = campaign.clinic_settings?.ycloud_api_key
         if (!ycloudKey) throw new Error('No YCloud API Key found for this clinic')
 
+        // Fetch Template Details from YCloud
+        const templatesRes = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', {
+            headers: { 'X-API-Key': ycloudKey }
+        })
+        const templatesData = await templatesRes.json()
+        const targetTemplate = (templatesData.items || []).find((t: any) => t.name === campaign.template_name)
+
+        if (!targetTemplate) {
+            throw new Error(`Template ${campaign.template_name} not found in YCloud.`)
+        }
+
+        const bodyComponent = targetTemplate.components.find((c: any) => c.type === 'BODY')
+        const bodyText = bodyComponent ? bodyComponent.text : ''
+        const variableMatches = bodyText.match(/\{\{\d+\}\}/g)
+        const numVariables = variableMatches ? variableMatches.length : 0
+
         const results = []
         let sentCount = 0
 
         // 3. Loop and Send (Batching could be better, but loop is fine for <1000)
         for (const patient of patients) {
             try {
-                // Template construction
-                // We need to map campaign.template_name to actual logic
-                // If standard templates are used, we follow standard params.
+                // Prepare dynamic parameters
+                const parameters = []
+                if (numVariables > 0) {
+                    for (let i = 1; i <= numVariables; i++) {
+                        let textValue = 'Información'
+                        if (i === 1) textValue = patient.full_name || 'Paciente'
+                        else if (i === 2) textValue = 'Promoción'
+                        else textValue = `Variable ${i}`
 
-                // Standardizing: {{1}} = Patient Name. 
-                // If marketing templates allow media headers, we'd need more logic.
-                // For now, assume text-based templates with 1 variable.
+                        parameters.push({ type: 'text', text: textValue })
+                    }
+                }
 
-                const messagePayload = {
+                // Construct component list
+                const messageComponents = []
+                if (parameters.length > 0) {
+                    messageComponents.push({
+                        type: 'body',
+                        parameters: parameters
+                    })
+                }
+
+                const messagePayload: any = {
                     to: patient.phone_number,
                     type: 'template',
                     template: {
                         name: campaign.template_name,
-                        language: { code: 'es' },
-                        components: [
-                            {
-                                type: 'body',
-                                parameters: [
-                                    { type: 'text', text: patient.full_name }
-                                ]
-                            }
-                        ]
+                        language: { code: targetTemplate.language || 'es' },
                     }
+                }
+
+                if (messageComponents.length > 0) {
+                    messagePayload.template.components = messageComponents
                 }
 
                 // Call YCloud

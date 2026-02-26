@@ -10,6 +10,7 @@ interface UserProfile {
     full_name: string
     clinic_id: string
     role: 'owner' | 'admin' | 'staff' | 'super_admin'
+    activation_status: 'pending_activation' | 'active' | 'inactive'
     avatar_url?: string
 }
 
@@ -33,7 +34,7 @@ interface AuthContextType {
     session: Session | null
     loading: boolean
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-    signUp: (email: string, password: string, fullName: string, clinicName: string, selectedPlan: string) => Promise<{ error: Error | null }>
+    signUp: (email: string, password: string, fullName: string, clinicName: string, selectedPlan: string, cardToken?: string | null) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
     connectGoogleCalendar: () => Promise<{ error: Error | null }>
     switchClinic: (clinicId: string) => Promise<void>
@@ -58,7 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const CLINICS_STORAGE_KEY = 'citenly_user_clinics'
 
     // Fetch user profile from database with retry logic
-    const fetchProfile = async (userId: string, retries = 3, delay = 500) => {
+    const fetchProfile = async (userId: string, retries = 3, delay = 500): Promise<UserProfile | null> => {
+        // Bypass profile fetching for HQ routes
+        if (window.location.pathname.startsWith('/hq')) {
+            console.log('Bypassing profile fetch for HQ route.')
+            return null
+        }
+
         try {
             for (let i = 0; i < retries; i++) {
                 try {
@@ -101,14 +108,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Fetch user's clinics (for multi-branch)
-    const fetchUserClinics = async () => {
+    const fetchUserClinics = async (): Promise<Clinic[]> => {
         try {
             const { data, error } = await supabase.rpc('get_user_clinics')
             if (error) throw error
             if (data) {
-                setClinics(data)
-                localStorage.setItem(CLINICS_STORAGE_KEY, JSON.stringify(data))
-                return data
+                const clinicsData = data as unknown as Clinic[]
+                setClinics(clinicsData)
+                localStorage.setItem(CLINICS_STORAGE_KEY, JSON.stringify(clinicsData))
+                return clinicsData
             }
         } catch (error) {
             console.error('Error fetching user clinics:', error)
@@ -177,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (updateError) throw updateError
 
             // 3. Update local state
-            const newProfile = { ...profile, clinic_id: clinicId }
+            const newProfile = { ...profile, clinic_id: clinicId } as UserProfile
             setProfile(newProfile)
             localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(newProfile))
 
@@ -297,12 +305,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                         if (mounted) {
                             if (subData) setSubscription(subData)
-                            if (memberData) setMember(memberData)
+                            if (memberData) setMember(memberData as any)
 
                             // Debug roles match
                             console.log('Role Check:', {
-                                profileRole: profileData.role,
-                                memberRole: memberData?.role,
+                                profileRole: (profileData as any).role,
+                                memberRole: (memberData as any)?.role,
                                 userId: session.user.id
                             })
 
@@ -310,9 +318,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 clinicsCount: clinicsData?.length,
                                 hasSub: !!subData,
                                 hasMember: !!memberData,
-                                memberRole: memberData?.role
+                                memberRole: (memberData as any)?.role
                             })
                         }
+                    } else if (mounted) {
+                        // Profile fetch returned null (likely skipped for HQ route or user not in user_profiles)
+                        setLoading(false)
                     }
                 } else {
                     localStorage.removeItem(PROFILE_STORAGE_KEY)
@@ -382,10 +393,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: null }
     }
 
-    const signUp = async (email: string, password: string, fullName: string, clinicName: string, selectedPlan: string) => {
+    const signUp = async (email: string, password: string, fullName: string, clinicName: string, selectedPlan: string, cardToken?: string | null) => {
         try {
             const { data, error: functionError } = await supabase.functions.invoke('signup-handler', {
-                body: { email, password, full_name: fullName, clinic_name: clinicName, selected_plan: selectedPlan }
+                body: { email, password, full_name: fullName, clinic_name: clinicName, selected_plan: selectedPlan, card_token: cardToken }
             })
             if (functionError) return { error: new Error(functionError.message || 'Error al crear la cuenta') }
             if (data?.error) return { error: new Error(data.error) }
@@ -412,7 +423,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const connectGoogleCalendar = async () => {
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 scopes: 'https://www.googleapis.com/auth/calendar',

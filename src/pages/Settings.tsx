@@ -228,10 +228,41 @@ export default function Settings() {
         monthlyUsed: number
     } | null>(null)
 
-    // Read tab from URL params (for deep linking)
+    // Payment return message state
+    const [paymentMessage, setPaymentMessage] = useState<{ type: 'success' | 'error' | 'pending'; text: string } | null>(null)
+
+    // Read tab from URL params (for deep linking) + handle payment returns
     useEffect(() => {
         const tabParam = searchParams.get('tab')
-        if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
+        const paymentParam = searchParams.get('payment')
+
+        if (paymentParam) {
+            // User returned from MercadoPago checkout
+            setActiveTab('subscription')
+            switch (paymentParam) {
+                case 'success':
+                    setPaymentMessage({
+                        type: 'success',
+                        text: '¡Pago procesado exitosamente! Tu suscripción ha sido activada. Los cambios pueden demorar unos segundos en reflejarse.'
+                    })
+                    break
+                case 'failure':
+                    setPaymentMessage({
+                        type: 'error',
+                        text: 'El pago fue rechazado. Por favor intenta con otro método de pago o contacta a tu banco.'
+                    })
+                    break
+                case 'pending':
+                    setPaymentMessage({
+                        type: 'pending',
+                        text: 'Tu pago está siendo procesado. Te notificaremos cuando se confirme. Esto puede demorar hasta 48 horas.'
+                    })
+                    break
+            }
+            // Clean URL params after reading
+            const newUrl = window.location.pathname
+            window.history.replaceState({}, '', newUrl)
+        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
             setActiveTab(tabParam)
         }
     }, [searchParams])
@@ -1401,7 +1432,19 @@ export default function Settings() {
                     {/* Subscription Settings */}
                     {activeTab === 'subscription' && (
                         <div className="space-y-6">
-                            {/* Current Plan */}
+                            {/* Payment Return Message */}
+                            {paymentMessage && (
+                                <div className={`p-4 rounded-soft flex items-center gap-3 animate-fade-in ${paymentMessage.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' :
+                                        paymentMessage.type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
+                                            'bg-amber-50 border border-amber-200 text-amber-800'
+                                    }`}>
+                                    {paymentMessage.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> :
+                                        paymentMessage.type === 'error' ? <CreditCard className="w-5 h-5 flex-shrink-0" /> :
+                                            <Clock className="w-5 h-5 flex-shrink-0" />}
+                                    <p className="text-sm">{paymentMessage.text}</p>
+                                    <button onClick={() => setPaymentMessage(null)} className="ml-auto p-1 hover:opacity-70">✕</button>
+                                </div>
+                            )}
                             <div className="card-soft p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
