@@ -880,7 +880,8 @@ export default function Appointments() {
                             service: event.resource.service,
                             appointment_date: format(event.start, 'yyyy-MM-dd'),
                             appointment_time: format(event.start, 'HH:mm'),
-                            notes: event.resource.notes || ''
+                            notes: event.resource.notes || '',
+                            professional_id: event.resource.professional_id || ''
                         })
                         setShowModal(true)
                     }}
@@ -906,7 +907,8 @@ export default function Appointments() {
                             service: event.resource.service,
                             appointment_date: format(event.start, 'yyyy-MM-dd'),
                             appointment_time: format(event.start, 'HH:mm'),
-                            notes: event.resource.notes || ''
+                            notes: event.resource.notes || '',
+                            professional_id: event.resource.professional_id || ''
                         })
                         setShowModal(true)
                     }}
@@ -1042,7 +1044,8 @@ export default function Appointments() {
                                                                         service: appointment.service,
                                                                         appointment_date: appointment.appointment_date.split('T')[0],
                                                                         appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
-                                                                        notes: appointment.notes || ''
+                                                                        notes: appointment.notes || '',
+                                                                        professional_id: appointment.professional_id || ''
                                                                     })
                                                                     setShowModal(true) // Open modal
                                                                 }}
@@ -1178,7 +1181,8 @@ export default function Appointments() {
                                             service: '',
                                             appointment_date: '',
                                             appointment_time: '',
-                                            notes: ''
+                                            notes: '',
+                                            professional_id: ''
                                         })
                                     }}
                                     className="p-2 hover:bg-ivory rounded-soft transition-colors"
@@ -1408,7 +1412,8 @@ export default function Appointments() {
                                                 service: '',
                                                 appointment_date: '',
                                                 appointment_time: '',
-                                                notes: ''
+                                                notes: '',
+                                                professional_id: ''
                                             })
                                         }}
                                         className="btn-ghost"

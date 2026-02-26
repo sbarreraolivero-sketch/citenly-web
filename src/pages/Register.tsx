@@ -62,14 +62,14 @@ export default function Register() {
                 }
                 setLoading(true)
                 // Use new RPC that returns clinic details
-                const { data } = await supabase.rpc('check_pending_invite_details', {
+                const { data } = await (supabase as any).rpc('check_pending_invite_details', {
                     p_email: email,
                     p_clinic_id: joinClinicId || null
                 })
                 setLoading(false)
 
                 // The RPC returns { valid, clinic_name }
-                const result = data && data.length > 0 ? data[0] : null; // Handle if it returns array
+                const result: any = data && data.length > 0 ? data[0] : null; // Handle if it returns array
 
                 if (!result || !result.valid) {
                     setError('No encontramos una invitación pendiente para este correo.')

@@ -1,11 +1,10 @@
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Calendar, ShieldCheck, Sparkles, LogOut } from 'lucide-react';
 import { HQBookingForm } from '../components/HQBookingForm';
 
 export function PendingActivation() {
     const { user, profile, signOut } = useAuth();
-    const navigate = useNavigate();
 
     // Redirect if doesn't meet criteria
     if (!user) {

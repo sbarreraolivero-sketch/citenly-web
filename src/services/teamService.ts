@@ -49,7 +49,7 @@ export const teamService = {
 
         // Trigger Send Email Edge Function
         try {
-            const { data: settings } = await supabase
+            const { data: settings } = await (supabase as any)
                 .from('clinic_settings')
                 .select('clinic_name')
                 .eq('id', clinicId)
@@ -129,9 +129,10 @@ export const teamService = {
     },
 
     async createBranch(name: string, address?: string) {
-        const { data, error } = await supabase.rpc('create_clinic_branch', {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('create_clinic_branch', {
             p_name: name,
-            p_address: address
+            p_address: address || null
         })
 
         if (error) throw error

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Calendar as CalendarIcon, Clock, Building2, Phone, Mail, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, Building2, Mail, Loader2, CheckCircle, XCircle } from 'lucide-react'
 
 // Define un tipo extendido para incluir los datos de la clínica
 type HQAppointment = {
@@ -32,7 +32,7 @@ export default function AdminCalendar() {
         setLoading(true)
         try {
             // First get the appointments
-            const { data: apts, error } = await supabase
+            const { data: apts, error } = await (supabase as any)
                 .from('hq_appointments')
                 .select('*')
                 .order('scheduled_at', { ascending: true })
@@ -42,7 +42,7 @@ export default function AdminCalendar() {
             // Now theoretically we should bring clinic_settings and their owner. 
             // In a real query we can do a inner join if proper foreign keys exist.
             // But let's fetch clinics for these apts
-            const clinicIds = [...new Set(apts.map(a => a.clinic_id))]
+            const clinicIds = [...new Set(apts.map((a: any) => a.clinic_id))]
 
             const { data: clinics } = await supabase
                 .from('clinic_settings')
@@ -55,10 +55,10 @@ export default function AdminCalendar() {
                 .in('clinic_id', clinicIds)
                 .eq('role', 'owner')
 
-            const enriched = apts.map(apt => ({
+            const enriched = apts.map((apt: any) => ({
                 ...apt,
-                clinic_settings: clinics?.find(c => c.id === apt.clinic_id),
-                clinic_members: members?.filter(m => m.clinic_id === apt.clinic_id) || []
+                clinic_settings: clinics?.find((c: any) => c.id === apt.clinic_id),
+                clinic_members: members?.filter((m: any) => m.clinic_id === apt.clinic_id) || []
             }))
 
             setAppointments(enriched)
@@ -74,7 +74,7 @@ export default function AdminCalendar() {
     }, [])
 
     const handleUpdateStatus = async (id: string, newStatus: string) => {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('hq_appointments')
             .update({ status: newStatus })
             .eq('id', id)

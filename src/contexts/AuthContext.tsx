@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             // 2. Update user_profiles in DB to persist choice
-            const { error: updateError } = await supabase
+            const { error: updateError } = await (supabase as any)
                 .from('user_profiles')
                 .update({ clinic_id: clinicId })
                 .eq('id', user.id)

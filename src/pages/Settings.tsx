@@ -769,7 +769,7 @@ export default function Settings() {
         try {
             await redirectToCheckout({
                 clinicId: profile.clinic_id,
-                planId,
+                planId: planId as "essence" | "radiance" | "prestige",
                 email: user.email
             })
         } catch (error) {
@@ -1435,8 +1435,8 @@ export default function Settings() {
                             {/* Payment Return Message */}
                             {paymentMessage && (
                                 <div className={`p-4 rounded-soft flex items-center gap-3 animate-fade-in ${paymentMessage.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' :
-                                        paymentMessage.type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
-                                            'bg-amber-50 border border-amber-200 text-amber-800'
+                                    paymentMessage.type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
+                                        'bg-amber-50 border border-amber-200 text-amber-800'
                                     }`}>
                                     {paymentMessage.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> :
                                         paymentMessage.type === 'error' ? <CreditCard className="w-5 h-5 flex-shrink-0" /> :

@@ -76,7 +76,7 @@ const getNotificationIcon = (type: string) => {
 export default function DashboardLayout() {
     const location = useLocation()
     const navigate = useNavigate()
-    const { profile, member, user, signOut } = useAuth()
+    const { profile, member, signOut } = useAuth()
     console.log('DashboardLayout Member State:', member)
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
@@ -161,12 +161,12 @@ export default function DashboardLayout() {
 
     // For demo purposes, show placeholder if not authenticated
     const userName = profile?.full_name || 'Usuario Demo'
-    const clinicName = 'Clínica Demo' // Will come from clinic_settings later
+    // const clinicName = 'Clínica Demo' // Will come from clinic_settings later
     const userRole = member?.job_title || (
-        profile?.role === 'owner' ? 'Dueño' :
-            profile?.role === 'admin' ? 'Administrador' :
-                profile?.role === 'professional' ? 'Profesional' :
-                    profile?.role === 'receptionist' ? 'Recepción' :
+        (profile as any)?.role === 'owner' ? 'Dueño' :
+            (profile as any)?.role === 'admin' ? 'Administrador' :
+                (profile as any)?.role === 'professional' ? 'Profesional' :
+                    (profile as any)?.role === 'receptionist' ? 'Recepción' :
                         'Staff'
     )
 

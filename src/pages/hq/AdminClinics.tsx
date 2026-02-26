@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
-    Search, Building2, Users, Calendar, Shield, ChevronDown, ChevronUp,
+    Search, Building2, Users, Shield, ChevronUp,
     CheckCircle, Clock, XCircle, Loader2, RefreshCw, CreditCard, Eye
 } from 'lucide-react'
 

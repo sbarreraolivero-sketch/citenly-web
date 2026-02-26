@@ -73,7 +73,7 @@ export default function Dashboard() {
         average: 0
     })
 
-    const { getDateRange, toUTC, now: clinicNow } = useClinicTimezone()
+    const { getDateRange } = useClinicTimezone()
 
     useEffect(() => {
         const fetchDashboardData = async () => {

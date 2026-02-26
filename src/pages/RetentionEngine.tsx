@@ -21,14 +21,9 @@ import {
     Filter,
     Crown,
     Eye,
-    Check,
     X,
-    Clock as ClockIcon, // Alias to avoid conflict if needed, though risk icon uses Clock
-    Settings, // Added Settings icon
-    ArrowRight, // Added for the new import list
-    Calendar, // Added for the new import list
-    ChevronRight, // Added for the new import list
-    MoreHorizontal // Added for the new import list
+    Settings,
+    MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -99,7 +94,7 @@ const getRiskIcon = (level: string) => {
 // ── Component ────────────────────────────────────────────────────────
 
 const RetentionEngine = () => {
-    const { profile, member, subscription } = useAuth()
+    const { profile, member } = useAuth()
     const clinicId = member?.clinic_id || profile?.clinic_id
     const clinicName = (member as any)?.clinic_name || (profile as any)?.clinic_name || 'Clínica'
 
@@ -107,7 +102,7 @@ const RetentionEngine = () => {
     // State
     const [stats, setStats] = useState<RetentionDashboardStats | null>(null)
     const [patients, setPatients] = useState<PatientAtRisk[]>([])
-    const [generatingActions, setGeneratingActions] = useState(false)
+    const [loadingToAction] = useState<string | null>(null)
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
     const [pendingActions, setPendingActions] = useState<AIAction[]>([])
     const [actionLog, setActionLog] = useState<AIAction[]>([])
@@ -942,7 +937,7 @@ const RetentionEngine = () => {
                         clinicId={clinicId}
                         onSaved={() => {
                             // Refresh logic if needed, e.g. reload pending actions
-                            fetchActionLog()
+                            fetchData()
                         }}
                     />
                 )

@@ -15,7 +15,6 @@ import {
     Zap,
     Crown,
     Bot,
-    Wand2,
     Star,
     TrendingUp,
     Bell

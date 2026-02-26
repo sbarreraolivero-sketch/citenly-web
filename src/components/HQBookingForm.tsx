@@ -29,14 +29,14 @@ export function HQBookingForm() {
     useEffect(() => {
         // Fetch existing appointments to block taken slots
         const fetchAppointments = async () => {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('hq_appointments')
                 .select('scheduled_at')
                 .gte('scheduled_at', currentWeekStart.toISOString())
                 .eq('status', 'scheduled')
 
             if (data && !error) {
-                setExistingAppointments(data.map(a => new Date(a.scheduled_at)))
+                setExistingAppointments(data.map((a: any) => new Date(a.scheduled_at)))
             }
         }
         fetchAppointments()
@@ -58,7 +58,7 @@ export function HQBookingForm() {
             const [hours, minutes] = selectedTime.split(':').map(Number)
             const scheduledDatetime = setMinutes(setHours(selectedDate, hours), minutes)
 
-            const { error } = await supabase.from('hq_appointments').insert({
+            const { error } = await (supabase as any).from('hq_appointments').insert({
                 clinic_id: profile.clinic_id,
                 scheduled_at: scheduledDatetime.toISOString(),
                 duration_minutes: 15,
@@ -137,8 +137,8 @@ export function HQBookingForm() {
                                     key={date.toISOString()}
                                     onClick={() => { setSelectedDate(date); setSelectedTime(null); }}
                                     className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${isSelected
-                                            ? 'border-primary-500 bg-primary-50 text-primary-700'
-                                            : 'border-gray-100 hover:border-primary-300 hover:bg-gray-50 text-charcoal'
+                                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                        : 'border-gray-100 hover:border-primary-300 hover:bg-gray-50 text-charcoal'
                                         }`}
                                 >
                                     <span className="font-bold capitalize">{format(date, 'EEEE', { locale: es })}</span>
@@ -171,10 +171,10 @@ export function HQBookingForm() {
                                             disabled={isBooked}
                                             onClick={() => setSelectedTime(time)}
                                             className={`p-3 rounded-xl border-2 font-bold text-center transition-all ${isBooked
-                                                    ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
-                                                    : isSelected
-                                                        ? 'border-primary-500 bg-primary-500 text-white shadow-md'
-                                                        : 'border-gray-200 text-charcoal hover:border-primary-500 hover:text-primary-600'
+                                                ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
+                                                : isSelected
+                                                    ? 'border-primary-500 bg-primary-500 text-white shadow-md'
+                                                    : 'border-gray-200 text-charcoal hover:border-primary-500 hover:text-primary-600'
                                                 }`}
                                         >
                                             {time}
