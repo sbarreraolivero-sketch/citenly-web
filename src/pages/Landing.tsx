@@ -257,15 +257,15 @@ export default function Landing() {
                         </div>
 
                         {/* Interactive Abstract Visual */}
-                        <div className="relative h-[480px] bg-charcoal rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-8 overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-transform duration-500">
+                        <div className="relative min-h-[480px] lg:h-[480px] bg-charcoal rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-6 sm:p-8 overflow-hidden flex flex-col justify-between hover:scale-[1.02] transition-transform duration-500">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500 rounded-full mix-blend-screen filter blur-[80px] opacity-30 animate-pulse"></div>
                             <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500 rounded-full mix-blend-screen filter blur-[80px] opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
 
-                            <h3 className="text-2xl font-bold text-white z-10 flex items-center gap-2">
+                            <h3 className="text-xl sm:text-2xl font-bold text-white z-10 flex items-center gap-2 mb-6 lg:mb-0">
                                 <TrendingUp className="text-red-400" /> Fuga Financiera Mensual
                             </h3>
 
-                            <div className="space-y-6 z-10">
+                            <div className="space-y-4 sm:space-y-6 z-10">
                                 <div className="bg-white/10 border border-white/20 rounded-xl p-5 backdrop-blur-md transform hover:translate-x-2 transition-transform shadow-lg">
                                     <div className="flex justify-between items-center text-sm font-bold text-white/90 mb-2">
                                         <span>Pacientes inactivos (abandonaron tto.)</span>
@@ -435,9 +435,9 @@ export default function Landing() {
                                 ))}
                             </ul>
 
-                            <button className="bg-white text-charcoal hover:bg-gray-100 px-8 py-4 rounded-xl font-extrabold shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-lg">
+                            <Link to="/register" className="inline-block text-center bg-white text-charcoal hover:bg-gray-100 px-6 py-4 sm:px-8 sm:py-4 rounded-xl font-extrabold shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-base sm:text-lg w-full sm:w-auto">
                                 Calcular tu potencial de retención
-                            </button>
+                            </Link>
                         </div>
 
                         {/* Mockup Dashboard UI */}
