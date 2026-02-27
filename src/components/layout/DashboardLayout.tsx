@@ -84,10 +84,22 @@ export default function DashboardLayout() {
 
     // Check activation status and redirect
     useEffect(() => {
-        if (profile?.activation_status === 'pending_activation') {
-            navigate('/pending-activation', { replace: true });
+        const checkActivation = async () => {
+            if (profile?.clinic_id) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data } = await (supabase as any)
+                    .from('clinic_settings')
+                    .select('activation_status')
+                    .eq('id', profile.clinic_id)
+                    .single()
+
+                if (data?.activation_status === 'pending_activation') {
+                    navigate('/pending-activation', { replace: true })
+                }
+            }
         }
-    }, [profile?.activation_status, navigate]);
+        checkActivation();
+    }, [profile?.clinic_id, navigate])
 
     // Fetch notifications
     useEffect(() => {

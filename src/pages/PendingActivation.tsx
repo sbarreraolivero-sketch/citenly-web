@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Calendar, ShieldCheck, Sparkles, LogOut } from 'lucide-react';
 import { HQBookingForm } from '../components/HQBookingForm';
 
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 export function PendingActivation() {
     const { user, profile, signOut } = useAuth();
 
@@ -11,8 +13,28 @@ export function PendingActivation() {
         return <Navigate to="/login" replace />;
     }
 
+    const [activationStatus, setActivationStatus] = useState<string | null>(null);
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            if (profile?.clinic_id) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data } = await (supabase as any)
+                    .from('clinic_settings')
+                    .select('activation_status')
+                    .eq('id', profile.clinic_id)
+                    .single()
+
+                if (data) {
+                    setActivationStatus(data.activation_status)
+                }
+            }
+        }
+        checkStatus();
+    }, [profile?.clinic_id])
+
     // If already active, send to app
-    if (profile?.activation_status === 'active') {
+    if (activationStatus === 'active') {
         return <Navigate to="/app" replace />;
     }
 

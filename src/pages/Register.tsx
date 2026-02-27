@@ -151,8 +151,8 @@ export default function Register() {
             return
         }
 
-        // Success - redirect to dashboard
-        navigate('/app/dashboard?welcome=true')
+        // Success - redirect to pending activation for scheduling
+        navigate('/pending-activation')
     }
 
     return (

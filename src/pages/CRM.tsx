@@ -457,14 +457,14 @@ export default function CRM() {
                     <h1 className="text-2xl font-bold text-charcoal">CRM</h1>
                     <p className="text-charcoal/60">Gestiona tus prospectos y pipeline de ventas</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setShowTagManager(true)} className="btn-ghost flex items-center gap-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <button onClick={() => setShowTagManager(true)} className="btn-ghost flex-1 sm:flex-none justify-center flex items-center gap-2 text-sm">
                         <Tag className="w-4 h-4" /> Etiquetas
                     </button>
-                    <button onClick={() => setShowStageConfig(true)} className="btn-ghost flex items-center gap-2 text-sm">
+                    <button onClick={() => setShowStageConfig(true)} className="btn-ghost flex-1 sm:flex-none justify-center flex items-center gap-2 text-sm">
                         <Settings2 className="w-4 h-4" /> Etapas
                     </button>
-                    <button onClick={() => openProspectModal()} className="btn-primary flex items-center gap-2">
+                    <button onClick={() => openProspectModal()} className="btn-primary w-full sm:w-auto justify-center flex items-center gap-2 mt-2 sm:mt-0">
                         <Plus className="w-4 h-4" /> Nuevo Prospecto
                     </button>
                 </div>

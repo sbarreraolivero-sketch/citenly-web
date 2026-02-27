@@ -616,7 +616,7 @@ export default function Appointments() {
     return (
         <div className="space-y-6 animate-fade-in pb-20">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold text-charcoal">Citas</h1>
                     <p className="text-charcoal/50 mt-1">Gestiona todas las citas de tu clínica</p>
@@ -635,7 +635,7 @@ export default function Appointments() {
                         })
                         setShowModal(true)
                     }}
-                    className="btn-primary flex items-center gap-2"
+                    className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
                     <Plus className="w-5 h-5" />
                     Nueva Cita
@@ -644,9 +644,9 @@ export default function Appointments() {
 
             {/* Filters */}
             <div className="card-soft p-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                     {/* Search */}
-                    <div className="flex-1 relative">
+                    <div className="flex-1 min-w-[200px] relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40" />
                         <input
                             type="text"
