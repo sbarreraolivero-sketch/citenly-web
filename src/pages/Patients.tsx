@@ -19,6 +19,7 @@ import { PatientForm } from '@/components/patients/PatientForm'
 import { PatientDetails } from '@/components/patients/PatientDetails'
 import { SubscriptionGuard } from '@/components/auth/SubscriptionGuard'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { CSVUploader } from '@/components/patients/CSVUploader'
 
 type Patient = Database['public']['Tables']['patients']['Row'] & {
     tags?: { id: string; name: string; color: string }[]
@@ -146,13 +147,16 @@ export default function Patients() {
                             <h1 className="text-2xl font-bold text-charcoal">Pacientes</h1>
                             <p className="text-charcoal/60">Gestiona tu base de datos de clientes</p>
                         </div>
-                        <button
-                            onClick={openNew}
-                            className="btn-primary flex items-center gap-2 self-start sm:self-auto"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Nuevo Paciente
-                        </button>
+                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <CSVUploader onSuccess={fetchPatients} />
+                            <button
+                                onClick={openNew}
+                                className="btn-primary flex items-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Nuevo Paciente
+                            </button>
+                        </div>
                     </div>
 
                     {/* Filters */}
