@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Sparkles, Mail, Lock, User, Building2, ArrowRight, Loader2, Check, ShieldCheck } from 'lucide-react'
+import { Sparkles, Mail, Lock, User, Building2, ArrowRight, Loader2, Check, ShieldCheck, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react'
@@ -413,6 +413,18 @@ export default function Register() {
                                             setError('Error al procesar la tarjeta. Revisa los datos ingresados.');
                                         }}
                                     />
+                                </div>
+                                <div className="mt-6 flex flex-col items-center gap-2">
+                                    <p className="text-sm text-charcoal/60">¿Tienes dudas con el registro o el pago?</p>
+                                    <a
+                                        href="https://wa.me/56996600259?text=Hola,%20tengo%20una%20duda%20con%20el%20registro%20en%20Citenly"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-bold bg-primary-50 px-4 py-2 rounded-full border border-primary-100 transition-colors"
+                                    >
+                                        <MessageCircle className="w-4 h-4" />
+                                        Escríbenos por WhatsApp (+56 9 9660 0259)
+                                    </a>
                                 </div>
                             </div>
                         )}
