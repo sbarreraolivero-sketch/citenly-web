@@ -182,11 +182,11 @@ export default function Landing() {
                             <a href="#pricing" className="text-charcoal/80 hover:text-primary-600 transition-colors">Planes</a>
                         </div>
 
-                        <div className="flex items-center gap-2 sm:gap-4">
-                            <Link to="/login" className="text-xs sm:text-sm font-bold text-charcoal/80 hover:text-primary-600 transition-colors whitespace-nowrap">
+                        <div className="flex flex-col-reverse sm:flex-row items-center gap-1 sm:gap-4">
+                            <Link to="/login" className="text-[11px] sm:text-sm font-bold text-charcoal/60 hover:text-primary-600 transition-colors whitespace-nowrap">
                                 Iniciar Sesión
                             </Link>
-                            <Link to="/register" className="btn-primary px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm shadow-xl shadow-primary-500/20 hover:scale-105 transition-all text-center whitespace-nowrap">
+                            <Link to="/register" className="btn-primary px-4 py-2 sm:px-5 sm:py-2.5 text-[13px] sm:text-sm shadow-xl shadow-primary-500/20 hover:scale-105 transition-all text-center whitespace-nowrap">
                                 <span className="hidden sm:inline">Agendar Implementación</span>
                                 <span className="sm:hidden">Agendar Asesoría Gratis</span>
                             </Link>
