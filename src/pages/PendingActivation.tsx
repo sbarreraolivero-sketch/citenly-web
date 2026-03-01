@@ -85,7 +85,7 @@ export function PendingActivation() {
                     </div>
 
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-6">
-                        <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-3">¿Qué haremos en esta sesión de 15 min?</h3>
+                        <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-3">¿Qué haremos en esta sesión de 30-45 minutos aprox?</h3>
                         <ul className="space-y-4">
                             <li className="flex gap-4 items-start">
                                 <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
