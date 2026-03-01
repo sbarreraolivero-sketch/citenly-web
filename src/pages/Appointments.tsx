@@ -67,7 +67,8 @@ const tabs = [
 ]
 
 export default function Appointments() {
-    const { user, profile, session } = useAuth()
+    const { user, profile, session, member } = useAuth()
+    const isProfessional = member?.role === 'professional'
     const navigate = useNavigate()
     const [appointments, setAppointments] = useState<Appointment[]>([])
     const [loading, setLoading] = useState(true)
@@ -482,7 +483,12 @@ export default function Appointments() {
         const matchesTab = activeTab === 'all' || appointment.status === activeTab
 
         // Professional filter
-        const matchesProfessional = professionalFilter === 'all' || appointment.professional_id === professionalFilter
+        let matchesProfessional = true;
+        if (isProfessional) {
+            matchesProfessional = appointment.professional_id === member?.id;
+        } else {
+            matchesProfessional = professionalFilter === 'all' || appointment.professional_id === professionalFilter;
+        }
 
         // Date filter logic
         const appointmentDate = new Date(appointment.appointment_date)
@@ -828,7 +834,7 @@ export default function Appointments() {
             </div>
 
             {/* Professional Filter Pills */}
-            {professionals.length > 1 && (
+            {!isProfessional && professionals.length > 1 && (
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wide mr-1">Profesional:</span>
                     <button
