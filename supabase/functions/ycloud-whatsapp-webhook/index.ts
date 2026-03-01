@@ -29,13 +29,13 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 const functions = [
     {
         name: "check_availability",
-        description: "Verifica disponibilidad. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). Si no se especifica, busca en mensajes anteriores. Solo usa 'Consulta General' si es explícito.",
-        parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" } }, required: ["date"] }
+        description: "Verifica disponibilidad. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). Además, si el usuario menciona a un profesional o cargo específico (ej. 'con la doctora Ana', 'con la kinesióloga'), extrae su nombre en professional_name.",
+        parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado por el paciente (opcional)" } }, required: ["date"] }
     },
     {
         name: "create_appointment",
         description: "Crea nueva cita cuando paciente confirma fecha, hora y servicio",
-        parameters: { type: "object", properties: { patient_name: { type: "string" }, date: { type: "string" }, time: { type: "string" }, service_name: { type: "string" } }, required: ["patient_name", "date", "time", "service_name"] }
+        parameters: { type: "object", properties: { patient_name: { type: "string" }, date: { type: "string" }, time: { type: "string" }, service_name: { type: "string" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado (opcional)" } }, required: ["patient_name", "date", "time", "service_name"] }
     },
     {
         name: "get_services",
@@ -147,16 +147,34 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (svc) {
             duration = svc.duration;
             serviceId = svc.id;
+        }
+    }
 
-            // Find assigned professional (prefer primary)
-            const { data: profs } = await sb.from("service_professionals")
-                .select("member_id, is_primary")
-                .eq("service_id", svc.id);
+    // Try to find requested professional BY NAME/TITLE
+    // @ts-ignore
+    const profName = arguments[4]; // Extracting from processFunc arguments implicitly, see update below
+    if (profName) {
+        const { data: prof } = await sb.from("clinic_members")
+            .select("id:user_id, member_id:id")
+            .eq("clinic_id", clinicId)
+            .or(`first_name.ilike.%${profName}%,last_name.ilike.%${profName}%,job_title.ilike.%${profName}%`)
+            .limit(1)
+            .maybeSingle();
 
-            if (profs && profs.length > 0) {
-                const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
-                professionalId = primary ? primary.member_id : profs[0].member_id;
-            }
+        if (prof) {
+            professionalId = prof.member_id;
+        }
+    }
+
+    // Fallback to service professional if NO specific professional was requested or found
+    if (!professionalId && serviceId) {
+        const { data: profs } = await sb.from("service_professionals")
+            .select("member_id, is_primary")
+            .eq("service_id", serviceId);
+
+        if (profs && profs.length > 0) {
+            const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
+            professionalId = primary ? primary.member_id : profs[0].member_id;
         }
     }
 
@@ -243,16 +261,34 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (svc) {
             duration = svc.duration;
             serviceId = svc.id;
+        }
+    }
 
-            // Find assigned professional (prefer primary)
-            const { data: profs } = await sb.from("service_professionals")
-                .select("member_id, is_primary")
-                .eq("service_id", svc.id);
+    // Try to find requested professional BY NAME/TITLE
+    // @ts-ignore
+    const profName = args.professional_name;
+    if (profName) {
+        const { data: prof } = await sb.from("clinic_members")
+            .select("id:user_id, member_id:id")
+            .eq("clinic_id", clinicId)
+            .or(`first_name.ilike.%${profName}%,last_name.ilike.%${profName}%,job_title.ilike.%${profName}%`)
+            .limit(1)
+            .maybeSingle();
 
-            if (profs && profs.length > 0) {
-                const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
-                professionalId = primary ? primary.member_id : profs[0].member_id;
-            }
+        if (prof) {
+            professionalId = prof.member_id;
+        }
+    }
+
+    // Fallback to service professional if NO specific professional was requested or found
+    if (!professionalId && serviceId) {
+        const { data: profs } = await sb.from("service_professionals")
+            .select("member_id, is_primary")
+            .eq("service_id", serviceId);
+
+        if (profs && profs.length > 0) {
+            const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
+            professionalId = primary ? primary.member_id : profs[0].member_id;
         }
     }
 
@@ -493,10 +529,12 @@ const getKnowledgeSummary = async (sb: ReturnType<typeof createClient>, clinicId
     }
 };
 
+// @ts-ignore
 const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, name: string, args: Record<string, unknown>, timezone: string) => {
     switch (name) {
-        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone);
-        case "create_appointment": return createAppt(sb, clinicId, phone, args as { patient_name: string; date: string; time: string; service_name: string }, timezone);
+        // @ts-ignore - passing extra argument that is received dynamically via arguments[4] in checkAvail
+        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string);
+        case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone);
         case "get_services": return getServices(sb, clinicId);
         case "confirm_appointment":
         case "cancel_appointment": return confirmAppt(sb, clinicId, phone, name === "cancel_appointment" ? "no" : args.response as string);
