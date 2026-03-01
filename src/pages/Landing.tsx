@@ -183,12 +183,12 @@ export default function Landing() {
                         </div>
 
                         <div className="flex items-center gap-2 sm:gap-4">
-                            <Link to="/login" className="hidden sm:block text-sm font-bold text-charcoal/80 hover:text-primary-600 transition-colors whitespace-nowrap">
+                            <Link to="/login" className="text-xs sm:text-sm font-bold text-charcoal/80 hover:text-primary-600 transition-colors whitespace-nowrap">
                                 Iniciar Sesión
                             </Link>
                             <Link to="/register" className="btn-primary px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm shadow-xl shadow-primary-500/20 hover:scale-105 transition-all text-center whitespace-nowrap">
                                 <span className="hidden sm:inline">Agendar Implementación</span>
-                                <span className="sm:hidden">Agendar Gratis</span>
+                                <span className="sm:hidden">Agendar Asesoría Gratis</span>
                             </Link>
                         </div>
                     </div>
