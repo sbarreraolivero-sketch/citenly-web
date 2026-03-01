@@ -99,6 +99,8 @@ export function HQBookingForm() {
                 <h3 className="text-2xl font-black text-charcoal mb-4">¡Sesión Agendada Exitosamente!</h3>
                 <p className="text-gray-600 mb-8 max-w-md">
                     Hemos reservado tu horario. Un consultor estratégico de Citenly se conectará contigo para tu activación oficial.
+                    <br /><br />
+                    <strong>Te hemos enviado un correo con el enlace a la videollamada para que lo guardes en tu calendario.</strong>
                 </p>
                 <div className="bg-gray-50 p-6 rounded-2xl w-full max-w-sm border border-gray-100">
                     <div className="flex items-center gap-3 text-charcoal mb-3">
@@ -118,7 +120,11 @@ export function HQBookingForm() {
         <div className="flex flex-col h-full bg-white">
             <div className="p-8 border-b border-gray-100">
                 <h2 className="text-2xl font-bold text-charcoal">Selecciona tu horario</h2>
-                <p className="text-gray-500 mt-2">Sesión de Activación Estratégica (15 min)</p>
+                <p className="text-gray-500 mt-2">Sesión de Activación Estratégica (30-45 min aprox)</p>
+                <div className="mt-4 bg-primary-50 text-primary-700 p-3 rounded-lg text-sm flex gap-3 items-start">
+                    <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                    <p>Al confirmar tu horario, te enviaremos un correo electrónico con el enlace de Google Meet para nuestra videollamada.</p>
+                </div>
             </div>
 
             <div className="flex-1 flex flex-col md:flex-row p-6 gap-8 overflow-y-auto">
