@@ -151,6 +151,15 @@ export default function Register() {
             return
         }
 
+        // Enviar correo de bienvenida
+        try {
+            await supabase.functions.invoke('send-welcome-email', {
+                body: { email, name: fullName }
+            });
+        } catch (e) {
+            console.error('Error enviando email de bienvenida:', e);
+        }
+
         // Success - redirect to pending activation for scheduling
         navigate('/pending-activation')
     }

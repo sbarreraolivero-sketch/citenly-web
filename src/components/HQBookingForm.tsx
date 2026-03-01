@@ -67,6 +67,20 @@ export function HQBookingForm() {
 
             if (error) throw error
 
+            try {
+                const dateStr = format(selectedDate, "EEEE d 'de' MMMM, yyyy", { locale: es })
+                await supabase.functions.invoke('send-booking-email', {
+                    body: {
+                        email: profile.email,
+                        name: profile.full_name,
+                        dateStr,
+                        timeStr: selectedTime
+                    }
+                });
+            } catch (e) {
+                console.error("Error sending booking email:", e);
+            }
+
             setSuccess(true)
         } catch (error) {
             console.error('Error booking appointment:', error)
