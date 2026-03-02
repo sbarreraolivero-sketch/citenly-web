@@ -482,6 +482,13 @@ export default function Register() {
                         </div>
                     </form>
 
+                    <p className="mt-6 text-xs text-center text-charcoal/50">
+                        Al registrarte en Citenly, aceptas nuestros{' '}
+                        <Link to="/terms" target="_blank" className="underline hover:text-primary-600">Términos y Condiciones</Link>
+                        {' '}y nuestra{' '}
+                        <Link to="/privacy" target="_blank" className="underline hover:text-primary-600">Política de Privacidad</Link>.
+                    </p>
+
                     {/* Login Link */}
                     <p className="mt-8 text-center text-charcoal/60">
                         ¿Ya tienes cuenta?{' '}

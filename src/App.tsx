@@ -15,6 +15,8 @@ import Pricing from './pages/Pricing'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Landing from './pages/Landing'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 import ForgotPassword from './pages/ForgotPassword'
 import UpdatePassword from './pages/UpdatePassword'
 import { PendingActivation } from './pages/PendingActivation'
@@ -58,6 +60,10 @@ function MainRoutes() {
             <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Landing />} />
+                <Route path="/terminos" element={<Terms />} />
+                <Route path="/terms" element={<Navigate to="/terminos" replace />} />
+                <Route path="/privacidad" element={<Privacy />} />
+                <Route path="/privacy" element={<Navigate to="/privacidad" replace />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/update-password" element={<UpdatePassword />} />
