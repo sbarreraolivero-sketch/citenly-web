@@ -35,14 +35,12 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
 
     // Custom Event Component for content only
     const CustomEvent = ({ event }: any) => {
-        const titleClass = "font-medium leading-tight truncate"
-        const timeClass = "text-[10px] opacity-80 truncate mt-0.5"
         const isCancelled = event.resource?.status === 'cancelled'
 
         return (
-            <div className={`h-full w-full py-1 px-2 flex flex-col justify-center pointer-events-none ${isCancelled ? 'line-through' : ''}`}>
-                <div className={titleClass}>{event.title}</div>
-                <div className={timeClass}>
+            <div className={`h-full w-full py-0.5 px-1 sm:py-1 sm:px-2 flex flex-col justify-center pointer-events-none ${isCancelled ? 'line-through' : ''}`}>
+                <div className="font-medium leading-tight text-[10px] sm:text-xs truncate">{event.title}</div>
+                <div className="text-[9px] sm:text-[10px] opacity-80 truncate mt-0.5">
                     {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
                 </div>
             </div>
@@ -80,7 +78,7 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
     }
 
     return (
-        <div className="h-[650px] bg-white rounded-soft shadow-premium p-6 animate-fade-in border border-silk-beige/50">
+        <div className="h-[600px] sm:h-[650px] bg-white rounded-soft shadow-premium p-2 sm:p-4 md:p-6 animate-fade-in border border-silk-beige/50 overflow-hidden">
             <Calendar
                 localizer={localizer}
                 events={events}
@@ -201,35 +199,37 @@ const CustomToolbar = (toolbar: any) => {
     }
 
     return (
-        <div className="flex items-center justify-between mb-4 flex-col sm:flex-row gap-4">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4 w-full">
+            <div className="flex flex-wrap items-center justify-center gap-2 w-full md:w-auto">
                 <button
                     onClick={goToBack}
-                    className="p-2 hover:bg-silk-beige rounded-soft transition-colors"
+                    className="p-2 hover:bg-silk-beige rounded-soft transition-colors flex-shrink-0"
                 >
                     <ChevronLeft className="w-5 h-5 text-charcoal/60" />
                 </button>
                 <button
                     onClick={goToCurrent}
-                    className="px-3 py-1 text-sm font-medium text-charcoal/70 hover:bg-silk-beige rounded-soft transition-colors"
+                    className="px-3 py-1.5 text-sm font-medium text-charcoal/70 hover:bg-silk-beige rounded-soft transition-colors flex-shrink-0"
                 >
                     Hoy
                 </button>
                 <button
                     onClick={goToNext}
-                    className="p-2 hover:bg-silk-beige rounded-soft transition-colors"
+                    className="p-2 hover:bg-silk-beige rounded-soft transition-colors flex-shrink-0"
                 >
                     <ChevronRight className="w-5 h-5 text-charcoal/60" />
                 </button>
-                {label()}
+                <div className="w-full text-center md:w-auto md:ml-2 mt-2 md:mt-0">
+                    {label()}
+                </div>
             </div>
 
-            <div className="flex bg-silk-beige/50 p-1 rounded-soft">
+            <div className="flex bg-silk-beige/50 p-1 rounded-soft overflow-x-auto w-full md:w-auto justify-center flex-shrink-0">
                 {['month', 'week', 'day'].map((view) => (
                     <button
                         key={view}
                         onClick={() => toolbar.onView(view)}
-                        className={`px-3 py-1 text-sm font-medium rounded-soft transition-all duration-200 capitalize ${toolbar.view === view
+                        className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-soft transition-all duration-200 capitalize whitespace-nowrap ${toolbar.view === view
                             ? 'bg-white shadow-soft text-primary-600'
                             : 'text-charcoal/60 hover:text-charcoal'
                             }`}
