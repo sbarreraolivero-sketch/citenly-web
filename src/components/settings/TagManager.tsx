@@ -123,9 +123,9 @@ export function TagManager() {
                         maxLength={30}
                     />
                 </div>
-                <div>
-                    <label className="block text-xs font-medium text-charcoal/60 mb-1 uppercase">Color</label>
-                    <div className="flex gap-2 h-10 items-center">
+                <div className="w-full sm:w-auto mt-2 sm:mt-0">
+                    <label className="block text-xs font-medium text-charcoal/60 mb-2 uppercase">Color</label>
+                    <div className="flex flex-wrap gap-3 items-center">
                         {PRESET_COLORS.map(color => (
                             <button
                                 key={color}
@@ -141,7 +141,7 @@ export function TagManager() {
                 <button
                     type="submit"
                     disabled={creating || !newTagName.trim()}
-                    className="btn-primary h-10 flex items-center justify-center gap-2 min-w-[120px]"
+                    className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto min-w-[120px] mt-4 sm:mt-0 py-2.5"
                 >
                     {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Crear

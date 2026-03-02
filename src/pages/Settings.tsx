@@ -1646,13 +1646,13 @@ export default function Settings() {
                                 {Object.entries(workingHours).map(([day, hours]) => (
                                     <div
                                         key={day}
-                                        className="flex items-center gap-4 p-4 bg-ivory rounded-soft"
+                                        className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-ivory rounded-soft"
                                     >
-                                        <div className="w-28">
+                                        <div className="w-24 sm:w-28 flex-shrink-0">
                                             <p className="font-medium text-charcoal">{dayNames[day]}</p>
                                         </div>
 
-                                        <label className="flex items-center gap-2">
+                                        <label className="flex items-center gap-2 mr-2">
                                             <input
                                                 type="checkbox"
                                                 checked={hours !== null}
@@ -1662,26 +1662,24 @@ export default function Settings() {
                                             <span className="text-sm text-charcoal/60">Abierto</span>
                                         </label>
 
-                                        {hours && (
-                                            <>
+                                        {hours ? (
+                                            <div className="flex items-center gap-2 flex-1 min-w-[200px]">
                                                 <input
                                                     type="time"
                                                     value={hours.open}
                                                     onChange={() => { }}
-                                                    className="px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm"
+                                                    className="w-full px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
                                                 />
                                                 <span className="text-charcoal/40">a</span>
                                                 <input
                                                     type="time"
                                                     value={hours.close}
                                                     onChange={() => { }}
-                                                    className="px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm"
+                                                    className="w-full px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
                                                 />
-                                            </>
-                                        )}
-
-                                        {!hours && (
-                                            <span className="text-sm text-charcoal/40">Cerrado</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-charcoal/40 ml-2">Cerrado</span>
                                         )}
                                     </div>
                                 ))}

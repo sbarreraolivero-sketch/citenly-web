@@ -17,12 +17,16 @@ export function SubscriptionGuard({ children, fallback }: SubscriptionGuardProps
     useEffect(() => {
         if (!loading) {
             const isTrial = subscription?.status === 'trial'
-            const isActive = subscription?.status === 'active' || (subscription?.status as string) === 'converted'
+            const isActive = subscription?.status === 'active' || (subscription?.status as string) === 'converted' || (subscription?.status as string) === 'freemium'
 
             // Check if trial expired based on date
             const trialExpired = isTrial && subscription?.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()
 
-            if (!subscription || (!isActive && !isTrial) || trialExpired) {
+            // Block ONLY if there is a subscription and it's explicitly not active/trial OR if trial is expired.
+            // If subscription is null (no row in DB), assume Freemium/Legacy and do not block.
+            const isBlocked = subscription !== null && ((!isActive && !isTrial) || trialExpired)
+
+            if (isBlocked) {
                 // If fallback provided, don't redirect, just let parent decide (or render fallback)
                 if (!fallback && location.pathname !== '/app/settings') {
                     navigate('/app/settings?tab=subscription', {
@@ -41,10 +45,12 @@ export function SubscriptionGuard({ children, fallback }: SubscriptionGuardProps
     }
 
     const isTrial = subscription?.status === 'trial'
-    const isActive = subscription?.status === 'active' || (subscription?.status as string) === 'converted'
+    const isActive = subscription?.status === 'active' || (subscription?.status as string) === 'converted' || (subscription?.status as string) === 'freemium'
     const trialExpired = isTrial && subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) < new Date() : false
 
-    if (!subscription || (!isActive && !isTrial) || trialExpired) {
+    const isBlocked = subscription !== null && ((!isActive && !isTrial) || trialExpired)
+
+    if (isBlocked) {
         if (fallback) return <>{fallback}</>
         if (location.pathname === '/app/settings') return <>{children}</> // allow settings route
         return null // Will redirect in useEffect

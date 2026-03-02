@@ -155,7 +155,7 @@ export default function Team() {
 
     return (
         <div className="p-6 max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Gestión de Equipo</h1>
                     <p className="text-gray-500">Administra los miembros de tu clínica y sus permisos.</p>
@@ -194,8 +194,8 @@ export default function Team() {
                 )}
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                <table className="w-full min-w-[600px]">
                     <thead className="bg-gray-50 border-b border-gray-100">
                         <tr>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Miembro</th>
