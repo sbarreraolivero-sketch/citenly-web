@@ -28,6 +28,7 @@ import {
     Send,
     Tag,
     Users,
+    ArrowLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
@@ -94,6 +95,7 @@ export default function Settings() {
     const [clinicAddress, setClinicAddress] = useState('')
     const [services, setServices] = useState<any[]>([])
     const [workingHours, _setWorkingHours] = useState(mockWorkingHours)
+    const [showMobileList, setShowMobileList] = useState(true)
 
     // Service modal state
     const [showServiceModal, setShowServiceModal] = useState(false)
@@ -264,6 +266,7 @@ export default function Settings() {
             window.history.replaceState({}, '', newUrl)
         } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
             setActiveTab(tabParam)
+            if (window.innerWidth < 768) setShowMobileList(false)
         }
     }, [searchParams])
 
@@ -943,18 +946,40 @@ export default function Settings() {
     }
 
     return (
-        <div className="animate-fade-in">
-            <div className="flex gap-6">
+        <div className="animate-fade-in relative min-h-[calc(100vh-7rem)]">
+            <div className="flex flex-col md:flex-row gap-6">
+
+                {/* Mobile Content Header (Back Button) */}
+                {!showMobileList && (
+                    <div className="md:hidden flex items-center gap-3 p-4 bg-white rounded-soft shadow-premium">
+                        <button
+                            onClick={() => setShowMobileList(true)}
+                            className="p-1.5 -ml-1 text-charcoal/60 hover:text-charcoal hover:bg-ivory rounded-full transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <h2 className="font-semibold text-charcoal">
+                            {availableTabs.find(t => t.id === activeTab)?.label}
+                        </h2>
+                    </div>
+                )}
+
                 {/* Sidebar Navigation */}
-                <div className="w-64 flex-shrink-0">
+                <div className={cn(
+                    "w-full md:w-64 flex-shrink-0",
+                    !showMobileList && "hidden md:block" // hide on mobile if viewing content
+                )}>
                     <div className="card-soft p-2">
                         {availableTabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => {
+                                    setActiveTab(tab.id)
+                                    if (window.innerWidth < 768) setShowMobileList(false)
+                                }}
                                 className={cn(
                                     'w-full flex items-center gap-3 px-4 py-3 rounded-soft text-left transition-colors',
-                                    activeTab === tab.id
+                                    activeTab === tab.id && !showMobileList
                                         ? 'bg-primary-500/10 text-primary-600 font-medium'
                                         : 'text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal'
                                 )}
@@ -964,7 +989,7 @@ export default function Settings() {
                                 <ChevronRight
                                     className={cn(
                                         'w-4 h-4 ml-auto transition-transform',
-                                        activeTab === tab.id && 'rotate-90'
+                                        activeTab === tab.id && !showMobileList && 'rotate-90 hidden md:block'
                                     )}
                                 />
                             </button>
@@ -973,10 +998,13 @@ export default function Settings() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1">
+                <div className={cn(
+                    "flex-1",
+                    showMobileList && "hidden md:block" // hide content on mobile if showing list
+                )}>
                     {/* Profile Settings */}
                     {activeTab === 'profile' && (
-                        <div className="space-y-6 animate-fade-in">
+                        <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
                             <MyProfile />
 
                             <div className="card-soft p-6 space-y-4">

@@ -17,18 +17,15 @@ export function SubscriptionGuard({ children, fallback }: SubscriptionGuardProps
     useEffect(() => {
         if (!loading) {
             const isTrial = subscription?.status === 'trial'
-            const isActive = subscription?.status === 'active'
+            const isActive = subscription?.status === 'active' || (subscription?.status as string) === 'converted'
 
             // Check if trial expired based on date
             const trialExpired = isTrial && subscription?.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()
 
-            // Period expired check (optional, usually handled by status update)
-            // const periodExpired = isActive && subscription?.current_period_end && new Date(subscription.current_period_end) < new Date()
-
             if (!subscription || (!isActive && !isTrial) || trialExpired) {
                 // If fallback provided, don't redirect, just let parent decide (or render fallback)
-                if (!fallback) {
-                    navigate('/settings?tab=subscription', {
+                if (!fallback && location.pathname !== '/app/settings') {
+                    navigate('/app/settings?tab=subscription', {
                         state: {
                             from: location.pathname,
                             message: 'Tu suscripción ha expirado. Por favor actualiza tu plan para continuar.'
@@ -44,11 +41,12 @@ export function SubscriptionGuard({ children, fallback }: SubscriptionGuardProps
     }
 
     const isTrial = subscription?.status === 'trial'
-    const isActive = subscription?.status === 'active'
+    const isActive = subscription?.status === 'active' || (subscription?.status as string) === 'converted'
     const trialExpired = isTrial && subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) < new Date() : false
 
     if (!subscription || (!isActive && !isTrial) || trialExpired) {
         if (fallback) return <>{fallback}</>
+        if (location.pathname === '/app/settings') return <>{children}</> // allow settings route
         return null // Will redirect in useEffect
     }
 
