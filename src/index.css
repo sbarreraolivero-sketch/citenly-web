@@ -90,7 +90,7 @@
   }
 
   .nav-item-active {
-    @apply nav-item bg-primary-500/10 text-primary-600 font-medium hover:bg-primary-500/15 hover:text-primary-600;
+    @apply nav-item bg-accent-500/15 text-accent-700 font-medium hover:bg-accent-500/20 hover:text-accent-800 border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200, 169, 106, 0.1)];
   }
 
   /* Status Badges */

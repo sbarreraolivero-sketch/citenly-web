@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Phone, Send, Sparkles, MoreVertical, MessageSquare, RefreshCw, Bot, User } from 'lucide-react'
+import { Search, Phone, Send, Sparkles, MoreVertical, MessageSquare, RefreshCw, Bot, User, BellOff } from 'lucide-react'
 import { cn, formatPhoneNumber, getInitials } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -21,6 +21,7 @@ interface Conversation {
     last_message_at: string
     unread_count: number
     message_count: number
+    requires_human: boolean
 }
 
 export default function Messages() {
@@ -33,6 +34,7 @@ export default function Messages() {
     const [loading, setLoading] = useState(true)
     const [loadingMessages, setLoadingMessages] = useState(false)
     const [sending, setSending] = useState(false)
+    const [togglingAI, setTogglingAI] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatRef = useRef<HTMLDivElement>(null)
 
@@ -69,18 +71,22 @@ export default function Messages() {
                 entry.count++
             }
 
-            // Fetch prospect names for phones
+            // Fetch prospect names and requires_human flag for phones
             const phones = Array.from(phoneMap.keys())
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: prospects } = await (supabase as any)
                 .from('crm_prospects')
-                .select('phone, name')
+                .select('phone, name, requires_human')
                 .eq('clinic_id', profile.clinic_id)
                 .in('phone', phones)
 
             const nameMap = new Map<string, string>()
+            const humanMap = new Map<string, boolean>()
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            prospects?.forEach((p: any) => { if (p.name && p.name !== 'Sin nombre') nameMap.set(p.phone, p.name) })
+            prospects?.forEach((p: any) => {
+                if (p.name && p.name !== 'Sin nombre') nameMap.set(p.phone, p.name)
+                if (p.requires_human) humanMap.set(p.phone, true)
+            })
 
             // Also check patients table
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,7 +114,8 @@ export default function Messages() {
                     last_message: latest.content,
                     last_message_at: latest.created_at,
                     unread_count: unread,
-                    message_count: data.count
+                    message_count: data.count,
+                    requires_human: humanMap.get(phone) || false
                 }
             })
 
@@ -186,6 +193,40 @@ export default function Messages() {
 
         return () => { supabase.removeChannel(channel) }
     }, [profile?.clinic_id, selectedPhone, fetchConversations, scrollToBottom])
+
+    // Toggle AI (Requires Human flag)
+    const toggleAIStatus = async (conv: Conversation) => {
+        if (!profile?.clinic_id || togglingAI) return
+        setTogglingAI(true)
+        try {
+            const newStatus = !conv.requires_human
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error: updateError } = await (supabase as any)
+                .from('crm_prospects')
+                .update({ requires_human: newStatus })
+                .eq('clinic_id', profile.clinic_id)
+                .eq('phone', conv.phone_number)
+
+            if (updateError) throw updateError
+
+            // Update local state
+            setConversations(prev => prev.map(c =>
+                c.phone_number === conv.phone_number
+                    ? { ...c, requires_human: newStatus }
+                    : c
+            ))
+
+            // Optional: dismiss any notification about this
+            if (!newStatus) { /* AI Reactivated */ }
+
+        } catch (e) {
+            console.error('Error toggling AI status:', e)
+            alert('Error al actualizar el estado de la IA para este paciente.')
+        } finally {
+            setTogglingAI(false)
+        }
+    }
 
     // Send manual message via YCloud
     const handleSend = async () => {
@@ -367,9 +408,14 @@ export default function Messages() {
                                         <p className="font-medium text-charcoal truncate">
                                             {conversation.patient_name || formatPhoneNumber(conversation.phone_number)}
                                         </p>
-                                        <span className="text-xs text-charcoal/40 flex-shrink-0">
-                                            {formatTime(conversation.last_message_at)}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {conversation.requires_human && (
+                                                <BellOff className="w-3.5 h-3.5 text-red-500 flex-shrink-0" title="Atención humana requerida" />
+                                            )}
+                                            <span className="text-xs text-charcoal/40 flex-shrink-0">
+                                                {formatTime(conversation.last_message_at)}
+                                            </span>
+                                        </div>
                                     </div>
                                     <p className="text-sm text-charcoal/50 mt-0.5 truncate">
                                         {conversation.last_message}
@@ -404,10 +450,29 @@ export default function Messages() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-500/10 rounded-full">
-                                    <Sparkles className="w-4 h-4 text-primary-500" />
-                                    <span className="text-xs font-medium text-primary-600">IA Activa</span>
-                                </div>
+                                <button
+                                    onClick={() => toggleAIStatus(selectedConversation)}
+                                    disabled={togglingAI}
+                                    title={selectedConversation.requires_human ? "Reactivar IA" : "Silenciar IA (Tomar control manual)"}
+                                    className={cn(
+                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors cursor-pointer disabled:opacity-50",
+                                        selectedConversation.requires_human
+                                            ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                                            : "bg-accent-500/15 hover:bg-accent-500/20 text-accent-700 border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]"
+                                    )}
+                                >
+                                    {selectedConversation.requires_human ? (
+                                        <>
+                                            <BellOff className="w-4 h-4" />
+                                            <span className="text-xs font-medium">IA Pausada</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-4 h-4" />
+                                            <span className="text-xs font-medium">IA Activa</span>
+                                        </>
+                                    )}
+                                </button>
                                 <span className="text-xs text-charcoal/40">{selectedConversation.message_count} msgs</span>
                                 <button className="p-2 text-charcoal/50 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors">
                                     <MoreVertical className="w-5 h-5" />
@@ -527,8 +592,12 @@ export default function Messages() {
                                     {sending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                                 </button>
                             </div>
-                            <p className="text-xs text-charcoal/40 mt-2 text-center">
-                                El asistente IA responderá automáticamente cuando no escribas manualmente
+                            <p className="text-xs mt-2 text-center">
+                                {selectedConversation.requires_human ? (
+                                    <span className="text-red-500 font-medium">La IA está pausada. Reactívala arriba si deseas que el bot vuelva a responderle al paciente automáticamente.</span>
+                                ) : (
+                                    <span className="text-charcoal/40">El asistente IA responderá automáticamente cuando no escribas manualmente</span>
+                                )}
                             </p>
                         </div>
                     </>

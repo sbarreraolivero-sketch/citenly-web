@@ -24,6 +24,7 @@ import {
     Menu,
     X,
     FileText,
+    BellOff
 } from 'lucide-react'
 import { AIChatWidget } from '../AIChatWidget'
 import { cn, getInitials } from '@/lib/utils'
@@ -68,6 +69,8 @@ const getNotificationIcon = (type: string) => {
             return <MessageSquare className="w-4 h-4 text-primary-500" />
         case 'survey_response':
             return <Star className="w-4 h-4 text-yellow-500" />
+        case 'human_handoff':
+            return <BellOff className="w-4 h-4 text-red-500" />
         default:
             return <Bell className="w-4 h-4 text-charcoal/50" />
     }
@@ -239,7 +242,7 @@ export default function DashboardLayout() {
                                 className={cn(
                                     'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
                                     isActive
-                                        ? 'bg-primary-500/10 text-primary-600 font-medium'
+                                        ? 'bg-accent-500/15 text-accent-700 font-medium border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]'
                                         : 'text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal'
                                 )}
                             >
