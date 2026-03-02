@@ -82,9 +82,24 @@ export default function AdminCalendar() {
         if (!error) {
             // Also update clinic activation status to "active" magically behind the scenes when HQ finishes the onboarding call
             if (newStatus === 'completed' && clinicId) {
+                const now = new Date()
+                const trialEnd = new Date()
+                trialEnd.setDate(trialEnd.getDate() + 14) // 14 days from now
+
+                // 1. Activate clinic and set trial properties
                 await (supabase as any).from('clinic_settings').update({
-                    activation_status: 'active'
+                    activation_status: 'active',
+                    trial_status: 'running',
+                    trial_start_date: now.toISOString(),
+                    trial_end_date: trialEnd.toISOString(),
                 }).eq('id', clinicId)
+
+                // 2. Also try to update subscription table for trials automatically setup
+                await (supabase as any).from('subscriptions').update({
+                    status: 'trial',
+                    trial_ends_at: trialEnd.toISOString(),
+                    current_period_start: now.toISOString(),
+                }).eq('clinic_id', clinicId)
             }
             fetchAppointments()
         }
