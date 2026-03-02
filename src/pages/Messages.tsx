@@ -410,7 +410,9 @@ export default function Messages() {
                                         </p>
                                         <div className="flex items-center gap-2">
                                             {conversation.requires_human && (
-                                                <BellOff className="w-3.5 h-3.5 text-red-500 flex-shrink-0" title="Atención humana requerida" />
+                                                <span title="Atención humana requerida" className="flex-shrink-0 flex">
+                                                    <BellOff className="w-3.5 h-3.5 text-red-500" />
+                                                </span>
                                             )}
                                             <span className="text-xs text-charcoal/40 flex-shrink-0">
                                                 {formatTime(conversation.last_message_at)}
