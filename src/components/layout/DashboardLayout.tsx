@@ -186,6 +186,7 @@ export default function DashboardLayout() {
     )
 
     const [showMobileMenu, setShowMobileMenu] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
     return (
         <div className="flex h-screen bg-ivory overflow-hidden">
@@ -197,29 +198,21 @@ export default function DashboardLayout() {
                 />
             )}
 
-            {/* Sidebar */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
-                showMobileMenu ? "translate-x-0" : "-translate-x-full"
+                "fixed inset-y-0 left-0 z-50 bg-gray-900 border-r border-gray-800 flex flex-col transition-all duration-300 ease-in-out md:relative md:translate-x-0 hidden md:flex",
+                isSidebarCollapsed ? "w-20" : "w-64"
             )}>
                 {/* Logo */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800 relative group cursor-pointer transition-colors hover:bg-gray-800/50" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-800 rounded-soft flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-primary-400" />
+                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-gray-800 rounded-soft flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary-400" />
                         </div>
-                        <div>
+                        <div className={cn("transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
                             <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-primary-600">Citenly</h1>
                             <p className="text-xs text-gray-400 -mt-0.5">AI System</p>
                         </div>
                     </div>
-                    {/* Close Mobile Menu Button */}
-                    <button
-                        onClick={() => setShowMobileMenu(false)}
-                        className="md:hidden p-2 -mr-2 text-gray-400 hover:text-white"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
                 </div>
 
                 {/* Navigation */}
@@ -239,6 +232,78 @@ export default function DashboardLayout() {
                                 key={item.name}
                                 to={item.href}
                                 onClick={() => setShowMobileMenu(false)}
+                                title={isSidebarCollapsed ? item.name : undefined}
+                                className={cn(
+                                    'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
+                                    isActive
+                                        ? 'bg-accent-500/15 text-accent-400 font-medium border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]'
+                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                                    isSidebarCollapsed && 'justify-center px-0'
+                                )}
+                            >
+                                <item.icon className={cn("shrink-0", isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-accent-400" : "text-gray-500")} />
+                                <span className={cn("transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>{item.name}</span>
+                            </NavLink>
+                        )
+                    })}
+                </nav>
+
+                {/* Footer - AI Status */}
+                <div className="p-4 border-t border-gray-800">
+                    <div className={cn("card-soft bg-gray-800 border-none transition-all duration-300", isSidebarCollapsed ? "p-2 flex justify-center" : "p-4")}>
+                        <div className="flex items-center gap-3">
+                            <div className={cn("shrink-0 bg-gray-700 rounded-full flex items-center justify-center", isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10")}>
+                                <Sparkles className="w-5 h-5 text-primary-400" />
+                            </div>
+                            <div className={cn("min-w-0 transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                                <p className="text-sm font-medium text-white truncate">IA Activa</p>
+                                <p className="text-xs text-gray-400">Respondiendo 24/7</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Mobile Sidebar */}
+            <aside className={cn(
+                "fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:hidden",
+                showMobileMenu ? "translate-x-0" : "-translate-x-full"
+            )}>
+                {/* Logo */}
+                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-800 rounded-soft flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-primary-400" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-primary-600">Citenly</h1>
+                            <p className="text-xs text-gray-400 -mt-0.5">AI System</p>
+                        </div>
+                    </div>
+                    {/* Close Mobile Menu Button */}
+                    <button
+                        onClick={() => setShowMobileMenu(false)}
+                        className="p-2 -mr-2 text-gray-400 hover:text-white"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto w-full">
+                    {navigation.filter(item => {
+                        if (['Finanzas', 'Retención', 'CRM', 'Campañas'].includes(item.name)) {
+                            const isOwner = member?.role === 'owner' || profile?.role === 'owner'
+                            if (!isOwner) return false
+                        }
+                        return true
+                    }).map((item) => {
+                        const isActive = location.pathname === item.href
+                        return (
+                            <NavLink
+                                key={item.name}
+                                to={item.href}
+                                onClick={() => setShowMobileMenu(false)}
                                 className={cn(
                                     'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
                                     isActive
@@ -246,8 +311,8 @@ export default function DashboardLayout() {
                                         : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                                 )}
                             >
-                                <item.icon className={cn("w-5 h-5", isActive ? "text-accent-400" : "text-gray-500")} />
-                                {item.name}
+                                <item.icon className={cn("w-5 h-5 shrink-0", isActive ? "text-accent-400" : "text-gray-500")} />
+                                <span>{item.name}</span>
                             </NavLink>
                         )
                     })}
@@ -257,7 +322,7 @@ export default function DashboardLayout() {
                 <div className="p-4 border-t border-gray-800">
                     <div className="card-soft p-4 bg-gray-800 border-none">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center shrink-0">
                                 <Sparkles className="w-5 h-5 text-primary-400" />
                             </div>
                             <div className="flex-1 min-w-0">

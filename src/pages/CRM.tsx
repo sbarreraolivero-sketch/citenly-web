@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
     Search,
     Plus,
@@ -682,7 +683,7 @@ export default function CRM() {
             </div>
 
             {/* Prospect Create/Edit Modal */}
-            {showProspectModal && (
+            {showProspectModal && createPortal(
                 <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-silk-beige">
@@ -854,11 +855,12 @@ export default function CRM() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Stage Config Modal */}
-            {showStageConfig && (
+            {showStageConfig && createPortal(
                 <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-md animate-scale-in">
                         <div className="flex items-center justify-between p-6 border-b border-silk-beige">
@@ -932,11 +934,12 @@ export default function CRM() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Tag Manager Modal */}
-            {showTagManager && (
+            {showTagManager && createPortal(
                 <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-md animate-scale-in">
                         <div className="flex items-center justify-between p-6 border-b border-silk-beige">
@@ -996,7 +999,8 @@ export default function CRM() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     )

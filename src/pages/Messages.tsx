@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Phone, Send, Sparkles, MoreVertical, MessageSquare, RefreshCw, Bot, User, BellOff } from 'lucide-react'
+import { Search, Phone, Send, Sparkles, MoreVertical, MessageSquare, RefreshCw, Bot, User, BellOff, ArrowLeft } from 'lucide-react'
 import { cn, formatPhoneNumber, getInitials } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -178,7 +178,7 @@ export default function Messages() {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'messages',
-                filter: `clinic_id=eq.${profile.clinic_id}`
+                filter: `clinic_id=eq.${profile.clinic_id}`,
             }, (payload) => {
                 const newMsg = payload.new as Message
                 // Update conversations list
@@ -346,9 +346,12 @@ export default function Messages() {
     }
 
     return (
-        <div className="h-[calc(100vh-7rem)] flex gap-6 animate-fade-in">
+        <div className="h-[calc(100vh-7rem)] flex flex-col md:flex-row gap-6 animate-fade-in">
             {/* Conversations List */}
-            <div className="w-80 flex-shrink-0 card-soft flex flex-col">
+            <div className={cn(
+                "w-full md:w-80 flex-shrink-0 card-soft flex-col h-full",
+                selectedPhone ? "hidden md:flex" : "flex"
+            )}>
                 {/* Search Header */}
                 <div className="p-4 border-b border-silk-beige">
                     <div className="flex items-center justify-between mb-3">
@@ -430,12 +433,21 @@ export default function Messages() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 card-soft flex flex-col">
+            <div className={cn(
+                "flex-1 card-soft flex-col h-full relative overflow-hidden",
+                selectedPhone ? "flex" : "hidden md:flex"
+            )}>
                 {selectedConversation ? (
                     <>
                         {/* Chat Header */}
-                        <div className="p-4 border-b border-silk-beige flex items-center justify-between">
+                        <div className="p-4 border-b border-silk-beige flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setSelectedPhone(null)}
+                                    className="p-1.5 -ml-1 text-charcoal/60 hover:text-charcoal md:hidden"
+                                >
+                                    <ArrowLeft className="w-6 h-6" />
+                                </button>
                                 <div className="w-10 h-10 bg-silk-beige rounded-full flex items-center justify-center">
                                     <span className="text-sm font-medium text-charcoal">
                                         {getInitials(selectedConversation.patient_name || selectedConversation.phone_number.slice(-4))}

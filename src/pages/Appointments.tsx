@@ -930,8 +930,8 @@ export default function Appointments() {
             ) : (
                 <>
                     {/* Appointments Table */}
-                    <div className="card-soft">
-                        <table className="w-full">
+                    <div className="card-soft overflow-x-auto">
+                        <table className="w-full min-w-[800px]">
                             <thead>
                                 <tr className="border-b border-silk-beige bg-ivory/50">
                                     <th className="text-left py-4 px-6 text-sm font-medium text-charcoal/60">Paciente</th>
