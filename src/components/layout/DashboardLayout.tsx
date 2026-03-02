@@ -199,24 +199,24 @@ export default function DashboardLayout() {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-ivory border-r border-silk-beige flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
                 showMobileMenu ? "translate-x-0" : "-translate-x-full"
             )}>
                 {/* Logo */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-silk-beige">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-hero-gradient rounded-soft flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-gray-800 rounded-soft flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-primary-400" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-semibold text-charcoal">Citenly</h1>
-                            <p className="text-xs text-charcoal/50 -mt-0.5">IA Assistant</p>
+                            <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-primary-600">Citenly</h1>
+                            <p className="text-xs text-gray-400 -mt-0.5">AI System</p>
                         </div>
                     </div>
                     {/* Close Mobile Menu Button */}
                     <button
                         onClick={() => setShowMobileMenu(false)}
-                        className="md:hidden p-2 -mr-2 text-charcoal/60 hover:text-charcoal"
+                        className="md:hidden p-2 -mr-2 text-gray-400 hover:text-white"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -242,11 +242,11 @@ export default function DashboardLayout() {
                                 className={cn(
                                     'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
                                     isActive
-                                        ? 'bg-accent-500/15 text-accent-700 font-medium border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]'
-                                        : 'text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal'
+                                        ? 'bg-accent-500/15 text-accent-400 font-medium border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]'
+                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                                 )}
                             >
-                                <item.icon className="w-5 h-5" />
+                                <item.icon className={cn("w-5 h-5", isActive ? "text-accent-400" : "text-gray-500")} />
                                 {item.name}
                             </NavLink>
                         )
@@ -254,15 +254,15 @@ export default function DashboardLayout() {
                 </nav>
 
                 {/* Footer - AI Status */}
-                <div className="p-4 border-t border-silk-beige">
-                    <div className="card-soft p-4 bg-gradient-to-br from-primary-500/5 to-accent-500/5">
+                <div className="p-4 border-t border-gray-800">
+                    <div className="card-soft p-4 bg-gray-800 border-none">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-premium-gradient rounded-full flex items-center justify-center">
-                                <Sparkles className="w-5 h-5 text-charcoal" />
+                            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                                <Sparkles className="w-5 h-5 text-primary-400" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-charcoal truncate">IA Activa</p>
-                                <p className="text-xs text-charcoal/50">Respondiendo 24/7</p>
+                                <p className="text-sm font-medium text-white truncate">IA Activa</p>
+                                <p className="text-xs text-gray-400">Respondiendo 24/7</p>
                             </div>
                         </div>
                     </div>
