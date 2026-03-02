@@ -120,7 +120,7 @@ export default function MyProfile() {
                     <Briefcase className="w-4 h-4 text-primary-500" />
                     Información Profesional
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-charcoal/70 mb-1.5">Nombre</label>
                         <input
@@ -173,24 +173,24 @@ export default function MyProfile() {
                 <p className="text-sm text-charcoal/50 mb-4">
                     Este color se usará para identificar tus citas en el calendario compartido.
                 </p>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     {COLOR_PRESETS.map((c) => (
                         <button
                             key={c}
                             onClick={() => setColor(c)}
                             className={cn(
-                                "w-9 h-9 rounded-full transition-all duration-200 ring-offset-2",
+                                "w-9 h-9 rounded-full transition-all duration-200 ring-offset-2 flex-shrink-0",
                                 color === c ? "ring-2 ring-primary-500 scale-110" : "hover:scale-105"
                             )}
                             style={{ backgroundColor: c }}
                         />
                     ))}
-                    <div className="ml-2 flex items-center gap-2">
+                    <div className="ml-2 flex items-center gap-2 sm:ml-2">
                         <input
                             type="color"
                             value={color}
                             onChange={(e) => setColor(e.target.value)}
-                            className="w-9 h-9 rounded-full cursor-pointer border-2 border-silk-beige"
+                            className="w-9 h-9 rounded-full cursor-pointer border-2 border-silk-beige flex-shrink-0"
                         />
                         <span className="text-xs text-charcoal/40 font-mono">{color}</span>
                     </div>
@@ -221,11 +221,11 @@ export default function MyProfile() {
                             <div
                                 key={day.key}
                                 className={cn(
-                                    "flex items-center gap-4 p-3 rounded-lg transition-colors",
+                                    "flex flex-wrap items-center gap-3 sm:gap-4 p-3 rounded-lg transition-colors",
                                     dayHours.enabled ? "bg-ivory" : "bg-gray-50/70"
                                 )}
                             >
-                                <label className="flex items-center gap-3 w-32 cursor-pointer">
+                                <label className="flex items-center gap-3 w-28 sm:w-32 cursor-pointer flex-shrink-0">
                                     <input
                                         type="checkbox"
                                         checked={dayHours.enabled}
@@ -240,19 +240,19 @@ export default function MyProfile() {
                                     </span>
                                 </label>
                                 {dayHours.enabled && (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
                                         <input
                                             type="time"
                                             value={dayHours.start}
                                             onChange={(e) => updateDay(day.key, 'start', e.target.value)}
-                                            className="input-soft text-sm py-1.5 px-3"
+                                            className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
                                         />
                                         <span className="text-charcoal/40 text-sm">a</span>
                                         <input
                                             type="time"
                                             value={dayHours.end}
                                             onChange={(e) => updateDay(day.key, 'end', e.target.value)}
-                                            className="input-soft text-sm py-1.5 px-3"
+                                            className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
                                         />
                                     </div>
                                 )}
