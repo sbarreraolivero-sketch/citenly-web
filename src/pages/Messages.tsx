@@ -123,8 +123,8 @@ export default function Messages() {
             convs.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
             setConversations(convs)
 
-            // Auto-select first conversation if none selected
-            if (!selectedPhone && convs.length > 0) {
+            // Auto-select first conversation if none selected (only on desktop)
+            if (!selectedPhone && convs.length > 0 && window.innerWidth >= 768) {
                 setSelectedPhone(convs[0].phone_number)
             }
         } catch (e) {
