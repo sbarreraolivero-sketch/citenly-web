@@ -72,6 +72,11 @@ const functions = [
             required: ["query"]
         }
     },
+    {
+        name: "escalate_to_human",
+        description: "ÚSALA SÓLO si el paciente está molesto, tiene un problema médico complejo o pide EXPLÍCITAMENTE hablar con un humano. Esta función silenciará al bot para que un agente humano tome el control del chat.",
+        parameters: { type: "object", properties: {}, required: [] }
+    }
 ];
 
 // =============================================
@@ -423,6 +428,40 @@ const getKnowledge = async (sb: ReturnType<typeof createClient>, clinicId: strin
     }
 };
 
+const escalateToHuman = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string) => {
+    try {
+        // Find existing prospect
+        const { data: existing } = await sb.from("crm_prospects")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .eq("phone", phone)
+            .limit(1)
+            .single();
+
+        if (existing) {
+            await sb.from("crm_prospects").update({ requires_human: true }).eq("id", existing.id);
+        } else {
+            // Very rare: AI called escalate before prospect creation succeeded
+            await autoUpsertMinimalProspect(sb, clinicId, phone);
+            await sb.from("crm_prospects").update({ requires_human: true }).eq("clinic_id", clinicId).eq("phone", phone);
+        }
+
+        // Send a notification!
+        await sb.from("notifications").insert({
+            clinic_id: clinicId,
+            type: "human_handoff",
+            title: "Atención Requerida 🚨",
+            message: `El paciente ${phone} solicitó atención humana. La IA ha sido silenciada para este chat.`
+        });
+
+        console.log(`[ESCALATE] Escalated to human for ${phone} in clinic ${clinicId}`);
+        return { success: true, message: "El chat ha sido derivado a un agente humano. Despídete cordialmente avisando que un humano se contactará pronto." };
+    } catch (e) {
+        console.error("escalateToHuman error:", e);
+        return { success: false, message: "Error al derivar." };
+    }
+};
+
 const getStageId = async (sb: ReturnType<typeof createClient>, clinicId: string, stageName: string) => {
     const { data } = await sb.from("crm_pipeline_stages")
         .select("id")
@@ -540,6 +579,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
         case "cancel_appointment": return confirmAppt(sb, clinicId, phone, name === "cancel_appointment" ? "no" : args.response as string);
         case "upsert_prospect": return upsertProspect(sb, clinicId, phone, args as { name?: string; email?: string; service_interest?: string; notes?: string });
         case "get_knowledge": return getKnowledge(sb, clinicId, args.query as string);
+        case "escalate_to_human": return escalateToHuman(sb, clinicId, phone);
         default: return { error: `Unknown: ${name}` };
     }
 };
@@ -629,6 +669,20 @@ Deno.serve(async (req) => {
         autoUpsertMinimalProspect(sb, clinic.id, from).catch(e => console.error("Auto-prospect failed:", e));
 
         if (!clinic.ai_auto_respond) return new Response(JSON.stringify({ status: "saved" }), { headers: corsHeaders });
+
+        // VERIFY IF HUMAN IS REQUIRED
+        const { data: prospect } = await sb.from("crm_prospects")
+            .select("requires_human")
+            .eq("clinic_id", clinic.id)
+            .eq("phone", from)
+            .limit(1)
+            .maybeSingle();
+
+        if (prospect?.requires_human) {
+            await debugLog(sb, `IA silenciosa: Handoff a humano activo para ${from}`, { phone: from });
+            // Only save the message but DO NOT respond
+            return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
+        }
 
         // Build conversation context
         const history = await getHistory(sb, clinic.id, from);
