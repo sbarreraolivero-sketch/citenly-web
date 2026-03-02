@@ -652,7 +652,7 @@ export default function Appointments() {
             <div className="card-soft p-4">
                 <div className="flex flex-wrap items-center gap-4">
                     {/* Search */}
-                    <div className="flex-1 min-w-[200px] relative">
+                    <div className="flex-1 w-full min-w-[200px] sm:min-w-0 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40" />
                         <input
                             type="text"
@@ -806,13 +806,13 @@ export default function Appointments() {
                 </div>
 
                 {viewMode === 'list' && (
-                    <div className="flex gap-2 mt-4 border-t border-silk-beige pt-4">
+                    <div className="flex gap-2 mt-4 border-t border-silk-beige pt-4 overflow-x-auto pb-2 scrollbar-none">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    'flex items-center gap-2 px-4 py-2 rounded-soft text-sm font-medium transition-colors',
+                                    'whitespace-nowrap flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-soft text-sm font-medium transition-colors',
                                     activeTab === tab.id
                                         ? 'bg-primary-500 text-white'
                                         : 'text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal'
@@ -821,7 +821,7 @@ export default function Appointments() {
                                 {tab.label}
                                 <span
                                     className={cn(
-                                        'w-5 h-5 rounded-full flex items-center justify-center text-xs',
+                                        'w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0',
                                         activeTab === tab.id ? 'bg-white/20' : 'bg-silk-beige'
                                     )}
                                 >
