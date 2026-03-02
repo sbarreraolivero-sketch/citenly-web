@@ -121,7 +121,7 @@ export function PendingActivation() {
                 {/* Calendly Column */}
                 <div className="flex-1 w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 min-h-[600px] flex flex-col relative">
                     <div className="p-6 bg-gradient-to-r from-charcoal to-gray-900 text-white text-center">
-                        <h2 className="font-bold text-xl">Agenda tu Activación</h2>
+                        <h2 className="font-bold text-xl text-gradient-premium">Agenda tu Activación</h2>
                         <p className="text-sm text-gray-300 mt-1">Selecciona el horario que mejor te acomode.</p>
                     </div>
                     <div className="flex-1 bg-white relative">

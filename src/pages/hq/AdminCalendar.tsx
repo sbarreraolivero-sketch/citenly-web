@@ -73,13 +73,19 @@ export default function AdminCalendar() {
         fetchAppointments()
     }, [])
 
-    const handleUpdateStatus = async (id: string, newStatus: string) => {
+    const handleUpdateStatus = async (id: string, newStatus: string, clinicId?: string) => {
         const { error } = await (supabase as any)
             .from('hq_appointments')
             .update({ status: newStatus })
             .eq('id', id)
 
         if (!error) {
+            // Also update clinic activation status to "active" magically behind the scenes when HQ finishes the onboarding call
+            if (newStatus === 'completed' && clinicId) {
+                await (supabase as any).from('clinic_settings').update({
+                    activation_status: 'active'
+                }).eq('id', clinicId)
+            }
             fetchAppointments()
         }
     }
@@ -189,14 +195,14 @@ export default function AdminCalendar() {
                                             {apt.status === 'scheduled' && (
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => handleUpdateStatus(apt.id, 'completed')}
+                                                        onClick={() => handleUpdateStatus(apt.id, 'completed', apt.clinic_id)}
                                                         className="p-1.5 text-green-600 hover:bg-green-50 rounded bg-white border border-green-200 shadow-sm transition-colors"
                                                         title="Marcar como Completada"
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleUpdateStatus(apt.id, 'cancelled')}
+                                                        onClick={() => handleUpdateStatus(apt.id, 'cancelled', apt.clinic_id)}
                                                         className="p-1.5 text-red-600 hover:bg-red-50 rounded bg-white border border-red-200 shadow-sm transition-colors"
                                                         title="Cancelar Cita"
                                                     >
