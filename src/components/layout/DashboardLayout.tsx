@@ -368,7 +368,7 @@ export default function DashboardLayout() {
                             </button>
 
                             {showNotifications && (
-                                <div className="absolute -right-[72px] sm:right-0 mt-2 w-[calc(100vw-32px)] sm:w-96 bg-white rounded-soft shadow-soft-lg border border-silk-beige z-50">
+                                <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-96 bg-white rounded-soft shadow-soft-lg border border-silk-beige z-[100]">
                                     <div className="px-4 py-3 border-b border-silk-beige flex items-center justify-between">
                                         <h3 className="font-medium text-charcoal">Notificaciones</h3>
                                         <span className="text-xs text-charcoal/50">{unreadCount} nuevas</span>
