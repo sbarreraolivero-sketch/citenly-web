@@ -132,7 +132,7 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
 // =============================================
 // Tool Implementations
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago") => {
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string) => {
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
@@ -156,8 +156,6 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     // Try to find requested professional BY NAME/TITLE
-    // @ts-ignore
-    const profName = arguments[4]; // Extracting from processFunc arguments implicitly, see update below
     if (profName) {
         const { data: prof } = await sb.from("clinic_members")
             .select("id:user_id, member_id:id")
