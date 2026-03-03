@@ -50,12 +50,16 @@ export default function MyProfile() {
             setSpecialty(member.specialty || '')
             setColor(member.color || '#8B5CF6')
             setWorkingHours((member as any).working_hours || DEFAULT_HOURS)
-            setLoading(false)
         }
+        // Always stop loading after attempting to get member
+        setLoading(false)
     }, [member])
 
     const handleSave = async () => {
-        if (!member) return
+        if (!member) {
+            toast.error('No se pudo encontrar tu registro profesional.')
+            return
+        }
         setSaving(true)
         try {
             await teamService.updateMemberProfile(member.id, {

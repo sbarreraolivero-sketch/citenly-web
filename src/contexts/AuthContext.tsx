@@ -293,14 +293,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                             // 3. Fetch Member
                             try {
-                                const { data } = await supabase
+                                const { data, error } = await supabase
                                     .from('clinic_members')
                                     .select('*')
                                     .eq('user_id', session.user.id)
                                     .eq('clinic_id', profileData.clinic_id)
                                     .single()
+                                if (error) console.error('Member fetch error details:', error)
                                 memberData = data
-                            } catch (e) { console.error('Member fetch error:', e) }
+                            } catch (e) { console.error('Member fetch exception:', e) }
                         }
 
                         if (mounted) {
@@ -361,7 +362,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 .eq('user_id', session.user.id)
                                 .eq('clinic_id', data.clinic_id)
                                 .single()
-                                .then(({ data }) => mounted && setMember(data))
+                                .then(({ data, error }) => {
+                                    if (error) console.error('Auth state change member fetch error:', error)
+                                    if (data && mounted) setMember(data)
+                                })
                         }
                     }
                 } else {
