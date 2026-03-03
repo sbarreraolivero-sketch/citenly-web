@@ -59,11 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const CLINICS_STORAGE_KEY = 'citenly_user_clinics'
 
     // Fetch user profile from database with retry logic
-    const fetchProfile = async (userId: string, retries = 3, delay = 500): Promise<UserProfile | null> => {
+    const fetchProfile = async (userId: string, retries = 3, delay = 500): Promise<{ data: UserProfile | null, status: 'found' | 'not_found' | 'error' }> => {
         // Bypass profile fetching for HQ routes
         if (window.location.pathname.startsWith('/hq')) {
             console.log('Bypassing profile fetch for HQ route.')
-            return null
+            return { data: null, status: 'not_found' }
         }
 
         try {
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         .single()
 
                     const timeoutPromise = new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+                        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
                     )
 
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,12 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                     if (!error && data) {
                         localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data))
-                        return data as UserProfile
+                        return { data: data as UserProfile, status: 'found' }
                     }
 
                     if (error && error.code === 'PGRST116') {
                         console.error('Profile not found for user:', userId)
-                        return null
+                        return { data: null, status: 'not_found' }
                     }
                 } catch (err) {
                     console.warn(`Attempt ${i + 1} failed to fetch profile. Retrying...`)
@@ -100,10 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     delay *= 2
                 }
             }
-            return null
+            return { data: null, status: 'error' }
         } catch (error) {
             console.error('Fetch profile exception:', error)
-            return null
+            return { data: null, status: 'error' }
         }
     }
 
@@ -274,7 +274,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     }
 
                     // Fetch fresh data
-                    const profileData = await fetchProfile(session.user.id)
+                    const { data: profileData, status: profileStatus } = await fetchProfile(session.user.id)
                     if (mounted && profileData) {
                         setProfile(profileData)
 
@@ -323,10 +323,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             })
                         }
                     } else if (mounted) {
-                        // Profile fetch returned null (likely skipped for HQ route or user not in user_profiles)
-                        // If we are NOT in HQ routes, this user shouldn't be here, or their profile is missing.
-                        // We must clear the Frankenstein state so they get logged out of MainRoutes.
-                        if (!window.location.pathname.startsWith('/hq')) {
+                        // Profile fetch returned null. We only clear the session if the profile is strictly NOT FOUND.
+                        // If it's a network error, we keep the cached profile and let them continue.
+                        if (profileStatus === 'not_found' && !window.location.pathname.startsWith('/hq')) {
+                            console.warn('Profile not found for this user, clearing Frankenstein session.')
                             setProfile(null)
                             setMember(null)
                             setSubscription(null)
@@ -334,6 +334,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             localStorage.removeItem(PROFILE_STORAGE_KEY)
                             localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
                             localStorage.removeItem(CLINICS_STORAGE_KEY)
+                        } else if (profileStatus === 'error') {
+                            console.warn('Profile fetch failed due to network error, keeping cached profile if exists.')
                         }
                         setLoading(false)
                     }
@@ -362,7 +364,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUser(session?.user ?? null)
 
                 if (session?.user) {
-                    const data = await fetchProfile(session.user.id)
+                    const { data, status } = await fetchProfile(session.user.id)
                     if (mounted && data) {
                         setProfile(data)
                         fetchUserClinics() // Background refresh
@@ -378,8 +380,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                     if (data && mounted) setMember(data)
                                 })
                         }
-                    } else if (mounted && !window.location.pathname.startsWith('/hq')) {
+                    } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
                         // Prevent Frankenstein session when JWT changes to a non-profile user (like Admin)
+                        console.warn('Profile not found from AuthStateChange, clearing session.')
                         setProfile(null)
                         setMember(null)
                         setSubscription(null)
@@ -387,6 +390,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         localStorage.removeItem(PROFILE_STORAGE_KEY)
                         localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
                         localStorage.removeItem(CLINICS_STORAGE_KEY)
+                    } else if (mounted && status === 'error') {
+                        console.warn('Network error in AuthStateChange, keeping current auth state.')
                     }
                 } else {
                     setProfile(null)
