@@ -32,6 +32,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import { SubscriptionGuard } from './components/auth/SubscriptionGuard'
 import { AdminProtectedRoute } from './components/auth/AdminProtectedRoute'
 import { RoleGuard } from './components/auth/RoleGuard'
+import { Toaster } from 'react-hot-toast'
 
 // HQ routes use ONLY AdminAuthProvider (no AuthProvider interference)
 function HQRoutes() {
@@ -190,6 +191,7 @@ function App() {
                 {/* Everything else — uses AuthProvider */}
                 <Route path="/*" element={<MainRoutes />} />
             </Routes>
+            <Toaster position="top-right" />
         </BrowserRouter>
     )
 }

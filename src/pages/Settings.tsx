@@ -348,12 +348,20 @@ export default function Settings() {
                         monthlyUsed: subData.monthly_appointments_used || 0
                     })
                 }
+            } catch (error) {
+                console.error('Error loading settings:', error)
+            }
 
+            try {
                 // Fetch services
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: servicesData } = await (supabase as any).rpc('get_clinic_services_secure', {
+                const { data: servicesData, error: servicesError } = await (supabase as any).rpc('get_clinic_services_secure', {
                     p_clinic_id: profile.clinic_id
                 })
+
+                if (servicesError) {
+                    console.error('Error fetching services:', servicesError)
+                }
 
                 if (servicesData) {
                     setServices(servicesData.map((s: any) => ({
@@ -367,18 +375,29 @@ export default function Settings() {
                             message: s.upselling_message || ''
                         }
                     })))
+                } else {
+                    console.warn('servicesData was empty or null')
                 }
+            } catch (error) {
+                console.error('Error loading services:', error)
+            }
 
+            try {
                 // Fetch clinic professionals for service assignment
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: profData } = await (supabase as any).rpc('get_clinic_professionals', {
+                const { data: profData, error: profError } = await (supabase as any).rpc('get_clinic_professionals', {
                     p_clinic_id: profile.clinic_id
                 })
+
+                if (profError) {
+                    console.error('Error fetching professionals:', profError)
+                }
+
                 if (profData) {
                     setClinicProfessionals(profData)
                 }
             } catch (error) {
-                console.error('Error loading settings:', error)
+                console.error('Error loading professionals:', error)
             }
 
             // Fetch webhooks
