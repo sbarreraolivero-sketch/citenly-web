@@ -56,13 +56,24 @@ export default function MyProfile() {
     }, [member])
 
     const handleSave = async () => {
-        if (!member) {
-            toast.error('No se pudo encontrar tu registro profesional.')
+        let currentMemberId = member?.id
+
+        if (!currentMemberId) {
+            // Intenta recuperar el ID directamente si se perdió en el contexto (múltiples sesiones/caché)
+            const fallbackMember = await teamService.getCurrentMember()
+            if (fallbackMember?.id) {
+                currentMemberId = fallbackMember.id
+            }
+        }
+
+        if (!currentMemberId) {
+            toast.error('No se pudo encontrar tu registro profesional. Refresca la página.')
             return
         }
+
         setSaving(true)
         try {
-            await teamService.updateMemberProfile(member.id, {
+            await teamService.updateMemberProfile(currentMemberId, {
                 first_name: firstName,
                 last_name: lastName,
                 job_title: jobTitle,
