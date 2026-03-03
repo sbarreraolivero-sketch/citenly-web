@@ -324,6 +324,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         }
                     } else if (mounted) {
                         // Profile fetch returned null (likely skipped for HQ route or user not in user_profiles)
+                        // If we are NOT in HQ routes, this user shouldn't be here, or their profile is missing.
+                        // We must clear the Frankenstein state so they get logged out of MainRoutes.
+                        if (!window.location.pathname.startsWith('/hq')) {
+                            setProfile(null)
+                            setMember(null)
+                            setSubscription(null)
+                            setClinics([])
+                            localStorage.removeItem(PROFILE_STORAGE_KEY)
+                            localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+                            localStorage.removeItem(CLINICS_STORAGE_KEY)
+                        }
                         setLoading(false)
                     }
                 } else {
@@ -367,6 +378,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                     if (data && mounted) setMember(data)
                                 })
                         }
+                    } else if (mounted && !window.location.pathname.startsWith('/hq')) {
+                        // Prevent Frankenstein session when JWT changes to a non-profile user (like Admin)
+                        setProfile(null)
+                        setMember(null)
+                        setSubscription(null)
+                        setClinics([])
+                        localStorage.removeItem(PROFILE_STORAGE_KEY)
+                        localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+                        localStorage.removeItem(CLINICS_STORAGE_KEY)
                     }
                 } else {
                     setProfile(null)
