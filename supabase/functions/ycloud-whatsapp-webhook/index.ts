@@ -250,12 +250,13 @@ const getOffset = (timeZone: string = "America/Santiago", date: Date) => {
 
 const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago") => {
     let duration = 60;
+    let price = 0;
     let professionalId: string | null = null;
     let serviceId: string | null = null;
 
     if (args.service_name) {
         const { data: svc } = await sb.from("services")
-            .select("id, duration")
+            .select("id, duration, price")
             .eq("clinic_id", clinicId)
             .ilike("name", `%${args.service_name}%`)
             .limit(1)
@@ -264,6 +265,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (svc) {
             duration = svc.duration;
             serviceId = svc.id;
+            price = svc.price || 0;
         }
     }
 
@@ -311,6 +313,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         appointment_date: appointmentDateWithOffset,
         status: "pending",
         duration: duration,
+        price: price,
         professional_id: professionalId // NEW field
     }).select().single();
 

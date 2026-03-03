@@ -179,57 +179,19 @@ export default function Appointments() {
 
             // Handle "Completed" status - CRM Integration
             if (newStatus === 'completed') {
-                // 1. Find patient by phone number
-                const cleanPhone = appointment.phone_number.replace(/\D/g, '')
-
-                // Try exact match first, then formatted
+                // Fetch the appointment again to get the auto-generated patient_id from the DB trigger
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: patients, error: patientError } = await (supabase as any)
-                    .from('patients')
-                    .select('*')
-                    .eq('clinic_id', profile!.clinic_id)
-                    .or(`phone_number.eq.${cleanPhone},phone_number.eq.${appointment.phone_number}`)
-                    .limit(1)
+                const { data: updatedApt, error: fetchErr } = await (supabase as any)
+                    .from('appointments')
+                    .select('*, patient:patients(id, name)')
+                    .eq('id', id)
+                    .single()
 
-                if (patientError) {
-                    console.error('Error finding patient:', patientError)
-                    return
-                }
-
-                const patient = patients && patients.length > 0 ? patients[0] : null
-                setSelectedAppointment(appointment)
-
-                if (patient) {
-                    // Patient found
-                    setFoundPatient(patient)
-                    if (confirm(`Cita completada. ¿Deseas crear un registro clínico para ${patient.name}?`)) {
-                        setShowRecordModal(true)
-                    }
-                } else {
-                    // Patient not found
-                    setFoundPatient(null)
-                    if (confirm(`Cita completada. El paciente "${appointment.patient_name}" no existe en la base de datos. ¿Deseas crearlo ahora para agregar el registro clínico?`)) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const { data: appointmentData } = await (supabase as any)
-                            .from('appointments')
-                            .select(`
-                        *,
-                        patient:patients(name)
-                    `)
-                            .eq('id', id)
-                            .single()
-
-                        if (appointmentData?.patient) {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const patientName = (appointmentData as any).patient.name
-                            if (confirm(`Cita completada. ¿Deseas crear un registro clínico para ${patientName}?`)) {
-                                // Redirect to patient details with open modal
-                                // We need patient ID, which is on the appointment
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                const patientId = (appointmentData as any).patient_id
-                                navigate(`/patients/${patientId}?action=new_record`)
-                            }
-                        }
+                if (!fetchErr && updatedApt?.patient) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const patientData = (updatedApt as any).patient
+                    if (window.confirm(`Cita completada con éxito.\n\nEl paciente ${patientData.name} está registrado en tu CRM.\n\n¿Deseas agregar sus notas y ficha clínica ahora?`)) {
+                        navigate(`/patients/${patientData.id}?action=new_record`)
                     }
                 }
             }

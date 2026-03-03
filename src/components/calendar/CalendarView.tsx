@@ -38,9 +38,9 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
         const isCancelled = event.resource?.status === 'cancelled'
 
         return (
-            <div className={`h-full w-full py-0.5 px-1 sm:py-1 sm:px-2 flex flex-col justify-center pointer-events-none ${isCancelled ? 'line-through' : ''}`}>
-                <div className="font-medium leading-tight text-[10px] sm:text-xs truncate">{event.title}</div>
-                <div className="text-[9px] sm:text-[10px] opacity-80 truncate mt-0.5">
+            <div className={`h-full w-full py-1 px-2 flex flex-col justify-start pointer-events-none ${isCancelled ? 'line-through' : ''}`}>
+                <div className="font-semibold leading-tight text-xs sm:text-sm truncate">{event.title}</div>
+                <div className="text-[10px] sm:text-xs opacity-90 truncate mt-1 font-medium">
                     {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
                 </div>
             </div>
@@ -78,7 +78,7 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
     }
 
     return (
-        <div className="h-[600px] sm:h-[650px] bg-white rounded-soft shadow-premium p-2 sm:p-4 md:p-6 animate-fade-in border border-silk-beige/50 overflow-hidden">
+        <div className="h-[80vh] min-h-[800px] bg-white rounded-2xl shadow-xl p-4 sm:p-6 animate-fade-in border-[3px] border-silk-beige/60 overflow-hidden">
             <Calendar
                 localizer={localizer}
                 events={events}
@@ -88,6 +88,8 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
                 views={[Views.MONTH, Views.WEEK, Views.DAY]}
                 defaultView={Views.WEEK}
                 culture='es'
+                step={30}
+                timeslots={2}
                 messages={{
                     next: "Siguiente",
                     previous: "Anterior",
@@ -106,9 +108,9 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
                 onSelectSlot={onSelectSlot}
                 selectable={!!onSelectSlot}
                 selected={null}
-                min={new Date(new Date().setHours(7, 0, 0, 0))} // Start at 7 AM
-                max={new Date(new Date().setHours(23, 0, 0, 0))} // End at 11 PM
-                scrollToTime={new Date(new Date().setHours(8, 0, 0, 0))} // Scroll to 8 AM initial
+                min={new Date(new Date().setHours(9, 0, 0, 0))} // Start at 9 AM
+                max={new Date(new Date().setHours(21, 0, 0, 0))} // End at 9 PM
+                scrollToTime={new Date(new Date().setHours(9, 0, 0, 0))} // Scroll to 9 AM initial
                 components={{
                     toolbar: CustomToolbar,
                     event: CustomEvent,
