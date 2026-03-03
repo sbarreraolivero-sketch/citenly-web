@@ -83,7 +83,7 @@ export default function Settings() {
     const [searchParams] = useSearchParams()
 
     const availableTabs = tabs.filter(tab => {
-        if (!member || member.role === 'owner') return true
+        if (!member || member.role === 'owner' || member.role === 'admin') return true
 
         // Allowed tabs for non-owners
         const allowedTabs = ['profile', 'schedule', 'team', 'notifications']

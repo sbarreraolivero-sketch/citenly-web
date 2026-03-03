@@ -221,8 +221,8 @@ export default function DashboardLayout() {
                         // Hide Finance, CRM, and Campaigns for non-owners
                         if (['Finanzas', 'Retención', 'CRM', 'Campañas'].includes(item.name)) {
                             // Check both member role and profile role to be safe
-                            const isOwner = member?.role === 'owner' || profile?.role === 'owner'
-                            if (!isOwner) return false
+                            const isOwnerOrAdmin = member?.role === 'owner' || profile?.role === 'owner' || member?.role === 'admin' || profile?.role === 'admin'
+                            if (!isOwnerOrAdmin) return false
                         }
                         return true
                     }).map((item) => {
@@ -293,8 +293,8 @@ export default function DashboardLayout() {
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto w-full">
                     {navigation.filter(item => {
                         if (['Finanzas', 'Retención', 'CRM', 'Campañas'].includes(item.name)) {
-                            const isOwner = member?.role === 'owner' || profile?.role === 'owner'
-                            if (!isOwner) return false
+                            const isOwnerOrAdmin = member?.role === 'owner' || profile?.role === 'owner' || member?.role === 'admin' || profile?.role === 'admin'
+                            if (!isOwnerOrAdmin) return false
                         }
                         return true
                     }).map((item) => {
