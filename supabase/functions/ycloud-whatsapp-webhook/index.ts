@@ -763,8 +763,8 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
 
-        // DEBOUNCE - WAIT FOR MORE MESSAGES IN THE BURST (e.g. 5 SECONDS)
-        await new Promise(r => setTimeout(r, 5000));
+        // DEBOUNCE - WAIT FOR MORE MESSAGES IN THE BURST (e.g. 2 SECONDS)
+        await new Promise(r => setTimeout(r, 2000));
 
         // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
         const { data: latestMsg } = await sb.from("messages")
