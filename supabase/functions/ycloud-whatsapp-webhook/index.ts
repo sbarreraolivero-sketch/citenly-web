@@ -763,124 +763,126 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
 
-        // DEBOUNCE - WAIT FOR MORE MESSAGES IN THE BURST (e.g. 2 SECONDS)
-        await new Promise(r => setTimeout(r, 2000));
+        const asyncProcess = async () => {
+            try {
+                // DEBOUNCE - WAIT FOR 60 SECONDS (1 MINUTE)
+                await new Promise(r => setTimeout(r, 60000));
 
-        // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
-        const { data: latestMsg } = await sb.from("messages")
-            .select("id")
-            .eq("clinic_id", clinic.id)
-            .eq("phone_number", from)
-            .eq("direction", "inbound")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+                // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
+                const { data: latestMsg } = await sb.from("messages")
+                    .select("id")
+                    .eq("clinic_id", clinic.id)
+                    .eq("phone_number", from)
+                    .eq("direction", "inbound")
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
 
-        if (latestMsg && latestMsg.id !== msgRowId) {
-            // WE ARE NOT THE LATEST MESSAGE! Abort silently and let the latest one handle everything.
-            await debugLog(sb, `Debounced message`, { msgRowId });
-            return new Response(JSON.stringify({ status: "debounced" }), { headers: corsHeaders });
-        }
+                if (latestMsg && latestMsg.id !== msgRowId) {
+                    // WE ARE NOT THE LATEST MESSAGE! Abort silently and let the latest one handle everything.
+                    await debugLog(sb, `Debounced message`, { msgRowId });
+                    return;
+                }
 
-        // --- AT THIS POINT, WE ARE THE LATEST MESSAGE. BEGIN PROCESSING. ---
+                // --- AT THIS POINT, WE ARE THE LATEST MESSAGE. BEGIN PROCESSING. ---
 
-        const localTime = new Date().toLocaleString("es-MX", { timeZone: clinic.timezone || "America/Mexico_City", weekday: "long", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                const localTime = new Date().toLocaleString("es-MX", { timeZone: clinic.timezone || "America/Mexico_City", weekday: "long", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-        // Fetch knowledge base summary for system prompt
-        const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
+                // Fetch knowledge base summary for system prompt
+                const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
 
-        const sysPrompt = `${clinic.ai_personality}
+                const sysPrompt = `${clinic.ai_personality}\n\nClínica: ${clinic.clinic_name}\nDirección: ${clinic.address || "No especificada, consultar al equipo."}\nFecha/Hora actual: ${localTime}\nServicios (Fuente de Verdad para Precios y Duración): ${JSON.stringify(clinic.services)}\nHorarios: ${JSON.stringify(clinic.working_hours)}\n${knowledgeSummary}\n\nIMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.\n\n${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
-Clínica: ${clinic.clinic_name}
-Dirección: ${clinic.address || "No especificada, consultar al equipo."}
-Fecha/Hora actual: ${localTime}
-Servicios (Fuente de Verdad para Precios y Duración): ${JSON.stringify(clinic.services)}
-Horarios: ${JSON.stringify(clinic.working_hours)}
-${knowledgeSummary}
+                // Build conversation context WITH GROUPING
+                const { data: recentMsgs } = await sb.from("messages")
+                    .select("direction, content, message_type, payload")
+                    .eq("clinic_id", clinic.id)
+                    .eq("phone_number", from)
+                    .order("created_at", { ascending: false })
+                    .limit(15);
 
-${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
+                const orderedMsgs = recentMsgs?.reverse() || [];
 
-        // Build conversation context WITH GROUPING
-        const { data: recentMsgs } = await sb.from("messages")
-            .select("direction, content, message_type, payload")
-            .eq("clinic_id", clinic.id)
-            .eq("phone_number", from)
-            .order("created_at", { ascending: false })
-            .limit(15);
+                // Find where the last outbound message is so we can group all recent inbound ones
+                let lastOutboundIndex = -1;
+                for (let i = orderedMsgs.length - 1; i >= 0; i--) {
+                    if (orderedMsgs[i].direction === "outbound") {
+                        lastOutboundIndex = i;
+                        break;
+                    }
+                }
 
-        const orderedMsgs = recentMsgs?.reverse() || [];
+                const pastContext = lastOutboundIndex >= 0 ? orderedMsgs.slice(0, lastOutboundIndex + 1) : [];
+                const burstInbound = lastOutboundIndex >= 0 ? orderedMsgs.slice(lastOutboundIndex + 1) : orderedMsgs;
 
-        // Find where the last outbound message is so we can group all recent inbound ones
-        let lastOutboundIndex = -1;
-        for (let i = orderedMsgs.length - 1; i >= 0; i--) {
-            if (orderedMsgs[i].direction === "outbound") {
-                lastOutboundIndex = i;
-                break;
-            }
-        }
+                const msgs: Msg[] = [
+                    { role: "system", content: sysPrompt },
+                    ...pastContext.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content || "" }))
+                ];
 
-        const pastContext = lastOutboundIndex >= 0 ? orderedMsgs.slice(0, lastOutboundIndex + 1) : [];
-        const burstInbound = lastOutboundIndex >= 0 ? orderedMsgs.slice(lastOutboundIndex + 1) : orderedMsgs;
+                // Combine the current inbound burst into a single user message
+                let userContentBlocks: any[] = [];
+                for (const msg of burstInbound) {
+                    if (msg.message_type === "image" && msg.payload?.image_base64) {
+                        userContentBlocks.push({ type: "text", text: msg.content || "[Imagen]" });
+                        userContentBlocks.push({
+                            type: "image_url",
+                            image_url: { url: msg.payload.image_base64 }
+                        });
+                    } else {
+                        userContentBlocks.push({ type: "text", text: msg.content || "" });
+                    }
+                }
 
-        const msgs: Msg[] = [
-            { role: "system", content: sysPrompt },
-            ...pastContext.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content || "" }))
-        ];
+                if (userContentBlocks.length > 0) {
+                    msgs.push({ role: "user", content: userContentBlocks });
+                }
 
-        // Combine the current inbound burst into a single user message
-        let userContentBlocks: any[] = [];
-        for (const msg of burstInbound) {
-            if (msg.message_type === "image" && msg.payload?.image_base64) {
-                userContentBlocks.push({ type: "text", text: msg.content || "[Imagen]" });
-                userContentBlocks.push({
-                    type: "image_url",
-                    image_url: { url: msg.payload.image_base64 }
+                let res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
+                let assistant = res.choices[0].message;
+                let funcResult: Record<string, unknown> | null = null;
+                let allFuncResults: Record<string, unknown>[] = [];
+
+                // Handle function calls (support multiple sequential calls)
+                let maxCalls = 3;
+                while (assistant.function_call && maxCalls > 0) {
+                    const fnArgs = JSON.parse(assistant.function_call.arguments);
+                    funcResult = await processFunc(sb, clinic.id, from, assistant.function_call.name, fnArgs, clinic.timezone || "America/Santiago");
+                    allFuncResults.push({ name: assistant.function_call.name, result: funcResult });
+
+                    msgs.push(
+                        { role: "assistant", content: "", function_call: assistant.function_call },
+                        { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
+                    );
+
+                    res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
+                    assistant = res.choices[0].message;
+                    maxCalls--;
+                }
+
+                const reply = assistant.content || "Error. ¿Puedes repetir?";
+                await saveMsg(sb, clinic.id, from, reply, "outbound", {
+                    ai_generated: true,
+                    ai_function_called: allFuncResults.length > 0 ? allFuncResults.map(r => (r as Record<string, unknown>).name).join(", ") : null,
+                    ai_function_result: allFuncResults.length > 0 ? allFuncResults : null
                 });
-            } else {
-                userContentBlocks.push({ type: "text", text: msg.content || "" });
+
+                // Send reply via WA
+                await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply);
+            } catch (err) {
+                console.error("Async Process Error:", err);
             }
+        };
+
+        // @ts-ignore: EdgeRuntime is available in Supabase edge functions
+        if (typeof EdgeRuntime !== "undefined" && typeof EdgeRuntime.waitUntil === "function") {
+            // @ts-ignore
+            EdgeRuntime.waitUntil(asyncProcess());
+        } else {
+            asyncProcess();
         }
 
-        if (userContentBlocks.length > 0) {
-            msgs.push({ role: "user", content: userContentBlocks });
-        }
-
-        let res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
-        let assistant = res.choices[0].message;
-        let funcResult: Record<string, unknown> | null = null;
-        let allFuncResults: Record<string, unknown>[] = [];
-
-        // Handle function calls (support multiple sequential calls)
-        let maxCalls = 3;
-        while (assistant.function_call && maxCalls > 0) {
-            const fnArgs = JSON.parse(assistant.function_call.arguments);
-            funcResult = await processFunc(sb, clinic.id, from, assistant.function_call.name, fnArgs, clinic.timezone || "America/Santiago");
-            allFuncResults.push({ name: assistant.function_call.name, result: funcResult });
-
-            msgs.push(
-                { role: "assistant", content: "", function_call: assistant.function_call },
-                { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
-            );
-
-            res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
-            assistant = res.choices[0].message;
-            maxCalls--;
-        }
-
-        const reply = assistant.content || "Error. ¿Puedes repetir?";
-        await saveMsg(sb, clinic.id, from, reply, "outbound", {
-            ai_generated: true,
-            ai_function_called: allFuncResults.length > 0 ? allFuncResults.map(r => (r as Record<string, unknown>).name).join(", ") : null,
-            ai_function_result: allFuncResults.length > 0 ? allFuncResults : null
-        });
-
-        // Send reply via WA
-        // sendWA(key, to, from, msg)
-        // to (destination) = user phone (from variable)
-        // from (sender) = clinic phone (to variable)
-        await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply);
-
-        return new Response(JSON.stringify({ status: "ok", response: reply }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ status: "processing_async" }), { headers: corsHeaders });
     } catch (e) {
         console.error(e);
         const sb = getSupabase(); // Needs logging if internal error
