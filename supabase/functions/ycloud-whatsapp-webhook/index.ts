@@ -13,12 +13,40 @@ interface YCloudPayload {
         to: string;
         type: string;
         text?: { body: string };
+        audio?: { id: string; link: string; mime_type: string };
+        image?: { id: string; link: string; mime_type: string; caption?: string };
         wamid?: string;
         context?: any;
     };
 }
 
-interface Msg { role: "system" | "user" | "assistant" | "function"; content: string; name?: string; function_call?: { name: string; arguments: string }; }
+interface Msg { role: "system" | "user" | "assistant" | "function"; content: string | any[]; name?: string; function_call?: { name: string; arguments: string }; }
+
+// ====== Helper: Download Media from YCloud ======
+const downloadYCloudMedia = async (link: string, ycloudKey: string): Promise<Blob> => {
+    const res = await fetch(link, {
+        headers: { "X-API-Key": ycloudKey }
+    });
+    if (!res.ok) throw new Error(`Media fetch failed: ${await res.text()}`);
+    return await res.blob();
+};
+
+// ====== Helper: Transcribe Audio using OpenAI Whisper ======
+const transcribeAudioData = async (audioBlob: Blob, openAiKey: string): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", audioBlob, "audio.ogg");
+    formData.append("model", "whisper-1");
+    // Ensure text output
+    formData.append("response_format", "text");
+
+    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${openAiKey}` },
+        body: formData
+    });
+    if (!res.ok) throw new Error(`Transcription failed: ${await res.text()}`);
+    return await res.text();
+};
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -256,7 +284,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
     if (args.service_name) {
         const { data: svc } = await sb.from("services")
-            .select("id, duration, price")
+            .select("id, name, duration, price")
             .eq("clinic_id", clinicId)
             .ilike("name", `%${args.service_name}%`)
             .limit(1)
@@ -266,6 +294,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             duration = svc.duration;
             serviceId = svc.id;
             price = svc.price || 0;
+            args.service_name = svc.name; // Keep exact DB string so select UI binds correctly
         }
     }
 
@@ -635,14 +664,18 @@ Deno.serve(async (req) => {
 
         const msgObj = p.whatsappInboundMessage;
 
-        if (!msgObj || msgObj.type !== "text") {
-            await debugLog(sb, `Ignored: Not text message`, { msgType: msgObj?.type });
+        if (!msgObj) {
+            return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
+        }
+
+        const validTypes = ["text", "audio", "image"];
+        if (!validTypes.includes(msgObj.type)) {
+            await debugLog(sb, `Ignored: Unsupported message type`, { msgType: msgObj?.type });
             return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
         }
 
         const to = msgObj.to;
         const from = msgObj.from;
-        const body = msgObj.text?.body || "";
         const msgId = msgObj.id;
 
         // Deduplication
@@ -664,7 +697,49 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ error: "Missing config" }), { status: 500, headers: corsHeaders });
         }
 
-        await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId });
+        let body = "";
+        let isImage = false;
+        let base64ImageObj: any = null;
+
+        if (msgObj.type === "text") {
+            body = msgObj.text?.body || "";
+        } else if (msgObj.type === "audio" && msgObj.audio) {
+            try {
+                // If link exists, use it, otherwise fall back to fetching via ID
+                let downloadUrl = msgObj.audio.link;
+                if (!downloadUrl) {
+                    downloadUrl = `https://api.ycloud.com/v2/whatsapp/media/${msgObj.audio.id}`;
+                }
+                const blob = await downloadYCloudMedia(downloadUrl, clinic.ycloud_api_key);
+                body = await transcribeAudioData(blob, clinic.openai_api_key);
+                await debugLog(sb, `Audio transcribed`, { body });
+            } catch (e) {
+                console.error("Audio error", e);
+                body = "[Mensaje de audio que no pude procesar. Pide amablemente que te escriban.]";
+            }
+        } else if (msgObj.type === "image" && msgObj.image) {
+            try {
+                let downloadUrl = msgObj.image.link;
+                if (!downloadUrl) {
+                    downloadUrl = `https://api.ycloud.com/v2/whatsapp/media/${msgObj.image.id}`;
+                }
+                const blob = await downloadYCloudMedia(downloadUrl, clinic.ycloud_api_key);
+                const arrayBuffer = await blob.arrayBuffer();
+                const base64 = btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+                base64ImageObj = {
+                    type: "image_url",
+                    image_url: { url: `data:${blob.type || 'image/jpeg'};base64,${base64}` }
+                };
+                body = msgObj.image?.caption || "[La persona te acaba de enviar una imagen]";
+                isImage = true;
+                await debugLog(sb, `Image received`, { type: blob.type });
+            } catch (e) {
+                console.error("Image error", e);
+                body = "[La persona envió una imagen pero no pude verla. Pídele que te describa lo que envió.]";
+            }
+        }
+
+        await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId, type: msgObj.type });
 
         // Auto-create prospect in CRM (best-effort, non-blocking)
         autoUpsertMinimalProspect(sb, clinic.id, from).catch(e => console.error("Auto-prospect failed:", e));
@@ -703,10 +778,18 @@ ${knowledgeSummary}
 
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
+        let userContent: any = body;
+        if (isImage && base64ImageObj) {
+            userContent = [
+                { type: "text", text: body },
+                base64ImageObj
+            ];
+        }
+
         const msgs: Msg[] = [
             { role: "system", content: sysPrompt },
             ...history.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content })),
-            { role: "user", content: body }
+            { role: "user", content: userContent }
         ];
 
         let res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
