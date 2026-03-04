@@ -38,6 +38,12 @@ export default function Messages() {
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatRef = useRef<HTMLDivElement>(null)
 
+    // Use a ref for selectedPhone to avoid dependency cycles in useEffect and useCallback
+    const selectedPhoneRef = useRef<string | null>(selectedPhone)
+    useEffect(() => {
+        selectedPhoneRef.current = selectedPhone
+    }, [selectedPhone])
+
     // Scroll to bottom of messages
     const scrollToBottom = useCallback(() => {
         setTimeout(() => {
@@ -124,7 +130,7 @@ export default function Messages() {
             setConversations(convs)
 
             // Auto-select first conversation if none selected (only on desktop)
-            if (!selectedPhone && convs.length > 0 && window.innerWidth >= 768) {
+            if (!selectedPhoneRef.current && convs.length > 0 && window.innerWidth >= 768) {
                 setSelectedPhone(convs[0].phone_number)
             }
         } catch (e) {
@@ -132,7 +138,7 @@ export default function Messages() {
         } finally {
             setLoading(false)
         }
-    }, [profile?.clinic_id, selectedPhone])
+    }, [profile?.clinic_id])
 
     // Fetch messages for selected conversation
     const fetchMessages = useCallback(async () => {
@@ -173,7 +179,7 @@ export default function Messages() {
         if (!profile?.clinic_id) return
 
         const channel = supabase
-            .channel('messages-realtime')
+            .channel(`messages-${profile.clinic_id}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -184,15 +190,19 @@ export default function Messages() {
                 // Update conversations list
                 fetchConversations()
                 // If the message belongs to the selected conversation, add it
-                if (newMsg.phone_number === selectedPhone) {
-                    setMessages(prev => [...prev, newMsg])
+                if (newMsg.phone_number === selectedPhoneRef.current) {
+                    setMessages(prev => {
+                        // Avoid duplicates if React ran twice or we already fetched it
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [...prev, newMsg];
+                    })
                     scrollToBottom()
                 }
             })
             .subscribe()
 
         return () => { supabase.removeChannel(channel) }
-    }, [profile?.clinic_id, selectedPhone, fetchConversations, scrollToBottom])
+    }, [profile?.clinic_id, fetchConversations, scrollToBottom])
 
     // Toggle AI (Requires Human flag)
     const toggleAIStatus = async (conv: Conversation) => {
@@ -357,7 +367,11 @@ export default function Messages() {
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="font-semibold text-charcoal">Mensajes</h2>
                         <button
-                            onClick={() => { setLoading(true); fetchConversations() }}
+                            onClick={() => {
+                                setLoading(true);
+                                fetchConversations();
+                                if (selectedPhone) fetchMessages();
+                            }}
                             className="p-1.5 text-charcoal/40 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors"
                             title="Actualizar"
                         >

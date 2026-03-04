@@ -149,12 +149,13 @@ const getHistory = async (sb: ReturnType<typeof createClient>, clinicId: string,
 };
 
 const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, content: string, direction: string, extra = {}) => {
-    const { error } = await sb.from("messages").insert({ clinic_id: clinicId, phone_number: phone, content, direction, ...extra });
+    const { data, error } = await sb.from("messages").insert({ clinic_id: clinicId, phone_number: phone, content, direction, ...extra }).select("id").single();
     if (error) {
         console.error(`[saveMsg] Error inserting message (dir: ${direction}):`, error);
         throw new Error(`saveMsg failed: ${error.message}`);
     }
-    console.log(`[saveMsg] Saved message (dir: ${direction})`);
+    console.log(`[saveMsg] Saved message (dir: ${direction}) id: ${data.id}`);
+    return data.id;
 };
 
 // =============================================
@@ -700,6 +701,7 @@ Deno.serve(async (req) => {
         let body = "";
         let isImage = false;
         let base64ImageObj: any = null;
+        let payloadExtra: any = {};
 
         if (msgObj.type === "text") {
             body = msgObj.text?.body || "";
@@ -730,6 +732,7 @@ Deno.serve(async (req) => {
                     type: "image_url",
                     image_url: { url: `data:${blob.type || 'image/jpeg'};base64,${base64}` }
                 };
+                payloadExtra = { image_base64: `data:${blob.type || 'image/jpeg'};base64,${base64}` };
                 body = msgObj.image?.caption || "[La persona te acaba de enviar una imagen]";
                 isImage = true;
                 await debugLog(sb, `Image received`, { type: blob.type });
@@ -739,7 +742,7 @@ Deno.serve(async (req) => {
             }
         }
 
-        await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId, message_type: msgObj.type });
+        const msgRowId = await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId, message_type: msgObj.type, payload: payloadExtra });
 
         // Auto-create prospect in CRM (best-effort, non-blocking)
         autoUpsertMinimalProspect(sb, clinic.id, from).catch(e => console.error("Auto-prospect failed:", e));
@@ -760,8 +763,27 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
 
-        // Build conversation context
-        const history = await getHistory(sb, clinic.id, from);
+        // DEBOUNCE - WAIT FOR MORE MESSAGES IN THE BURST (e.g. 5 SECONDS)
+        await new Promise(r => setTimeout(r, 5000));
+
+        // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
+        const { data: latestMsg } = await sb.from("messages")
+            .select("id")
+            .eq("clinic_id", clinic.id)
+            .eq("phone_number", from)
+            .eq("direction", "inbound")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (latestMsg && latestMsg.id !== msgRowId) {
+            // WE ARE NOT THE LATEST MESSAGE! Abort silently and let the latest one handle everything.
+            await debugLog(sb, `Debounced message`, { msgRowId });
+            return new Response(JSON.stringify({ status: "debounced" }), { headers: corsHeaders });
+        }
+
+        // --- AT THIS POINT, WE ARE THE LATEST MESSAGE. BEGIN PROCESSING. ---
+
         const localTime = new Date().toLocaleString("es-MX", { timeZone: clinic.timezone || "America/Mexico_City", weekday: "long", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
         // Fetch knowledge base summary for system prompt
@@ -778,19 +800,50 @@ ${knowledgeSummary}
 
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
-        let userContent: any = body;
-        if (isImage && base64ImageObj) {
-            userContent = [
-                { type: "text", text: body },
-                base64ImageObj
-            ];
+        // Build conversation context WITH GROUPING
+        const { data: recentMsgs } = await sb.from("messages")
+            .select("direction, content, message_type, payload")
+            .eq("clinic_id", clinic.id)
+            .eq("phone_number", from)
+            .order("created_at", { ascending: false })
+            .limit(15);
+
+        const orderedMsgs = recentMsgs?.reverse() || [];
+
+        // Find where the last outbound message is so we can group all recent inbound ones
+        let lastOutboundIndex = -1;
+        for (let i = orderedMsgs.length - 1; i >= 0; i--) {
+            if (orderedMsgs[i].direction === "outbound") {
+                lastOutboundIndex = i;
+                break;
+            }
         }
+
+        const pastContext = lastOutboundIndex >= 0 ? orderedMsgs.slice(0, lastOutboundIndex + 1) : [];
+        const burstInbound = lastOutboundIndex >= 0 ? orderedMsgs.slice(lastOutboundIndex + 1) : orderedMsgs;
 
         const msgs: Msg[] = [
             { role: "system", content: sysPrompt },
-            ...history.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content })),
-            { role: "user", content: userContent }
+            ...pastContext.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content || "" }))
         ];
+
+        // Combine the current inbound burst into a single user message
+        let userContentBlocks: any[] = [];
+        for (const msg of burstInbound) {
+            if (msg.message_type === "image" && msg.payload?.image_base64) {
+                userContentBlocks.push({ type: "text", text: msg.content || "[Imagen]" });
+                userContentBlocks.push({
+                    type: "image_url",
+                    image_url: { url: msg.payload.image_base64 }
+                });
+            } else {
+                userContentBlocks.push({ type: "text", text: msg.content || "" });
+            }
+        }
+
+        if (userContentBlocks.length > 0) {
+            msgs.push({ role: "user", content: userContentBlocks });
+        }
 
         let res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
         let assistant = res.choices[0].message;
