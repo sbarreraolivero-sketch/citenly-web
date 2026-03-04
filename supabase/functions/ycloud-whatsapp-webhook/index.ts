@@ -739,7 +739,7 @@ Deno.serve(async (req) => {
             }
         }
 
-        await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId, type: msgObj.type });
+        await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId, message_type: msgObj.type });
 
         // Auto-create prospect in CRM (best-effort, non-blocking)
         autoUpsertMinimalProspect(sb, clinic.id, from).catch(e => console.error("Auto-prospect failed:", e));
