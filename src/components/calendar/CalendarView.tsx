@@ -78,7 +78,7 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
     }
 
     return (
-        <div className="h-[80vh] min-h-[800px] bg-white rounded-2xl shadow-xl p-4 sm:p-6 animate-fade-in border-[3px] border-silk-beige/60 overflow-hidden">
+        <div className="h-[1000px] sm:h-[1200px] bg-white rounded-2xl shadow-xl p-4 sm:p-6 animate-fade-in border-[3px] border-silk-beige/60 overflow-hidden">
             <Calendar
                 localizer={localizer}
                 events={events}
