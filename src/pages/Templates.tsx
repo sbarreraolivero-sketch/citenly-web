@@ -284,23 +284,42 @@ export default function Templates() {
                         </div>
 
                         {/* Simulador Vista Previa (WhatsApp) */}
-                        <div className="flex flex-col items-center justify-center p-6 bg-charcoal/5 rounded-2xl border border-charcoal/10 relative overflow-hidden bg-[url('https://i.ibb.co/30Z1Tzv/wa-bg.png')] bg-cover bg-center">
-                            <div className="absolute top-4 left-4 flex gap-2 items-center text-charcoal/60 font-medium text-xs uppercase tracking-wider bg-white/80 px-3 py-1.5 rounded-full backdrop-blur-md shadow-sm">
-                                <Smartphone className="w-4 h-4" /> Simulador de WhatsApp
+                        <div className="flex flex-col items-center justify-center p-6 lg:p-10 bg-gradient-to-br from-charcoal/5 to-charcoal/10 rounded-2xl border border-charcoal/10 relative overflow-hidden">
+                            <div className="absolute top-4 left-4 flex gap-2 items-center text-charcoal/70 font-semibold text-xs uppercase tracking-wider bg-white/90 px-4 py-2 rounded-full shadow-sm">
+                                <Smartphone className="w-4 h-4 text-primary-500" /> Simulador en Tiempo Real
                             </div>
-                            <div className="w-[300px] bg-[#EFEAE2] rounded-[2rem] p-4 shadow-2xl border-8 border-white relative mt-8 h-[450px] flex flex-col justify-end bg-cover bg-center" style={{ backgroundImage: "url('https://i.ibb.co/vHxSvp1/wa-background.jpg')" }}>
-                                {/* Chat bubble */}
-                                <div className="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[13.5px] text-[#111B21] mb-2 max-w-[90%] whitespace-pre-wrap leading-relaxed shadow-[0_1px_0.5px_rgba(11,20,26,.13)]">
-                                    {newTemplate.body || <span className="text-gray-400 italic">Aquí verás tu mensaje...</span>}
-                                    <div className="text-[10px] text-charcoal/40 text-right mt-1 ml-4 select-none">12:00</div>
-                                </div>
-
-                                {/* Buttons */}
-                                {newTemplate.buttons.map((btn, idx) => btn ? (
-                                    <div key={idx} className="bg-white text-[#00A884] font-medium text-center p-2.5 rounded-xl shadow-[0_1px_0.5px_rgba(11,20,26,.13)] text-sm mb-2 hover:bg-gray-50 transition-colors cursor-pointer select-none">
-                                        {btn}
+                            {/* Marco de Teléfono */}
+                            <div className="w-[320px] bg-[#EFEAE2] rounded-[2.5rem] p-4 shadow-2xl border-[12px] border-charcoal relative mt-8 h-[550px] flex flex-col justify-start overflow-hidden">
+                                {/* WhatsApp Header */}
+                                <div className="absolute top-0 left-0 right-0 bg-[#00A884] px-4 py-3 flex items-center gap-3 z-10 shadow-sm">
+                                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                                        <div className="w-6 h-6 bg-white/40 rounded-full" />
                                     </div>
-                                ) : null)}
+                                    <div>
+                                        <p className="text-white text-sm font-semibold leading-tight">Tu Clínica</p>
+                                        <p className="text-white/80 text-[10px]">Cuenta de empresa</p>
+                                    </div>
+                                </div>
+                                {/* Fondo con Patrón WhatsApp (CSS) */}
+                                <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+                                    backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
+                                    backgroundSize: "20px 20px"
+                                }} />
+                                {/* Contenedor de Mensajes */}
+                                <div className="flex flex-col justify-end flex-1 pt-16 pb-4 relative z-10">
+                                    {/* Chat bubble */}
+                                    <div className="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[14px] text-[#111B21] mb-2 max-w-[92%] whitespace-pre-wrap leading-relaxed">
+                                        {newTemplate.body || <span className="text-gray-400 italic font-light">Escribe el cuerpo del mensaje para previsualizar...</span>}
+                                        <div className="text-[10px] text-charcoal/40 text-right mt-1.5 ml-4 select-none">12:00</div>
+                                    </div>
+
+                                    {/* Buttons */}
+                                    {newTemplate.buttons.map((btn, idx) => btn ? (
+                                        <div key={idx} className="bg-white text-[#00A884] font-medium text-center p-2.5 rounded-xl shadow-[0_1px_1px_rgba(11,20,26,.1)] border border-gray-100 text-base mb-2 hover:bg-gray-50 transition-colors cursor-pointer select-none">
+                                            {btn}
+                                        </div>
+                                    ) : null)}
+                                </div>
                             </div>
                         </div>
                     </div>

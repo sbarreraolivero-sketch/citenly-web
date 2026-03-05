@@ -37,7 +37,6 @@ import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
 import Team from './settings/Team'
 import MyProfile from './settings/MyProfile'
-import { WhatsAppTemplates } from '@/components/settings/WhatsAppTemplates'
 import { TemplateSelector } from '@/components/settings/TemplateSelector'
 
 // Get the Supabase URL for webhook display
@@ -52,7 +51,6 @@ const tabs = [
     { id: 'integrations', label: 'Integraciones', icon: Key },
     { id: 'ai', label: 'Inteligencia Artificial', icon: Sparkles },
     { id: 'tags', label: 'Etiquetas', icon: Tag },
-    { id: 'templates', label: 'Plantillas', icon: MessageSquare },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
     { id: 'reminders', label: 'Recordatorios', icon: AlarmClock },
 ]
@@ -272,7 +270,7 @@ export default function Settings() {
             // Clean URL params after reading
             const newUrl = window.location.pathname
             window.history.replaceState({}, '', newUrl)
-        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags', 'templates'].includes(tabParam)) {
+        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
             setActiveTab(tabParam)
             if (window.innerWidth < 768) setShowMobileList(false)
         }
@@ -980,8 +978,8 @@ export default function Settings() {
     }
 
     return (
-        <div className="animate-fade-in relative min-h-[calc(100vh-7rem)]">
-            <div className="flex flex-col md:flex-row gap-6">
+        <div className="animate-fade-in relative min-h-[calc(100vh-7rem)] bg-gradient-to-br from-accent-200 to-accent-100 p-4 md:p-8 rounded-[2rem] shadow-soft-xl border border-white/60">
+            <div className="flex flex-col md:flex-row gap-6 md:gap-8">
 
                 {/* Mobile Content Header (Back Button) */}
                 {!showMobileList && (
@@ -2255,11 +2253,11 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">⏰ Tiempo de recordatorios</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-ivory rounded-soft overflow-hidden">
-                                        <div className="flex items-center justify-between p-4">
+                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
+                                        <div className="flex items-center justify-between p-5">
                                             <div>
-                                                <p className="font-medium text-charcoal">24 horas antes</p>
-                                                <p className="text-sm text-charcoal/50">Enviar recordatorio un día antes</p>
+                                                <p className="font-medium text-ivory">24 horas antes</p>
+                                                <p className="text-sm text-ivory/60">Enviar recordatorio un día antes</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2283,11 +2281,11 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-ivory rounded-soft overflow-hidden">
-                                        <div className="flex items-center justify-between p-4">
+                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
+                                        <div className="flex items-center justify-between p-5">
                                             <div>
-                                                <p className="font-medium text-charcoal">2 horas antes</p>
-                                                <p className="text-sm text-charcoal/50">Recordatorio cercano a la cita</p>
+                                                <p className="font-medium text-ivory">2 horas antes</p>
+                                                <p className="text-sm text-ivory/60">Recordatorio cercano a la cita</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2311,11 +2309,11 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-ivory rounded-soft overflow-hidden">
-                                        <div className="flex items-center justify-between p-4">
+                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
+                                        <div className="flex items-center justify-between p-5">
                                             <div>
-                                                <p className="font-medium text-charcoal">1 hora antes</p>
-                                                <p className="text-sm text-charcoal/50">Último recordatorio antes de la cita</p>
+                                                <p className="font-medium text-ivory">1 hora antes</p>
+                                                <p className="text-sm text-ivory/60">Último recordatorio antes de la cita</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2344,16 +2342,16 @@ export default function Settings() {
                             {/* Preferred Hour */}
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">🕐 Hora preferida de envío</h3>
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-5 bg-charcoal rounded-soft shadow-soft-md border border-charcoal/80">
                                     <div>
-                                        <p className="font-medium text-charcoal">Hora de recordatorios</p>
-                                        <p className="text-sm text-charcoal/50">Para recordatorios de 24h, enviar a esta hora</p>
+                                        <p className="font-medium text-ivory">Hora de recordatorios</p>
+                                        <p className="text-sm text-ivory/60">Para recordatorios de 24h, enviar a esta hora</p>
                                     </div>
                                     <input
                                         type="time"
                                         value={reminderSettings.preferred_hour}
                                         onChange={(e) => setReminderSettings({ ...reminderSettings, preferred_hour: e.target.value })}
-                                        className="px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm"
+                                        className="px-3 py-2 bg-white/10 text-ivory border border-white/20 rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-accent-500"
                                     />
                                 </div>
                             </div>
@@ -2362,11 +2360,11 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">✅ Solicitar confirmación</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-ivory rounded-soft overflow-hidden">
-                                        <div className="flex items-center justify-between p-4">
+                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
+                                        <div className="flex items-center justify-between p-5">
                                             <div>
-                                                <p className="font-medium text-charcoal">Pedir confirmación</p>
-                                                <p className="text-sm text-charcoal/50">Solicitar al paciente que confirme su asistencia</p>
+                                                <p className="font-medium text-ivory">Pedir confirmación</p>
+                                                <p className="text-sm text-ivory/60">Solicitar al paciente que confirme su asistencia</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2397,10 +2395,10 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">📅 Seguimiento post-cita</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                    <div className="flex items-center justify-between p-5 bg-charcoal rounded-soft shadow-soft-md border border-charcoal/80">
                                         <div>
-                                            <p className="font-medium text-charcoal">Recordatorio de seguimiento</p>
-                                            <p className="text-sm text-charcoal/50">Enviar mensaje después de la cita para reagendar</p>
+                                            <p className="font-medium text-ivory">Recordatorio de seguimiento</p>
+                                            <p className="text-sm text-ivory/60">Enviar mensaje después de la cita para reagendar</p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
@@ -2415,15 +2413,15 @@ export default function Settings() {
 
                                     {reminderSettings.followup_enabled && (
                                         <>
-                                            <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                            <div className="flex items-center justify-between p-5 bg-charcoal rounded-soft shadow-soft-md border border-charcoal/80">
                                                 <div>
-                                                    <p className="font-medium text-charcoal">Días después de la cita</p>
-                                                    <p className="text-sm text-charcoal/50">Cuántos días esperar antes de enviar</p>
+                                                    <p className="font-medium text-ivory">Días después de la cita</p>
+                                                    <p className="text-sm text-ivory/60">Cuántos días esperar antes de enviar</p>
                                                 </div>
                                                 <select
                                                     value={reminderSettings.followup_days_after}
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, followup_days_after: parseInt(e.target.value) })}
-                                                    className="px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm"
+                                                    className="px-3 py-2 bg-white/10 text-white border border-white/20 rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-accent-500"
                                                 >
                                                     <option value={3}>3 días</option>
                                                     <option value={7}>7 días</option>
@@ -2527,13 +2525,6 @@ export default function Settings() {
                                 <p className="text-sm text-charcoal/50">Personaliza las etiquetas para organizar a tus pacientes.</p>
                             </div>
                             <TagManager />
-                        </div>
-                    )}
-
-                    {/* WhatsApp Templates */}
-                    {activeTab === 'templates' && (
-                        <div className="max-w-5xl animate-fade-in pb-12">
-                            <WhatsAppTemplates />
                         </div>
                     )}
                 </div>
