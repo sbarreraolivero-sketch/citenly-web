@@ -1039,26 +1039,26 @@ export default function Settings() {
                         <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
                             <MyProfile />
 
-                            <div className="card-soft p-6 space-y-4">
+                            <div className="card-soft p-6 space-y-4 max-w-3xl w-full">
                                 <h3 className="font-medium text-charcoal">Seguridad</h3>
-                                <div className="space-y-4 max-w-md">
-                                    <div>
+                                <div className="space-y-4 w-full">
+                                    <div className="w-full">
                                         <label className="block text-sm font-medium text-charcoal mb-2">Nueva Contraseña</label>
                                         <input
                                             type="password"
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
-                                            className="input-soft"
+                                            className="input-soft w-full max-w-md"
                                             placeholder="Ingresa tu nueva contraseña"
                                         />
                                     </div>
-                                    <div>
+                                    <div className="w-full">
                                         <label className="block text-sm font-medium text-charcoal mb-2">Confirmar Contraseña</label>
                                         <input
                                             type="password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="input-soft"
+                                            className="input-soft w-full max-w-md"
                                             placeholder="Repite tu nueva contraseña"
                                         />
                                     </div>
@@ -2253,11 +2253,11 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">⏰ Tiempo de recordatorios</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
-                                        <div className="flex items-center justify-between p-5">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
+                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
                                             <div>
-                                                <p className="font-medium text-ivory">24 horas antes</p>
-                                                <p className="text-sm text-ivory/60">Enviar recordatorio un día antes</p>
+                                                <p className="font-semibold text-charcoal">24 horas antes</p>
+                                                <p className="text-sm text-charcoal/60">Enviar recordatorio un día antes</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2281,11 +2281,11 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
-                                        <div className="flex items-center justify-between p-5">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
+                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
                                             <div>
-                                                <p className="font-medium text-ivory">2 horas antes</p>
-                                                <p className="text-sm text-ivory/60">Recordatorio cercano a la cita</p>
+                                                <p className="font-semibold text-charcoal">2 horas antes</p>
+                                                <p className="text-sm text-charcoal/60">Recordatorio cercano a la cita</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2309,11 +2309,11 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
-                                        <div className="flex items-center justify-between p-5">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
+                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
                                             <div>
-                                                <p className="font-medium text-ivory">1 hora antes</p>
-                                                <p className="text-sm text-ivory/60">Último recordatorio antes de la cita</p>
+                                                <p className="font-semibold text-charcoal">1 hora antes</p>
+                                                <p className="text-sm text-charcoal/60">Último recordatorio antes de la cita</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2342,16 +2342,16 @@ export default function Settings() {
                             {/* Preferred Hour */}
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">🕐 Hora preferida de envío</h3>
-                                <div className="flex items-center justify-between p-5 bg-charcoal rounded-soft shadow-soft-md border border-charcoal/80">
+                                <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-silk-beige">
                                     <div>
-                                        <p className="font-medium text-ivory">Hora de recordatorios</p>
-                                        <p className="text-sm text-ivory/60">Para recordatorios de 24h, enviar a esta hora</p>
+                                        <p className="font-semibold text-charcoal">Hora de recordatorios</p>
+                                        <p className="text-sm text-charcoal/60">Para recordatorios de 24h, enviar a esta hora</p>
                                     </div>
                                     <input
                                         type="time"
                                         value={reminderSettings.preferred_hour}
                                         onChange={(e) => setReminderSettings({ ...reminderSettings, preferred_hour: e.target.value })}
-                                        className="px-3 py-2 bg-white/10 text-ivory border border-white/20 rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-accent-500"
+                                        className="px-3 py-2 bg-ivory text-charcoal border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                                     />
                                 </div>
                             </div>
@@ -2360,11 +2360,11 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">✅ Solicitar confirmación</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-charcoal rounded-soft overflow-hidden shadow-soft-md border border-charcoal/80">
-                                        <div className="flex items-center justify-between p-5">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
+                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
                                             <div>
-                                                <p className="font-medium text-ivory">Pedir confirmación</p>
-                                                <p className="text-sm text-ivory/60">Solicitar al paciente que confirme su asistencia</p>
+                                                <p className="font-semibold text-charcoal">Pedir confirmación</p>
+                                                <p className="text-sm text-charcoal/60">Solicitar al paciente que confirme su asistencia</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2395,10 +2395,10 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">📅 Seguimiento post-cita</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-5 bg-charcoal rounded-soft shadow-soft-md border border-charcoal/80">
+                                    <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-silk-beige">
                                         <div>
-                                            <p className="font-medium text-ivory">Recordatorio de seguimiento</p>
-                                            <p className="text-sm text-ivory/60">Enviar mensaje después de la cita para reagendar</p>
+                                            <p className="font-semibold text-charcoal">Recordatorio de seguimiento</p>
+                                            <p className="text-sm text-charcoal/60">Enviar mensaje después de la cita para reagendar</p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
@@ -2413,15 +2413,15 @@ export default function Settings() {
 
                                     {reminderSettings.followup_enabled && (
                                         <>
-                                            <div className="flex items-center justify-between p-5 bg-charcoal rounded-soft shadow-soft-md border border-charcoal/80">
+                                            <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-silk-beige">
                                                 <div>
-                                                    <p className="font-medium text-ivory">Días después de la cita</p>
-                                                    <p className="text-sm text-ivory/60">Cuántos días esperar antes de enviar</p>
+                                                    <p className="font-semibold text-charcoal">Días después de la cita</p>
+                                                    <p className="text-sm text-charcoal/60">Cuántos días esperar antes de enviar</p>
                                                 </div>
                                                 <select
                                                     value={reminderSettings.followup_days_after}
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, followup_days_after: parseInt(e.target.value) })}
-                                                    className="px-3 py-2 bg-white/10 text-white border border-white/20 rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-accent-500"
+                                                    className="px-3 py-2 bg-ivory text-charcoal border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                                                 >
                                                     <option value={3}>3 días</option>
                                                     <option value={7}>7 días</option>
