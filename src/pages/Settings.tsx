@@ -37,6 +37,8 @@ import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
 import Team from './settings/Team'
 import MyProfile from './settings/MyProfile'
+import { WhatsAppTemplates } from '@/components/settings/WhatsAppTemplates'
+import { TemplateSelector } from '@/components/settings/TemplateSelector'
 
 // Get the Supabase URL for webhook display
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -50,6 +52,7 @@ const tabs = [
     { id: 'integrations', label: 'Integraciones', icon: Key },
     { id: 'ai', label: 'Inteligencia Artificial', icon: Sparkles },
     { id: 'tags', label: 'Etiquetas', icon: Tag },
+    { id: 'templates', label: 'Plantillas', icon: MessageSquare },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
     { id: 'reminders', label: 'Recordatorios', icon: AlarmClock },
 ]
@@ -113,9 +116,11 @@ export default function Settings() {
     const [assignedProfessionals, setAssignedProfessionals] = useState<Record<string, boolean>>({})
     const [primaryProfessional, setPrimaryProfessional] = useState<string>('')
 
-    // Currency setting
+    // Currency and templates
     const [currency, setCurrency] = useState('MXN')
     const [timezone, setTimezone] = useState('America/Mexico_City')
+    const [templateSurvey, setTemplateSurvey] = useState('')
+    const [templateReactivation, setTemplateReactivation] = useState('')
     const currencySymbols: Record<string, string> = {
         'MXN': '$',
         'USD': '$',
@@ -194,10 +199,13 @@ export default function Settings() {
         request_confirmation: true,
         confirmation_days_before: 1,
         preferred_hour: '09:00',
-        reminder_message: '¡Hola {nombre}! Te recordamos tu cita de {servicio} mañana a las {hora}. ¿Confirmas tu asistencia?',
+        template_24h: '',
+        template_2h: '',
+        template_1h: '',
+        template_confirmation: '',
+        template_followup: '',
         followup_enabled: false,
         followup_days_after: 7,
-        followup_message: '¡Hola {nombre}! Hace {dias} días que nos visitaste. ¿Te gustaría agendar otra cita?'
     })
     const [savingReminders, setSavingReminders] = useState(false)
     const [remindersSaved, setRemindersSaved] = useState(false)
@@ -264,7 +272,7 @@ export default function Settings() {
             // Clean URL params after reading
             const newUrl = window.location.pathname
             window.history.replaceState({}, '', newUrl)
-        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
+        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags', 'templates'].includes(tabParam)) {
             setActiveTab(tabParam)
             if (window.innerWidth < 768) setShowMobileList(false)
         }
@@ -296,10 +304,13 @@ export default function Settings() {
                         request_confirmation: reminderData.request_confirmation,
                         confirmation_days_before: reminderData.confirmation_days_before,
                         preferred_hour: reminderData.preferred_hour,
-                        reminder_message: reminderData.reminder_message,
+                        template_24h: reminderData.template_24h || '',
+                        template_2h: reminderData.template_2h || '',
+                        template_1h: reminderData.template_1h || '',
+                        template_confirmation: reminderData.template_confirmation || '',
+                        template_followup: reminderData.template_followup || '',
                         followup_enabled: reminderData.followup_enabled,
                         followup_days_after: reminderData.followup_days_after,
-                        followup_message: reminderData.followup_message,
                     })
                 }
 
@@ -322,6 +333,8 @@ export default function Settings() {
                     setClinicAddress(data.clinic_address || '')
                     setCurrency(data.currency || 'MXN')
                     setTimezone(data.timezone || 'America/Mexico_City')
+                    setTemplateSurvey(data.template_survey || '')
+                    setTemplateReactivation(data.template_reactivation || '')
 
                     setYCloudApiKey(data.ycloud_api_key || '')
                     setYCloudPhoneNumber(data.ycloud_phone_number || '')
@@ -706,6 +719,8 @@ export default function Settings() {
                     clinic_address: clinicAddress,
                     currency: currency,
                     timezone: timezone,
+                    template_survey: templateSurvey,
+                    template_reactivation: templateReactivation,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
@@ -1196,6 +1211,25 @@ export default function Settings() {
                                             </optgroup>
                                         </select>
                                     </div>
+                                </div>
+
+                                {/* Clinic Templates */}
+                                <div className="mt-8 space-y-6">
+                                    <h3 className="text-sm font-semibold text-charcoal mb-4">💬 Plantillas de la Clínica</h3>
+
+                                    <TemplateSelector
+                                        label="Plantilla: Encuesta de Satisfacción"
+                                        description="Se envía automáticamente horas después de que finaliza la cita."
+                                        value={templateSurvey}
+                                        onChange={setTemplateSurvey}
+                                    />
+
+                                    <TemplateSelector
+                                        label="Plantilla: Reactivación de Pacientes"
+                                        description="Se envía a pacientes que no han visitado en meses para ofrecer un nuevo servicio y recuperar la relación."
+                                        value={templateReactivation}
+                                        onChange={setTemplateReactivation}
+                                    />
                                 </div>
 
                                 <div className="mt-6 pt-6 border-t border-silk-beige flex items-center gap-4">
@@ -2310,21 +2344,37 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            {/* Message Template */}
-                            <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-charcoal mb-4">💬 Mensaje de recordatorio</h3>
-                                <div className="p-4 bg-ivory rounded-soft">
-                                    <textarea
-                                        value={reminderSettings.reminder_message}
-                                        onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_message: e.target.value })}
-                                        rows={3}
-                                        className="input-soft w-full resize-none"
-                                        placeholder="Escribe el mensaje de recordatorio..."
-                                    />
-                                    <p className="text-xs text-charcoal/40 mt-2">
-                                        Variables disponibles: {'{nombre}'}, {'{servicio}'}, {'{hora}'}, {'{fecha}'}
-                                    </p>
-                                </div>
+                            {/* Message Templates */}
+                            <div className="mt-8 space-y-6">
+                                <h3 className="text-sm font-semibold text-charcoal mb-4">💬 Plantillas de WhatsApp</h3>
+
+                                <TemplateSelector
+                                    label="Plantilla: Recordatorio 24h"
+                                    description="Se envía un día antes. Generalmente incluye petición de confirmación."
+                                    value={reminderSettings.template_24h}
+                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_24h: val })}
+                                />
+
+                                <TemplateSelector
+                                    label="Plantilla: Recordatorio 2h"
+                                    description="Se envía 2 horas antes de la cita."
+                                    value={reminderSettings.template_2h}
+                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_2h: val })}
+                                />
+
+                                <TemplateSelector
+                                    label="Plantilla: Recordatorio 1h"
+                                    description="Se envía 1 hora antes de la cita."
+                                    value={reminderSettings.template_1h}
+                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_1h: val })}
+                                />
+
+                                <TemplateSelector
+                                    label="Plantilla: Confirmación Requerida"
+                                    description="Se envía si la cita fue confirmada manualmente o hay condiciones especiales."
+                                    value={reminderSettings.template_confirmation}
+                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_confirmation: val })}
+                                />
                             </div>
 
                             {/* Follow-up Section */}
@@ -2366,18 +2416,12 @@ export default function Settings() {
                                                 </select>
                                             </div>
 
-                                            <div className="p-4 bg-ivory rounded-soft">
-                                                <label className="block text-sm font-medium text-charcoal mb-2">Mensaje de seguimiento</label>
-                                                <textarea
-                                                    value={reminderSettings.followup_message}
-                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, followup_message: e.target.value })}
-                                                    rows={2}
-                                                    className="input-soft w-full resize-none"
-                                                    placeholder="Escribe el mensaje de seguimiento..."
+                                            <div className="mt-4">
+                                                <TemplateSelector
+                                                    label="Plantilla de Seguimiento"
+                                                    value={reminderSettings.template_followup}
+                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_followup: val })}
                                                 />
-                                                <p className="text-xs text-charcoal/40 mt-2">
-                                                    Variables: {'{nombre}'}, {'{dias}'}, {'{servicio}'}
-                                                </p>
                                             </div>
                                         </>
                                     )}
@@ -2467,6 +2511,13 @@ export default function Settings() {
                                 <p className="text-sm text-charcoal/50">Personaliza las etiquetas para organizar a tus pacientes.</p>
                             </div>
                             <TagManager />
+                        </div>
+                    )}
+
+                    {/* WhatsApp Templates */}
+                    {activeTab === 'templates' && (
+                        <div className="max-w-5xl animate-fade-in pb-12">
+                            <WhatsAppTemplates />
                         </div>
                     )}
                 </div>

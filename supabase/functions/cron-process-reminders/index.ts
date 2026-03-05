@@ -140,12 +140,14 @@ serve(async (req) => {
                     const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                     const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
+                    const tplName = settings.template_24h || 'appointment_reminder'
+
                     const messagePayload = {
                         to: appt.phone_number,
                         type: 'template',
                         template: {
-                            name: 'appointment_reminder',
-                            language: { code: 'es' },
+                            name: tplName,
+                            language: { code: 'es_ES' },
                             components: [
                                 {
                                     type: 'body',
@@ -322,12 +324,14 @@ serve(async (req) => {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
+                        const tplName2h = settings.template_2h || 'appointment_reminder'
+
                         const messagePayload = {
                             to: appt.phone_number,
                             type: 'template',
                             template: {
-                                name: 'appointment_reminder',
-                                language: { code: 'es' },
+                                name: tplName2h,
+                                language: { code: 'es_ES' },
                                 components: [
                                     {
                                         type: 'body',
@@ -450,12 +454,14 @@ serve(async (req) => {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
+                        const tplName1h = settings.template_1h || 'appointment_reminder'
+
                         const messagePayload = {
                             to: appt.phone_number,
                             type: 'template',
                             template: {
-                                name: 'appointment_reminder',
-                                language: { code: 'es' },
+                                name: tplName1h,
+                                language: { code: 'es_ES' },
                                 components: [
                                     {
                                         type: 'body',
@@ -495,6 +501,9 @@ serve(async (req) => {
                                 reminder_sent_at: new Date().toISOString()
                             }).eq('id', appt.id)
                             sentCount++
+                        } else {
+                            const err = await response.json()
+                            console.error('YCloud Error (1h)', err)
                         }
                     } catch (e) {
                         console.error(e)

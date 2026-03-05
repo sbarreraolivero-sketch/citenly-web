@@ -79,13 +79,15 @@ serve(async (req) => {
 
             // Send Survey (Reusable logic from send-whatsapp-survey)
             try {
-                // Template: satisfaction_survey
+                // Template: Use dynamic template from clinic_settings, fallback to 'satisfaction_survey'
+                const surveyTemplateName = appointment.clinic_settings?.template_survey || 'satisfaction_survey'
+
                 // {{1}} = Patient Name
                 const messagePayload = {
                     to: appointment.phone_number,
                     type: 'template',
                     template: {
-                        name: 'satisfaction_survey',
+                        name: surveyTemplateName,
                         language: { code: 'es' },
                         components: [
                             {

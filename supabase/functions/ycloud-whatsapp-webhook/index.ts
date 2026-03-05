@@ -104,6 +104,18 @@ const functions = [
         name: "escalate_to_human",
         description: "ÚSALA SÓLO si el paciente está molesto, tiene un problema médico complejo o pide EXPLÍCITAMENTE hablar con un humano. Esta función silenciará al bot para que un agente humano tome el control del chat.",
         parameters: { type: "object", properties: {}, required: [] }
+    },
+    {
+        name: "reschedule_appointment",
+        description: "Reagenda una cita existente del paciente a una nueva fecha y hora. Úsala cuando el paciente quiera cambiar la fecha/hora de su cita. Primero verifica disponibilidad con check_availability, luego usa esta función para mover la cita.",
+        parameters: {
+            type: "object",
+            properties: {
+                new_date: { type: "string", description: "Nueva fecha YYYY-MM-DD" },
+                new_time: { type: "string", description: "Nueva hora HH:MM (24h)" }
+            },
+            required: ["new_date", "new_time"]
+        }
     }
 ];
 
@@ -493,6 +505,73 @@ const escalateToHuman = async (sb: ReturnType<typeof createClient>, clinicId: st
     }
 };
 
+const rescheduleAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { new_date: string; new_time: string }, timezone: string) => {
+    try {
+        // 1. Find the patient's nearest upcoming appointment
+        const { data: appt, error: apptError } = await sb.from("appointments")
+            .select("*")
+            .eq("clinic_id", clinicId)
+            .eq("phone_number", phone)
+            .in("status", ["pending", "confirmed"])
+            .gte("appointment_date", new Date().toISOString())
+            .order("appointment_date", { ascending: true })
+            .limit(1)
+            .single();
+
+        if (apptError || !appt) {
+            return { success: false, message: "No encontré una cita próxima para reagendar. ¿Podrías darme más detalles?" };
+        }
+
+        // 2. Check availability at the new time
+        const duration = appt.duration || 60;
+        const offset = getOffset(timezone, new Date(`${args.new_date}T12:00:00`));
+        const newDateWithOffset = `${args.new_date}T${args.new_time}:00${offset}`;
+
+        // Check for conflicts
+        const newStart = new Date(newDateWithOffset);
+        const newEnd = new Date(newStart.getTime() + duration * 60000);
+
+        const { data: conflicts } = await sb.from("appointments")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .in("status", ["pending", "confirmed"])
+            .neq("id", appt.id) // Exclude current appointment
+            .lt("appointment_date", newEnd.toISOString())
+            .gte("appointment_date", new Date(newStart.getTime() - duration * 60000).toISOString());
+
+        if (conflicts && conflicts.length > 0) {
+            return { success: false, message: "Ese horario ya está ocupado. ¿Podrías elegir otra hora?" };
+        }
+
+        // 3. Update the appointment
+        const { error: updateError } = await sb.from("appointments").update({
+            appointment_date: newDateWithOffset,
+            status: "pending", // Reset to pending after reschedule
+            reminder_sent: false, // Reset reminder flags
+            reminder_sent_at: null,
+            confirmation_received: false,
+            confirmation_response: null,
+            updated_at: new Date().toISOString()
+        }).eq("id", appt.id);
+
+        if (updateError) {
+            console.error("[rescheduleAppt] Error:", updateError);
+            return { success: false, message: "Error al reagendar. Intenta de nuevo." };
+        }
+
+        const d = new Date(`${args.new_date}T${args.new_time}:00`);
+        const h = parseInt(args.new_time.split(":")[0]);
+        return {
+            success: true,
+            appointment_id: appt.id,
+            message: `¡Cita reagendada exitosamente!\n\n📅 ${d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" })}\n🕐 ${h > 12 ? h - 12 : h}:${args.new_time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}\n💆 ${appt.service || 'consulta'}`
+        };
+    } catch (e) {
+        console.error("rescheduleAppt error:", e);
+        return { success: false, message: "Error al reagendar la cita." };
+    }
+};
+
 const getStageId = async (sb: ReturnType<typeof createClient>, clinicId: string, stageName: string) => {
     const { data } = await sb.from("crm_pipeline_stages")
         .select("id")
@@ -611,6 +690,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
         case "upsert_prospect": return upsertProspect(sb, clinicId, phone, args as { name?: string; email?: string; service_interest?: string; notes?: string });
         case "get_knowledge": return getKnowledge(sb, clinicId, args.query as string);
         case "escalate_to_human": return escalateToHuman(sb, clinicId, phone);
+        case "reschedule_appointment": return rescheduleAppt(sb, clinicId, phone, args as { new_date: string; new_time: string }, timezone);
         default: return { error: `Unknown: ${name}` };
     }
 };
@@ -765,8 +845,8 @@ Deno.serve(async (req) => {
 
         const asyncProcess = async () => {
             try {
-                // DEBOUNCE - WAIT FOR 60 SECONDS (1 MINUTE)
-                await new Promise(r => setTimeout(r, 60000));
+                // DEBOUNCE - WAIT FOR 30 SECONDS
+                await new Promise(r => setTimeout(r, 30000));
 
                 // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
                 const { data: latestMsg } = await sb.from("messages")
