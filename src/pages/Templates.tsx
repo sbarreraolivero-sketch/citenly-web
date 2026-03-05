@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code } from 'lucide-react'
 import { retentionService, YCloudTemplate } from '@/services/retentionService'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
@@ -13,6 +13,38 @@ export default function Templates() {
     const [isCreating, setIsCreating] = useState(false)
     const [creatingTemplate, setCreatingTemplate] = useState(false)
     const [newTemplate, setNewTemplate] = useState<{ name: string, body: string, category: string, buttons: string[] }>({ name: '', body: '', category: 'MARKETING', buttons: [] })
+
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+    const insertVariable = () => {
+        const textarea = textareaRef.current
+        if (!textarea) return
+
+        const matches = newTemplate.body.match(/\{\{\d+\}\}/g) || []
+        const uniqueVars = Array.from(new Set(matches.map(m => parseInt(m.replace(/[{}]/g, '')))))
+        const nextNum = uniqueVars.length + 1
+        const textToInsert = `{{${nextNum}}}`
+
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+
+        const newBody = newTemplate.body.substring(0, start) + textToInsert + newTemplate.body.substring(end)
+        setNewTemplate(prev => ({ ...prev, body: newBody }))
+
+        // Reset cursor to end of inserted text
+        setTimeout(() => {
+            textarea.focus()
+            textarea.setSelectionRange(start + textToInsert.length, start + textToInsert.length)
+        }, 0)
+    }
+
+    const QUICK_VARIABLES = [
+        { label: 'Paciente', icon: '👤' },
+        { label: 'Especialista', icon: '👨‍⚕️' },
+        { label: 'Fecha/Hora', icon: '📅' },
+        { label: 'Clínica', icon: '🏥' },
+        { label: 'Link', icon: '🔗' },
+    ]
 
     const loadTemplates = async () => {
         if (!clinicId) return
@@ -201,16 +233,38 @@ export default function Templates() {
                             </div>
 
                             <div className="flex-1 flex flex-col">
-                                <label className="block text-sm font-semibold text-charcoal mb-1">
-                                    Cuerpo del Mensaje <span className="text-red-500">*</span>
+                                <label className="block text-sm font-semibold text-charcoal mb-2 flex items-center justify-between">
+                                    <span>Cuerpo del Mensaje <span className="text-red-500">*</span></span>
                                 </label>
+
+                                {/* Seleccionador de Variables */}
+                                <div className="mb-3 p-3 bg-white border border-silk-beige rounded-xl shadow-soft-sm">
+                                    <div className="text-[11px] font-semibold text-charcoal/60 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        <Code className="w-3.5 h-3.5 text-primary-500" /> Insertar Variables Dinámicas
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {QUICK_VARIABLES.map((v, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => insertVariable()}
+                                                className="px-2.5 py-1.5 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 hover:text-primary-800 border border-primary-200 rounded-lg transition-colors flex items-center gap-1.5"
+                                                title={`Insertar variable para ${v.label}`}
+                                            >
+                                                <span>{v.icon}</span> {v.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-charcoal/40 mt-2">Haz clic para insertar la variable en donde tienes el cursor del texto.</p>
+                                </div>
+
                                 <textarea
+                                    ref={textareaRef}
                                     value={newTemplate.body}
                                     onChange={e => setNewTemplate({ ...newTemplate, body: e.target.value })}
                                     placeholder="Hola {{1}}, te escribimos de la clínica para recordarte..."
                                     className="w-full flex-1 p-3 bg-ivory border border-silk-beige rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none min-h-[120px] resize-none"
                                 />
-                                <p className="text-[11px] text-charcoal/40 mt-2">Usa {'{{1}}'}, {'{{2}}'} para incluir variables dinámicas como el nombre del paciente, fecha, etc.</p>
 
                                 {/* Autocompletado Variables UI */}
                                 {(() => {
