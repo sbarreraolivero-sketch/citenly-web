@@ -2255,52 +2255,88 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">⏰ Tiempo de recordatorios</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
-                                        <div>
-                                            <p className="font-medium text-charcoal">24 horas antes</p>
-                                            <p className="text-sm text-charcoal/50">Enviar recordatorio un día antes</p>
+                                    <div className="bg-ivory rounded-soft overflow-hidden">
+                                        <div className="flex items-center justify-between p-4">
+                                            <div>
+                                                <p className="font-medium text-charcoal">24 horas antes</p>
+                                                <p className="text-sm text-charcoal/50">Enviar recordatorio un día antes</p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={reminderSettings.reminder_24h_before}
+                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_24h_before: e.target.checked })}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                            </label>
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={reminderSettings.reminder_24h_before}
-                                                onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_24h_before: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
-                                        </label>
+                                        {reminderSettings.reminder_24h_before && (
+                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
+                                                <TemplateSelector
+                                                    label="Plantilla: Recordatorio 24h"
+                                                    description="Se enviará este mensaje a tus pacientes 24 horas antes de la cita."
+                                                    value={reminderSettings.template_24h}
+                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_24h: val })}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
-                                        <div>
-                                            <p className="font-medium text-charcoal">2 horas antes</p>
-                                            <p className="text-sm text-charcoal/50">Recordatorio cercano a la cita</p>
+                                    <div className="bg-ivory rounded-soft overflow-hidden">
+                                        <div className="flex items-center justify-between p-4">
+                                            <div>
+                                                <p className="font-medium text-charcoal">2 horas antes</p>
+                                                <p className="text-sm text-charcoal/50">Recordatorio cercano a la cita</p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={reminderSettings.reminder_2h_before}
+                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_2h_before: e.target.checked })}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                            </label>
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={reminderSettings.reminder_2h_before}
-                                                onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_2h_before: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
-                                        </label>
+                                        {reminderSettings.reminder_2h_before && (
+                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
+                                                <TemplateSelector
+                                                    label="Plantilla: Recordatorio 2h"
+                                                    description="Se enviará este mensaje a tus pacientes 2 horas antes de la cita."
+                                                    value={reminderSettings.template_2h}
+                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_2h: val })}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
-                                        <div>
-                                            <p className="font-medium text-charcoal">1 hora antes</p>
-                                            <p className="text-sm text-charcoal/50">Último recordatorio antes de la cita</p>
+                                    <div className="bg-ivory rounded-soft overflow-hidden">
+                                        <div className="flex items-center justify-between p-4">
+                                            <div>
+                                                <p className="font-medium text-charcoal">1 hora antes</p>
+                                                <p className="text-sm text-charcoal/50">Último recordatorio antes de la cita</p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={reminderSettings.reminder_1h_before}
+                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_1h_before: e.target.checked })}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                            </label>
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={reminderSettings.reminder_1h_before}
-                                                onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_1h_before: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
-                                        </label>
+                                        {reminderSettings.reminder_1h_before && (
+                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
+                                                <TemplateSelector
+                                                    label="Plantilla: Recordatorio 1h"
+                                                    description="Se enviará este mensaje a tus pacientes 1 hora antes de la cita."
+                                                    value={reminderSettings.template_1h}
+                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_1h: val })}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2326,56 +2362,36 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-charcoal mb-4">✅ Solicitar confirmación</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
-                                        <div>
-                                            <p className="font-medium text-charcoal">Pedir confirmación</p>
-                                            <p className="text-sm text-charcoal/50">Solicitar al paciente que confirme su asistencia</p>
+                                    <div className="bg-ivory rounded-soft overflow-hidden">
+                                        <div className="flex items-center justify-between p-4">
+                                            <div>
+                                                <p className="font-medium text-charcoal">Pedir confirmación</p>
+                                                <p className="text-sm text-charcoal/50">Solicitar al paciente que confirme su asistencia</p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={reminderSettings.request_confirmation}
+                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, request_confirmation: e.target.checked })}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                            </label>
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={reminderSettings.request_confirmation}
-                                                onChange={(e) => setReminderSettings({ ...reminderSettings, request_confirmation: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
-                                        </label>
+                                        {reminderSettings.request_confirmation && (
+                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
+                                                <TemplateSelector
+                                                    label="Plantilla: Confirmación Requerida"
+                                                    description="Se utiliza cuando requieres que el paciente confirme expresamente. Incluye mensaje y botones."
+                                                    value={reminderSettings.template_confirmation}
+                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_confirmation: val })}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Message Templates */}
-                            <div className="mt-8 space-y-6">
-                                <h3 className="text-sm font-semibold text-charcoal mb-4">💬 Plantillas de WhatsApp</h3>
-
-                                <TemplateSelector
-                                    label="Plantilla: Recordatorio 24h"
-                                    description="Se envía un día antes. Generalmente incluye petición de confirmación."
-                                    value={reminderSettings.template_24h}
-                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_24h: val })}
-                                />
-
-                                <TemplateSelector
-                                    label="Plantilla: Recordatorio 2h"
-                                    description="Se envía 2 horas antes de la cita."
-                                    value={reminderSettings.template_2h}
-                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_2h: val })}
-                                />
-
-                                <TemplateSelector
-                                    label="Plantilla: Recordatorio 1h"
-                                    description="Se envía 1 hora antes de la cita."
-                                    value={reminderSettings.template_1h}
-                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_1h: val })}
-                                />
-
-                                <TemplateSelector
-                                    label="Plantilla: Confirmación Requerida"
-                                    description="Se envía si la cita fue confirmada manualmente o hay condiciones especiales."
-                                    value={reminderSettings.template_confirmation}
-                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_confirmation: val })}
-                                />
-                            </div>
 
                             {/* Follow-up Section */}
                             <div className="mt-6">

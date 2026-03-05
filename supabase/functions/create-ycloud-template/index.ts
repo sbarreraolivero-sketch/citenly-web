@@ -13,7 +13,8 @@ serve(async (req) => {
     }
 
     try {
-        const { clinic_id, name, body_text, category = 'MARKETING' } = await req.json()
+        const bodyPayload = await req.json()
+        const { clinic_id, name, body_text, category = 'MARKETING', buttons = [] } = bodyPayload
 
         if (!clinic_id || !name || !body_text) {
             throw new Error('Clinic ID, Name, and Body Text are required')
@@ -63,6 +64,16 @@ serve(async (req) => {
                     text: body_text
                 }
             ]
+        }
+
+        if (buttons && Array.isArray(buttons) && buttons.length > 0) {
+            const validButtons = buttons.filter((b: string) => b.trim() !== '')
+            if (validButtons.length > 0) {
+                payload.components.push({
+                    type: 'BUTTONS',
+                    buttons: validButtons.map((b: string) => ({ type: 'QUICK_REPLY', text: b }))
+                })
+            }
         }
 
         // --- META APPROVAL FIX: Auto-inject examples for variables ---

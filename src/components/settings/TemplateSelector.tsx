@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Template {
     name: string
@@ -18,12 +19,18 @@ export function TemplateSelector({ value, onChange, label, description, placehol
     const [templates, setTemplates] = useState<Template[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
+    const { profile } = useAuth()
+    const clinicId = profile?.clinic_id
+
     useEffect(() => {
         const fetchTemplates = async () => {
+            if (!clinicId) return
             try {
-                const { data, error } = await supabase.functions.invoke('ycloud-templates')
-                if (!error && data?.items) {
-                    setTemplates(data.items.filter((t: Template) => t.status === 'APPROVED'))
+                const { data, error } = await supabase.functions.invoke('get-ycloud-templates', {
+                    body: { clinic_id: clinicId }
+                })
+                if (!error && data?.templates) {
+                    setTemplates(data.templates.filter((t: any) => t.status === 'APPROVED'))
                 }
             } catch (err) {
                 console.error('Error fetching templates:', err)
@@ -31,8 +38,10 @@ export function TemplateSelector({ value, onChange, label, description, placehol
                 setIsLoading(false)
             }
         }
-        fetchTemplates()
-    }, [])
+        if (clinicId) {
+            fetchTemplates()
+        }
+    }, [clinicId])
 
     return (
         <div className="space-y-2">

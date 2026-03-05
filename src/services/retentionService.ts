@@ -262,9 +262,9 @@ export const retentionService = {
     },
 
     // Create a new template on YCloud
-    async createRemoteTemplate(clinicId: string, name: string, bodyText: string): Promise<any> {
+    async createRemoteTemplate(clinicId: string, name: string, bodyText: string, buttons?: string[]): Promise<any> {
         const { data, error } = await supabase.functions.invoke('create-ycloud-template', {
-            body: { clinic_id: clinicId, name, body_text: bodyText }
+            body: { clinic_id: clinicId, name, body_text: bodyText, buttons }
         })
         if (error) throw error
         return data
