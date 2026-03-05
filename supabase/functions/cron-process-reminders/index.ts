@@ -140,7 +140,10 @@ serve(async (req) => {
                     const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                     const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
-                    const tplName = settings.template_24h || 'appointment_reminder'
+                    let tplName = settings.template_24h || 'appointment_reminder'
+                    if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending') {
+                        tplName = settings.template_confirmation
+                    }
 
                     const messagePayload = {
                         to: appt.phone_number,
@@ -281,22 +284,8 @@ serve(async (req) => {
                     .select('*')
                     .eq('clinic_id', clinic.id)
                     .in('status', ['pending', 'confirmed'])
-                    .eq('reminder_sent', false) // Use a separate flag? 
-                    // ISSUE: We only have one 'reminder_sent' flag.
-                    // If we use the same flag, we can't send both 24h and 2h reminders.
-                    // We need 'reminder_sent_24h' and 'reminder_sent_2h' columns?
-                    // OR: We just send it if it hasn't been sent yet?
-                    // Typically 24h reminder is sent. So 'reminder_sent' is true.
-                    // If we want 2h reminder, we need to bypass 'reminder_sent' check OR have a new state.
-                    // For now, let's assume 'reminder_sent' tracks the *latest* reminder? 
-                    // No, that risks spamming.
-                    // We should probably check if we sent a reminder *recently*.
-                    // OR: add `last_reminder_sent_at`.
-                    // But schema changes are hard now.
-                    // WORKAROUND: Check if `reminder_sent_at` is older than 20 hours. 
-                    // If 24h reminder was sent yesterday, it's > 20h ago. So clean to send again.
-                    // If no reminder sent, `reminder_sent` is false.
-
+                    // Removed .eq('reminder_sent', false) here because the 24h reminder sets it to true.
+                    // Instead, we rely on the timestamp check inside the loop to avoid duplicates.
                     .gte('appointment_date', startSearch.toISOString())
                     .lt('appointment_date', endSearch.toISOString())
 
@@ -324,7 +313,10 @@ serve(async (req) => {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
-                        const tplName2h = settings.template_2h || 'appointment_reminder'
+                        let tplName2h = settings.template_2h || 'appointment_reminder'
+                        if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending') {
+                            tplName2h = settings.template_confirmation
+                        }
 
                         const messagePayload = {
                             to: appt.phone_number,
@@ -454,7 +446,10 @@ serve(async (req) => {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
-                        const tplName1h = settings.template_1h || 'appointment_reminder'
+                        let tplName1h = settings.template_1h || 'appointment_reminder'
+                        if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending') {
+                            tplName1h = settings.template_confirmation
+                        }
 
                         const messagePayload = {
                             to: appt.phone_number,
