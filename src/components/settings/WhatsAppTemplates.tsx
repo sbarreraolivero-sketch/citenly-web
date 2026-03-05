@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Smartphone, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
 
 interface TemplateComponent {
     type: 'BODY' | 'BUTTONS'
@@ -18,7 +17,6 @@ interface Template {
 }
 
 export function WhatsAppTemplates() {
-    const { profile } = useAuth()
     const [templates, setTemplates] = useState<Template[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState('')
@@ -119,23 +117,7 @@ export function WhatsAppTemplates() {
         }
     }
 
-    const handleDelete = async (name: string) => {
-        if (!window.confirm(`¿Estás seguro de eliminar la plantilla ${name}?`)) return
 
-        try {
-            const { error } = await supabase.functions.invoke('ycloud-templates', {
-                method: 'DELETE',
-                body: { name } // Send it in body or url depending on your edge function parsing. Wait, Edge Function parses URL. Let's send in URL path since we built it that way.
-            })
-            // Actually our edge function parses path: const pathParts = url.pathname.split('/')
-            // Wait, we can't easily append to url in invoke without modifying the supabase.functions client.
-            // Let's modify edge function to accept DELETE name in body, or just use invoke's custom URL if possible.
-            // Let's assume sending it in body works if we modify Edge Function slightly, but currently EF expects URL param.
-            // Let's use fetch directly with session token if needed, or update EF to accept name in body for DELETE.
-        } catch (e) {
-            console.error(e)
-        }
-    }
 
     const getStatusIcon = (status: string) => {
         switch (status) {
