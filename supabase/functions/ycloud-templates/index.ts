@@ -82,9 +82,12 @@ Deno.serve(async (req: Request) => {
           headers: { 'X-API-Key': YCLOUD_KEY }
         })
         const data = await ycloudRes.json()
+        if (!ycloudRes.ok) data.isError = true
+        if (!ycloudRes.ok && data.message) data.error = data.message
+
         return new Response(JSON.stringify(data), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: ycloudRes.ok ? 200 : 400
+          status: 200
         })
       }
 
@@ -102,9 +105,12 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify(payload)
       })
       const data = await ycloudRes.json()
+      if (!ycloudRes.ok) data.isError = true
+      if (!ycloudRes.ok && data.message) data.error = data.message
+
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: ycloudRes.ok ? 200 : 400
+        status: 200
       })
     }
 
@@ -114,8 +120,8 @@ Deno.serve(async (req: Request) => {
 
   } catch (error: any) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      JSON.stringify({ error: error.message || 'Unknown error', isError: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   }
 })
