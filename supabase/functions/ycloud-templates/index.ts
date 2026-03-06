@@ -53,12 +53,12 @@ Deno.serve(async (req: Request) => {
 
     const { data: clinicSettings, error: csError } = await adminClient
       .from('clinic_settings')
-      .select('ycloud_api_key, ycloud_waba_id')
+      .select('ycloud_api_key')
       .eq('id', clinic_id)
       .single()
 
     if (csError || !clinicSettings?.ycloud_api_key) {
-      throw new Error('YCloud API Key not configured for this clinic')
+      throw new Error(`YCloud API Key not configured for this clinic. Clinic ID: ${clinic_id}, DB Error: ${csError?.message || 'None'}, Settings found: ${!!clinicSettings}`)
     }
 
     const YCLOUD_KEY = clinicSettings.ycloud_api_key
@@ -91,10 +91,7 @@ Deno.serve(async (req: Request) => {
         })
       }
 
-      // Ensure waba_id is injected if not present and available
-      if (clinicSettings.ycloud_waba_id && !payload.waba_id) {
-        payload.waba_id = clinicSettings.ycloud_waba_id
-      }
+      // Removed waba_id injection as column does not exist
 
       const ycloudRes = await fetch(YCLOUD_BASE, {
         method: 'POST',
