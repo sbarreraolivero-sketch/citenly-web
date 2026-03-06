@@ -91,9 +91,16 @@ Deno.serve(async (req: Request) => {
     }
 
     else if (req.method === 'DELETE') {
-      if (!templateName) throw new Error('Template name required for deletion')
+      let delName = templateName
+      if (!delName) {
+        try {
+          const body = await req.json()
+          delName = body.name
+        } catch (e) { }
+      }
+      if (!delName) throw new Error('Template name required for deletion')
 
-      const ycloudRes = await fetch(`${YCLOUD_BASE}/${templateName}`, {
+      const ycloudRes = await fetch(`${YCLOUD_BASE}/${delName}`, {
         method: 'DELETE',
         headers: { 'X-API-Key': YCLOUD_KEY }
       })
