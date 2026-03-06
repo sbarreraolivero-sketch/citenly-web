@@ -27,14 +27,23 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) throw new Error('Unauthorized')
 
-    // Get User's Clinic
-    const { data: clinicUser, error: cuError } = await supabaseClient
-      .from('clinic_users')
-      .select('clinic_id')
-      .eq('user_id', user.id)
-      .single()
+    // Route Request
+    const url = new URL(req.url)
+    const pathParts = url.pathname.split('/')
+    let templateName = pathParts[pathParts.length - 1] !== 'ycloud-templates' ? pathParts[pathParts.length - 1] : null
 
-    if (cuError || !clinicUser) throw new Error('Clinic not found')
+    let clinic_id = url.searchParams.get('clinic_id')
+    let bodyPayload: any = null
+
+    if (req.method === 'POST' || req.method === 'DELETE') {
+      try {
+        bodyPayload = await req.json()
+        if (bodyPayload?.clinic_id) clinic_id = bodyPayload.clinic_id
+        if (bodyPayload?.name && !templateName) templateName = bodyPayload.name
+      } catch (e) { }
+    }
+
+    if (!clinic_id) throw new Error('clinic_id is required')
 
     // Get Clinic YCloud Key (Using Service Role for secure access)
     const adminClient = createClient(
@@ -45,7 +54,7 @@ Deno.serve(async (req: Request) => {
     const { data: clinicSettings, error: csError } = await adminClient
       .from('clinic_settings')
       .select('ycloud_api_key, ycloud_waba_id')
-      .eq('id', clinicUser.clinic_id)
+      .eq('id', clinic_id)
       .single()
 
     if (csError || !clinicSettings?.ycloud_api_key) {
@@ -54,11 +63,6 @@ Deno.serve(async (req: Request) => {
 
     const YCLOUD_KEY = clinicSettings.ycloud_api_key
     const YCLOUD_BASE = 'https://api.ycloud.com/v2/whatsapp/templates'
-
-    // Route Request
-    const url = new URL(req.url)
-    const pathParts = url.pathname.split('/')
-    const templateName = pathParts[pathParts.length - 1] !== 'ycloud-templates' ? pathParts[pathParts.length - 1] : null
 
     if (req.method === 'GET') {
       const ycloudRes = await fetch(`${YCLOUD_BASE}?limit=100`, {
@@ -69,10 +73,10 @@ Deno.serve(async (req: Request) => {
     }
 
     else if (req.method === 'POST') {
-      const body = await req.json()
+      const payload = bodyPayload || {}
       // Ensure waba_id is injected if not present and available
-      if (clinicSettings.ycloud_waba_id && !body.waba_id) {
-        body.waba_id = clinicSettings.ycloud_waba_id
+      if (clinicSettings.ycloud_waba_id && !payload.waba_id) {
+        payload.waba_id = clinicSettings.ycloud_waba_id
       }
 
       const ycloudRes = await fetch(YCLOUD_BASE, {
@@ -81,7 +85,7 @@ Deno.serve(async (req: Request) => {
           'X-API-Key': YCLOUD_KEY,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(payload)
       })
       const data = await ycloudRes.json()
       return new Response(JSON.stringify(data), {
@@ -91,16 +95,9 @@ Deno.serve(async (req: Request) => {
     }
 
     else if (req.method === 'DELETE') {
-      let delName = templateName
-      if (!delName) {
-        try {
-          const body = await req.json()
-          delName = body.name
-        } catch (e) { }
-      }
-      if (!delName) throw new Error('Template name required for deletion')
+      if (!templateName) throw new Error('Template name required for deletion')
 
-      const ycloudRes = await fetch(`${YCLOUD_BASE}/${delName}`, {
+      const ycloudRes = await fetch(`${YCLOUD_BASE}/${templateName}`, {
         method: 'DELETE',
         headers: { 'X-API-Key': YCLOUD_KEY }
       })

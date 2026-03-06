@@ -66,7 +66,8 @@ export default function Templates() {
 
         setDeletingTemplate(templateName)
         try {
-            await retentionService.deleteRemoteTemplate(templateName)
+            if (!clinicId) throw new Error('Clinic ID no encontrado')
+            await retentionService.deleteRemoteTemplate(clinicId, templateName)
             toast.success('Plantilla eliminada exitosamente en YCloud')
             loadTemplates() // Refresh list automatically
         } catch (err: any) {

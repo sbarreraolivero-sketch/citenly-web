@@ -271,10 +271,10 @@ export const retentionService = {
     },
 
     // Delete a template from YCloud
-    async deleteRemoteTemplate(name: string): Promise<any> {
+    async deleteRemoteTemplate(clinicId: string, name: string): Promise<any> {
         const { data, error } = await supabase.functions.invoke('ycloud-templates', {
             method: 'DELETE',
-            body: { name }
+            body: { clinic_id: clinicId, name }
         })
         if (error) throw error
         return data
