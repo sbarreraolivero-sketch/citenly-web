@@ -400,22 +400,35 @@ export default function Templates() {
             {/* Template List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map(template => (
-                    <div key={template.id} className="bg-white rounded-2xl border border-silk-beige p-6 hover:shadow-soft-md transition-shadow flex flex-col">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-2">
-                                <div className="p-2 bg-primary-50 rounded-lg">
-                                    <MessageSquare className="w-5 h-5 text-primary-500" />
+                    <div key={template.id} className="bg-white rounded-[1.5rem] border border-silk-beige p-5 hover:shadow-soft-md hover:border-primary-200 transition-all duration-300 flex flex-col group relative overflow-hidden">
+                        {/* Soft background glow on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/0 via-transparent to-primary-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                        <div className="flex justify-between items-start mb-5 relative z-10">
+                            <div className="flex items-center gap-3.5">
+                                <div className="p-3 bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-2xl border border-primary-100 text-primary-600 group-hover:bg-primary-500 group-hover:text-white transition-all shadow-sm">
+                                    <MessageSquare className="w-5 h-5 flex-shrink-0" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-charcoal text-sm truncate max-w-[140px]" title={template.name}>
+                                    <h3 className="font-bold text-charcoal text-base truncate max-w-[150px] leading-tight mb-1" title={template.name}>
                                         {template.name}
                                     </h3>
                                     {getStatusBadge(template.status)}
                                 </div>
                             </div>
                         </div>
-                        <div className="flex-1 bg-ivory/50 rounded-xl p-4 border border-silk-beige/50 text-sm text-charcoal/80 whitespace-pre-wrap">
-                            {template.desc}
+
+                        {/* WhatsApp-style bubble preview */}
+                        <div className="flex-1 bg-[#EFEAE2]/50 rounded-2xl p-4 border border-[#cfc8bc]/30 relative z-10 shadow-inner flex flex-col">
+                            {/* Decorative whatsapp pattern */}
+                            <div className="absolute inset-0 opacity-[0.04] pointer-events-none rounded-2xl" style={{
+                                backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
+                                backgroundSize: "12px 12px"
+                            }} />
+
+                            <div className="relative z-10 bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[13.5px] text-charcoal/90 whitespace-pre-wrap leading-relaxed line-clamp-4 min-h-[80px]">
+                                {template.desc || template.body || <span className="text-gray-400 italic">El contenido no está disponible para previsualizar...</span>}
+                            </div>
                         </div>
                     </div>
                 ))}
