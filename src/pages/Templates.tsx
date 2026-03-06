@@ -12,6 +12,7 @@ export default function Templates() {
     const [loading, setLoading] = useState(true)
     const [isCreating, setIsCreating] = useState(false)
     const [creatingTemplate, setCreatingTemplate] = useState(false)
+    const [deletingTemplate, setDeletingTemplate] = useState<string | null>(null)
     const [newTemplate, setNewTemplate] = useState<{ name: string, body: string, category: string, buttons: string[] }>({ name: '', body: '', category: 'MARKETING', buttons: [] })
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -57,6 +58,22 @@ export default function Templates() {
             // Error handling handled internally by service/toast usually, or we can toast here
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleDeleteTemplate = async (templateName: string) => {
+        if (!confirm(`¿Estás seguro de que deseas eliminar la plantilla '${templateName}' de YCloud? Esta acción no se puede deshacer y fallará si está en uso.`)) return
+
+        setDeletingTemplate(templateName)
+        try {
+            await retentionService.deleteRemoteTemplate(templateName)
+            toast.success('Plantilla eliminada exitosamente en YCloud')
+            loadTemplates() // Refresh list automatically
+        } catch (err: any) {
+            console.error('Error deleting template:', err)
+            toast.error(err.message || 'Error al eliminar la plantilla')
+        } finally {
+            setDeletingTemplate(null)
         }
     }
 
@@ -416,6 +433,14 @@ export default function Templates() {
                                     {getStatusBadge(template.status)}
                                 </div>
                             </div>
+                            <button
+                                onClick={() => handleDeleteTemplate(template.name)}
+                                disabled={deletingTemplate === template.name}
+                                className={`p-2 rounded-lg transition-colors ${deletingTemplate === template.name ? 'opacity-50 cursor-not-allowed' : 'text-charcoal/30 hover:text-red-500 hover:bg-red-50'}`}
+                                title="Eliminar plantilla"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
                         </div>
 
                         {/* WhatsApp-style bubble preview */}
