@@ -74,6 +74,20 @@ Deno.serve(async (req: Request) => {
 
     else if (req.method === 'POST') {
       const payload = bodyPayload || {}
+
+      if (payload.action === 'delete') {
+        if (!templateName) throw new Error('Template name required for deletion')
+        const ycloudRes = await fetch(`${YCLOUD_BASE}/${templateName}`, {
+          method: 'DELETE',
+          headers: { 'X-API-Key': YCLOUD_KEY }
+        })
+        const data = await ycloudRes.json()
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: ycloudRes.ok ? 200 : 400
+        })
+      }
+
       // Ensure waba_id is injected if not present and available
       if (clinicSettings.ycloud_waba_id && !payload.waba_id) {
         payload.waba_id = clinicSettings.ycloud_waba_id
@@ -86,20 +100,6 @@ Deno.serve(async (req: Request) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
-      })
-      const data = await ycloudRes.json()
-      return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: ycloudRes.ok ? 200 : 400
-      })
-    }
-
-    else if (req.method === 'DELETE') {
-      if (!templateName) throw new Error('Template name required for deletion')
-
-      const ycloudRes = await fetch(`${YCLOUD_BASE}/${templateName}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': YCLOUD_KEY }
       })
       const data = await ycloudRes.json()
       return new Response(JSON.stringify(data), {

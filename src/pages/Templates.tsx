@@ -146,10 +146,10 @@ export default function Templates() {
                 {!isCreating && (
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="btn-primary whitespace-nowrap"
+                        className="btn-primary flex flex-row items-center justify-center gap-2 whitespace-nowrap px-6 py-2.5"
                     >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nueva Plantilla
+                        <Plus className="w-4 h-4" />
+                        <span>Nueva Plantilla</span>
                     </button>
                 )}
             </div>
