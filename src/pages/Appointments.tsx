@@ -169,10 +169,15 @@ export default function Appointments() {
                 a.id === id ? { ...a, status: newStatus } : a
             ))
 
+            const updates: any = { status: newStatus }
+            if (newStatus === 'completed') {
+                updates.payment_status = 'paid'
+            }
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await (supabase as any)
                 .from('appointments')
-                .update({ status: newStatus })
+                .update(updates)
                 .eq('id', id)
 
             if (error) throw error
@@ -196,7 +201,36 @@ export default function Appointments() {
                 }
             }
             // Sync with Google Calendar
-            if (newStatus === 'cancelled') {
+            if (newStatus === 'confirmed' && !appointment?.google_event_id) {
+                const appointmentDateStr = appointment?.appointment_date || new Date().toISOString()
+
+                // Construct standard duration
+                const serviceInfo = services.find(s => s.name === appointment?.service)
+                const dur = serviceInfo ? serviceInfo.duration : 60
+
+                const start = new Date(appointmentDateStr)
+                const end = new Date(start.getTime() + (dur * 60000))
+
+                console.log('Syncing newly confirmed appointment to Google Calendar...')
+                supabase.functions.invoke('create-google-event', {
+                    body: {
+                        title: `${appointment?.patient_name} - ${appointment?.service || 'Consulta'}`,
+                        description: appointment?.notes || '',
+                        start: start.toISOString(),
+                        end: end.toISOString()
+                    }
+                }).then(({ data: googleData, error: googleError }) => {
+                    if (googleError) {
+                        console.error('Error creating Google event locally upon confirm:', googleError)
+                    } else if (googleData?.event_id) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        ; (supabase as any).from('appointments').update({ google_event_id: googleData.event_id }).eq('id', id).then(() => {
+                            console.log('Successfully synced confirmed appointment with Google Calendar')
+                            fetchAppointments()
+                        })
+                    }
+                }).catch(err => console.error('Error in google sync:', err))
+            } else if (newStatus === 'cancelled') {
                 if (appointment?.google_event_id) {
                     console.log('Cancelling Google Event:', appointment.google_event_id)
                     supabase.functions.invoke('delete-google-event', {
