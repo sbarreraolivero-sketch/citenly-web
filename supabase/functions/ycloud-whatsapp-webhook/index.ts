@@ -773,8 +773,14 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "ignored", reason: "clinic_not_found" }), { headers: corsHeaders });
         }
 
-        if (!clinic.openai_api_key || !clinic.ycloud_api_key) {
-            await debugLog(sb, "Missing API keys", { clinic_id: clinic.id });
+        if (!clinic.ycloud_api_key) {
+            await debugLog(sb, "Missing YCloud API key", { clinic_id: clinic.id });
+            return new Response(JSON.stringify({ error: "Missing config" }), { status: 500, headers: corsHeaders });
+        }
+
+        const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+        if (!openaiApiKey) {
+            await debugLog(sb, "Missing global OPENAI_API_KEY", { clinic_id: clinic.id });
             return new Response(JSON.stringify({ error: "Missing config" }), { status: 500, headers: corsHeaders });
         }
 
@@ -793,7 +799,7 @@ Deno.serve(async (req) => {
                     downloadUrl = `https://api.ycloud.com/v2/whatsapp/media/${msgObj.audio.id}`;
                 }
                 const blob = await downloadYCloudMedia(downloadUrl, clinic.ycloud_api_key);
-                body = await transcribeAudioData(blob, clinic.openai_api_key);
+                body = await transcribeAudioData(blob, openaiApiKey);
                 await debugLog(sb, `Audio transcribed`, { body });
             } catch (e) {
                 console.error("Audio error", e);
@@ -918,7 +924,7 @@ Deno.serve(async (req) => {
                     msgs.push({ role: "user", content: userContentBlocks });
                 }
 
-                let res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
+                let res = await callOpenAI(openaiApiKey, clinic.openai_model, msgs);
                 let assistant = res.choices[0].message;
                 let funcResult: Record<string, unknown> | null = null;
                 let allFuncResults: Record<string, unknown>[] = [];
@@ -935,7 +941,7 @@ Deno.serve(async (req) => {
                         { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
                     );
 
-                    res = await callOpenAI(clinic.openai_api_key, clinic.openai_model, msgs);
+                    res = await callOpenAI(openaiApiKey, clinic.openai_model, msgs);
                     assistant = res.choices[0].message;
                     maxCalls--;
                 }

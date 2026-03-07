@@ -134,7 +134,7 @@ export default function Settings() {
     // Integration settings
     const [yCloudApiKey, setYCloudApiKey] = useState('')
     const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
-    const [openaiApiKey, setOpenaiApiKey] = useState('')
+
     const [openaiModel] = useState('gpt-4o')
     const [aiBehaviorRules, setAiBehaviorRules] = useState('')
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
@@ -336,7 +336,7 @@ export default function Settings() {
 
                     setYCloudApiKey(data.ycloud_api_key || '')
                     setYCloudPhoneNumber(data.ycloud_phone_number || '')
-                    setOpenaiApiKey(data.openai_api_key || '')
+
                     setAiBehaviorRules(data.ai_behavior_rules || '')
                     // setOpenaiModel(data.openai_model || 'gpt-4o') - removed since model is fixed
                     if (data.working_hours) _setWorkingHours(data.working_hours)
@@ -451,7 +451,7 @@ export default function Settings() {
                 .update({
                     ycloud_api_key: yCloudApiKey || null,
                     ycloud_phone_number: yCloudPhoneNumber || null,
-                    openai_api_key: openaiApiKey || null,
+
                     openai_model: openaiModel,
                 })
                 .eq('id', profile.clinic_id)
@@ -764,7 +764,7 @@ export default function Settings() {
             const { error } = await (supabase as any)
                 .from('clinic_settings')
                 .update({
-                    openai_api_key: openaiApiKey,
+
                     ai_behavior_rules: aiBehaviorRules,
                     updated_at: new Date().toISOString()
                 })
@@ -1824,39 +1824,6 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            {/* OpenAI */}
-                            <div className="card-soft p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 bg-violet-100 rounded-soft flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-violet-600" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-charcoal">OpenAI API</h2>
-                                        <p className="text-sm text-charcoal/50">Configura el modelo de IA para el asistente</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">API Key</label>
-                                        <input
-                                            type="password"
-                                            placeholder="sk-xxxxxxxxxxxxxxxxxxxxxx"
-                                            value={openaiApiKey}
-                                            onChange={(e) => setOpenaiApiKey(e.target.value)}
-                                            className="input-soft"
-                                        />
-                                        <p className="text-xs text-charcoal/40 mt-1">
-                                            Obtén tu API Key desde <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">platform.openai.com</a>
-                                        </p>
-                                    </div>
-                                    <div className="p-3 bg-violet-50 rounded-soft">
-                                        <p className="text-sm text-violet-700">
-                                            <strong>Modelo:</strong> GPT-4o (el más inteligente)
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
 
                             {/* Webhooks / n8n */}
                             <div className="card-soft p-6">
