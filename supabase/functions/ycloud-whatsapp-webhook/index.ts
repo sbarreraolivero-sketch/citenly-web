@@ -367,51 +367,6 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // Update CRM stage to "Cita Agendada"
     await updateProspectStage(sb, clinicId, phone, "Cita Agendada");
 
-    // Try to sync with Google Calendar
-    try {
-        const { data: gcToken } = await sb.from("google_calendar_tokens")
-            .select("user_id, user_profiles!inner(clinic_id)")
-            .eq("user_profiles.clinic_id", clinicId)
-            .limit(1)
-            .maybeSingle();
-
-        if (gcToken?.user_id) {
-            const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-            const supabaseUrl = Deno.env.get("SUPABASE_URL");
-
-            // Format end time correctly by adding duration in minutes
-            const endDate = new Date(new Date(appointmentDateWithOffset).getTime() + (duration * 60000));
-
-            if (serviceRole && supabaseUrl) {
-                const res = await fetch(`${supabaseUrl}/functions/v1/create-google-event`, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${serviceRole}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        title: `${args.patient_name} - ${args.service_name}`,
-                        start: appointmentDateWithOffset,
-                        end: endDate.toISOString(),
-                        user_id: gcToken.user_id
-                    })
-                });
-
-                if (res.ok) {
-                    const json = await res.json();
-                    if (json.event_id) {
-                        await sb.from("appointments").update({ google_event_id: json.event_id }).eq("id", data.id);
-                        console.log(`[createAppt] Successfully synced to Google Calendar args:`, json.event_id);
-                    }
-                } else {
-                    console.error("[createAppt] Failed to sync to Google Calendar:", await res.text());
-                }
-            }
-        }
-    } catch (e) {
-        console.error("[createAppt] Google Calendar Sync Error:", e);
-    }
-
     const d = new Date(`${args.date}T${args.time}:00`);
     const h = parseInt(args.time.split(":")[0]);
     return {
