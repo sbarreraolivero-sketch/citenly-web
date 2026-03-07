@@ -277,7 +277,15 @@ export const retentionService = {
             body: { action: 'delete', clinic_id: clinicId, name }
         })
         if (error) throw error
-        if (data?.isError || data?.error) throw new Error(data.error || 'API Error')
+        if (data?.isError || data?.error) {
+            let errMsg = 'API Error'
+            if (typeof data.error === 'string') errMsg = data.error
+            else if (data.error?.message) errMsg = data.error.message
+            else if (data.message) errMsg = data.message
+            else errMsg = JSON.stringify(data.error || data)
+
+            throw new Error(errMsg)
+        }
         return data
     }
 }
