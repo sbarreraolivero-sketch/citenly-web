@@ -81,7 +81,14 @@ Deno.serve(async (req: Request) => {
           method: 'DELETE',
           headers: { 'X-API-Key': YCLOUD_KEY }
         })
-        const data = await ycloudRes.json()
+
+        let data: any = {}
+        const responseText = await ycloudRes.text()
+        if (responseText) {
+          try { data = JSON.parse(responseText) }
+          catch { data = { message: responseText } }
+        }
+
         if (!ycloudRes.ok) data.isError = true
         if (!ycloudRes.ok && data.message) data.error = data.message
 
@@ -101,7 +108,13 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify(payload)
       })
-      const data = await ycloudRes.json()
+      let data: any = {}
+      const responseText = await ycloudRes.text()
+      if (responseText) {
+        try { data = JSON.parse(responseText) }
+        catch { data = { message: responseText } }
+      }
+
       if (!ycloudRes.ok) data.isError = true
       if (!ycloudRes.ok && data.message) data.error = data.message
 
