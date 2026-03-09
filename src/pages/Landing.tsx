@@ -824,7 +824,7 @@ export default function Landing() {
             </footer>
 
             {/* AI Sales Agent Widget */}
-            <AIChatWidget variant="sales" />
+            <AIChatWidget variant="simulator" />
         </div>
     )
 }
