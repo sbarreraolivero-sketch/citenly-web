@@ -116,6 +116,18 @@ const functions = [
             },
             required: ["new_date", "new_time"]
         }
+    },
+    {
+        name: "tag_patient",
+        description: "Asigna una etiqueta al paciente para segmentación y marketing. ÚSALA PROACTIVAMENTE cuando: (1) El paciente muestra interés en un servicio específico → etiqueta 'Interés [Servicio]' (ej: 'Interés Microblading'). (2) El paciente agenda una cita → etiqueta 'Cliente [Servicio]'. (3) Detectas una condición relevante → etiqueta descriptiva (ej: 'Piel Sensible', 'Primera Vez'). (4) El paciente es recurrente → 'Cliente Frecuente'. (5) El paciente refiere a alguien → 'Referidor'. Puedes llamar esta función múltiples veces para asignar varias etiquetas. La etiqueta se crea automáticamente si no existe.",
+        parameters: {
+            type: "object",
+            properties: {
+                tag_name: { type: "string", description: "Nombre de la etiqueta. Usa formato capitalizado y descriptivo. Ej: 'Interés Microblading', 'Cliente Frecuente', 'VIP', 'Piel Sensible', 'Primera Vez'" },
+                tag_color: { type: "string", description: "Color hex de la etiqueta. Usa: #10B981 (verde) para clientes activos, #3B82F6 (azul) para intereses, #F59E0B (amarillo) para alertas, #EF4444 (rojo) para condiciones médicas, #8B5CF6 (morado) para VIP/especiales, #EC4899 (rosado) para servicios estéticos. Opcional, default azul." }
+            },
+            required: ["tag_name"]
+        }
     }
 ];
 
@@ -505,6 +517,109 @@ const escalateToHuman = async (sb: ReturnType<typeof createClient>, clinicId: st
     }
 };
 
+// =============================================
+// Tag Patient - Automatic Segmentation
+// =============================================
+const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { tag_name: string; tag_color?: string }) => {
+    try {
+        const tagName = args.tag_name.trim();
+        if (!tagName) return { success: false, message: "Nombre de etiqueta vacío." };
+
+        const defaultColor = "#3B82F6"; // Blue
+        const tagColor = args.tag_color || defaultColor;
+
+        // 1. Find or create the tag
+        let tagId: string | null = null;
+
+        const { data: existingTag } = await sb.from("tags")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .ilike("name", tagName)
+            .limit(1)
+            .maybeSingle();
+
+        if (existingTag) {
+            tagId = existingTag.id;
+        } else {
+            // Create new tag
+            const { data: newTag, error: tagError } = await sb.from("tags")
+                .insert({ clinic_id: clinicId, name: tagName, color: tagColor })
+                .select("id")
+                .single();
+
+            if (tagError) {
+                // Might be a race condition duplicate - try fetching again
+                const { data: retryTag } = await sb.from("tags")
+                    .select("id")
+                    .eq("clinic_id", clinicId)
+                    .ilike("name", tagName)
+                    .limit(1)
+                    .maybeSingle();
+                tagId = retryTag?.id || null;
+            } else {
+                tagId = newTag?.id || null;
+            }
+        }
+
+        if (!tagId) {
+            console.error("[tagPatient] Could not create or find tag:", tagName);
+            return { success: false, message: "No se pudo crear la etiqueta." };
+        }
+
+        // 2. Find the patient by phone number and clinic
+        let patientId: string | null = null;
+
+        const { data: existingPatient } = await sb.from("patients")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .eq("phone_number", phone)
+            .limit(1)
+            .maybeSingle();
+
+        if (existingPatient) {
+            patientId = existingPatient.id;
+        } else {
+            // Create a minimal patient record
+            const { data: newPatient, error: patientError } = await sb.from("patients")
+                .insert({ clinic_id: clinicId, phone_number: phone, name: "Paciente WhatsApp" })
+                .select("id")
+                .single();
+
+            if (patientError) {
+                console.error("[tagPatient] Error creating patient:", patientError);
+                return { success: false, message: "No se pudo encontrar o crear el paciente." };
+            }
+            patientId = newPatient?.id || null;
+        }
+
+        if (!patientId) return { success: false, message: "No se pudo identificar al paciente." };
+
+        // 3. Assign tag to patient (skip if already assigned)
+        const { data: existingLink } = await sb.from("patient_tags")
+            .select("patient_id")
+            .eq("patient_id", patientId)
+            .eq("tag_id", tagId)
+            .limit(1)
+            .maybeSingle();
+
+        if (!existingLink) {
+            const { error: linkError } = await sb.from("patient_tags")
+                .insert({ patient_id: patientId, tag_id: tagId });
+
+            if (linkError) {
+                console.error("[tagPatient] Error linking tag:", linkError);
+                return { success: false, message: "Error al asignar etiqueta." };
+            }
+        }
+
+        console.log(`[tagPatient] Tagged ${phone} with "${tagName}" (tag: ${tagId}, patient: ${patientId})`);
+        return { success: true, tag_name: tagName, message: `Etiqueta "${tagName}" asignada al paciente. (Esto es interno, NO lo menciones al paciente.)` };
+    } catch (e) {
+        console.error("[tagPatient] Error:", e);
+        return { success: false, message: "Error al etiquetar paciente." };
+    }
+};
+
 const rescheduleAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { new_date: string; new_time: string }, timezone: string) => {
     try {
         // 1. Find the patient's nearest upcoming appointment
@@ -691,6 +806,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
         case "get_knowledge": return getKnowledge(sb, clinicId, args.query as string);
         case "escalate_to_human": return escalateToHuman(sb, clinicId, phone);
         case "reschedule_appointment": return rescheduleAppt(sb, clinicId, phone, args as { new_date: string; new_time: string }, timezone);
+        case "tag_patient": return tagPatient(sb, clinicId, phone, args as { tag_name: string; tag_color?: string });
         default: return { error: `Unknown: ${name}` };
     }
 };
@@ -877,7 +993,7 @@ Deno.serve(async (req) => {
                 // Fetch knowledge base summary for system prompt
                 const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
 
-                const sysPrompt = `${clinic.ai_personality}\n\nClínica: ${clinic.clinic_name}\nDirección: ${clinic.address || "No especificada, consultar al equipo."}\nFecha/Hora actual: ${localTime}\nServicios (Fuente de Verdad para Precios y Duración): ${JSON.stringify(clinic.services)}\nHorarios: ${JSON.stringify(clinic.working_hours)}\n${knowledgeSummary}\n\nIMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.\n\n${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
+                const sysPrompt = `${clinic.ai_personality}\n\nClínica: ${clinic.clinic_name}\nDirección: ${clinic.address || "No especificada, consultar al equipo."}\nFecha/Hora actual: ${localTime}\nServicios (Fuente de Verdad para Precios y Duración): ${JSON.stringify(clinic.services)}\nHorarios: ${JSON.stringify(clinic.working_hours)}\n${knowledgeSummary}\n\nIMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.\n\nETIQUETADO AUTOMÁTICO: Usa la función tag_patient PROACTIVAMENTE durante la conversación para etiquetar al paciente. Hazlo SIN mencionarlo al paciente (es interno). Etiqueta cuando: detectes interés en un servicio, el paciente agende, mencione condiciones de piel/salud, sea primera vez, o cualquier dato que ayude a segmentar para marketing futuro.\n\n${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
                 // Build conversation context WITH GROUPING
                 const { data: recentMsgs } = await sb.from("messages")
@@ -957,6 +1073,12 @@ Deno.serve(async (req) => {
                 await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply);
             } catch (err) {
                 console.error("Async Process Error:", err);
+                await debugLog(sb, "Async Process Error (OpenAI/Otros)", { error: (err as Error).message });
+
+                // Respond to user so it doesn't stay silent
+                const fallbackReply = "Lo siento, tuve un problema técnico procesando tu mensaje. Por favor intenta consultarme en unos minutos.";
+                await saveMsg(sb, clinic.id, from, fallbackReply, "outbound", { error_fallback: true });
+                await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, fallbackReply).catch(e => console.error("Failed sending fallback WA:", e));
             }
         };
 
