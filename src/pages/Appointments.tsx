@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { format } from 'date-fns'
-import { useNavigate } from 'react-router-dom'
+// import { useNavigate } from 'react-router-dom' // Not needed anymore
 import {
     Calendar,
     Clock,
@@ -69,7 +69,6 @@ const tabs = [
 export default function Appointments() {
     const { user, profile, session, member } = useAuth()
     const isProfessional = member?.role === 'professional'
-    const navigate = useNavigate()
     const [appointments, setAppointments] = useState<Appointment[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('all')
@@ -182,23 +181,26 @@ export default function Appointments() {
             // Re-fetch to confirm the DB state is in sync
             await fetchAppointments()
 
-            // Handle "Completed" status - CRM Integration
+            // Handle "Completed" status - just notify, don't navigate away
             if (newStatus === 'completed') {
-                // Fetch the appointment again to get the auto-generated patient_id from the DB trigger
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: updatedApt, error: fetchErr } = await (supabase as any)
+                const { data: updatedApt } = await (supabase as any)
                     .from('appointments')
                     .select('*, patient:patients(id, name)')
                     .eq('id', id)
                     .single()
 
-                if (!fetchErr && updatedApt?.patient) {
+                if (updatedApt?.patient) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const patientData = (updatedApt as any).patient
-                    if (window.confirm(`Cita completada con éxito.\n\nEl paciente ${patientData.name} está registrado en tu CRM.\n\n¿Deseas agregar sus notas y ficha clínica ahora?`)) {
-                        navigate(`/patients/${patientData.id}?action=new_record`)
-                    }
+                    alert(`✅ Cita completada con éxito.\n\nEl paciente "${patientData.name}" ha sido registrado automáticamente en Pacientes.\n\nPuedes agregar notas clínicas desde la sección de Pacientes.`)
+                } else {
+                    alert('✅ Cita completada con éxito.')
                 }
+            }
+
+            if (newStatus === 'confirmed') {
+                alert('✅ Cita confirmada exitosamente.')
             }
 
         } catch (error: any) {
