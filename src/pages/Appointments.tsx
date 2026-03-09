@@ -156,16 +156,13 @@ export default function Appointments() {
 
     useEffect(() => {
         fetchAppointments()
-    }, [user, profile])
+    }, [user?.id, profile?.clinic_id])
 
     // Update appointment status
     const updateAppointmentStatus = async (id: string, newStatus: 'confirmed' | 'cancelled' | 'completed') => {
         try {
-            // Optimistic update
-            const appointment = appointments.find(a => a.id === id)
-            if (!appointment) return
-
-            setAppointments(appointments.map(a =>
+            // Optimistic update using functional updater to avoid stale closure
+            setAppointments(prev => prev.map(a =>
                 a.id === id ? { ...a, status: newStatus } : a
             ))
 
@@ -181,6 +178,9 @@ export default function Appointments() {
                 .eq('id', id)
 
             if (error) throw error
+
+            // Re-fetch to confirm the DB state is in sync
+            await fetchAppointments()
 
             // Handle "Completed" status - CRM Integration
             if (newStatus === 'completed') {
@@ -200,10 +200,11 @@ export default function Appointments() {
                     }
                 }
             }
-            // Since Google Calendar sync is disabled, we do nothing extra here
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating status:', error)
+            alert('Error al actualizar el estado: ' + (error?.message || 'Intenta de nuevo'))
+            // Revert to real DB state
             fetchAppointments()
         }
     }
