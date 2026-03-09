@@ -199,9 +199,9 @@ export function AIChatWidget(_props?: AIChatWidgetProps) {
                                         )}
                                     </div>
                                 </div>
-                                {msg.toolsUsed && msg.toolsUsed > 0 && (
+                                {Number(msg.toolsUsed) > 0 && (
                                     <span className="text-[9px] text-gray-400 mt-0.5 ml-1 flex items-center gap-1">
-                                        <Zap className="w-2.5 h-2.5" />{msg.toolsUsed} herramienta{msg.toolsUsed > 1 ? 's' : ''} usada{msg.toolsUsed > 1 ? 's' : ''}
+                                        <Zap className="w-2.5 h-2.5" />{msg.toolsUsed} herramienta{(msg.toolsUsed || 0) > 1 ? 's' : ''} usada{(msg.toolsUsed || 0) > 1 ? 's' : ''}
                                     </span>
                                 )}
                             </div>
