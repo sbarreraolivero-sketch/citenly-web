@@ -110,7 +110,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 p_date: date,
                 p_duration: duration,
                 p_timezone: tz,
-                p_interval: 30
+                p_interval: duration
             });
             if (!error && data) slots = data;
         }
@@ -121,7 +121,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 p_date: date,
                 p_duration: duration,
                 p_timezone: tz,
-                p_interval: 30
+                p_interval: duration
             });
             if (!error && data) slots = data;
         }
