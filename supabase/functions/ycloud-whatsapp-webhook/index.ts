@@ -1054,32 +1054,46 @@ Deno.serve(async (req) => {
                     ? realServices.map(s => ({ name: s.name, duration: `${s.duration} min`, price: `$${s.price.toLocaleString('es-CL')}` }))
                     : clinic.services || [];
 
+                // Build a readable string of hours for the AI to know if it is closed TODAY or a SPECIFIC day
+                const hoursSummary = Object.entries(clinic.working_hours || {})
+                    .map(([day, h]: [string, any]) => {
+                        if (!h || h.closed || h.enabled === false) return `${day}: CERRADO`;
+                        return `${day}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${h.break ? ` (Descanso: ${h.break.start}-${h.break.end})` : ""}`;
+                    }).join(", ");
+
                 const sysPrompt = `${clinic.ai_personality}
 
 Clínica: ${clinic.clinic_name}
-Dirección: ${clinic.address || "No especificada, consultar al equipo."}
+Dirección: ${clinic.clinic_address || clinic.address || "No especificada, consultar al equipo."}
+Horario General de la Clínica: ${hoursSummary}
 
 CONTEXTO DE FECHAS (FUENTE DE VERDAD):
 - HOY: ${todayDay}, ${localDateISO}
 - MAÑANA: ${tomorrowDay}, ${tomorrowISO}
 - PASADO MAÑANA: ${dayAfterDay}, ${dayAfterISO}
-
-SERVICIOS OFICIALES (SOLO ESTOS EXISTEN): 
-${JSON.stringify(servicesForPrompt)}
+Servicios OFICIALES (SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
 
 ${knowledgeSummary}
 
 IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
-1. NUNCA menciones horarios o disponibilidad sin llamar primero a 'check_availability'.
-2. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO de arriba para el parámetro 'date' de la herramienta.
-3. EL NOMBRE DEL DÍA (ej. miércoles) que te devuelva 'check_availability' es el CORRECTO. Úsalo sin cuestionar.
-4. LA CLÍNICA NO TIENE HORARIOS FIJOS EN TU MEMORIA. La herramienta es tu única fuente de verdad sobre disponibilidad.
+1. SI el paciente pregunta por un día que aparece como CERRADO en 'Horario General' (ej: sábado), dile INMEDIATAMENTE que la clínica está cerrada ese día y ofrece opciones de lunes a viernes. NO preguntes qué sábado ni pidas confirmación.
+2. NUNCA menciones horarios o disponibilidad sin llamar primero a 'check_availability'.
+3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO de arriba para el parámetro 'date' de la herramienta.
+4. EL NOMBRE DEL DÍA (ej. miércoles) que te devuelva 'check_availability' es el CORRECTO. Úsalo sin cuestionar.
+5. El Horario General es tu guía rápida. La herramienta es tu verificación FINAL.
 
 REGLAS OBLIGATORIAS SOBRE SERVICIOS:
 1. Los ÚNICOS servicios que ofreces son los listados arriba en "Servicios OFICIALES". NUNCA inventes, sugieras ni menciones servicios que NO estén en esa lista.
 2. Cuando un paciente pregunte "¿qué servicios ofrecen?", menciona TODOS los de la lista oficial con precios.
+
+ESTRUCTURA DE ATENCIÓN (MICROBLADING):
+Si el usuario consulta por Microblading de cejas, DEBES seguir este orden EXACTO:
+1. Antes de dar precios u horarios, PREGUNTA: "¿Es tu primera vez realizando este tratamiento?" (Es obligatorio para calificar al paciente).
+2. Luego entrega la información de qué es el servicio mencionado, e incluye SIEMPRE las contraindicaciones (embarazo, lactancia, diabetes, etc.).
+3. Indica el valor (Normal vs Oferta si existe).
+4. Ofrece agendar preguntando qué día le acomoda.
 
 REGLAS CRÍTICAS PARA PRECIOS:
 1. Si falta un precio en la lista de arriba, USA 'get_knowledge' antes de decir que no sabes.
