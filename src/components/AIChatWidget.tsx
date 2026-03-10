@@ -9,22 +9,24 @@ interface Message {
     text: string;
     timestamp: string;
     toolsUsed?: number;
-    tab?: 'sales' | 'support';
+    tab?: 'sales' | 'support' | 'simulator';
 }
 
-type TabMode = 'sales' | 'support';
+type TabMode = 'sales' | 'support' | 'simulator';
 
 interface AIChatWidgetProps {
-    variant?: TabMode;
+    variant?: 'sales' | 'simulator';
+    clinicId?: string;
 }
 
-export function AIChatWidget({ variant }: AIChatWidgetProps) {
+export function AIChatWidget({ variant = 'sales', clinicId }: AIChatWidgetProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<TabMode>(variant || 'sales');
+    const [activeTab, setActiveTab] = useState<TabMode>(variant === 'simulator' ? 'simulator' : 'sales');
 
-    // Separate message histories
+    // Message histories
     const [salesMessages, setSalesMessages] = useState<Message[]>([]);
     const [supportMessages, setSupportMessages] = useState<Message[]>([]);
+    const [simulatorMessages, setSimulatorMessages] = useState<Message[]>([]);
 
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -33,8 +35,8 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const currentMessages = activeTab === 'sales' ? salesMessages : supportMessages;
-    const setMessages = activeTab === 'sales' ? setSalesMessages : setSupportMessages;
+    const currentMessages = activeTab === 'sales' ? salesMessages : activeTab === 'simulator' ? simulatorMessages : supportMessages;
+    const setMessages = activeTab === 'sales' ? setSalesMessages : activeTab === 'simulator' ? setSimulatorMessages : setSupportMessages;
 
     const formatTime = () => {
         return new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
@@ -49,6 +51,15 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
                         id: 'init-sales',
                         sender: 'ai',
                         text: '¡Hola! ✨ Soy asesor de Citenly AI.\n\nEstoy aquí para ayudarte a transformar la rentabilidad de tu clínica estética con nuestra Infraestructura Inteligente. ¿Tienes alguna duda sobre nuestras funciones o quieres agendar una asesoría de implementación?',
+                        timestamp: formatTime()
+                    }
+                ]);
+            } else if (activeTab === 'simulator' && simulatorMessages.length === 0) {
+                setSimulatorMessages([
+                    {
+                        id: 'init-sim',
+                        sender: 'ai',
+                        text: '¡Hola! 🤖 Soy tu agente de atención en modo prueba.\n\nPuedes simular una conversación conmigo para ver cómo responderé a tus pacientes reales por WhatsApp. ¡Hazme una pregunta o intenta agendar!',
                         timestamp: formatTime()
                     }
                 ]);
@@ -88,16 +99,30 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
         setIsTyping(true);
 
         try {
-            const endpoint = 'chat-agent';
+            const endpoint = activeTab === 'simulator' ? 'ai-simulator' : 'chat-agent';
 
-            const { data, error } = await supabase.functions.invoke(endpoint, {
-                body: {
-                    variant: activeTab, // sales or support
-                    messages: updatedMessages.map(m => ({
+            let body: any = {
+                variant: activeTab,
+                messages: updatedMessages.map(m => ({
+                    sender: m.sender,
+                    text: m.text
+                }))
+            };
+
+            // Custom body for simulator
+            if (activeTab === 'simulator') {
+                body = {
+                    clinic_id: clinicId,
+                    message: text.trim(),
+                    conversation_history: updatedMessages.slice(0, -1).map(m => ({
                         sender: m.sender,
                         text: m.text
                     }))
-                }
+                };
+            }
+
+            const { data, error } = await supabase.functions.invoke(endpoint, {
+                body
             });
 
             if (error) throw error;
@@ -138,6 +163,13 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
                 text: '🔄 Chat de ventas reiniciado. ¿Cómo puedo ayudarte a escalar tu clínica?',
                 timestamp: formatTime()
             }]);
+        } else if (activeTab === 'simulator') {
+            setSimulatorMessages([{
+                id: Date.now().toString(),
+                sender: 'ai',
+                text: '🔄 Simulador reiniciado. Listo para otra prueba.',
+                timestamp: formatTime()
+            }]);
         } else {
             setSupportMessages([{
                 id: Date.now().toString(),
@@ -161,7 +193,7 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
                         <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-4 py-3 flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center shadow-md">
-                                    {activeTab === 'sales' ? <Bot className="w-4 h-4 text-white" /> : <Sparkles className="w-4 h-4 text-white" />}
+                                    {activeTab === 'support' ? <Sparkles className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
                                 </div>
                                 <h3 className="font-semibold text-white text-sm">Asistente Citenly</h3>
                             </div>
@@ -177,16 +209,29 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
 
                         {/* Tab Selector */}
                         <div className="flex p-1 bg-gray-50/50 mx-2 my-2 rounded-xl border border-gray-100">
-                            <button
-                                onClick={() => setActiveTab('sales')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${activeTab === 'sales'
-                                    ? 'bg-white text-primary-600 shadow-sm border border-gray-100'
-                                    : 'text-gray-500 hover:text-gray-700'
-                                    }`}
-                            >
-                                <Sparkles className="w-3.5 h-3.5" />
-                                Ventas Citenly
-                            </button>
+                            {variant === 'sales' ? (
+                                <button
+                                    onClick={() => setActiveTab('sales')}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${activeTab === 'sales'
+                                        ? 'bg-white text-primary-600 shadow-sm border border-gray-100'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Ventas Citenly
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => setActiveTab('simulator')}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${activeTab === 'simulator'
+                                        ? 'bg-white text-primary-600 shadow-sm border border-gray-100'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    <Bot className="w-3.5 h-3.5" />
+                                    Simulador Chat
+                                </button>
+                            )}
                             <button
                                 onClick={() => setActiveTab('support')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${activeTab === 'support'
@@ -201,12 +246,14 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
                     </div>
 
                     {/* Mode Specific Info */}
-                    <div className={`${activeTab === 'sales' ? 'bg-primary-50 border-primary-100 text-primary-700' : 'bg-primary-50 border-primary-100 text-primary-700'} border-b px-4 py-2 flex items-center gap-2 transition-colors`}>
-                        {activeTab === 'sales' ? <Bot className="w-3.5 h-3.5 shrink-0" /> : <LifeBuoy className="w-3.5 h-3.5 shrink-0" />}
+                    <div className={`${activeTab === 'support' ? 'bg-primary-50 border-primary-100 text-primary-700' : 'bg-primary-50 border-primary-100 text-primary-700'} border-b px-4 py-2 flex items-center gap-2 transition-colors`}>
+                        {activeTab === 'support' ? <LifeBuoy className="w-3.5 h-3.5 shrink-0" /> : <Bot className="w-3.5 h-3.5 shrink-0" />}
                         <p className="text-[10px] sm:text-[11px] leading-tight font-medium">
                             {activeTab === 'sales'
                                 ? 'Pregúntame cómo Citenly puede ayudar a tu clínica a crecer.'
-                                : '¿Necesitas ayuda con Citenly? Pregúntame lo que sea sobre el uso de la app.'
+                                : activeTab === 'simulator'
+                                    ? 'Modo Prueba: Aquí puedes hablar con tu bot de atención configurado.'
+                                    : '¿Necesitas ayuda con Citenly? Pregúntame lo que sea sobre el uso de la app.'
                             }
                         </p>
                     </div>
@@ -261,7 +308,7 @@ export function AIChatWidget({ variant }: AIChatWidgetProps) {
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                placeholder={activeTab === 'sales' ? "Consulta sobre Citenly..." : "Consulta sobre soporte..."}
+                                placeholder={activeTab === 'sales' ? "Consulta sobre Citenly..." : activeTab === 'simulator' ? "Prueba tu agente aquí..." : "Consulta sobre soporte..."}
                                 disabled={isTyping}
                                 className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-100 focus:bg-white transition-all disabled:opacity-50"
                             />

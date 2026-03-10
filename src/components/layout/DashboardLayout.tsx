@@ -516,7 +516,7 @@ export default function DashboardLayout() {
             )}
 
             {/* AI Support Agent Widget */}
-            <AIChatWidget variant="support" />
+            <AIChatWidget variant="simulator" clinicId={profile?.clinic_id} />
         </div>
     )
 }
