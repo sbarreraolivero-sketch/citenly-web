@@ -185,7 +185,7 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
 // =============================================
 // Tool Implementations
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string) => {
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicWorkingHours?: any) => {
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
@@ -246,25 +246,20 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 p_member_id: professionalId,
                 p_date: date,
                 p_duration: duration,
-                p_interval: duration, // Step by duration to fit slots cleanly? Or 30? Let's use 30 for granularity.
+                p_interval: duration, // Step by duration to fit slots cleanly
                 p_timezone: timezone
             });
 
             if (!error && data) {
-                slots = data; // New RPC returns { slot_time, is_available }
+                slots = data;
             } else {
                 console.warn("[checkAvail] Professional slot check failed/empty, falling back to global:", error);
-                // Fallback will happen below if slots empty? No, we should explicitly fallback.
             }
         } catch (e) {
             console.error("[checkAvail] RPC error:", e);
         }
     }
 
-    // Fallback: If no professional identified OR professional check returned no slots (or error), try global
-    // Note: If professional has NO slots, we might NOT want to show other's slots if strictly assigned? 
-    // Current requirement: "Intelligent scheduling based on selected professional".
-    // If we couldn't get slots from professional RPC (e.g. migration not applied), we try global existing RPC.
     if (slots.length === 0) {
         const { data, error } = await sb.rpc("get_available_slots", {
             p_clinic_id: clinicId,
@@ -277,8 +272,31 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         slots = data || [];
     }
 
+    // 5. MANUALLY FILTER SLOTS FOR CLINIC LUNCH BREAK (Double-protection)
+    const dow = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][new Date(date + 'T12:00:00').getDay()];
+    const dayConfig = clinicWorkingHours?.[dow];
+    const lunch = dayConfig?.lunch_break;
+
     const availableSlots = slots
-        .filter((s: { is_available: boolean }) => s.is_available)
+        .filter((s: { is_available: boolean, slot_time: string }) => s.is_available)
+        .filter(s => {
+            if (!lunch || !lunch.enabled) return true;
+
+            // Compare times as HH:MM
+            const tStart = s.slot_time.substring(0, 5);
+
+            // Calculate end time
+            const [h, m] = tStart.split(':').map(Number);
+            const endDate = new Date(2000, 0, 1, h, m + duration);
+            const tEnd = endDate.toTimeString().substring(0, 5);
+
+            const lStart = lunch.start;
+            const lEnd = lunch.end;
+
+            // Overlap logic: T_Start < L_End AND T_End > L_Start
+            const isOverlapping = (tStart < lEnd && tEnd > lStart);
+            return !isOverlapping;
+        })
         .map((s: { slot_time: string }) => {
             const t = s.slot_time.substring(0, 5);
             const h = parseInt(t.split(":")[0]);
@@ -833,11 +851,9 @@ const getKnowledgeSummary = async (sb: ReturnType<typeof createClient>, clinicId
     }
 };
 
-// @ts-ignore
-const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, name: string, args: Record<string, unknown>, timezone: string) => {
+const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, name: string, args: Record<string, unknown>, timezone: string, clinic?: any) => {
     switch (name) {
-        // @ts-ignore - passing extra argument that is received dynamically via arguments[4] in checkAvail
-        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string);
+        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic?.working_hours);
         case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone);
         case "get_services": return getServices(sb, clinicId);
         case "confirm_appointment":
@@ -1166,7 +1182,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 let maxCalls = 3;
                 while (assistant.function_call && maxCalls > 0) {
                     const fnArgs = JSON.parse(assistant.function_call.arguments);
-                    funcResult = await processFunc(sb, clinic.id, from, assistant.function_call.name, fnArgs, clinic.timezone || "America/Santiago");
+                    funcResult = await processFunc(sb, clinic.id, from, assistant.function_call.name, fnArgs, clinic.timezone || "America/Santiago", clinic);
                     allFuncResults.push({ name: assistant.function_call.name, result: funcResult });
 
                     msgs.push(

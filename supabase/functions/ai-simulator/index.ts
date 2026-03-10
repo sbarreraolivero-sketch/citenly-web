@@ -56,7 +56,7 @@ const functions = [
 // =============================================
 // Tool implementations (simplified for simulator)
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, date: string, serviceName?: string, timezone?: string, professionalName?: string) => {
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, date: string, serviceName?: string, timezone?: string, professionalName?: string, clinicWorkingHours?: any) => {
     try {
         const tz = timezone || "America/Santiago";
         let duration = 60;
@@ -103,6 +103,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         let slots: { slot_time: string, is_available: boolean }[] = [];
 
         // 4. Call RPCs for specific slots
+        // Note: Even if RPC is old, we will filter lunch break in JS below.
         if (professionalId) {
             const { data, error } = await sb.rpc("get_professional_available_slots", {
                 p_clinic_id: clinicId,
@@ -130,8 +131,31 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
             return { available: false, message: `No hay disponibilidad para el ${date}. Sugiere otro día de lunes a viernes.` };
         }
 
+        // 5. MANUALLY FILTER SLOTS FOR CLINIC LUNCH BREAK (Double-protection)
+        const dow = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][new Date(date + 'T12:00:00').getDay()];
+        const dayConfig = clinicWorkingHours?.[dow];
+        const lunch = dayConfig?.lunch_break;
+
         const availableSlots = slots
             .filter(s => s.is_available)
+            .filter(s => {
+                if (!lunch || !lunch.enabled) return true;
+
+                // Compare times as HH:MM
+                const tStart = s.slot_time.substring(0, 5);
+
+                // Calculate end time
+                const [h, m] = tStart.split(':').map(Number);
+                const endDate = new Date(2000, 0, 1, h, m + duration);
+                const tEnd = endDate.toTimeString().substring(0, 5);
+
+                const lStart = lunch.start;
+                const lEnd = lunch.end;
+
+                // Overlap logic: T_Start < L_End AND T_End > L_Start
+                const isOverlapping = (tStart < lEnd && tEnd > lStart);
+                return !isOverlapping;
+            })
             .map(s => {
                 const t = s.slot_time.substring(0, 5);
                 const h = parseInt(t.split(":")[0]);
@@ -364,9 +388,9 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
 // =============================================
 // Process tool calls
 // =============================================
-const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, simulatedPhone: string, funcName: string, args: any, timezone: string) => {
+const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, simulatedPhone: string, funcName: string, args: any, timezone: string, clinic?: any) => {
     switch (funcName) {
-        case "check_availability": return checkAvail(sb, clinicId, args.date, args.service_name, timezone, args.professional_name);
+        case "check_availability": return checkAvail(sb, clinicId, args.date, args.service_name, timezone, args.professional_name, clinic?.working_hours);
         case "create_appointment": return createAppt(sb, clinicId, simulatedPhone, args, timezone);
         case "get_services": return getServices(sb, clinicId);
         case "get_knowledge": return getKnowledge(sb, clinicId, args.query);
@@ -585,7 +609,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
             console.log(`[Simulator] Tool call: ${funcName}`, funcArgs);
 
-            const result = await processFunc(sb, clinic_id, simulatedPhone, funcName, funcArgs, clinic.timezone || "America/Santiago");
+            const result = await processFunc(sb, clinic_id, simulatedPhone, funcName, funcArgs, clinic.timezone || "America/Santiago", clinic);
 
             // Add assistant's function call + result to messages
             msgs.push({ role: "assistant", content: "", function_call: assistant.function_call });
