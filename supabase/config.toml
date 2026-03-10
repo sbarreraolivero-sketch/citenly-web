@@ -16,4 +16,8 @@ import_map = "./functions/ycloud-templates/deno.json"
 entrypoint = "./functions/ycloud-templates/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/ycloud-templates/*.html" ]
+[functions.chat-agent]
+verify_jwt = false
+
+[functions.ai-simulator]
+verify_jwt = false
