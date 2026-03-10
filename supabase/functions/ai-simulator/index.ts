@@ -56,78 +56,99 @@ const functions = [
 // =============================================
 // Tool implementations (simplified for simulator)
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, date: string, serviceName?: string, timezone?: string) => {
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, date: string, serviceName?: string, timezone?: string, professionalName?: string) => {
     try {
         const tz = timezone || "America/Santiago";
-        // CRITICAL: Use mid-day to avoid offset shifts (Chile is UTC-3/UTC-4)
-        // 2026-03-11T00:00:00Z in Chile is still March 10th 21:00! 
-        // Using T12:00:00Z ensures we land in the correct day regardless of offset.
-        const midDay = new Date(date + "T12:00:00Z");
-        const startOfDay = new Date(date + "T00:00:00"); // For ISO string comparison
-        const endOfDay = new Date(date + "T23:59:59");
-
-        console.log(`[checkAvail] Checking date: ${date}, TZ: ${tz}`);
-
-        const { data: existing } = await sb.from("appointments")
-            .select("time, service, status, duration_minutes")
-            .eq("clinic_id", clinicId)
-            .gte("appointment_date", startOfDay.toISOString())
-            .lte("appointment_date", endOfDay.toISOString())
-            .in("status", ["pending", "confirmed"]);
-
-        const { data: clinic } = await sb.from("clinic_settings")
-            .select("working_hours")
-            .eq("id", clinicId)
-            .single();
-
-        if (!clinic) return { error: "No se encontró configuración de la clínica." };
-
-        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-        const dayNamesES: Record<string, string> = { sunday: "domingo", monday: "lunes", tuesday: "martes", wednesday: "miércoles", thursday: "jueves", friday: "viernes", saturday: "sábado" };
-
-        // Use timezone-aware day calculation
-        const dayEnglish = midDay.toLocaleDateString("en-US", { timeZone: tz, weekday: "long" }).toLowerCase();
-        const dayOfWeek = dayNames.find(d => dayEnglish.includes(d)) || dayNames[midDay.getUTCDay()];
-        const dayES = dayNamesES[dayOfWeek] || dayOfWeek;
-        const hours = clinic.working_hours?.[dayOfWeek];
-
-        console.log(`[checkAvail] Calculated day: ${dayOfWeek} (${dayES}), Hours found:`, JSON.stringify(hours));
-
-        if (!hours || hours.closed) {
-            return { available: false, message: `La clínica está CERRADA el ${dayES} (${date}). Horarios: Lun-Vie 10:00-20:00. Sugiere otro día.` };
-        }
-
-        // Working hours use 'open'/'close' properties (NOT start/end)
-        const openTime = hours.open || hours.start || "10:00";
-        const closeTime = hours.close || hours.end || "20:00";
-        const breakStart = hours.break?.start || null;
-        const breakEnd = hours.break?.end || null;
-
-        // Find service duration from REAL services table
         let duration = 60;
+        let serviceId: string | null = null;
+        let professionalId: string | null = null;
+
+        // 1. Fetch REAL service data
         if (serviceName) {
-            const { data: realServices } = await sb.from("services")
-                .select("name, duration, price")
-                .eq("clinic_id", clinicId);
-            if (realServices && realServices.length > 0) {
-                const svc = realServices.find((s: any) => s.name.toLowerCase().includes(serviceName.toLowerCase()));
-                if (svc) duration = svc.duration || 60;
+            const { data: svc } = await sb.from("services")
+                .select("id, duration")
+                .eq("clinic_id", clinicId)
+                .ilike("name", `%${serviceName}%`)
+                .limit(1)
+                .maybeSingle();
+            if (svc) {
+                duration = svc.duration;
+                serviceId = svc.id;
             }
         }
 
-        const bookedTimes = (existing || []).map((a: any) => `${a.time} (${a.service}, ${a.status})`);
-        const breakInfo = breakStart && breakEnd ? ` Horario de descanso: ${breakStart} a ${breakEnd} (no agendar en este rango).` : "";
+        // 2. Try to find the professional
+        if (professionalName) {
+            const { data: prof } = await sb.from("clinic_members")
+                .select("id")
+                .eq("clinic_id", clinicId)
+                .or(`first_name.ilike.%${professionalName}%,last_name.ilike.%${professionalName}%,job_title.ilike.%${professionalName}%`)
+                .limit(1)
+                .maybeSingle();
+            if (prof) professionalId = prof.id;
+        }
+
+        // 3. Fallback to service professional
+        if (!professionalId && serviceId) {
+            const { data: sp } = await sb.from("service_professionals")
+                .select("member_id")
+                .eq("service_id", serviceId)
+                .eq("is_primary", true)
+                .maybeSingle();
+            if (sp) professionalId = sp.member_id;
+        }
+
+        console.log(`[Simulator checkAvail] Date: ${date}, Service: ${serviceName}, Prof: ${professionalId || 'Global'}`);
+
+        let slots: { slot_time: string, is_available: boolean }[] = [];
+
+        // 4. Call RPCs for specific slots
+        if (professionalId) {
+            const { data, error } = await sb.rpc("get_professional_available_slots", {
+                p_clinic_id: clinicId,
+                p_member_id: professionalId,
+                p_date: date,
+                p_duration: duration,
+                p_timezone: tz,
+                p_interval: 30
+            });
+            if (!error && data) slots = data;
+        }
+
+        if (slots.length === 0) {
+            const { data, error } = await sb.rpc("get_available_slots", {
+                p_clinic_id: clinicId,
+                p_date: date,
+                p_duration: duration,
+                p_timezone: tz,
+                p_interval: 30
+            });
+            if (!error && data) slots = data;
+        }
+
+        if (slots.length === 0) {
+            return { available: false, message: `No hay disponibilidad para el ${date}. Sugiere otro día de lunes a viernes.` };
+        }
+
+        const availableSlots = slots
+            .filter(s => s.is_available)
+            .map(s => {
+                const t = s.slot_time.substring(0, 5);
+                const h = parseInt(t.split(":")[0]);
+                return `${h > 12 ? h - 12 : h}:${t.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
+            });
+
+        if (availableSlots.length === 0) {
+            return { available: false, message: `Lo siento, no hay espacios libres disponibles para el ${date}.` };
+        }
+
+        const displaySlots = availableSlots.slice(0, 10);
 
         return {
             available: true,
             date,
-            day_of_week: dayES,
-            hours_open: openTime,
-            hours_close: closeTime,
-            break_time: breakStart ? `${breakStart} - ${breakEnd}` : "sin descanso",
-            booked_slots: bookedTimes,
-            service_duration: duration,
-            message: `Disponibilidad para ${dayES} ${date}: Horario de atención: ${openTime} a ${closeTime}.${breakInfo} Citas existentes: ${bookedTimes.length > 0 ? bookedTimes.join(", ") : "ninguna"}. Duración del servicio: ${duration} min. Sugiere horarios dentro de ${openTime}-${closeTime} que NO conflicten con citas existentes ni con el descanso.`
+            slots: displaySlots,
+            message: `Para el ${date}, tenemos estos espacios disponibles para ${serviceName || 'tu cita'}: ${displaySlots.join(", ")}. ¿A qué hora te gustaría agendar?`
         };
     } catch (e) {
         console.error("checkAvail error:", e);
@@ -345,7 +366,7 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
 // =============================================
 const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, simulatedPhone: string, funcName: string, args: any, timezone: string) => {
     switch (funcName) {
-        case "check_availability": return checkAvail(sb, clinicId, args.date, args.service_name, timezone);
+        case "check_availability": return checkAvail(sb, clinicId, args.date, args.service_name, timezone, args.professional_name);
         case "create_appointment": return createAppt(sb, clinicId, simulatedPhone, args, timezone);
         case "get_services": return getServices(sb, clinicId);
         case "get_knowledge": return getKnowledge(sb, clinicId, args.query);
