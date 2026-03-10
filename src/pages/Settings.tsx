@@ -79,6 +79,8 @@ const dayNames: Record<string, string> = {
     sunday: 'Domingo',
 }
 
+const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 export default function Settings() {
     const { user, profile, member, refreshClinics } = useAuth()
     const [searchParams] = useSearchParams()
@@ -1707,130 +1709,133 @@ export default function Settings() {
                             <h2 className="text-lg font-semibold text-charcoal mb-6">Horarios de Atención</h2>
 
                             <div className="space-y-3">
-                                {Object.entries(workingHours).map(([day, hours]) => (
-                                    <div
-                                        key={day}
-                                        className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-ivory rounded-soft"
-                                    >
-                                        <div className="w-24 sm:w-28 flex-shrink-0">
-                                            <p className="font-medium text-charcoal">{dayNames[day]}</p>
-                                        </div>
-
-                                        <label className="flex items-center gap-2 mr-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={hours !== null}
-                                                onChange={(e) => {
-                                                    const checked = e.target.checked;
-                                                    setWorkingHours((prev: any) => ({
-                                                        ...prev,
-                                                        [day]: checked ? { open: '09:00', close: '18:00' } : null
-                                                    }))
-                                                }}
-                                                className="w-4 h-4 rounded border-silk-beige text-primary-500 focus:ring-primary-500"
-                                            />
-                                            <span className="text-sm text-charcoal/60">Abierto</span>
-                                        </label>
-
-                                        {hours ? (
-                                            <div className="flex flex-col gap-3 flex-1 min-w-[280px]">
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="time"
-                                                        value={(hours as any).open}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setWorkingHours((prev: any) => ({
-                                                                ...prev,
-                                                                [day]: { ...prev[day], open: val }
-                                                            }))
-                                                        }}
-                                                        className="px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
-                                                    />
-                                                    <span className="text-charcoal/40">a</span>
-                                                    <input
-                                                        type="time"
-                                                        value={(hours as any).close}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setWorkingHours((prev: any) => ({
-                                                                ...prev,
-                                                                [day]: { ...prev[day], close: val }
-                                                            }))
-                                                        }}
-                                                        className="px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
-                                                    />
-                                                </div>
-
-                                                {/* Colación UI */}
-                                                <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-silk-beige/30 ml-1">
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <div className="relative inline-flex items-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={(hours as any).lunch_break?.enabled || false}
-                                                                onChange={(e) => {
-                                                                    const checked = e.target.checked;
-                                                                    setWorkingHours((prev: any) => ({
-                                                                        ...prev,
-                                                                        [day]: {
-                                                                            ...prev[day],
-                                                                            lunch_break: {
-                                                                                ...(prev[day].lunch_break || { start: '14:00', end: '15:00' }),
-                                                                                enabled: checked
-                                                                            }
-                                                                        }
-                                                                    }))
-                                                                }}
-                                                                className="sr-only peer"
-                                                            />
-                                                            <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500"></div>
-                                                        </div>
-                                                        <span className="text-xs font-medium text-charcoal/50">Colación</span>
-                                                    </label>
-
-                                                    {(hours as any).lunch_break?.enabled && (
-                                                        <div className="flex items-center gap-2 animate-fade-in">
-                                                            <input
-                                                                type="time"
-                                                                value={(hours as any).lunch_break.start}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    setWorkingHours((prev: any) => ({
-                                                                        ...prev,
-                                                                        [day]: {
-                                                                            ...prev[day],
-                                                                            lunch_break: { ...prev[day].lunch_break, start: val }
-                                                                        }
-                                                                    }))
-                                                                }}
-                                                                className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
-                                                            />
-                                                            <span className="text-charcoal/40 text-[10px]">a</span>
-                                                            <input
-                                                                type="time"
-                                                                value={(hours as any).lunch_break.end}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    setWorkingHours((prev: any) => ({
-                                                                        ...prev,
-                                                                        [day]: {
-                                                                            ...prev[day],
-                                                                            lunch_break: { ...prev[day].lunch_break, end: val }
-                                                                        }
-                                                                    }))
-                                                                }}
-                                                                className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
+                                {dayOrder.map((day) => {
+                                    const hours = workingHours[day];
+                                    return (
+                                        <div
+                                            key={day}
+                                            className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-ivory rounded-soft"
+                                        >
+                                            <div className="w-24 sm:w-28 flex-shrink-0">
+                                                <p className="font-medium text-charcoal">{dayNames[day]}</p>
                                             </div>
-                                        ) : (
-                                            <span className="text-sm text-charcoal/40 ml-2">Cerrado</span>
-                                        )}
-                                    </div>
-                                ))}
+
+                                            <label className="flex items-center gap-2 mr-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={hours !== null}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        setWorkingHours((prev: any) => ({
+                                                            ...prev,
+                                                            [day]: checked ? { open: '09:00', close: '18:00' } : null
+                                                        }))
+                                                    }}
+                                                    className="w-4 h-4 rounded border-silk-beige text-primary-500 focus:ring-primary-500"
+                                                />
+                                                <span className="text-sm text-charcoal/60">Abierto</span>
+                                            </label>
+
+                                            {hours ? (
+                                                <div className="flex flex-col gap-3 flex-1 min-w-[280px]">
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="time"
+                                                            value={(hours as any).open}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setWorkingHours((prev: any) => ({
+                                                                    ...prev,
+                                                                    [day]: { ...prev[day], open: val }
+                                                                }))
+                                                            }}
+                                                            className="px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
+                                                        />
+                                                        <span className="text-charcoal/40">a</span>
+                                                        <input
+                                                            type="time"
+                                                            value={(hours as any).close}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setWorkingHours((prev: any) => ({
+                                                                    ...prev,
+                                                                    [day]: { ...prev[day], close: val }
+                                                                }))
+                                                            }}
+                                                            className="px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
+                                                        />
+                                                    </div>
+
+                                                    {/* Colación UI */}
+                                                    <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-silk-beige/30 ml-1">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <div className="relative inline-flex items-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(hours as any).lunch_break?.enabled || false}
+                                                                    onChange={(e) => {
+                                                                        const checked = e.target.checked;
+                                                                        setWorkingHours((prev: any) => ({
+                                                                            ...prev,
+                                                                            [day]: {
+                                                                                ...prev[day],
+                                                                                lunch_break: {
+                                                                                    ...(prev[day].lunch_break || { start: '14:00', end: '15:00' }),
+                                                                                    enabled: checked
+                                                                                }
+                                                                            }
+                                                                        }))
+                                                                    }}
+                                                                    className="sr-only peer"
+                                                                />
+                                                                <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500"></div>
+                                                            </div>
+                                                            <span className="text-xs font-medium text-charcoal/50">Colación</span>
+                                                        </label>
+
+                                                        {(hours as any).lunch_break?.enabled && (
+                                                            <div className="flex items-center gap-2 animate-fade-in">
+                                                                <input
+                                                                    type="time"
+                                                                    value={(hours as any).lunch_break.start}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setWorkingHours((prev: any) => ({
+                                                                            ...prev,
+                                                                            [day]: {
+                                                                                ...prev[day],
+                                                                                lunch_break: { ...prev[day].lunch_break, start: val }
+                                                                            }
+                                                                        }))
+                                                                    }}
+                                                                    className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
+                                                                />
+                                                                <span className="text-charcoal/40 text-[10px]">a</span>
+                                                                <input
+                                                                    type="time"
+                                                                    value={(hours as any).lunch_break.end}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setWorkingHours((prev: any) => ({
+                                                                            ...prev,
+                                                                            [day]: {
+                                                                                ...prev[day],
+                                                                                lunch_break: { ...prev[day].lunch_break, end: val }
+                                                                            }
+                                                                        }))
+                                                                    }}
+                                                                    className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-sm text-charcoal/40 ml-2">Cerrado</span>
+                                            )}
+                                        </div>
+                                    )
+                                })}
                             </div>
 
                             <div className="mt-6 pt-6 border-t border-silk-beige flex items-center gap-4">
