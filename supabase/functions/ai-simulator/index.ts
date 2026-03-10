@@ -237,7 +237,6 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             phone_number: simulatedPhone,
             service: args.service_name,
             appointment_date: appointmentDateWithOffset,
-            appointment_time: normalizedTime, // ADDED explicitly for frontend parsing sync
             duration: duration,
             price,
             status: "confirmed",
