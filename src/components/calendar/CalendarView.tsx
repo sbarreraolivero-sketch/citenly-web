@@ -108,9 +108,9 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
                 onSelectSlot={onSelectSlot}
                 selectable={!!onSelectSlot}
                 selected={null}
-                min={new Date(new Date().setHours(9, 0, 0, 0))} // Start at 9 AM
-                max={new Date(new Date().setHours(21, 0, 0, 0))} // End at 9 PM
-                scrollToTime={new Date(new Date().setHours(9, 0, 0, 0))} // Scroll to 9 AM initial
+                min={new Date(2020, 0, 1, 9, 0, 0)} // Start strictly at 9 AM (fixed date avoids DST shifts)
+                max={new Date(2020, 0, 1, 21, 0, 0)} // End strictly at 9 PM
+                scrollToTime={new Date(2020, 0, 1, 9, 0, 0)} // Scroll to 9 AM initial
                 components={{
                     toolbar: CustomToolbar,
                     event: CustomEvent,
