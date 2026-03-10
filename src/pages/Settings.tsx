@@ -139,6 +139,7 @@ export default function Settings() {
 
     const [openaiModel] = useState('gpt-4o')
     const [aiBehaviorRules, setAiBehaviorRules] = useState('')
+    const [aiAutoRespond, setAiAutoRespond] = useState(true)
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
     const [copiedWebhook, setCopiedWebhook] = useState(false)
 
@@ -284,6 +285,29 @@ export default function Settings() {
             if (!profile?.clinic_id) return
 
             try {
+                // Fetch notification preferences
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data: notifData, error: notifError } = await (supabase as any)
+                    .from('notification_preferences')
+                    .select('*')
+                    .eq('clinic_id', profile.clinic_id)
+                    .single()
+
+                if (notifError && notifError.code !== 'PGRST116') {
+                    throw notifError
+                }
+
+                if (notifData) {
+                    setNotifPrefs({
+                        new_appointment: notifData.new_appointment,
+                        confirmed: notifData.confirmed,
+                        cancelled: notifData.cancelled,
+                        pending_reminder: notifData.pending_reminder,
+                        new_message: notifData.new_message,
+                        survey_response: notifData.survey_response
+                    })
+                }
+
                 // Fetch reminder settings
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { data: reminderData, error: reminderError } = await (supabase as any)
@@ -340,6 +364,7 @@ export default function Settings() {
                     setYCloudPhoneNumber(data.ycloud_phone_number || '')
 
                     setAiBehaviorRules(data.ai_behavior_rules || '')
+                    setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
                     // setOpenaiModel(data.openai_model || 'gpt-4o') - removed since model is fixed
                     if (data.working_hours) setWorkingHours(data.working_hours)
                 }
@@ -779,8 +804,8 @@ export default function Settings() {
             const { error } = await (supabase as any)
                 .from('clinic_settings')
                 .update({
-
                     ai_behavior_rules: aiBehaviorRules,
+                    ai_auto_respond: aiAutoRespond,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
@@ -2543,6 +2568,25 @@ export default function Settings() {
                             </div>
 
                             <div className="space-y-6">
+                                {/* Auto-Respond Switch */}
+                                <div className="bg-white p-4 rounded-soft border border-silk-beige flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-charcoal">Atención Automática IA</h3>
+                                        <p className="text-xs text-charcoal/60 mt-1">
+                                            Si está desactivado, la IA no responderá mensajes en WhatsApp real. El Simulador seguirá funcionando para pruebas.
+                                        </p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={aiAutoRespond}
+                                            onChange={(e) => setAiAutoRespond(e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-charcoal/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-charcoal/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                    </label>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-charcoal mb-2">
                                         Instrucciones de Comportamiento (System Prompt)

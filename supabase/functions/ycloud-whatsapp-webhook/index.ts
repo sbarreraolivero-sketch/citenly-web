@@ -945,6 +945,11 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "ignored", reason: "clinic_not_found" }), { headers: corsHeaders });
         }
 
+        if (clinic.ai_auto_respond === false) {
+            await debugLog(sb, "AI Disabled - Ignored message", { phone: to });
+            return new Response(JSON.stringify({ status: "ignored", reason: "ai_disabled" }), { headers: corsHeaders });
+        }
+
         if (!clinic.ycloud_api_key) {
             await debugLog(sb, "Missing YCloud API key", { clinic_id: clinic.id });
             return new Response(JSON.stringify({ error: "Missing config" }), { status: 500, headers: corsHeaders });
@@ -1074,7 +1079,8 @@ Deno.serve(async (req) => {
                 const hoursSummary = Object.entries(clinic.working_hours || {})
                     .map(([day, h]: [string, any]) => {
                         if (!h || h.closed || h.enabled === false) return `${day}: CERRADO`;
-                        return `${day}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${h.break ? ` (Descanso: ${h.break.start}-${h.break.end})` : ""}`;
+                        const lunch = h.lunch_break;
+                        return `${day}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${lunch?.enabled ? ` (Colación: ${lunch.start}-${lunch.end})` : ""}`;
                     }).join(", ");
 
                 const sysPrompt = `${clinic.ai_personality}
@@ -1094,22 +1100,22 @@ ${knowledgeSummary}
 IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
-1. SI el paciente pregunta por un día que aparece como CERRADO en 'Horario General' (ej: sábado), dile INMEDIATAMENTE que la clínica está cerrada ese día y ofrece opciones de lunes a viernes. NO preguntes qué sábado ni pidas confirmación.
-2. NUNCA menciones horarios o disponibilidad sin llamar primero a 'check_availability'.
-3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO de arriba para el parámetro 'date' de la herramienta.
-4. EL NOMBRE DEL DÍA (ej. miércoles) que te devuelva 'check_availability' es el CORRECTO. Úsalo sin cuestionar.
-5. El Horario General es tu guía rápida. La herramienta es tu verificación FINAL.
+1. SI el paciente pregunta por disponibilidad en un día que aparece como CERRADO en 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de lunes a viernes. NO preguntes "¿qué sábado?" ni pidas confirmaciones si el día está cerrado.
+2. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, a menos que el día esté cerrado según el Horario General.
+3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
+4. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
+5. El Horario General es tu guía; la herramienta es tu confirmación final.
 
-REGLAS OBLIGATORIAS SOBRE SERVICIOS:
-1. Los ÚNICOS servicios que ofreces son los listados arriba en "Servicios OFICIALES". NUNCA inventes, sugieras ni menciones servicios que NO estén en esa lista.
-2. Cuando un paciente pregunte "¿qué servicios ofrecen?", menciona TODOS los de la lista oficial con precios.
-
-ESTRUCTURA DE ATENCIÓN (MICROBLADING):
-Si el usuario consulta por Microblading de cejas, DEBES seguir este orden EXACTO:
-1. Antes de dar precios u horarios, PREGUNTA: "¿Es tu primera vez realizando este tratamiento?" (Es obligatorio para calificar al paciente).
-2. Luego entrega la información de qué es el servicio mencionado, e incluye SIEMPRE las contraindicaciones (embarazo, lactancia, diabetes, etc.).
-3. Indica el valor (Normal vs Oferta si existe).
-4. Ofrece agendar preguntando qué día le acomoda.
+REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
+1. Solo ofrece los servicios listados en "Servicios OFICIALES".
+2. FLUJO OBLIGATORIO PARA MICROBLADING: Si el paciente muestra interés en Microblading (en cualquier variante), DEBES seguir este orden EXACTO:
+   a) Primero pregunta: "¿Es tu primera vez realizándote este tratamiento?" (Es obligatorio para calificar al paciente).
+   b) Explica el tratamiento e incluye TODAS las contraindicaciones (embarazo, lactancia, diabetes, problemas cutáneos, etc.).
+   c) Indica el valor oficial.
+   d) Ofrece agendar preguntando qué día le acomoda.
+3. Ante preguntas generales sobre servicios, enumera TODOS los servicios oficiales con sus precios.
+4. SIEMPRE usa 'get_knowledge' si te preguntan detalles técnicos o precios que no ves en la lista estática.
+5. SE PROACTIVO con 'tag_patient' para etiquetar intereses y condiciones médicas (embarazo, etc.) de forma interna.
 
 REGLAS CRÍTICAS PARA PRECIOS:
 1. Si falta un precio en la lista de arriba, USA 'get_knowledge' antes de decir que no sabes.

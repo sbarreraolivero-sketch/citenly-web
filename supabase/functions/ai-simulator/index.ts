@@ -56,6 +56,22 @@ const functions = [
 // =============================================
 // Tool implementations (simplified for simulator)
 // =============================================
+const getOffset = (timeZone: string = "America/Santiago", date: Date) => {
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            timeZoneName: 'shortOffset'
+        }).formatToParts(date);
+        const name = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT-3';
+        const match = name.match(/([+-])(\d+)(?::(\d+))?/);
+        if (match) {
+            const [_, sign, h, m] = match;
+            return `${sign}${h.padStart(2, '0')}:${(m || '00').padStart(2, '0')}`;
+        }
+        return "-03:00";
+    } catch (e) { return "-03:00"; }
+};
+
 const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, date: string, serviceName?: string, timezone?: string, professionalName?: string, clinicWorkingHours?: any) => {
     try {
         const tz = timezone || "America/Santiago";
@@ -194,14 +210,34 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             if (svc) { price = svc.price || 0; duration = svc.duration || 60; }
         }
 
-        const appointmentDate = new Date(`${args.date}T${args.time}:00`);
+        // Normalize time (handle 24h, 12h, and cleaning)
+        let normalizedTime = args.time.replace(/[^\d:apmAPM\s]/g, '').trim();
+        if (normalizedTime.toLowerCase().includes('pm') || normalizedTime.toLowerCase().includes('am')) {
+            const isPM = normalizedTime.toLowerCase().includes('pm');
+            let [h, m] = normalizedTime.replace(/[apmAPM\s]/g, '').split(':').map(Number);
+            if (isPM && h < 12) h += 12;
+            if (!isPM && h === 12) h = 0;
+            normalizedTime = `${h.toString().padStart(2, '0')}:${(m || 0).toString().padStart(2, '0')}`;
+        } else {
+            // Ensure HH:MM
+            const parts = normalizedTime.split(':');
+            const h = parts[0].padStart(2, '0');
+            const m = (parts[1] || '00').padStart(2, '0');
+            normalizedTime = `${h}:${m}`;
+        }
+
+        // Fix Timezone: Construct ISO string with offset
+        const offset = getOffset(timezone, new Date(`${args.date}T12:00:00`));
+        const appointmentDateWithOffset = `${args.date}T${normalizedTime}:00${offset}`;
+        console.log(`[Simulator createAppt] Final ISO: ${appointmentDateWithOffset}`);
 
         const { data, error } = await sb.from("appointments").insert({
             clinic_id: clinicId,
             patient_name: args.patient_name,
             phone_number: simulatedPhone,
             service: args.service_name,
-            appointment_date: appointmentDate.toISOString(),
+            appointment_date: appointmentDateWithOffset,
+            appointment_time: normalizedTime, // ADDED explicitly for frontend parsing sync
             duration: duration,
             price,
             status: "confirmed",
@@ -509,7 +545,8 @@ Deno.serve(async (req: Request) => {
         const hoursSummary = Object.entries(clinic.working_hours || {})
             .map(([day, h]: [string, any]) => {
                 if (!h || h.closed || h.enabled === false) return `${day}: CERRADO`;
-                return `${day}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${h.break ? ` (Descanso: ${h.break.start}-${h.break.end})` : ""}`;
+                const lunch = h.lunch_break;
+                return `${day}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${lunch?.enabled ? ` (Colación: ${lunch.start}-${lunch.end})` : ""}`;
             }).join(", ");
 
         const sysPrompt = `${clinic.ai_personality}
@@ -526,60 +563,33 @@ Servicios OFICIALES (FUENTE DE VERDAD - SOLO ESTOS EXISTEN): ${JSON.stringify(se
 ⚠️ MODO SIMULADOR: Estás en modo de prueba dentro de la app. Responde EXACTAMENTE como lo harías en WhatsApp real. Las citas que agendes aquí serán reales y aparecerán en el calendario. El número del paciente es simulado.
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
-1. SI el paciente pregunta por un día que aparece como CERRADO en 'Horario General' (ej: sábado), dile INMEDIATAMENTE que la clínica está cerrada ese día y ofrece opciones de lunes a viernes. NO preguntes qué sábado ni pidas confirmación.
-2. NUNCA menciones horarios o disponibilidad sin llamar primero a 'check_availability'.
-3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO de arriba para el parámetro 'date' de la herramienta.
-4. EL NOMBRE DEL DÍA (ej. miércoles) que te devuelva 'check_availability' es el CORRECTO. Úsalo sin cuestionar.
-5. El Horario General es tu guía rápida. La herramienta es tu verificación FINAL.
+1. SI el paciente pregunta por disponibilidad en un día que aparece como CERRADO en 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de lunes a viernes. NO preguntes "¿qué sábado?" ni pidas confirmaciones si el día está cerrado.
+2. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, a menos que el día esté cerrado según el Horario General.
+3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
+4. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
+5. El Horario General es tu guía; la herramienta es tu confirmación final.
 
-REGLAS OBLIGATORIAS SOBRE SERVICIOS:
-1. Los ÚNICOS servicios que ofreces son los listados arriba en "Servicios OFICIALES". NUNCA inventes, sugieras ni menciones servicios que NO estén en esa lista (ej: "consultas generales", "evaluaciones", etc. NO existen a menos que estén explícitamente listados).
-2. Cuando un paciente pregunte "¿qué servicios ofrecen?" o salude con una pregunta general, SIEMPRE menciona TODOS los servicios de la lista oficial, con sus nombres completos y precios.
-3. Si el paciente pregunta por un servicio que NO está en la lista, di amablemente que actualmente no lo ofreces e invítalo a conocer los servicios que SÍ tienes disponibles.
-
-REGLAS CRÍTICAS PARA PRECIOS E INFORMACIÓN MÉDICA:
-1. Si te preguntan por un precio o detalle que NO ves en la lista estática de 'Servicios' arriba, DEBES usar la herramienta 'get_knowledge' antes de responder. 
-2. NUNCA digas "no tengo información" sobre un precio sin haber buscado primero.
-3. Tus documentos internos (Resumen Base Conocimiento) pueden estar truncados; usa 'get_knowledge' con palabras clave simples (ej: 'precios') para obtener el detalle completo.
-
-ESTRUCTURA DE ATENCIÓN (MICROBLADING):
-Si el usuario consulta por Microblading de cejas, DEBES seguir este orden EXACTO:
-1. Antes de dar precios u horarios, PREGUNTA: "¿Es tu primera vez realizando este tratamiento?" (Es obligatorio para calificar al paciente).
-2. Luego entrega la información de qué es el servicio mencionado, e incluye SIEMPRE las contraindicaciones (embarazo, lactancia, diabetes, etc.).
-3. Indica el valor (Normal vs Oferta si existe).
-4. Ofrece agendar preguntando qué día le acomoda.
+REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
+1. Solo ofrece los servicios listados en "Servicios OFICIALES". No inventes servicios.
+2. FLUJO OBLIGATORIO PARA MICROBLADING: Si el paciente muestra interés en Microblading (en cualquier variante), DEBES seguir este orden EXACTO:
+   a) Primero pregunta: "¿Es tu primera vez realizándote este tratamiento?" (Es obligatorio para calificar al paciente).
+   b) Explica el tratamiento e incluye TODAS las contraindicaciones (embarazo, lactancia, diabetes, problemas cutáneos, etc.).
+   c) Indica el valor oficial.
+   d) Ofrece agendar preguntando qué día le acomoda.
+3. Ante preguntas generales sobre servicios, enumera TODOS los servicios oficiales con sus precios.
+4. SIEMPRE usa 'get_knowledge' si te preguntan detalles técnicos o precios que no ves en la lista estática.
 
 ETIQUETADO AUTOMÁTICO INTELIGENTE:
-Usa la función 'tag_patient' PROACTIVAMENTE durante la conversación para segmentar al paciente. Hazlo SIN mencionarlo al paciente (es 100% interno). Puedes llamar tag_patient múltiples veces en una misma conversación.
-
-Etiquetas por INTERÉS EN SERVICIO (color azul #3B82F6):
-- "Interés [NombreServicio]" → Cuando el paciente pregunte por un servicio específico (ej: "Interés Microblading", "Interés Labios")
-
-Etiquetas por CICLO DE VIDA (color verde #10B981):
-- "Primera Vez" → Cuando sea su primera interacción o lo mencione
-- "Cliente [NombreServicio]" → Cuando agende o complete una cita
-- "Cliente Frecuente" → Cuando mencione que ha visitado antes múltiples veces
-- "Retoque Pendiente" → Cuando pregunte por retoque o follow-up
-
-Etiquetas por CONDICIÓN (color rojo #EF4444):
-- "Piel Sensible" → Si menciona piel sensible, alergias, o condiciones cutáneas
-- "Embarazada" → Si menciona embarazo (contraindicación)
-- "Condición Médica" → Si menciona diabetes, problemas de coagulación, etc.
-
-Etiquetas por COMPORTAMIENTO (color amarillo #F59E0B):
-- "Consulta Precio" → Cuando solo pregunte precios sin agendar
-- "Interesada No Agenda" → Cuando muestre interés pero no confirme cita
-- "Referidor" → Si menciona que alguien le recomendó o ella quiere referir
-
-Etiquetas ESPECIALES (color morado #8B5CF6):
-- "VIP" → Clientes que agendan múltiples servicios o gastan mucho
-- "Promoción" → Si pregunta por ofertas o descuentos
+Usa la función 'tag_patient' PROACTIVAMENTE para segmentar al paciente internamente.
+- "Interés [NombreServicio]" (azul #3B82F6)
+- "Primera Vez", "Cliente [NombreServicio]", "Cliente Frecuente" (verde #10B981)
+- "Piel Sensible", "Embarazada", "Condición Médica" (rojo #EF4444)
+- "Consulta Precio", "Referidor" (amarillo #F59E0B)
+- "VIP", "Promoción" (morado #8B5CF6)
 
 REGLAS DE ETIQUETADO:
-1. Etiqueta INMEDIATAMENTE cuando detectes la señal, no esperes al final.
-2. Es mejor etiquetar de más que de menos.
-3. NUNCA menciones al paciente que lo estás etiquetando.
-4. Si una etiqueta ya existe con ese nombre, se reutiliza automáticamente.
+1. Etiqueta INMEDIATAMENTE cuando detectes la señal.
+2. NUNCA menciones al paciente que lo estás etiquetando.
 
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
