@@ -21,13 +21,13 @@ const COLOR_PRESETS = [
 ]
 
 const DEFAULT_HOURS = {
-    monday: { enabled: true, start: '09:00', end: '18:00' },
-    tuesday: { enabled: true, start: '09:00', end: '18:00' },
-    wednesday: { enabled: true, start: '09:00', end: '18:00' },
-    thursday: { enabled: true, start: '09:00', end: '18:00' },
-    friday: { enabled: true, start: '09:00', end: '18:00' },
-    saturday: { enabled: false, start: '09:00', end: '13:00' },
-    sunday: { enabled: false, start: '09:00', end: '13:00' },
+    monday: { enabled: true, start: '09:00', end: '18:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
+    tuesday: { enabled: true, start: '09:00', end: '18:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
+    wednesday: { enabled: true, start: '09:00', end: '18:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
+    thursday: { enabled: true, start: '09:00', end: '18:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
+    friday: { enabled: true, start: '09:00', end: '18:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
+    saturday: { enabled: false, start: '09:00', end: '13:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
+    sunday: { enabled: false, start: '09:00', end: '13:00', lunch_break: { enabled: false, start: '14:00', end: '15:00' } },
 }
 
 export default function MyProfile() {
@@ -40,7 +40,7 @@ export default function MyProfile() {
     const [jobTitle, setJobTitle] = useState('')
     const [specialty, setSpecialty] = useState('')
     const [color, setColor] = useState('#8B5CF6')
-    const [workingHours, setWorkingHours] = useState<Record<string, { enabled: boolean; start: string; end: string }>>(DEFAULT_HOURS)
+    const [workingHours, setWorkingHours] = useState<Record<string, { enabled: boolean; start: string; end: string; lunch_break?: { enabled: boolean; start: string; end: string } }>>(DEFAULT_HOURS)
 
     useEffect(() => {
         if (member) {
@@ -255,20 +255,86 @@ export default function MyProfile() {
                                     </span>
                                 </label>
                                 {dayHours.enabled && (
-                                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                                        <input
-                                            type="time"
-                                            value={dayHours.start}
-                                            onChange={(e) => updateDay(day.key, 'start', e.target.value)}
-                                            className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
-                                        />
-                                        <span className="text-charcoal/40 text-sm">a</span>
-                                        <input
-                                            type="time"
-                                            value={dayHours.end}
-                                            onChange={(e) => updateDay(day.key, 'end', e.target.value)}
-                                            className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
-                                        />
+                                    <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="time"
+                                                value={dayHours.start}
+                                                onChange={(e) => updateDay(day.key, 'start', e.target.value)}
+                                                className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
+                                            />
+                                            <span className="text-charcoal/40 text-sm">a</span>
+                                            <input
+                                                type="time"
+                                                value={dayHours.end}
+                                                onChange={(e) => updateDay(day.key, 'end', e.target.value)}
+                                                className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
+                                            />
+                                        </div>
+
+                                        {/* Colación UI */}
+                                        <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-silk-beige/30 ml-1">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className="relative inline-flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={dayHours.lunch_break?.enabled || false}
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked;
+                                                            setWorkingHours((prev: any) => ({
+                                                                ...prev,
+                                                                [day.key]: {
+                                                                    ...prev[day.key],
+                                                                    lunch_break: {
+                                                                        ...(prev[day.key].lunch_break || { start: '14:00', end: '15:00' }),
+                                                                        enabled: checked
+                                                                    }
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="sr-only peer"
+                                                    />
+                                                    <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500"></div>
+                                                </div>
+                                                <span className="text-[11px] font-medium text-charcoal/40 group-hover:text-charcoal/60 transition-colors">Colación</span>
+                                            </label>
+
+                                            {dayHours.lunch_break?.enabled && (
+                                                <div className="flex items-center gap-2 animate-fade-in">
+                                                    <input
+                                                        type="time"
+                                                        value={dayHours.lunch_break.start}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setWorkingHours((prev: any) => ({
+                                                                ...prev,
+                                                                [day.key]: {
+                                                                    ...prev[day.key],
+                                                                    lunch_break: { ...prev[day.key].lunch_break, start: val }
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="px-2 py-0.5 bg-white border border-silk-beige rounded-soft text-[11px] w-20"
+                                                    />
+                                                    <span className="text-charcoal/30 text-[10px]">a</span>
+                                                    <input
+                                                        type="time"
+                                                        value={dayHours.lunch_break.end}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setWorkingHours((prev: any) => ({
+                                                                ...prev,
+                                                                [day.key]: {
+                                                                    ...prev[day.key],
+                                                                    lunch_break: { ...prev[day.key].lunch_break, end: val }
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="px-2 py-0.5 bg-white border border-silk-beige rounded-soft text-[11px] w-20"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>

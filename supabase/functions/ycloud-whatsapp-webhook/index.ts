@@ -91,11 +91,11 @@ const functions = [
     },
     {
         name: "get_knowledge",
-        description: "Busca información en la base de conocimiento de la clínica. Usa esta función cuando el paciente pregunte sobre políticas, promociones, preguntas frecuentes, horarios especiales, cuidados post-tratamiento, o cualquier información específica de la clínica.",
+        description: "Busca información detallada en la base de conocimiento (precios, tratamientos, cuidados, valores, promociones). ÚSALO SIEMPRE ante preguntas sobre costos o temas específicos que no estén en tu configuración básica.",
         parameters: {
             type: "object",
             properties: {
-                query: { type: "string", description: "Tema o pregunta a buscar en la base de conocimiento" }
+                query: { type: "string", description: "Palabras clave simplificadas para la búsqueda (ej: 'precios', 'labios', 'cuidados', 'promocion')" }
             },
             required: ["query"]
         }
@@ -461,22 +461,62 @@ const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: str
 
 const getKnowledge = async (sb: ReturnType<typeof createClient>, clinicId: string, query: string) => {
     try {
-        const { data: docs } = await sb.from("knowledge_base")
+        const genericWords = ["valor", "precio", "costo", "cuanto", "vale", "informacion", "clinica", "servicio", "tratamiento", "precios", "valores", "costos", "procedimiento", "sesion"];
+
+        // Clean and split query into keywords
+        const allKeywords = query.toLowerCase()
+            .replace(/[¿?¡!.,]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 2); // Keywords of 3+ chars
+
+        // Filter out generic words to find specific subjects (e.g., "labios")
+        const specificKeywords = allKeywords.filter(w => !genericWords.map(g => g.normalize("NFD").replace(/[\u0300-\u036f]/g, "")).includes(w.normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+
+        // If we have specific keywords, use them. Otherwise, use all keywords.
+        const searchKeywords = specificKeywords.length > 0 ? specificKeywords : allKeywords;
+
+        let queryBuilder = sb.from("knowledge_base")
             .select("title, content, category")
             .eq("clinic_id", clinicId)
-            .eq("status", "active")
-            .or(`title.ilike.%${query}%,content.ilike.%${query}%,category.ilike.%${query}%`)
-            .limit(3);
+            .eq("status", "active");
 
-        if (!docs || docs.length === 0) {
-            return { found: false, message: "No encontré información específica sobre eso en nuestra base de conocimiento." };
+        if (searchKeywords.length > 0) {
+            // Search ANY of the words in title, content or category
+            const orFilters = searchKeywords.flatMap(kw => [
+                `title.ilike.%${kw}%`,
+                `content.ilike.%${kw}%`,
+                `category.ilike.%${kw}%`
+            ]).join(',');
+
+            queryBuilder = queryBuilder.or(orFilters);
+        } else {
+            // Literal fallback
+            queryBuilder = queryBuilder.or(`title.ilike.%${query}%,content.ilike.%${query}%,category.ilike.%${query}%`);
         }
 
-        const results = docs.map((d: { title: string; content: string; category: string }) =>
+        const { data: docs } = await queryBuilder.limit(10); // Get more to rank them
+
+        if (!docs || docs.length === 0) {
+            return { found: false, message: "No encontré información específica sobre eso en nuestra base de conocimiento. Intenta buscando un término más general (ej: 'precios' en lugar de 'valor de labios')." };
+        }
+
+        // Rank results by relevance
+        const rankedDocs = docs.map(d => {
+            let score = 0;
+            const docText = `${d.title} ${d.content} ${d.category}`.toLowerCase();
+            allKeywords.forEach(kw => {
+                if (d.title.toLowerCase().includes(kw)) score += 10;
+                if (d.category?.toLowerCase().includes(kw)) score += 5;
+                if (d.content.toLowerCase().includes(kw)) score += 1;
+            });
+            return { ...d, score };
+        }).sort((a, b) => b.score - a.score).slice(0, 5); // Take top 5
+
+        const results = rankedDocs.map((d: { title: string; content: string; category: string }) =>
             `📄 ${d.title} (${d.category}):\n${d.content}`
         ).join("\n\n---\n\n");
 
-        return { found: true, documents: docs.length, message: results };
+        return { found: true, documents: rankedDocs.length, message: results };
     } catch (e) {
         console.error("getKnowledge error:", e);
         return { found: false, message: "Error al buscar en base de conocimiento." };
@@ -988,12 +1028,75 @@ Deno.serve(async (req) => {
 
                 // --- AT THIS POINT, WE ARE THE LATEST MESSAGE. BEGIN PROCESSING. ---
 
-                const localTime = new Date().toLocaleString("es-MX", { timeZone: clinic.timezone || "America/Mexico_City", weekday: "long", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                const clinicTz = clinic.timezone || "America/Santiago";
+                const now = new Date();
+                const localTime = now.toLocaleString("es-CL", { timeZone: clinicTz, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+                // Pre-calculate dates for AI (CRITICAL: use timezone-aware day names, NOT getDay() which is UTC!)
+                const localDateISO = now.toLocaleDateString("en-CA", { timeZone: clinicTz });
+                const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                const dayAfter = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+                const tomorrowISO = tomorrow.toLocaleDateString("en-CA", { timeZone: clinicTz });
+                const dayAfterISO = dayAfter.toLocaleDateString("en-CA", { timeZone: clinicTz });
+                const todayDay = now.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long" });
+                const tomorrowDay = tomorrow.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long" });
+                const dayAfterDay = dayAfter.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long" });
 
                 // Fetch knowledge base summary for system prompt
                 const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
 
-                const sysPrompt = `${clinic.ai_personality}\n\nClínica: ${clinic.clinic_name}\nDirección: ${clinic.address || "No especificada, consultar al equipo."}\nFecha/Hora actual: ${localTime}\nServicios (Fuente de Verdad para Precios y Duración): ${JSON.stringify(clinic.services)}\nHorarios: ${JSON.stringify(clinic.working_hours)}\n${knowledgeSummary}\n\nIMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.\n\nETIQUETADO AUTOMÁTICO: Usa la función tag_patient PROACTIVAMENTE durante la conversación para etiquetar al paciente. Hazlo SIN mencionarlo al paciente (es interno). Etiqueta cuando: detectes interés en un servicio, el paciente agende, mencione condiciones de piel/salud, sea primera vez, o cualquier dato que ayude a segmentar para marketing futuro.\n\n${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
+                // Fetch REAL services from the 'services' table (not the legacy JSON field)
+                const { data: realServices } = await sb.from("services")
+                    .select("name, duration, price")
+                    .eq("clinic_id", clinic.id);
+
+                const servicesForPrompt = realServices && realServices.length > 0
+                    ? realServices.map(s => ({ name: s.name, duration: `${s.duration} min`, price: `$${s.price.toLocaleString('es-CL')}` }))
+                    : clinic.services || [];
+
+                const sysPrompt = `${clinic.ai_personality}
+
+Clínica: ${clinic.clinic_name}
+Dirección: ${clinic.address || "No especificada, consultar al equipo."}
+
+CONTEXTO DE FECHAS (FUENTE DE VERDAD):
+- HOY: ${todayDay}, ${localDateISO}
+- MAÑANA: ${tomorrowDay}, ${tomorrowISO}
+- PASADO MAÑANA: ${dayAfterDay}, ${dayAfterISO}
+
+SERVICIOS OFICIALES (SOLO ESTOS EXISTEN): 
+${JSON.stringify(servicesForPrompt)}
+
+${knowledgeSummary}
+
+IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.
+
+REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
+1. NUNCA menciones horarios o disponibilidad sin llamar primero a 'check_availability'.
+2. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO de arriba para el parámetro 'date' de la herramienta.
+3. EL NOMBRE DEL DÍA (ej. miércoles) que te devuelva 'check_availability' es el CORRECTO. Úsalo sin cuestionar.
+4. LA CLÍNICA NO TIENE HORARIOS FIJOS EN TU MEMORIA. La herramienta es tu única fuente de verdad sobre disponibilidad.
+
+REGLAS OBLIGATORIAS SOBRE SERVICIOS:
+1. Los ÚNICOS servicios que ofreces son los listados arriba en "Servicios OFICIALES". NUNCA inventes, sugieras ni menciones servicios que NO estén en esa lista.
+2. Cuando un paciente pregunte "¿qué servicios ofrecen?", menciona TODOS los de la lista oficial con precios.
+
+REGLAS CRÍTICAS PARA PRECIOS:
+1. Si falta un precio en la lista de arriba, USA 'get_knowledge' antes de decir que no sabes.
+
+ETIQUETADO AUTOMÁTICO INTELIGENTE:
+Usa la función 'tag_patient' PROACTIVAMENTE para segmentar al paciente.
+Etiquetas por INTERÉS: "Interés [NombreServicio]" (azul #3B82F6)
+Etiquetas por CICLO: "Primera Vez", "Cliente [NombreServicio]", "Cliente Frecuente" (verde #10B981)
+Etiquetas por CONDICIÓN: "Piel Sensible", "Embarazada", "Condición Médica" (rojo #EF4444)
+Etiquetas por COMPORTAMIENTO: "Consulta Precio", "Referidor" (amarillo #F59E0B)
+Etiquetas ESPECIALES: "VIP", "Promoción" (morado #8B5CF6)
+
+REGLAS DE ETIQUETADO:
+1. Etiqueta INMEDIATAMENTE cuando detectes la señal.
+2. NUNCA menciones al paciente que lo estás etiquetando.
+
+${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
                 // Build conversation context WITH GROUPING
                 const { data: recentMsgs } = await sb.from("messages")
