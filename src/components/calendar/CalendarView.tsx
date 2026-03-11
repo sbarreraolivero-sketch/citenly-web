@@ -131,8 +131,8 @@ const eventPropGetter = (event: CalendarEvent) => {
 
     let className = "border-l-4 text-xs rounded transition-all hover:brightness-95"
 
-    // If professional has a color, use it for the border
-    if (professionalColor && !isGoogle) {
+    // If professional has a color, use it for the border (except if appointment is cancelled)
+    if (professionalColor && !isGoogle && status !== 'cancelled') {
         return {
             className: className + " text-charcoal",
             style: {
