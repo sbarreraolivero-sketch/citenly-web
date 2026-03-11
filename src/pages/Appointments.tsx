@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { format } from 'date-fns'
-import { toZonedTime } from 'date-fns-tz'
-// import { useNavigate } from 'react-router-dom' // Not needed anymore
+import { useNavigate } from 'react-router-dom'
 import {
     Calendar,
     Clock,
@@ -70,6 +69,7 @@ const tabs = [
 export default function Appointments() {
     const { user, profile, session, member } = useAuth()
     const isProfessional = member?.role === 'professional'
+    const navigate = useNavigate()
     const [appointments, setAppointments] = useState<Appointment[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('all')
@@ -156,58 +156,60 @@ export default function Appointments() {
 
     useEffect(() => {
         fetchAppointments()
-    }, [user?.id, profile?.clinic_id])
+    }, [user, profile])
 
     // Update appointment status
     const updateAppointmentStatus = async (id: string, newStatus: 'confirmed' | 'cancelled' | 'completed') => {
         try {
-            // Optimistic update using functional updater to avoid stale closure
-            setAppointments(prev => prev.map(a =>
+            // Optimistic update
+            const appointment = appointments.find(a => a.id === id)
+            if (!appointment) return
+
+            setAppointments(appointments.map(a =>
                 a.id === id ? { ...a, status: newStatus } : a
             ))
-
-            const updates: any = { status: newStatus }
-            if (newStatus === 'completed') {
-                updates.payment_status = 'paid'
-            }
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await (supabase as any)
                 .from('appointments')
-                .update(updates)
+                .update({ status: newStatus })
                 .eq('id', id)
 
             if (error) throw error
 
-            // Re-fetch to confirm the DB state is in sync
-            await fetchAppointments()
-
-            // Handle "Completed" status - just notify, don't navigate away
+            // Handle "Completed" status - CRM Integration
             if (newStatus === 'completed') {
+                // Fetch the appointment again to get the auto-generated patient_id from the DB trigger
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: updatedApt } = await (supabase as any)
+                const { data: updatedApt, error: fetchErr } = await (supabase as any)
                     .from('appointments')
                     .select('*, patient:patients(id, name)')
                     .eq('id', id)
                     .single()
 
-                if (updatedApt?.patient) {
+                if (!fetchErr && updatedApt?.patient) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const patientData = (updatedApt as any).patient
-                    alert(`✅ Cita completada con éxito.\n\nEl paciente "${patientData.name}" ha sido registrado automáticamente en Pacientes.\n\nPuedes agregar notas clínicas desde la sección de Pacientes.`)
-                } else {
-                    alert('✅ Cita completada con éxito.')
+                    if (window.confirm(`Cita completada con éxito.\n\nEl paciente ${patientData.name} está registrado en tu CRM.\n\n¿Deseas agregar sus notas y ficha clínica ahora?`)) {
+                        navigate(`/patients/${patientData.id}?action=new_record`)
+                    }
+                }
+            }
+            // Sync with Google Calendar
+            if (newStatus === 'cancelled') {
+                if (appointment?.google_event_id) {
+                    console.log('Cancelling Google Event:', appointment.google_event_id)
+                    supabase.functions.invoke('delete-google-event', {
+                        body: { google_event_id: appointment.google_event_id }
+                    }).then(({ error }) => {
+                        if (error) console.error('Error deleting Google event:', error)
+                        else console.log('Google event deleted successfully')
+                    }).catch(err => console.error('Error deleting Google event:', err))
                 }
             }
 
-            if (newStatus === 'confirmed') {
-                alert('✅ Cita confirmada exitosamente.')
-            }
-
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error updating status:', error)
-            alert('Error al actualizar el estado: ' + (error?.message || 'Intenta de nuevo'))
-            // Revert to real DB state
             fetchAppointments()
         }
     }
@@ -272,7 +274,9 @@ export default function Appointments() {
             const [hours, minutes] = newAppointment.appointment_time.split(':').map(Number)
             const localDate = new Date(year, month - 1, day, hours, minutes)
             const appointmentDate = localDate.toISOString()
-            // let googleEventId = null // No longer needed as Google Calendar sync is removed
+
+            let appointmentId = editingId
+            let googleEventId = null
 
             if (editingId) {
                 // UPDATE existing appointment
@@ -294,13 +298,13 @@ export default function Appointments() {
                 if (error) throw error
 
                 // Get the existing google_event_id to update it
-                // const existingAppt = appointments.find(a => a.id === editingId) // No longer needed
-                // googleEventId = existingAppt?.google_event_id // No longer needed
+                const existingAppt = appointments.find(a => a.id === editingId)
+                googleEventId = existingAppt?.google_event_id
 
             } else {
                 // CREATE new appointment
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { error } = await (supabase as any)
+                const { data, error } = await (supabase as any)
                     .from('appointments')
                     .insert([
                         {
@@ -309,17 +313,76 @@ export default function Appointments() {
                             phone_number: newAppointment.phone_number,
                             service: newAppointment.service,
                             appointment_date: appointmentDate,
-                            status: 'confirmed', // Created by human directly translates to confirmed
+                            status: 'confirmed',
                             notes: newAppointment.notes,
                             professional_id: newAppointment.professional_id || null,
                         },
                     ])
+                    .select()
+                    .single()
 
                 if (error) throw error
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                appointmentId = (data as any).id
             }
 
-            // Google Calendar sync is removed.
-            // Update local appointment record completely, ignoring google logic.
+            // Sync with Google Calendar (Create or Update)
+            let durationMinutes = 60
+            const selectedServiceObj = services.find(s => s.name === newAppointment.service)
+            if (selectedServiceObj) {
+                durationMinutes = selectedServiceObj.duration
+            }
+
+            const endDate = new Date(new Date(appointmentDate).getTime() + durationMinutes * 60 * 1000).toISOString()
+
+            if (editingId && googleEventId) {
+                // Update Google Event
+                const { error: googleError } = await supabase.functions.invoke('update-google-event', {
+                    body: {
+                        google_event_id: googleEventId,
+                        title: `${newAppointment.patient_name} - ${newAppointment.service}`,
+                        description: newAppointment.notes,
+                        start: appointmentDate,
+                        end: endDate
+                    }
+                })
+
+                if (googleError) {
+                    console.error('Error syncing update to Google Calendar:', googleError)
+                    // alert(`Error debug: ${JSON.stringify(googleError)}`)
+                } else {
+                    console.log('Google Calendar event updated')
+                }
+            } else if (!editingId || (editingId && !googleEventId)) {
+                // ...
+                const { data: googleData, error: googleError } = await supabase.functions.invoke('create-google-event', {
+                    body: {
+                        title: `${newAppointment.patient_name} - ${newAppointment.service}`,
+                        description: newAppointment.notes,
+                        start: appointmentDate,
+                        end: endDate,
+                    },
+                })
+
+                if (googleError) {
+                    // This handles network/transport errors (like offline or CORS)
+                    console.error('Network/Transport error creating Google Calendar event:', googleError)
+                    // alert(`Error de conexión: ${JSON.stringify(googleError)}`)
+                } else if (!googleData?.success) {
+                    // This handles API/Logical errors returned as 200 OK { success: false }
+                    console.error('Logic error creating Google Calendar event:', googleData)
+                    // alert(`Error de sincronización: ${googleData?.error || 'Desconocido'}\nDetalles: ${JSON.stringify(googleData?.details)}`)
+                } else if (googleData?.event_id && appointmentId) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    await (supabase as any)
+                        .from('appointments')
+                        .update({ google_event_id: googleData.event_id })
+                        .eq('id', appointmentId)
+
+                    console.log('Synced with Google Calendar:', googleData.event_id)
+                }
+            }
+
             setShowModal(false)
             setNewAppointment({
                 patient_name: '',
@@ -357,7 +420,15 @@ export default function Appointments() {
             // 2. Remove from local state immediately
             setAppointments(appointments.filter(a => a.id !== appointment.id))
 
-            // 3. Google Calendar sync removed since system handles exclusively its own view
+            // 3. Delete from Google Calendar if linked
+            if (appointment.google_event_id) {
+                supabase.functions.invoke('delete-google-event', {
+                    body: { google_event_id: appointment.google_event_id }
+                }).then(({ error }) => {
+                    if (error) console.error('Error deleting Google event:', error)
+                    else console.log('Google event deleted')
+                }).catch(err => console.error('Error deleting Google event:', err))
+            }
 
         } catch (error) {
             console.error('Error deleting appointment:', error)
@@ -451,34 +522,34 @@ export default function Appointments() {
         )
     }
 
-    // Pre-filter for calendar (ignore dateFilter since calendar manages its own date view, but respect the activeTab, search, and professional filter)
-    const calendarAppointments = appointments.filter((appointment) => {
-        const matchesSearch =
-            appointment.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            appointment.service?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            appointment.phone_number.includes(searchQuery)
-
-        const matchesTab = activeTab === 'all' || appointment.status === activeTab
-
-        let matchesProfessional = true;
-        if (isProfessional) {
-            matchesProfessional = appointment.professional_id === member?.id;
-        } else {
-            matchesProfessional = professionalFilter === 'all' || appointment.professional_id === professionalFilter;
-        }
-
-        return matchesSearch && matchesTab && matchesProfessional
-    })
-
     // Map appointments to calendar events
-    const mappedAppointments = calendarAppointments.map(apt => {
+    const mappedAppointments = appointments.map(apt => {
         // Validation
         if (!apt.appointment_date) return null
 
         let start: Date
-        // Force interpretation to the clinic's local timezone (America/Santiago)
-        // This makes it completely immune to bugs caused by the user's OS/browser timezone evaluation
-        start = toZonedTime(apt.appointment_date, 'America/Santiago')
+
+        // Check if we have an explicit time column (newer records)
+        // If appointment_time is present and not just "00:00" or empty
+        const hasExplicitTime = apt.appointment_time && apt.appointment_time !== '00:00' && apt.appointment_time !== '00:00:00';
+
+        if (hasExplicitTime) {
+            // Safe extraction of YYYY-MM-DD
+            const datePart = apt.appointment_date.split('T')[0].split(' ')[0]
+
+            // Ensure HH:mm format (sanitize)
+            let timeStr = apt.appointment_time || '00:00'
+            const timeParts = timeStr.split(':')
+            const hour = (timeParts[0] || '00').padStart(2, '0')
+            const minute = (timeParts[1] || '00').padStart(2, '0')
+            const safeTimeStr = `${hour}:${minute}`
+
+            start = new Date(`${datePart}T${safeTimeStr}:00`)
+        } else {
+            // Fallback: Try parsing appointment_date directly (legacy records often include time)
+            // e.g. "2026-02-18T09:30:00"
+            start = new Date(apt.appointment_date)
+        }
 
         // Debug check for invalid dates
         if (isNaN(start.getTime())) {
