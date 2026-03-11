@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { format } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 // import { useNavigate } from 'react-router-dom' // Not needed anymore
 import {
     Calendar,
@@ -475,50 +476,9 @@ export default function Appointments() {
         if (!apt.appointment_date) return null
 
         let start: Date
-
-        // Check if we have an explicit time column (newer records)
-        // If appointment_time is present and not just "00:00" or empty
-        const hasExplicitTime = apt.appointment_time && apt.appointment_time !== '00:00' && apt.appointment_time !== '00:00:00';
-
-        if (hasExplicitTime) {
-            // Safe extraction of YYYY-MM-DD
-            const datePart = apt.appointment_date.split('T')[0].split(' ')[0]
-
-            // Ensure HH:mm format (sanitize)
-            let timeStr = apt.appointment_time || '00:00'
-            const timeParts = timeStr.split(':')
-            const hour = (timeParts[0] || '00').padStart(2, '0')
-            const minute = (timeParts[1] || '00').padStart(2, '0')
-            const safeTimeStr = `${hour}:${minute}`
-
-            start = new Date(`${datePart}T${safeTimeStr}:00`)
-        } else {
-            // Fallback: Try parsing appointment_date directly
-            // Extract YYYY-MM-DD and HH:mm from ISO string to create a LOCAL Date object
-            // This prevents the 3-hour shift if the DB stored it "raw" or without correct offset
-            const parts = apt.appointment_date.split('T')
-            if (parts.length === 2) {
-                const dateStrings = parts[0].split('-')
-                const timeStrings = parts[1].split(':')
-                if (dateStrings.length === 3 && timeStrings.length >= 2) {
-                    const y = parseInt(dateStrings[0])
-                    const m = parseInt(dateStrings[1]) - 1
-                    const d = parseInt(dateStrings[2])
-                    const hh = parseInt(timeStrings[0])
-                    const mm = parseInt(timeStrings[1])
-
-                    // Construct local date
-                    start = new Date(y, m, d, hh, mm)
-
-                    // Only use this if it's within a reasonable range, else fallback
-                    if (isNaN(start.getTime())) start = new Date(apt.appointment_date)
-                } else {
-                    start = new Date(apt.appointment_date)
-                }
-            } else {
-                start = new Date(apt.appointment_date)
-            }
-        }
+        // Force interpretation to the clinic's local timezone (America/Santiago)
+        // This makes it completely immune to bugs caused by the user's OS/browser timezone evaluation
+        start = toZonedTime(apt.appointment_date, 'America/Santiago')
 
         // Debug check for invalid dates
         if (isNaN(start.getTime())) {
