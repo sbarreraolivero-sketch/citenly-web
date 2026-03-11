@@ -1,4 +1,4 @@
-
+import React from 'react'
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -66,15 +66,11 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
             }
         }
 
-        return (
-            <div
-                onClick={handleClick}
-                className="h-full relative z-20 cursor-pointer"
-                title={`${event.title} - Haga clic para editar`}
-            >
-                {children}
-            </div>
-        )
+        return React.cloneElement(children as React.ReactElement, {
+            onClick: handleClick,
+            title: `${event.title} - Haga clic para editar`,
+            className: `${(children as React.ReactElement).props.className || ''} cursor-pointer hover:brightness-95`
+        })
     }
 
     return (
