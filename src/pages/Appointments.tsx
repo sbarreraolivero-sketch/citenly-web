@@ -1413,7 +1413,7 @@ export default function Appointments() {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-charcoal mb-2">
                                             Fecha *
@@ -1422,7 +1422,7 @@ export default function Appointments() {
                                             type="date"
                                             value={newAppointment.appointment_date}
                                             onChange={(e) => setNewAppointment({ ...newAppointment, appointment_date: e.target.value })}
-                                            className="input-soft w-full"
+                                            className="input-soft w-full !px-2 sm:!px-4"
                                         />
                                     </div>
                                     <div>
@@ -1431,7 +1431,7 @@ export default function Appointments() {
                                         </label>
                                         <div className="flex gap-2">
                                             <select
-                                                className="input-soft w-full appearance-none text-center"
+                                                className="input-soft w-full appearance-none text-center !px-1 sm:!px-4"
                                                 value={(() => {
                                                     const [h] = newAppointment.appointment_time.split(':').map(Number)
                                                     if (h === 0) return 12
@@ -1458,7 +1458,7 @@ export default function Appointments() {
                                                 ))}
                                             </select>
                                             <select
-                                                className="input-soft w-full appearance-none text-center"
+                                                className="input-soft w-full appearance-none text-center !px-1 sm:!px-4"
                                                 value={newAppointment.appointment_time.split(':')[1]}
                                                 onChange={(e) => {
                                                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1476,7 +1476,7 @@ export default function Appointments() {
                                                 ))}
                                             </select>
                                             <select
-                                                className="input-soft w-[80px] appearance-none text-center bg-primary-50 font-medium text-primary-700 border-primary-200"
+                                                className="input-soft w-[65px] sm:w-[80px] appearance-none text-center bg-primary-50 font-medium text-primary-700 border-primary-200 !px-1 sm:!px-4"
                                                 value={parseInt(newAppointment.appointment_time.split(':')[0]) >= 12 ? 'PM' : 'AM'}
                                                 onChange={(e) => {
                                                     const [currentH, currentM] = newAppointment.appointment_time.split(':').map(Number)
