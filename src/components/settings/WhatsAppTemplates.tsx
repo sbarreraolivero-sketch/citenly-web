@@ -37,7 +37,7 @@ export function WhatsAppTemplates() {
         setIsLoading(true)
         setError('')
         try {
-            const { data, error } = await supabase.functions.invoke('ycloud-templates', {
+            const { data, error } = await supabase.functions.invoke('get-ycloud-templates', {
                 body: { clinic_id: profile.clinic_id }
             })
 
@@ -46,8 +46,8 @@ export function WhatsAppTemplates() {
                 throw new Error(data.error || data.message || 'Error en la respuesta de la función')
             }
 
-            if (data?.items) {
-                setTemplates(data.items)
+            if (data?.templates) {
+                setTemplates(data.templates)
             }
         } catch (err: any) {
             console.error('Error fetching templates:', err)

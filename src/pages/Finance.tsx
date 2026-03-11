@@ -295,6 +295,18 @@ const Finance = () => {
         }
     }
 
+    const handleDeletePayment = async (appointmentId: string) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar este pago? La transacción volverá a estado pendiente y se descontará de los ingresos.')) return
+        try {
+            await financeService.updatePaymentStatus(appointmentId, 'pending')
+            toast.success('Pago eliminado')
+            loadData()
+        } catch (error) {
+            console.error('Error deleting payment:', error)
+            toast.error('Error al eliminar el pago')
+        }
+    }
+
     // ── Render ──
     return (
         <div className="space-y-6">
@@ -564,6 +576,15 @@ const Finance = () => {
                                                         onClick={() => handleRegisterPayment(tx.id)}
                                                     >
                                                         Registrar Pago
+                                                    </button>
+                                                )}
+                                                {tx.payment_status === 'paid' && (
+                                                    <button
+                                                        className="text-xs text-red-600 font-medium hover:underline flex items-center gap-1 justify-end w-full"
+                                                        onClick={() => handleDeletePayment(tx.id)}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                        Eliminar Pago
                                                     </button>
                                                 )}
                                             </td>

@@ -243,7 +243,14 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             payment_status: "pending"
         }).select("id").single();
 
-        if (error) throw error;
+        if (error) {
+            console.error("[createAppt Simulator] DB Error:", error);
+            let errorMsg = "Error DB-AG-01: No pudimos registrar tu cita en el sistema. Por favor intenta con otro nombre completo o contacta soporte.";
+            if (error.code === '23505') {
+                errorMsg = "Error DB-CONFLICT: Ya existe una cita con este teléfono y un nombre similar. Por favor intenta usando tu nombre completo real o contacta soporte.";
+            }
+            return { success: false, message: errorMsg };
+        }
 
         return {
             success: true,
@@ -252,7 +259,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         };
     } catch (e) {
         console.error("createAppt error:", e);
-        return { error: "Error creando la cita." };
+        return { success: false, message: "Error técnico: Cita no guardada correctamente." };
     }
 };
 
@@ -577,6 +584,17 @@ REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
    d) Ofrece agendar preguntando qué día le acomoda.
 3. Ante preguntas generales sobre servicios, enumera TODOS los servicios oficiales con sus precios.
 4. SIEMPRE usa 'get_knowledge' si te preguntan detalles técnicos o precios que no ves en la lista estática.
+
+7. ERRORES DE HERRAMIENTA: No inventes ni asumas que una herramienta falló. Llama a la herramienta y lee su respuesta real. Si 'create_appointment' devuelve un error (ej. DB-AG-01 o DB-CONFLICT), díselo explícitamente al usuario.
+8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
+9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
+   a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
+   b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO.
+   c) Registro: CUANDO TENGAS EL NOMBRE Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
+   d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta. Si la herramienta falló, informa el error y pide otro horario/nombre.
+   e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
+10. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
+
 
 ETIQUETADO AUTOMÁTICO INTELIGENTE:
 Usa la función 'tag_patient' PROACTIVAMENTE para segmentar al paciente internamente.

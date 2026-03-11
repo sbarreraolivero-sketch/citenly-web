@@ -194,6 +194,12 @@ export default function Appointments() {
                     if (window.confirm(`Cita completada con éxito.\n\nEl paciente ${patientData.name} está registrado en tu CRM.\n\n¿Deseas agregar sus notas y ficha clínica ahora?`)) {
                         navigate(`/patients/${patientData.id}?action=new_record`)
                     }
+                } else {
+                    // If no patient found, prompt to create one
+                    if (window.confirm('Cita completada. Sin embargo, este paciente aún no está registrado en tu CRM.\n\n¿Deseas registrarlo ahora para llevar su historial clínico?')) {
+                        setSelectedAppointment(updatedApt || appointment)
+                        setShowPatientModal(true)
+                    }
                 }
             }
             // Sync with Google Calendar
@@ -290,6 +296,7 @@ export default function Appointments() {
                         service: newAppointment.service,
                         appointment_date: appointmentDate,
                         notes: newAppointment.notes,
+                        professional_id: newAppointment.professional_id || null,
                         // Don't update clinic_id or user_id
                     })
                     .eq('id', editingId)
@@ -418,22 +425,25 @@ export default function Appointments() {
 
             if (error) throw error
 
-            // 2. Remove from local state immediately
-            setAppointments(appointments.filter(a => a.id !== appointment.id))
+            // 2. Remove from local state immediately (functional update)
+            setAppointments(prev => prev.filter(a => a.id !== appointment.id))
 
             // 3. Delete from Google Calendar if linked
             if (appointment.google_event_id) {
                 supabase.functions.invoke('delete-google-event', {
                     body: { google_event_id: appointment.google_event_id }
-                }).then(({ error }) => {
-                    if (error) console.error('Error deleting Google event:', error)
+                }).then(({ error: gErr }) => {
+                    if (gErr) console.error('Error deleting Google event:', gErr)
                     else console.log('Google event deleted')
                 }).catch(err => console.error('Error deleting Google event:', err))
             }
 
+            // 4. Optional: Force refresh from DB just to be 100% sure
+            // fetchAppointments() 
+
         } catch (error) {
             console.error('Error deleting appointment:', error)
-            alert('Error al eliminar la cita')
+            alert('Error al eliminar la cita de la base de datos.')
         }
     }
 
@@ -1516,17 +1526,32 @@ export default function Appointments() {
                             <div className="flex justify-between items-center p-6 border-t border-silk-beige flex-shrink-0 bg-white rounded-b-soft">
                                 <div>
                                     {editingId && (
-                                        <button
-                                            onClick={() => {
-                                                if (confirm('¿Quieres cancelar esta cita?')) {
-                                                    updateAppointmentStatus(editingId, 'cancelled')
-                                                    setShowModal(false)
-                                                }
-                                            }}
-                                            className="text-sm text-red-500 hover:text-red-700 font-medium underline decoration-red-200 hover:decoration-red-500 underline-offset-4 transition-all"
-                                        >
-                                            Cancelar Cita
-                                        </button>
+                                        <div className="flex gap-4 items-center">
+                                            <button
+                                                onClick={() => {
+                                                    const appt = appointments.find(a => a.id === editingId)
+                                                    if (appt && confirm('¿Estás SEGURO de que quieres ELIMINAR permanentemente esta cita del sistema?')) {
+                                                        handleDeleteAppointment(appt)
+                                                        setShowModal(false)
+                                                    }
+                                                }}
+                                                className="text-sm text-red-600 hover:text-red-700 font-bold flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 rounded-soft transition-all ring-1 ring-red-200"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Eliminar Definitivamente
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('¿Quieres marcar esta cita como CANCELADA (la cita se mantendrá en registros pero no en el calendario)?')) {
+                                                        updateAppointmentStatus(editingId, 'cancelled')
+                                                        setShowModal(false)
+                                                    }
+                                                }}
+                                                className="text-sm text-charcoal/50 hover:text-charcoal font-medium underline underline-offset-4 decoration-charcoal/20"
+                                            >
+                                                Sólo Cancelar
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex gap-3">

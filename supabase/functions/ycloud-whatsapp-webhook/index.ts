@@ -62,8 +62,18 @@ const functions = [
     },
     {
         name: "create_appointment",
-        description: "Crea nueva cita cuando paciente confirma fecha, hora y servicio",
-        parameters: { type: "object", properties: { patient_name: { type: "string" }, date: { type: "string" }, time: { type: "string" }, service_name: { type: "string" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado (opcional)" } }, required: ["patient_name", "date", "time", "service_name"] }
+        description: "Crea nueva cita cuando paciente confirma fecha, hora y servicio. REQUERIDO Y ESTRICTO: Pasa la fecha en formato YYYY-MM-DD y la hora EXACTA en formato de 24 horas (SOLO HH:MM, por ejemplo '14:00' o '09:00', SIN AM/PM ni texto extra).",
+        parameters: {
+            type: "object",
+            properties: {
+                patient_name: { type: "string" },
+                date: { type: "string", description: "Fecha en formato YYYY-MM-DD" },
+                time: { type: "string", description: "Hora en formato HH:MM (24h)" },
+                service_name: { type: "string" },
+                professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado (opcional)" }
+            },
+            required: ["patient_name", "date", "time", "service_name"]
+        }
     },
     {
         name: "get_services",
@@ -244,9 +254,8 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
             const { data, error } = await sb.rpc("get_professional_available_slots", {
                 p_clinic_id: clinicId,
                 p_member_id: professionalId,
-                p_date: date,
                 p_duration: duration,
-                p_interval: duration, // Step by duration to fit slots cleanly
+                p_interval: duration, // Step by duration (no flexible intervals)
                 p_timezone: timezone
             });
 
@@ -261,15 +270,26 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     if (slots.length === 0) {
+        // We use 30 as interval. If the RPC doesn't support it, we'll get a DB error.
+        // But we are updating it in the migration.
         const { data, error } = await sb.rpc("get_available_slots", {
             p_clinic_id: clinicId,
             p_date: date,
             p_duration: duration,
-            p_timezone: timezone,
-            p_interval: duration
+            p_interval: duration // Step by duration (no flexible intervals)
         });
-        if (error) return { available: false, error: error.message };
-        slots = data || [];
+        if (error) {
+            console.error("[checkAvail] get_available_slots failed, trying without interval param:", error);
+            const { data: data2, error: error2 } = await sb.rpc("get_available_slots", {
+                p_clinic_id: clinicId,
+                p_date: date,
+                p_duration: duration
+            });
+            if (error2) return { available: false, error: error2.message };
+            slots = data2 || [];
+        } else {
+            slots = data || [];
+        }
     }
 
     // 5. MANUALLY FILTER SLOTS FOR CLINIC LUNCH BREAK (Double-protection)
@@ -373,9 +393,37 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // Ideally yes, using the same logic as checkAvail.
     // For now, we trust the user picked a slot offered by checkAvail.
 
+    // Validate and clean date/time format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    // Safely handle time
+    let cleanTime = args.time || "";
+
+    // Extract HH:MM from something like "12:00 PM"
+    const timeMatch = typeof cleanTime === "string" ? cleanTime.match(/\d{1,2}:\d{2}/) : null;
+    if (timeMatch) {
+        cleanTime = timeMatch[0];
+        if (cleanTime.length === 4) cleanTime = "0" + cleanTime; // pad "9:00" to "09:00"
+    }
+
+    // Quick handle for "12 PM" -> "12:00"
+    // Though we told the AI strictly 24h format!
+    // We will trust it to send correct format but fallback just in case
+    const timeRegex = /^\d{2}:\d{2}$/;
+
+    if (!args.date || !args.time || !dateRegex.test(args.date) || !timeRegex.test(cleanTime)) {
+        console.error(`[createAppt] Invalid date/time format: ${args.date} ${args.time} (clean: ${cleanTime})`);
+        await debugLog(sb, "Invalid date/time format", { args, clinicId });
+        return { success: false, message: "Error: No tengo el horario completo. Por favor pídeme 'Agendar cita el [FECHA] a las [HORA]'." };
+    }
+
+    args.time = cleanTime; // Ensure args has the clean time
+
     // Fix Timezone: Construct ISO string with offset
+
     const offset = getOffset(timezone, new Date(`${args.date}T12:00:00`));
     const appointmentDateWithOffset = `${args.date}T${args.time}:00${offset}`;
+
+    console.log(`[createAppt] Attempting insert: ${appointmentDateWithOffset} for ${args.patient_name}`);
 
     const { data, error } = await sb.from("appointments").insert({
         clinic_id: clinicId,
@@ -383,15 +431,20 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         phone_number: phone,
         service: args.service_name,
         appointment_date: appointmentDateWithOffset,
-        status: "confirmed",
+        status: "pending",
         duration: duration,
         price: price,
-        professional_id: professionalId // NEW field
+        professional_id: professionalId
     }).select().single();
 
     if (error) {
-        console.error("[createAppt] Error:", error);
-        return { success: false, message: "Error al agendar. Intenta de nuevo." };
+        console.error("[createAppt] DB Error:", error);
+        let errorMsg = "Error DB-AG-01: No pudimos registrar tu cita en el sistema. Por favor intenta con otro nombre completo o contacta soporte.";
+        if (error.code === '23505') {
+            errorMsg = "Error DB-CONFLICT: Ya existe una cita con este teléfono y un nombre similar. Por favor intenta usando tu nombre completo real o contacta soporte.";
+        }
+        await debugLog(sb, "DB Create Appt Error", { error, args, clinicId });
+        return { success: false, message: errorMsg };
     }
 
     // Update CRM stage to "Cita Agendada"
@@ -399,8 +452,16 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
     const d = new Date(`${args.date}T${args.time}:00`);
     const h = parseInt(args.time.split(":")[0]);
+
+    // Ensure we have a valid data.id
+    if (!data) {
+        console.error("[createAppt] Success reported but no data returned from insert");
+        return { success: false, message: "Error técnico: Cita no guardada correctamente." };
+    }
+
     return {
-        success: true, appointment_id: data.id,
+        success: true,
+        appointment_id: data.id,
         message: `¡Cita agendada!\n\n📅 ${d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" })}\n🕐 ${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}\n💆 ${args.service_name}${professionalId ? ' (Profesional Asignado)' : ''}`
     };
 };
@@ -852,6 +913,8 @@ const getKnowledgeSummary = async (sb: ReturnType<typeof createClient>, clinicId
 };
 
 const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, name: string, args: Record<string, unknown>, timezone: string, clinic?: any) => {
+    console.log(`[processFunc] Calling: ${name}`, args);
+    await debugLog(sb, `Tool execution: ${name}`, { args, phone });
     switch (name) {
         case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic?.working_hours);
         case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone);
@@ -901,6 +964,11 @@ Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
     const sb = getSupabase();
+
+    if (req.method === "GET") {
+        const { data } = await sb.from("debug_logs").select("*").order("created_at", { ascending: false }).limit(100);
+        return new Response(JSON.stringify(data), { headers: corsHeaders });
+    }
 
     try {
         const p: YCloudPayload = await req.json();
@@ -1075,12 +1143,23 @@ Deno.serve(async (req) => {
                     ? realServices.map(s => ({ name: s.name, duration: `${s.duration} min`, price: `$${s.price.toLocaleString('es-CL')}` }))
                     : clinic.services || [];
 
-                // Build a readable string of hours for the AI to know if it is closed TODAY or a SPECIFIC day
+                // Build a readable string of hours in SPANISH to match the AI rules and context
+                const daysMap: Record<string, string> = {
+                    monday: "lunes",
+                    tuesday: "martes",
+                    wednesday: "miércoles",
+                    thursday: "jueves",
+                    friday: "viernes",
+                    saturday: "sábado",
+                    sunday: "domingo"
+                };
+
                 const hoursSummary = Object.entries(clinic.working_hours || {})
                     .map(([day, h]: [string, any]) => {
-                        if (!h || h.closed || h.enabled === false) return `${day}: CERRADO`;
+                        const dayName = daysMap[day.toLowerCase()] || day;
+                        if (!h || h.closed || h.enabled === false) return `${dayName}: CERRADO`;
                         const lunch = h.lunch_break;
-                        return `${day}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${lunch?.enabled ? ` (Colación: ${lunch.start}-${lunch.end})` : ""}`;
+                        return `${dayName}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${lunch?.enabled ? ` (Colación: ${lunch.start}-${lunch.end})` : ""}`;
                     }).join(", ");
 
                 const sysPrompt = `${clinic.ai_personality}
@@ -1100,11 +1179,23 @@ ${knowledgeSummary}
 IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
-1. SI el paciente pregunta por disponibilidad en un día que aparece como CERRADO en 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de lunes a viernes. NO preguntes "¿qué sábado?" ni pidas confirmaciones si el día está cerrado.
-2. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, a menos que el día esté cerrado según el Horario General.
+0. NO HAY LÍMITES DE ANTICIPACIÓN: Puedes agendar citas para cualquier semana o mes futuro. NUNCA digas que no es posible agendar con anticipación o que está muy lejos.
+1. SI el paciente pregunta por disponibilidad en un día que aparece EXPLÍCITAMENTE como 'CERRADO' en el 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de los días que sí están abiertos. NO asumas que un día está cerrado si no aparece en la lista; si no aparece, pregunta disponibilidad con 'check_availability'.
+2. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, INCLUSO si el usuario pide un horario específico. No asumas que está disponible.
 3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
 4. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
 5. El Horario General es tu guía; la herramienta es tu confirmación final.
+6. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
+7. ERRORES DE HERRAMIENTA: No inventes ni asumas que una herramienta falló. Llama a la herramienta y lee su respuesta real. Si 'create_appointment' devuelve un error (ej. DB-AG-01 o DB-CONFLICT), díselo explícitamente al usuario.
+8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
+9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
+   a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
+   b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO.
+   c) Registro: CUANDO TENGAS EL NOMBRE Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
+   d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta. Si la herramienta falló, informa el error y pide otro horario/nombre.
+   e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
+10. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
+
 
 REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
 1. Solo ofrece los servicios listados en "Servicios OFICIALES".
