@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Smartphone, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface TemplateComponent {
     type: 'BODY' | 'BUTTONS'
@@ -28,11 +29,17 @@ export function WhatsAppTemplates() {
     const [bodyText, setBodyText] = useState('')
     const [buttons, setButtons] = useState<string[]>([])
 
+    const { profile } = useAuth()
+
     const fetchTemplates = async () => {
+        if (!profile?.clinic_id) return
+
         setIsLoading(true)
         setError('')
         try {
-            const { data, error } = await supabase.functions.invoke('ycloud-templates')
+            const { data, error } = await supabase.functions.invoke('ycloud-templates', {
+                body: { clinic_id: profile.clinic_id }
+            })
 
             if (error) {
                 // If it's a 400 with 'YCloud API Key not configured', handle gracefully
@@ -77,26 +84,17 @@ export function WhatsAppTemplates() {
 
         setIsSubmitting(true)
         try {
-            const components: any[] = [
-                { type: 'BODY', text: bodyText }
-            ]
-
             const validButtons = buttons.filter(b => b.trim() !== '')
-            if (validButtons.length > 0) {
-                components.push({
-                    type: 'BUTTONS',
-                    buttons: validButtons.map(b => ({ type: 'QUICK_REPLY', text: b }))
-                })
-            }
 
             const payload = {
+                clinic_id: profile?.clinic_id,
                 name: templateName.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
-                language: 'es_ES',
-                category: 'UTILITY', // Standard for these kind of notifications
-                components
+                body_text: bodyText,
+                category: 'UTILITY',
+                buttons: validButtons
             }
 
-            const { data, error } = await supabase.functions.invoke('ycloud-templates', {
+            const { data, error } = await supabase.functions.invoke('create-ycloud-template', {
                 body: payload
             })
 
