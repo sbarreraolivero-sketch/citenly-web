@@ -41,14 +41,13 @@ export function WhatsAppTemplates() {
                 body: { clinic_id: profile.clinic_id }
             })
 
-            if (error) {
-                // If it's a 400 with 'YCloud API Key not configured', handle gracefully
-                throw error
+            if (error) throw error
+            if (data?.isError || data?.error) {
+                throw new Error(data.error || data.message || 'Error en la respuesta de la función')
             }
+
             if (data?.items) {
                 setTemplates(data.items)
-            } else if (data?.error) {
-                throw new Error(data.error)
             }
         } catch (err: any) {
             console.error('Error fetching templates:', err)
@@ -99,7 +98,9 @@ export function WhatsAppTemplates() {
             })
 
             if (error) throw error
-            if (data?.error) throw new Error(data.error)
+            if (data?.isError || data?.error) {
+                throw new Error(data.error || data.message || 'Error al procesar la plantilla')
+            }
 
             // Success
             setShowForm(false)
