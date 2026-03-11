@@ -187,7 +187,8 @@ export default function Settings() {
         cancelled: true,
         pending_reminder: true,
         new_message: true,
-        survey_response: true
+        survey_response: true,
+        ai_handoff: true
     })
     const [savingNotifications, setSavingNotifications] = useState(false)
     const [notificationsSaved, setNotificationsSaved] = useState(false)
@@ -304,7 +305,8 @@ export default function Settings() {
                         cancelled: notifData.cancelled,
                         pending_reminder: notifData.pending_reminder,
                         new_message: notifData.new_message,
-                        survey_response: notifData.survey_response
+                        survey_response: notifData.survey_response,
+                        ai_handoff: notifData.ai_handoff !== undefined ? notifData.ai_handoff : true
                     })
                 }
 
@@ -2300,6 +2302,25 @@ export default function Settings() {
                                             type="checkbox"
                                             checked={notifPrefs.survey_response}
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, survey_response: e.target.checked })}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft border border-orange-200">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-medium text-charcoal">🤖 Derivación a Humano</p>
+                                            <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-medium">IA Agent</span>
+                                        </div>
+                                        <p className="text-sm text-charcoal/50">Cuando el Asistente de IA requiere de un humano para continuar el chat</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={notifPrefs.ai_handoff}
+                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, ai_handoff: e.target.checked })}
                                             className="sr-only peer"
                                         />
                                         <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />

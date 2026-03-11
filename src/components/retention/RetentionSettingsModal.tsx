@@ -12,15 +12,7 @@ interface RetentionSettingsModalProps {
     onSaved: () => void
 }
 
-// Fallback placeholders only used if YCloud fetch fails
-const TEMPLATE_PLACEHOLDERS = [
-    { id: 'retention_warning_soft', name: 'Recordatorio Amable (Estándar)', desc: 'Tono cercano, recuerda la importancia del control.' },
-    { id: 'retention_miss_you', name: 'Te extrañamos (Emotivo)', desc: 'Enfocado en la relación personal con el paciente.' },
-    { id: 'retention_checkup', name: 'Revisión Necesaria (Clínico)', desc: 'Tono profesional, enfatiza la salud.' },
-    { id: 'retention_danger_offer', name: 'Oferta de Retorno (-20%)', desc: 'Incentivo económico para recuperar al cliente.' },
-    { id: 'retention_urgent_care', name: 'Atención Pendiente (Urgencia)', desc: 'Genera sentido de urgencia por salud.' },
-    { id: 'retention_vip_comeback', name: 'Invitación VIP (Exclusivo)', desc: 'Trato exclusivo para clientes de alto valor.' }
-]
+// Remove templates placeholder array to enforce real data
 
 export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: RetentionSettingsModalProps) {
     const [settings, setSettings] = useState<RetentionSettings>({
@@ -28,7 +20,7 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
         medium_risk_template: 'retention_warning_soft',
         high_risk_template: 'retention_danger_offer'
     })
-    const [templates, setTemplates] = useState<any[]>(TEMPLATE_PLACEHOLDERS)
+    const [templates, setTemplates] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [usingRemote, setUsingRemote] = useState(false)
@@ -61,7 +53,8 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                 })))
                 setUsingRemote(true)
             } else {
-                setUsingRemote(false) // Fallback to placeholders
+                setUsingRemote(false)
+                setTemplates([]) // No templates available
             }
 
         } catch (err) {
@@ -181,15 +174,16 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                     <select
                                         value={settings.medium_risk_template}
                                         onChange={e => setSettings(s => ({ ...s, medium_risk_template: e.target.value }))}
-                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                        disabled={templates.length === 0}
+                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <option value="">Selecciona una plantilla...</option>
+                                        <option value="">{templates.length === 0 ? 'No hay plantillas disponibles en YCloud' : 'Selecciona una plantilla...'}</option>
                                         {templates.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-charcoal/40 px-1 bg-gray-50 p-2 rounded-lg border border-dashed border-gray-200">
-                                        {templates.find(t => t.id === settings.medium_risk_template)?.desc || 'Selecciona una plantilla para ver previsualización'}
+                                    <p className="text-xs text-charcoal/40 px-1 bg-gray-50 p-2 rounded-lg border border-dashed border-gray-200 min-h-[40px]">
+                                        {templates.find(t => t.id === settings.medium_risk_template)?.desc || (templates.length === 0 ? 'Sin plantillas configuradas. Ve a la sección Plantillas para crear o sincronizar.' : 'Selecciona una plantilla para ver previsualización')}
                                     </p>
                                 </div>
 
@@ -202,15 +196,16 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                     <select
                                         value={settings.high_risk_template}
                                         onChange={e => setSettings(s => ({ ...s, high_risk_template: e.target.value }))}
-                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                        disabled={templates.length === 0}
+                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <option value="">Selecciona una plantilla...</option>
+                                        <option value="">{templates.length === 0 ? 'No hay plantillas disponibles en YCloud' : 'Selecciona una plantilla...'}</option>
                                         {templates.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-charcoal/40 px-1 bg-gray-50 p-2 rounded-lg border border-dashed border-gray-200">
-                                        {templates.find(t => t.id === settings.high_risk_template)?.desc || 'Selecciona una plantilla para ver previsualización'}
+                                    <p className="text-xs text-charcoal/40 px-1 bg-gray-50 p-2 rounded-lg border border-dashed border-gray-200 min-h-[40px]">
+                                        {templates.find(t => t.id === settings.high_risk_template)?.desc || (templates.length === 0 ? 'Sin plantillas configuradas. Ve a la sección Plantillas para crear o sincronizar.' : 'Selecciona una plantilla para ver previsualización')}
                                     </p>
                                 </div>
                             </div>
