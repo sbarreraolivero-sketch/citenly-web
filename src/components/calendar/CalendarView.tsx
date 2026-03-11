@@ -74,7 +74,15 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
     }
 
     return (
-        <div className="h-[1000px] sm:h-[1200px] bg-white rounded-2xl shadow-xl p-4 sm:p-6 animate-fade-in border-[3px] border-silk-beige/60 overflow-hidden">
+        <div className="h-[1200px] sm:h-[1200px] bg-white rounded-2xl shadow-xl p-4 sm:p-6 animate-fade-in border-[3px] border-silk-beige/60 overflow-hidden relative">
+            <style>{`
+                .rbc-date-cell { padding-right: 8px !important; text-align: center !important; font-weight: 500; font-size: 0.875rem; }
+                .rbc-header { padding: 8px 0 !important; font-size: 0.875rem; }
+                @media (max-width: 640px) {
+                    .rbc-time-view .rbc-header { font-size: 0.70rem; }
+                    .rbc-time-view .rbc-time-content { min-width: 150%; } /* Allow horizontal scroll on tight mobile screens */
+                }
+            `}</style>
             <Calendar
                 localizer={localizer}
                 events={events}

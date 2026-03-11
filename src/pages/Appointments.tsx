@@ -522,62 +522,64 @@ export default function Appointments() {
         )
     }
 
-    // Map appointments to calendar events
-    const mappedAppointments = appointments.map(apt => {
-        // Validation
-        if (!apt.appointment_date) return null
+    // Map appointments to calendar events (excluding cancelled ones for visual clarity)
+    const mappedAppointments = appointments
+        .filter(apt => apt.status !== 'cancelled')
+        .map(apt => {
+            // Validation
+            if (!apt.appointment_date) return null
 
-        let start: Date
+            let start: Date
 
-        // Check if we have an explicit time column (newer records)
-        // If appointment_time is present and not just "00:00" or empty
-        const hasExplicitTime = apt.appointment_time && apt.appointment_time !== '00:00' && apt.appointment_time !== '00:00:00';
+            // Check if we have an explicit time column (newer records)
+            // If appointment_time is present and not just "00:00" or empty
+            const hasExplicitTime = apt.appointment_time && apt.appointment_time !== '00:00' && apt.appointment_time !== '00:00:00';
 
-        if (hasExplicitTime) {
-            // Safe extraction of YYYY-MM-DD
-            const datePart = apt.appointment_date.split('T')[0].split(' ')[0]
+            if (hasExplicitTime) {
+                // Safe extraction of YYYY-MM-DD
+                const datePart = apt.appointment_date.split('T')[0].split(' ')[0]
 
-            // Ensure HH:mm format (sanitize)
-            let timeStr = apt.appointment_time || '00:00'
-            const timeParts = timeStr.split(':')
-            const hour = (timeParts[0] || '00').padStart(2, '0')
-            const minute = (timeParts[1] || '00').padStart(2, '0')
-            const safeTimeStr = `${hour}:${minute}`
+                // Ensure HH:mm format (sanitize)
+                let timeStr = apt.appointment_time || '00:00'
+                const timeParts = timeStr.split(':')
+                const hour = (timeParts[0] || '00').padStart(2, '0')
+                const minute = (timeParts[1] || '00').padStart(2, '0')
+                const safeTimeStr = `${hour}:${minute}`
 
-            start = new Date(`${datePart}T${safeTimeStr}:00`)
-        } else {
-            // Fallback: Try parsing appointment_date directly (legacy records often include time)
-            // e.g. "2026-02-18T09:30:00"
-            start = new Date(apt.appointment_date)
-        }
-
-        // Debug check for invalid dates
-        if (isNaN(start.getTime())) {
-            console.error('Invalid Date created for:', apt)
-            return null
-        }
-
-        // Find service duration
-        const service = services.find(s => s.name === apt.service)
-        const duration = service ? service.duration : 60
-        const end = new Date(start.getTime() + (duration * 60 * 1000))
-
-        // Get professional color
-        const prof = apt.professional_id ? professionals.find(p => p.member_id === apt.professional_id) : null
-
-        return {
-            id: apt.id,
-            title: `${apt.patient_name} - ${apt.service}`,
-            start,
-            end,
-            resource: {
-                type: 'local',
-                ...apt,
-                professionalColor: prof?.color || undefined,
-                professionalName: prof ? `${prof.first_name || ''} ${prof.last_name || ''}`.trim() : undefined
+                start = new Date(`${datePart}T${safeTimeStr}:00`)
+            } else {
+                // Fallback: Try parsing appointment_date directly (legacy records often include time)
+                // e.g. "2026-02-18T09:30:00"
+                start = new Date(apt.appointment_date)
             }
-        }
-    }).filter(Boolean) as CalendarEvent[]
+
+            // Debug check for invalid dates
+            if (isNaN(start.getTime())) {
+                console.error('Invalid Date created for:', apt)
+                return null
+            }
+
+            // Find service duration
+            const service = services.find(s => s.name === apt.service)
+            const duration = service ? service.duration : 60
+            const end = new Date(start.getTime() + (duration * 60 * 1000))
+
+            // Get professional color
+            const prof = apt.professional_id ? professionals.find(p => p.member_id === apt.professional_id) : null
+
+            return {
+                id: apt.id,
+                title: `${apt.patient_name} - ${apt.service}`,
+                start,
+                end,
+                resource: {
+                    type: 'local',
+                    ...apt,
+                    professionalColor: prof?.color || undefined,
+                    professionalName: prof ? `${prof.first_name || ''} ${prof.last_name || ''}`.trim() : undefined
+                }
+            }
+        }).filter(Boolean) as CalendarEvent[]
 
 
 
@@ -1134,8 +1136,8 @@ export default function Appointments() {
             {
                 showModal && createPortal(
                     <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in">
-                            <div className="flex items-center justify-between p-6 border-b border-silk-beige">
+                        <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in max-h-[90vh] flex flex-col">
+                            <div className="flex items-center justify-between p-6 border-b border-silk-beige flex-shrink-0">
                                 <h2 className="text-xl font-bold text-charcoal">
                                     {editingId ? 'Editar Cita' : 'Nueva Cita'}
                                 </h2>
@@ -1159,7 +1161,7 @@ export default function Appointments() {
                                 </button>
                             </div>
 
-                            <div className="p-6 space-y-4">
+                            <div className="p-6 space-y-4 overflow-y-auto flex-1">
                                 <div>
                                     <label className="block text-sm font-medium text-charcoal mb-2">
                                         Nombre del Paciente *
@@ -1353,7 +1355,7 @@ export default function Appointments() {
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center p-6 border-t border-silk-beige">
+                            <div className="flex justify-between items-center p-6 border-t border-silk-beige flex-shrink-0 bg-white rounded-b-soft">
                                 <div>
                                     {editingId && (
                                         <button
