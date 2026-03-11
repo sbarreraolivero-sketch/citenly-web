@@ -493,9 +493,31 @@ export default function Appointments() {
 
             start = new Date(`${datePart}T${safeTimeStr}:00`)
         } else {
-            // Fallback: Try parsing appointment_date directly (legacy records often include time)
-            // e.g. "2026-02-18T09:30:00"
-            start = new Date(apt.appointment_date)
+            // Fallback: Try parsing appointment_date directly
+            // Extract YYYY-MM-DD and HH:mm from ISO string to create a LOCAL Date object
+            // This prevents the 3-hour shift if the DB stored it "raw" or without correct offset
+            const parts = apt.appointment_date.split('T')
+            if (parts.length === 2) {
+                const dateStrings = parts[0].split('-')
+                const timeStrings = parts[1].split(':')
+                if (dateStrings.length === 3 && timeStrings.length >= 2) {
+                    const y = parseInt(dateStrings[0])
+                    const m = parseInt(dateStrings[1]) - 1
+                    const d = parseInt(dateStrings[2])
+                    const hh = parseInt(timeStrings[0])
+                    const mm = parseInt(timeStrings[1])
+
+                    // Construct local date
+                    start = new Date(y, m, d, hh, mm)
+
+                    // Only use this if it's within a reasonable range, else fallback
+                    if (isNaN(start.getTime())) start = new Date(apt.appointment_date)
+                } else {
+                    start = new Date(apt.appointment_date)
+                }
+            } else {
+                start = new Date(apt.appointment_date)
+            }
         }
 
         // Debug check for invalid dates
