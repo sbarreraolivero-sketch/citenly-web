@@ -28,6 +28,7 @@ import { cn, formatPhoneNumber, getStatusColor, getStatusLabel } from '@/lib/uti
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { CalendarView, CalendarEvent } from '@/components/calendar/CalendarView'
+import { MobileCalendarView } from '@/components/calendar/MobileCalendarView'
 import { ClinicalRecordForm } from '@/components/patients/ClinicalRecordForm'
 import { PatientForm } from '@/components/patients/PatientForm'
 import { Database } from '@/types/database'
@@ -834,63 +835,103 @@ export default function Appointments() {
             )}
 
             {viewMode === 'calendar' ? (
-                <CalendarView
-                    onEditEvent={(event) => {
-                        // Check if it's a google event
-                        if (event.resource?.type === 'google') {
-                            // Ideally show a toast
-                            console.log('Google event selected, cannot edit directly yet')
-                            alert('No se pueden editar eventos de Google directamente desde aquí.')
-                            return
-                        }
-                        setEditingId(event.id)
-                        setNewAppointment({
-                            patient_name: event.resource.patient_name,
-                            phone_number: event.resource.phone_number,
-                            service: event.resource.service,
-                            appointment_date: format(event.start, 'yyyy-MM-dd'),
-                            appointment_time: format(event.start, 'HH:mm'),
-                            notes: event.resource.notes || '',
-                            professional_id: event.resource.professional_id || ''
-                        })
-                        setShowModal(true)
-                    }}
-                    events={[
-                        ...mappedAppointments,
-                        // ...googleEvents // Disabled by user request
-                    ]}
-                    onSelectEvent={(event) => {
-                        // Debug log 
-                        console.log('Event clicked:', event)
+                <>
+                    {/* Desktop Calendar View */}
+                    <div className="hidden md:block">
+                        <CalendarView
+                            onEditEvent={(event) => {
+                                // Check if it's a google event
+                                if (event.resource?.type === 'google') {
+                                    // Ideally show a toast
+                                    console.log('Google event selected, cannot edit directly yet')
+                                    alert('No se pueden editar eventos de Google directamente desde aquí.')
+                                    return
+                                }
+                                setEditingId(event.id)
+                                setNewAppointment({
+                                    patient_name: event.resource.patient_name,
+                                    phone_number: event.resource.phone_number,
+                                    service: event.resource.service,
+                                    appointment_date: format(event.start, 'yyyy-MM-dd'),
+                                    appointment_time: format(event.start, 'HH:mm'),
+                                    notes: event.resource.notes || '',
+                                    professional_id: event.resource.professional_id || ''
+                                })
+                                setShowModal(true)
+                            }}
+                            events={[
+                                ...mappedAppointments,
+                                // ...googleEvents // Disabled by user request
+                            ]}
+                            onSelectEvent={(event) => {
+                                // Debug log 
+                                console.log('Event clicked:', event)
 
-                        // Check if it's a google event to prevent editing (or show info)
-                        if (event.resource?.type === 'google') {
-                            console.log('Google event selected, cannot edit directly yet')
-                            return
-                        }
+                                // Check if it's a google event to prevent editing (or show info)
+                                if (event.resource?.type === 'google') {
+                                    console.log('Google event selected, cannot edit directly yet')
+                                    return
+                                }
 
-                        // Populate form for editing
-                        setEditingId(event.id)
-                        setNewAppointment({
-                            patient_name: event.resource.patient_name,
-                            phone_number: event.resource.phone_number,
-                            service: event.resource.service,
-                            appointment_date: format(event.start, 'yyyy-MM-dd'),
-                            appointment_time: format(event.start, 'HH:mm'),
-                            notes: event.resource.notes || '',
-                            professional_id: event.resource.professional_id || ''
-                        })
-                        setShowModal(true)
-                    }}
-                    onSelectSlot={(slotInfo) => {
-                        setNewAppointment({
-                            ...newAppointment,
-                            appointment_date: slotInfo.start.toISOString().split('T')[0],
-                            appointment_time: slotInfo.start.toTimeString().slice(0, 5)
-                        })
-                        setShowModal(true)
-                    }}
-                />
+                                // Populate form for editing
+                                setEditingId(event.id)
+                                setNewAppointment({
+                                    patient_name: event.resource.patient_name,
+                                    phone_number: event.resource.phone_number,
+                                    service: event.resource.service,
+                                    appointment_date: format(event.start, 'yyyy-MM-dd'),
+                                    appointment_time: format(event.start, 'HH:mm'),
+                                    notes: event.resource.notes || '',
+                                    professional_id: event.resource.professional_id || ''
+                                })
+                                setShowModal(true)
+                            }}
+                            onSelectSlot={(slotInfo) => {
+                                setNewAppointment({
+                                    ...newAppointment,
+                                    appointment_date: slotInfo.start.toISOString().split('T')[0],
+                                    appointment_time: slotInfo.start.toTimeString().slice(0, 5)
+                                })
+                                setShowModal(true)
+                            }}
+                        />
+                    </div>
+
+                    {/* Mobile Calendar View (Google Calendar Style) */}
+                    <div className="block md:hidden">
+                        <MobileCalendarView
+                            events={[
+                                ...mappedAppointments,
+                            ]}
+                            onSelectEvent={(event) => {
+                                // Re-use the exact same logic
+                                if (event.resource?.type === 'google') {
+                                    alert('No se pueden editar eventos de Google directamente desde aquí.')
+                                    return
+                                }
+                                setEditingId(event.id)
+                                setNewAppointment({
+                                    patient_name: event.resource.patient_name,
+                                    phone_number: event.resource.phone_number,
+                                    service: event.resource.service,
+                                    appointment_date: format(event.start, 'yyyy-MM-dd'),
+                                    appointment_time: format(event.start, 'HH:mm'),
+                                    notes: event.resource.notes || '',
+                                    professional_id: event.resource.professional_id || ''
+                                })
+                                setShowModal(true)
+                            }}
+                            onSelectSlot={(date) => {
+                                setNewAppointment({
+                                    ...newAppointment,
+                                    appointment_date: date.toISOString().split('T')[0],
+                                    appointment_time: '09:00'
+                                })
+                                setShowModal(true)
+                            }}
+                        />
+                    </div>
+                </>
             ) : (
                 <>
                     {/* Appointments Table */}
