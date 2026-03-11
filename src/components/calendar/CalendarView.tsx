@@ -189,9 +189,18 @@ const CustomToolbar = (toolbar: any) => {
 
     const label = () => {
         const date = toolbar.date
+        const view = toolbar.view
+
+        let text = toolbar.label
+        if (view === 'month') {
+            text = format(date, 'MMMM yyyy', { locale: es })
+        } else if (view === 'day') {
+            text = format(date, "EEEE d 'de' MMMM, yyyy", { locale: es })
+        }
+
         return (
             <span className="capitalize text-lg font-semibold text-charcoal">
-                {format(date, 'MMMM yyyy', { locale: es })}
+                {text}
             </span>
         )
     }
