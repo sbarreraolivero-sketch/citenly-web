@@ -88,16 +88,13 @@ serve(async (req: Request) => {
         }
 
         // --- META APPROVAL FIX: Auto-inject examples for variables ---
-        // Match all variables in the format {{1}}, {{2}}, etc.
+        // Meta expects the 'example' array to have EXACTLY the same number of elements 
+        // as there are placeholders {{n}} in the text, in order of appearance.
         const variableMatches = body_text.match(/\{\{\d+\}\}/g)
 
         if (variableMatches && variableMatches.length > 0) {
-            // Find the highest variable number (e.g., if {{3}} exists, we need 3 examples)
-            const maxVar = Math.max(...variableMatches.map((m: string) => parseInt(m.replace(/[{}]/g, ''))))
+            const { examples: providedExamples = [] } = bodyPayload
 
-            const { examples = [] } = bodyPayload
-
-            // Generate generic examples based on the amount needed if not provided
             const genericExamples = [
                 "Juan Pérez",                 // {{1}} Paciente
                 "Dr. López",                  // {{2}} Especialista
@@ -107,15 +104,15 @@ serve(async (req: Request) => {
                 "https://citenly.ai/reserva"  // {{6}} Link
             ]
 
-            // Fill the array up to maxVar
-            // Priority: 1. Passed examples, 2. Generic examples
-            const exampleData = Array.from({ length: maxVar }).map((_, i) => {
-                return examples[i] || genericExamples[i % genericExamples.length]
+            // Map each match to an example based on its number
+            const exampleData = variableMatches.map((m: string) => {
+                const num = parseInt(m.replace(/[{}]/g, ''))
+                // variableExamples mapping (using providedExamples or fallback)
+                return providedExamples[num - 1] || genericExamples[(num - 1) % genericExamples.length]
             })
 
-            // Inject into the payload
             payload.components[0].example = {
-                body_text: [exampleData] // Note: YCloud expects a 2D array for body_text examples
+                body_text: [exampleData]
             }
         }
         // -------------------------------------------------------------

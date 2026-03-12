@@ -99,9 +99,7 @@ export default function Templates() {
         setCreatingTemplate(true)
         try {
             // Prepare examples array for Meta
-            const matches = newTemplate.body.match(/\{\{\d+\}\}/g) || []
-            const uniqueVars = Array.from(new Set(matches.map(m => parseInt(m.replace(/[{}]/g, ''))))).sort((a, b) => a - b)
-            const examples = uniqueVars.map(v => variableExamples[v] || "Ejemplo")
+            const examples = genericExamples.map((gen, i) => variableExamples[i + 1] || gen)
 
             const result = await retentionService.createRemoteTemplate(clinicId, newTemplate.name, newTemplate.body, newTemplate.buttons, examples)
             toast.success('Plantilla enviada a WhatsApp para revisión')
