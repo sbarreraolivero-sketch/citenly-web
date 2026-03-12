@@ -95,17 +95,23 @@ serve(async (req: Request) => {
             // Find the highest variable number (e.g., if {{3}} exists, we need 3 examples)
             const maxVar = Math.max(...variableMatches.map((m: string) => parseInt(m.replace(/[{}]/g, ''))))
 
-            // Generate generic examples based on the amount needed
+            const { examples = [] } = bodyPayload
+
+            // Generate generic examples based on the amount needed if not provided
             const genericExamples = [
-                "Juan Pérez",                 // {{1}} usually name
-                "Clínica Estética",           // {{2}} usually clinic
-                "Mañana a las 10:00",         // {{3}} usually time
-                "Dr. López",                  // {{4}} usually doctor
-                "https://ejemplo.com/pago"    // {{5}} usually link
+                "Juan Pérez",                 // {{1}} Paciente
+                "Dr. López",                  // {{2}} Especialista
+                "Lunes 15 de Mayo a las 10:00", // {{3}} Fecha/Hora
+                "Limpieza Dental",           // {{4}} Servicio
+                "FixSalud Clínica",           // {{5}} Clínica
+                "https://citenly.ai/reserva"  // {{6}} Link
             ]
 
-            // Fill the array up to maxVar, repeating if necessary
-            const exampleData = Array.from({ length: maxVar }).map((_, i) => genericExamples[i % genericExamples.length])
+            // Fill the array up to maxVar
+            // Priority: 1. Passed examples, 2. Generic examples
+            const exampleData = Array.from({ length: maxVar }).map((_, i) => {
+                return examples[i] || genericExamples[i % genericExamples.length]
+            })
 
             // Inject into the payload
             payload.components[0].example = {

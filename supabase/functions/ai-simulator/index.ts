@@ -245,6 +245,9 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
         if (error) {
             console.error("[createAppt Simulator] DB Error:", error);
+            // Log to console so user can see in browser if they look at devtools
+            console.log("DB ERROR ARGS:", args);
+
             let errorMsg = "Error DB-AG-01: No pudimos registrar tu cita en el sistema. Por favor intenta con otro nombre completo o contacta soporte.";
             if (error.code === '23505') {
                 errorMsg = "Error DB-CONFLICT: Ya existe una cita con este teléfono y un nombre similar. Por favor intenta usando tu nombre completo real o contacta soporte.";
@@ -257,8 +260,13 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             appointment_id: data?.id,
             message: `✅ Cita agendada: ${args.patient_name} el ${args.date} a las ${args.time} para ${args.service_name}. Precio: $${price.toLocaleString()}. (NOTA INTERNA: Cita creada desde el simulador)`
         };
-    } catch (e) {
+    } catch (e: any) {
         console.error("createAppt error:", e);
+        await sb.from("debug_logs").insert({
+            clinic_id: clinicId,
+            message: "Simulator Exception",
+            payload: { error: e.message || e, args }
+        });
         return { success: false, message: "Error técnico: Cita no guardada correctamente." };
     }
 };
@@ -560,11 +568,11 @@ Deno.serve(async (req: Request) => {
 Clínica: ${clinic.clinic_name}
 Dirección: ${clinic.clinic_address || clinic.address || "No especificada"}
 Horario General de la Clínica: ${hoursSummary}
-                FECHA DE HOY (ISO): ${localDateISO} (${todayDay})
-                MAÑANA: ${tomorrowDay} ${tomorrowISO}
-                PASADO MAÑANA: ${dayAfterDay} ${dayAfterISO}
+FECHA DE HOY (ISO): ${localDateISO} (${todayDay})
+MAÑANA: ${tomorrowDay} ${tomorrowISO}
+PASADO MAÑANA: ${dayAfterDay} ${dayAfterISO}
 Servicios OFICIALES (FUENTE DE VERDAD - SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
-                ${knowledgeSummary}
+${knowledgeSummary}
 
 ⚠️ MODO SIMULADOR: Estás en modo de prueba dentro de la app. Responde EXACTAMENTE como lo harías en WhatsApp real. Las citas que agendes aquí serán reales y aparecerán en el calendario. El número del paciente es simulado.
 
@@ -585,16 +593,16 @@ REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
 3. Ante preguntas generales sobre servicios, enumera TODOS los servicios oficiales con sus precios.
 4. SIEMPRE usa 'get_knowledge' si te preguntan detalles técnicos o precios que no ves en la lista estática.
 
-7. ERRORES DE HERRAMIENTA: No inventes ni asumas que una herramienta falló. Llama a la herramienta y lee su respuesta real. Si 'create_appointment' devuelve un error (ej. DB-AG-01 o DB-CONFLICT), díselo explícitamente al usuario.
-8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
-9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
-   a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
-   b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO.
-   c) Registro: CUANDO TENGAS EL NOMBRE Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
-   d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta. Si la herramienta falló, informa el error y pide otro horario/nombre.
-   e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
-10. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
-
+7. Errores en herramientas: 
+   - Si create_appointment falla (success: false), NUNCA inventes que se agendó. 
+   - Informa al usuario el mensaje de error exacto recibido. 
+   - Si el error contiene "DB-AG-01", dile que no pudimos registrarla y sugiera intentar con el nombre real.
+   - Si el error contiene "DB-CONFLICT", significa que el nombre genera un conflicto de duplicidad con el teléfono. Sugiere al usuario usar un "segundo apellido" o nombre completo real (Regla 10).
+8. Formulario: Si falta algún campo obligatorio, pídelo de forma clara. Sugiere el Microblading si el usuario no sabe qué elegir.
+9. Confirmación: Antes de agendar, muestra un resumen de la cita (Fecha, Hora, Servicio, Nombre completo y el abono de $10.000). Pregunta "¿Confirmamos?" de forma explícita.
+10. Conflicto de Paciente (DB-CONFLICT): 
+    - Si recibes un error 'DB-CONFLICT', explica al usuario que ya existe un registro con ese número pero con un nombre ligeramente distinto. 
+    - Pide amablemente el segundo apellido o el nombre completo real del paciente para diferenciarlo en el sistema.
 
 ETIQUETADO AUTOMÁTICO INTELIGENTE:
 Usa la función 'tag_patient' PROACTIVAMENTE para segmentar al paciente internamente.
@@ -634,7 +642,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
             let funcArgs: any = {};
             try { funcArgs = JSON.parse(assistant.function_call.arguments); } catch { }
 
-            console.log(`[Simulator] Tool call: ${funcName}`, funcArgs);
+            console.log(`[Simulator] Tool call: ${funcName} `, funcArgs);
 
             const result = await processFunc(sb, clinic_id, simulatedPhone, funcName, funcArgs, clinic.timezone || "America/Santiago", clinic);
 

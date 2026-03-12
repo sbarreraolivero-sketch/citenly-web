@@ -17,14 +17,14 @@ export default function Templates() {
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    const insertVariable = () => {
+    const insertVariable = (num: number, example: string) => {
         const textarea = textareaRef.current
         if (!textarea) return
 
-        const matches = newTemplate.body.match(/\{\{\d+\}\}/g) || []
-        const uniqueVars = Array.from(new Set(matches.map(m => parseInt(m.replace(/[{}]/g, '')))))
-        const nextNum = uniqueVars.length + 1
-        const textToInsert = `{{${nextNum}}}`
+        const textToInsert = `{{${num}}}`
+
+        // Store mappings for preview
+        setVariableExamples(prev => ({ ...prev, [num]: example }))
 
         const start = textarea.selectionStart
         const end = textarea.selectionEnd
@@ -40,12 +40,15 @@ export default function Templates() {
     }
 
     const QUICK_VARIABLES = [
-        { label: 'Paciente', icon: '👤' },
-        { label: 'Especialista', icon: '👨‍⚕️' },
-        { label: 'Fecha/Hora', icon: '📅' },
-        { label: 'Clínica', icon: '🏥' },
-        { label: 'Link', icon: '🔗' },
+        { label: 'Paciente', icon: '👤', example: 'Juan Pérez', num: 1 },
+        { label: 'Especialista', icon: '👨‍⚕️', example: 'Dr. López', num: 2 },
+        { label: 'Fecha/Hora', icon: '📅', example: 'Lunes 15 de Mayo a las 10:00', num: 3 },
+        { label: 'Servicio', icon: '🦷', example: 'Limpieza Dental', num: 4 },
+        { label: 'Clínica', icon: '🏥', example: 'FixSalud Clínica', num: 5 },
+        { label: 'Link', icon: '🔗', example: 'https://citenly.ai/reserva', num: 6 },
     ]
+
+    const [variableExamples, setVariableExamples] = useState<Record<number, string>>({})
 
     const loadTemplates = async () => {
         if (!clinicId) return
@@ -86,7 +89,12 @@ export default function Templates() {
         if (!clinicId) return
         setCreatingTemplate(true)
         try {
-            const result = await retentionService.createRemoteTemplate(clinicId, newTemplate.name, newTemplate.body, newTemplate.buttons)
+            // Prepare examples array for Meta
+            const matches = newTemplate.body.match(/\{\{\d+\}\}/g) || []
+            const uniqueVars = Array.from(new Set(matches.map(m => parseInt(m.replace(/[{}]/g, ''))))).sort((a, b) => a - b)
+            const examples = uniqueVars.map(v => variableExamples[v] || "Ejemplo")
+
+            const result = await retentionService.createRemoteTemplate(clinicId, newTemplate.name, newTemplate.body, newTemplate.buttons, examples)
             toast.success('Plantilla enviada a WhatsApp para revisión')
 
             // Add to list optimistically
@@ -178,40 +186,64 @@ export default function Templates() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <button
-                                onClick={() => setNewTemplate({
-                                    name: 'reactivacion_mensual',
-                                    category: 'MARKETING',
-                                    body: 'Hola {{1}}, te extrañamos en {{2}}. Ha pasado tiempo desde tu último control. Responde a este mensaje para agendar tu próxima cita con un beneficio especial.',
-                                    buttons: ['Agendar Cita']
-                                })}
+                                onClick={() => {
+                                    setNewTemplate({
+                                        name: 'reactivacion_mensual',
+                                        category: 'MARKETING',
+                                        body: 'Hola {{1}}, el especialista {{2}} de la clínica {{4}} te extraña. Ha pasado tiempo desde tu último control. Responde para agendar.',
+                                        buttons: ['Agendar Cita']
+                                    })
+                                    setVariableExamples({
+                                        1: 'Juan Pérez',
+                                        2: 'Dr. López',
+                                        5: 'FixSalud Clínica'
+                                    })
+                                }}
                                 className="text-left p-3 rounded-lg border border-silk-beige bg-white hover:border-primary-300 hover:shadow-soft-sm transition-all text-sm group"
                             >
                                 <div className="font-bold text-charcoal mb-1 group-hover:text-primary-600 transition-colors">Reactivación</div>
-                                <div className="text-charcoal/60 text-xs line-clamp-2">Hola {'{{1}}'}, te extrañamos en {'{{2}}'}...</div>
+                                <div className="text-charcoal/60 text-xs line-clamp-2">Hola {'{{1}}'}, el especialista {'{{2}}'} te extraña...</div>
                             </button>
                             <button
-                                onClick={() => setNewTemplate({
-                                    name: 'recordatorio_cita',
-                                    category: 'UTILITY',
-                                    body: 'Hola {{1}}, te escribimos de {{2}} para recordar tu cita el día {{3}} a las {{4}}. Por favor confirma respondiendo "Sí" o "No".',
-                                    buttons: ['Sí, confirmo', 'No podré asistir']
-                                })}
+                                onClick={() => {
+                                    setNewTemplate({
+                                        name: 'recordatorio_cita',
+                                        category: 'UTILITY',
+                                        body: 'Hola {{1}}, te escribimos de {{5}} para recordar tu cita de {{4}} el día {{3}} con el especialista {{2}}. Por favor confirma respondiendo "Sí" o "No".',
+                                        buttons: ['Sí, confirmo', 'No podré asistir']
+                                    })
+                                    setVariableExamples({
+                                        1: 'Juan Pérez',
+                                        2: 'Dr. López',
+                                        3: 'Lunes 15 de Mayo a las 10:00',
+                                        4: 'Limpieza Dental',
+                                        5: 'FixSalud Clínica'
+                                    })
+                                }}
                                 className="text-left p-3 rounded-lg border border-silk-beige bg-white hover:border-primary-300 hover:shadow-soft-sm transition-all text-sm group"
                             >
                                 <div className="font-bold text-charcoal mb-1 group-hover:text-primary-600 transition-colors">Recordatorio</div>
-                                <div className="text-charcoal/60 text-xs line-clamp-2">Hola {'{{1}}'}, recuerda tu cita el {'{{3}}'}...</div>
+                                <div className="text-charcoal/60 text-xs line-clamp-2">Hola {'{{1}}'}, tu cita con {'{{2}}'} el {'{{3}}'}...</div>
                             </button>
                             <button
-                                onClick={() => setNewTemplate({
-                                    name: 'oferta_especial',
-                                    category: 'MARKETING',
-                                    body: 'Hola {{1}}! Tenemos promoción en {{2}} esta semana. Quedan pocos cupos, responde este mensaje para reservar el tuyo. ¡Te esperamos!',
-                                    buttons: ['Quiero reservar', 'Ver promoción']
-                                })}
+                                onClick={() => {
+                                    setNewTemplate({
+                                        name: 'oferta_especial',
+                                        category: 'MARKETING',
+                                        body: '¡Hola {{1}}! El especialista {{2}} de {{5}} tiene una promoción en {{4}} para ti. Responde este mensaje para reservar tu cupo.',
+                                        buttons: ['Quiero reservar', 'Ver promoción']
+                                    })
+                                    setVariableExamples({
+                                        1: 'Juan Pérez',
+                                        2: 'Dr. López',
+                                        4: 'Limpieza Dental',
+                                        5: 'FixSalud Clínica'
+                                    })
+                                }}
                                 className="text-left p-3 rounded-lg border border-silk-beige bg-white hover:border-primary-300 hover:shadow-soft-sm transition-all text-sm group"
                             >
                                 <div className="font-bold text-charcoal mb-1 group-hover:text-primary-600 transition-colors">Oferta Semanal</div>
-                                <div className="text-charcoal/60 text-xs line-clamp-2">Hola {'{{1}}'}! Tenemos promoción en...</div>
+                                <div className="text-charcoal/60 text-xs line-clamp-2">¡Hola {'{{1}}'}! Promoción en {'{{4}}'}...</div>
                             </button>
                         </div>
                     </div>
@@ -265,7 +297,7 @@ export default function Templates() {
                                             <button
                                                 key={i}
                                                 type="button"
-                                                onClick={() => insertVariable()}
+                                                onClick={() => insertVariable(v.num, v.example)}
                                                 className="px-2.5 py-1.5 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 hover:text-primary-800 border border-primary-200 rounded-lg transition-colors flex items-center gap-1.5"
                                                 title={`Insertar variable para ${v.label}`}
                                             >
@@ -294,10 +326,11 @@ export default function Templates() {
 
                                     const genericExamples = [
                                         "Juan Pérez",
-                                        "Clínica Estética",
-                                        "Mañana a las 10:00",
                                         "Dr. López",
-                                        "https://ejemplo.com/pago"
+                                        "Lunes 15 de Mayo a las 10:00",
+                                        "Limpieza Dental",
+                                        "FixSalud Clínica",
+                                        "https://citenly.ai/reserva"
                                     ]
 
                                     return (
@@ -308,12 +341,15 @@ export default function Templates() {
                                             </h4>
                                             <p className="text-[11px] text-blue-700/80 mb-3">Detectamos las siguientes variables y le enviaremos a Meta estos ejemplos genéricos para asegurar su rápida aprobación:</p>
                                             <div className="flex flex-wrap gap-2">
-                                                {uniqueVars.map((v, i) => (
-                                                    <div key={v} className="flex flex-col bg-white border border-blue-100 rounded-lg p-2 shadow-soft-sm">
-                                                        <span className="text-[10px] font-bold text-blue-500 mb-0.5">Variable {'{{' + v + '}}'}</span>
-                                                        <span className="text-xs font-medium text-charcoal">{genericExamples[i % genericExamples.length]}</span>
-                                                    </div>
-                                                ))}
+                                                {uniqueVars.map((v) => {
+                                                    const example = variableExamples[v] || genericExamples[v - 1] || "Ejemplo"
+                                                    return (
+                                                        <div key={v} className="flex flex-col bg-white border border-blue-100 rounded-lg p-2 shadow-soft-sm min-w-[100px]">
+                                                            <span className="text-[10px] font-bold text-blue-500 mb-0.5">Variable {'{{' + v + '}}'}</span>
+                                                            <span className="text-xs font-medium text-charcoal">{example}</span>
+                                                        </div>
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     )
@@ -381,7 +417,19 @@ export default function Templates() {
                                 <div className="flex flex-col justify-end flex-1 pt-16 pb-4 relative z-10">
                                     {/* Chat bubble */}
                                     <div className="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[14px] text-[#111B21] mb-2 max-w-[92%] whitespace-pre-wrap leading-relaxed">
-                                        {newTemplate.body || <span className="text-gray-400 italic font-light">Escribe el cuerpo del mensaje para previsualizar...</span>}
+                                        {(() => {
+                                            if (!newTemplate.body) return <span className="text-gray-400 italic font-light">Escribe el cuerpo del mensaje para previsualizar...</span>
+
+                                            let previewBody = newTemplate.body
+                                            // Replace {{n}} with actual examples in the simulator
+                                            const matches = newTemplate.body.match(/\{\{\d+\}\}/g) || []
+                                            matches.forEach(m => {
+                                                const num = parseInt(m.replace(/[{}]/g, ''))
+                                                const example = variableExamples[num] || genericExamples[num - 1] || m
+                                                previewBody = previewBody.replaceAll(m, `{{${example}}}`)
+                                            })
+                                            return previewBody
+                                        })()}
                                         <div className="text-[10px] text-charcoal/40 text-right mt-1.5 ml-4 select-none">12:00</div>
                                     </div>
 
