@@ -50,6 +50,15 @@ export default function Templates() {
 
     const [variableExamples, setVariableExamples] = useState<Record<number, string>>({})
 
+    const genericExamples = [
+        "Juan Pérez",
+        "Dr. López",
+        "Lunes 15 de Mayo a las 10:00",
+        "Limpieza Dental",
+        "FixSalud Clínica",
+        "https://citenly.ai/reserva"
+    ]
+
     const loadTemplates = async () => {
         if (!clinicId) return
         try {
@@ -324,15 +333,6 @@ export default function Templates() {
                                     const uniqueVars = Array.from(new Set(matches.map(m => parseInt(m.replace(/[{}]/g, ''))))).sort((a, b) => a - b)
                                     if (uniqueVars.length === 0) return null
 
-                                    const genericExamples = [
-                                        "Juan Pérez",
-                                        "Dr. López",
-                                        "Lunes 15 de Mayo a las 10:00",
-                                        "Limpieza Dental",
-                                        "FixSalud Clínica",
-                                        "https://citenly.ai/reserva"
-                                    ]
-
                                     return (
                                         <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 animate-in fade-in">
                                             <h4 className="text-xs font-bold text-blue-800 flex items-center gap-1.5 mb-1">
@@ -426,7 +426,8 @@ export default function Templates() {
                                             matches.forEach(m => {
                                                 const num = parseInt(m.replace(/[{}]/g, ''))
                                                 const example = variableExamples[num] || genericExamples[num - 1] || m
-                                                previewBody = previewBody.replaceAll(m, `{{${example}}}`)
+                                                // Using split/join instead of replaceAll for broader compatibility
+                                                previewBody = previewBody.split(m).join(`{{${example}}}`)
                                             })
                                             return previewBody
                                         })()}
