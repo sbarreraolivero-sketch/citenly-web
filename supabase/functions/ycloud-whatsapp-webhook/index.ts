@@ -15,6 +15,24 @@ interface YCloudPayload {
         text?: { body: string };
         audio?: { id: string; link: string; mime_type: string };
         image?: { id: string; link: string; mime_type: string; caption?: string };
+        interactive?: {
+            type: string;
+            button_reply?: { id: string; title: string };
+            list_reply?: { id: string; title: string; description?: string };
+        };
+        referral?: {
+            id: string;
+            source_id: string;
+            source_type: string;
+            headline: string;
+            body: string;
+            media_type: string;
+            thumbnail_url: string;
+            video_url?: string;
+            image_url?: string;
+            source_url?: string;
+            ctwa_clid?: string;
+        };
         wamid?: string;
         context?: any;
     };
@@ -112,7 +130,7 @@ const functions = [
     },
     {
         name: "escalate_to_human",
-        description: "ÚSALA SÓLO si el paciente está molesto, tiene un problema médico complejo o pide EXPLÍCITAMENTE hablar con un humano. Esta función silenciará al bot para que un agente humano tome el control del chat.",
+        description: "ÚSALA si el paciente pide hablar con una persona, si te hace una pregunta que no puedes responder con seguridad, si tiene una urgencia médica o si detectas frustración. Esta función notificará al equipo y desactivará tus respuestas automáticas para este chat.",
         parameters: { type: "object", properties: {}, required: [] }
     },
     {
@@ -155,13 +173,22 @@ const debugLog = async (sb: ReturnType<typeof createClient>, msg: string, payloa
     }
 };
 
+/**
+ * Normalizes phone numbers for consistent DB lookups and API calls.
+ * Removes '+' and leading zeros, keeping only digits.
+ */
+const normalizePhone = (phone: string): string => {
+    if (!phone) return "";
+    return phone.replace(/\D/g, '');
+};
+
 const getClinic = async (sb: ReturnType<typeof createClient>, phone: string) => {
     console.log(`[getClinic] Looking up clinic for phone: ${phone}`);
-    const clean = phone.replace(/^\+/, '');
+    const normalized = normalizePhone(phone);
     // Try matching exact, or with +, or without +
     const { data, error } = await sb.from("clinic_settings")
         .select("*")
-        .or(`ycloud_phone_number.eq.${phone},ycloud_phone_number.eq.+${clean},ycloud_phone_number.eq.${clean}`)
+        .or(`ycloud_phone_number.eq.${phone},ycloud_phone_number.eq.+${normalized},ycloud_phone_number.eq.${normalized}`)
         .limit(1)
         .maybeSingle();
 
@@ -170,7 +197,7 @@ const getClinic = async (sb: ReturnType<typeof createClient>, phone: string) => 
         throw new Error(error.message);
     }
     if (!data) {
-        console.warn(`[getClinic] No clinic found for phone: ${phone} (clean: ${clean})`);
+        console.warn(`[getClinic] No clinic found for phone: ${phone} (normalized: ${normalized})`);
     } else {
         console.log(`[getClinic] Found clinic: ${data.id} (${data.clinic_name})`);
     }
@@ -340,6 +367,7 @@ const getOffset = (timeZone: string = "America/Santiago", date: Date) => {
 };
 
 const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago") => {
+    const normalizedPhone = normalizePhone(phone);
     let duration = 60;
     let price = 0;
     let professionalId: string | null = null;
@@ -428,7 +456,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     const { data, error } = await sb.from("appointments").insert({
         clinic_id: clinicId,
         patient_name: args.patient_name,
-        phone_number: phone,
+        phone_number: normalizedPhone,
         service: args.service_name,
         appointment_date: appointmentDateWithOffset,
         status: "pending",
@@ -448,7 +476,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     // Update CRM stage to "Cita Agendada"
-    await updateProspectStage(sb, clinicId, phone, "Cita Agendada");
+    await updateProspectStage(sb, clinicId, normalizedPhone, "Cita Agendada");
 
     const d = new Date(`${args.date}T${args.time}:00`);
     const h = parseInt(args.time.split(":")[0]);
@@ -479,7 +507,8 @@ const getServices = async (sb: ReturnType<typeof createClient>, clinicId: string
 };
 
 const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, response: string) => {
-    const { data: appt } = await sb.from("appointments").select("*").eq("clinic_id", clinicId).eq("phone_number", phone).eq("status", "pending").gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1).single();
+    const normalizedPhone = normalizePhone(phone);
+    const { data: appt } = await sb.from("appointments").select("*").eq("clinic_id", clinicId).eq("phone_number", normalizedPhone).eq("status", "pending").gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1).single();
     if (!appt) return { message: "No hay citas pendientes." };
     const status = response === "yes" ? "confirmed" : "cancelled";
     await sb.from("appointments").update({ status, confirmation_received: true, confirmation_response: response }).eq("id", appt.id);
@@ -487,10 +516,11 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
 };
 
 const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { name?: string; email?: string; service_interest?: string; notes?: string }) => {
+    const normalizedPhone = normalizePhone(phone);
     try {
         // If interest is shown, update stage to "Calificado"
         if (args.service_interest) {
-            await updateProspectStage(sb, clinicId, phone, "Calificado");
+            await updateProspectStage(sb, clinicId, normalizedPhone, "Calificado");
         }
 
         const { data: defaultStage } = await sb.from("crm_pipeline_stages")
@@ -505,7 +535,7 @@ const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: str
 
         const { data: existing } = await sb.from("crm_prospects")
             .select("id, name, email, service_interest, notes")
-            .eq("clinic_id", clinicId).eq("phone", phone).limit(1).single();
+            .eq("clinic_id", clinicId).eq("phone", normalizedPhone).limit(1).single();
 
         if (existing) {
             const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -521,7 +551,7 @@ const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: str
                 clinic_id: clinicId,
                 stage_id: stageId,
                 name: args.name || "Sin nombre",
-                phone: phone,
+                phone: normalizedPhone,
                 email: args.email || null,
                 service_interest: args.service_interest || null,
                 notes: args.notes || null,
@@ -598,40 +628,62 @@ const getKnowledge = async (sb: ReturnType<typeof createClient>, clinicId: strin
         return { found: true, documents: rankedDocs.length, message: results };
     } catch (e) {
         console.error("getKnowledge error:", e);
-        return { found: false, message: "Error al buscar en base de conocimiento." };
+        return { success: false, message: "Error al buscar en base de conocimiento." };
     }
 };
 
 const escalateToHuman = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string) => {
+    const normalizedPhone = normalizePhone(phone);
+    console.log(`[ESCALATE] Identifying need for human support for ${normalizedPhone}`);
+    await debugLog(sb, `Iniciando derivación a humano`, { clinicId, phone: normalizedPhone });
+
     try {
         // Find existing prospect
-        const { data: existing } = await sb.from("crm_prospects")
+        const { data: existing, error: findError } = await sb.from("crm_prospects")
             .select("id")
             .eq("clinic_id", clinicId)
-            .eq("phone", phone)
+            .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
             .limit(1)
-            .single();
+            .maybeSingle();
+
+        if (findError) {
+            console.error("[ESCALATE] Error finding prospect:", findError);
+            await debugLog(sb, "Error buscando prospecto en derivación", { error: findError });
+        }
 
         if (existing) {
-            await sb.from("crm_prospects").update({ requires_human: true }).eq("id", existing.id);
+            const { error: updError } = await sb.from("crm_prospects").update({ requires_human: true }).eq("id", existing.id);
+            if (updError) {
+                console.error("[ESCALATE] Error updating prospect:", updError);
+                await debugLog(sb, "Error actualizando prospecto a handoff", { error: updError });
+            }
         } else {
-            // Very rare: AI called escalate before prospect creation succeeded
-            await autoUpsertMinimalProspect(sb, clinicId, phone);
-            await sb.from("crm_prospects").update({ requires_human: true }).eq("clinic_id", clinicId).eq("phone", phone);
+            console.log(`[ESCALATE] Prospect not found for ${normalizedPhone}, creating one...`);
+            await autoUpsertMinimalProspect(sb, clinicId, normalizedPhone);
+            await sb.from("crm_prospects").update({ requires_human: true }).eq("clinic_id", clinicId).eq("phone", normalizedPhone);
         }
 
         // Send a notification!
-        await sb.from("notifications").insert({
+        const { error: notifError } = await sb.from("notifications").insert({
             clinic_id: clinicId,
             type: "human_handoff",
             title: "Atención Requerida 🚨",
-            message: `El paciente ${phone} solicitó atención humana. La IA ha sido silenciada para este chat.`
+            message: `El paciente ${normalizedPhone} solicitó atención humana o la IA requiere apoyo.`,
+            link: `/app/messages?phone=${normalizedPhone}`
         });
 
+        if (notifError) {
+            console.error("[ESCALATE] Error inserting notification:", notifError);
+            await debugLog(sb, "Error insertando notificación de handoff", { error: notifError });
+            return { success: false, message: "No pude notificar al equipo, pero he guardado tu solicitud." };
+        }
+
+        await debugLog(sb, "Derivación a humano exitosa", { phone: normalizedPhone });
         console.log(`[ESCALATE] Escalated to human for ${phone} in clinic ${clinicId}`);
         return { success: true, message: "El chat ha sido derivado a un agente humano. Despídete cordialmente avisando que un humano se contactará pronto." };
     } catch (e) {
         console.error("escalateToHuman error:", e);
+        await debugLog(sb, "Excepción en escalateToHuman", { error: (e as Error).message });
         return { success: false, message: "Error al derivar." };
     }
 };
@@ -817,15 +869,17 @@ const getStageId = async (sb: ReturnType<typeof createClient>, clinicId: string,
 };
 
 const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, targetStageName: string) => {
+    const normalizedPhone = normalizePhone(phone);
     // 1. Get target stage ID
     const targetId = await getStageId(sb, clinicId, targetStageName);
     if (!targetId) return;
 
     // 2. Get current prospect and their stage
+    // Use OR to be resilient to non-normalized old data
     const { data: prospect } = await sb.from("crm_prospects")
         .select("id, stage_id, crm_pipeline_stages(name, position)") // Join to get stage info
         .eq("clinic_id", clinicId)
-        .eq("phone", phone)
+        .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
         .limit(1)
         .maybeSingle();
 
@@ -855,11 +909,17 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
 };
 
 const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string) => {
+    const normalizedPhone = normalizePhone(phone);
     try {
         const { data: existing } = await sb.from("crm_prospects")
-            .select("id").eq("clinic_id", clinicId).eq("phone", phone).limit(1).single();
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
+            .limit(1)
+            .single();
 
         if (existing) return;
+        console.log(`[CRM] No prospect found for ${normalizedPhone}, creating...`);
 
         // Try to find "Nuevo Prospecto" specifically, or fallback to default
         let stageId = await getStageId(sb, clinicId, "Nuevo Prospecto");
@@ -882,12 +942,12 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
         await sb.from("crm_prospects").insert({
             clinic_id: clinicId,
             stage_id: stageId,
-            name: "Sin nombre",
-            phone: phone,
+            name: "Sin nombre (Auto)",
+            phone: normalizedPhone,
             source: "whatsapp",
             score: 0
         });
-        console.log(`Auto-created prospect for phone: ${phone}`);
+        console.log(`Auto-created prospect for phone: ${normalizedPhone}`);
     } catch (e) {
         console.error("autoUpsertMinimalProspect error:", e);
     }
@@ -948,12 +1008,18 @@ const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true
 };
 
 const sendWA = async (key: string, to: string, from: string, msg: string) => {
+    const cleanTo = normalizePhone(to);
+    const cleanFrom = normalizePhone(from);
     const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-API-Key": key },
-        body: JSON.stringify({ from, to, type: "text", text: { body: msg } })
+        body: JSON.stringify({ from: cleanFrom, to: cleanTo, type: "text", text: { body: msg } })
     });
-    if (!r.ok) throw new Error(await r.text());
+    if (!r.ok) {
+        const errText = await r.text();
+        console.error(`[sendWA] Error sending to ${cleanTo} from ${cleanFrom}:`, errText);
+        throw new Error(errText);
+    }
     return r.json();
 };
 
@@ -971,7 +1037,13 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const p: YCloudPayload = await req.json();
+        let p: YCloudPayload;
+        try {
+            p = await req.json();
+        } catch (e) {
+            console.warn("Received empty or non-JSON body, ignoring.");
+            return new Response(JSON.stringify({ status: "ok", message: "Empty body ignored" }), { headers: corsHeaders });
+        }
 
         // Log incoming payload
         await debugLog(sb, `Incoming webhook: ${p.type}`, p);
@@ -989,14 +1061,14 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
         }
 
-        const validTypes = ["text", "audio", "image"];
+        const validTypes = ["text", "audio", "image", "interactive"];
         if (!validTypes.includes(msgObj.type)) {
             await debugLog(sb, `Ignored: Unsupported message type`, { msgType: msgObj?.type });
             return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
         }
 
         const to = msgObj.to;
-        const from = msgObj.from;
+        const from = normalizePhone(msgObj.from); // Normalize user phone immediately
         const msgId = msgObj.id;
 
         // Deduplication
@@ -1071,9 +1143,30 @@ Deno.serve(async (req) => {
                 console.error("Image error", e);
                 body = "[La persona envió una imagen pero no pude verla. Pídele que te describa lo que envió.]";
             }
+        } else if (msgObj.type === "interactive" && msgObj.interactive) {
+            const interactive = msgObj.interactive;
+            if (interactive.type === "button_reply") {
+                body = interactive.button_reply?.title || "";
+            } else if (interactive.type === "list_reply") {
+                body = interactive.list_reply?.title || "";
+            }
         }
 
-        const msgRowId = await saveMsg(sb, clinic.id, from, body, "inbound", { ycloud_message_id: msgId, message_type: msgObj.type, payload: payloadExtra });
+        // Add context from Facebook Ad referral if present
+        if (msgObj.referral) {
+            const headline = msgObj.referral.headline || "";
+            const adBody = msgObj.referral.body || "";
+            const adContext = `[Mensaje desde Anuncio: "${headline}" - ${adBody}]`.trim();
+            body = `${adContext}\n${body}`.trim();
+        }
+
+        const msgRowId = await saveMsg(sb, clinic.id, from, body, "inbound", {
+            ycloud_message_id: msgId,
+            message_type: msgObj.type,
+            payload: { ...msgObj, ...payloadExtra },
+            campaign_id: msgObj.referral?.source_id || null,
+            is_read: false
+        });
 
         // Auto-create prospect in CRM (best-effort, non-blocking)
         autoUpsertMinimalProspect(sb, clinic.id, from).catch(e => console.error("Auto-prospect failed:", e));
@@ -1081,10 +1174,11 @@ Deno.serve(async (req) => {
         if (!clinic.ai_auto_respond) return new Response(JSON.stringify({ status: "saved" }), { headers: corsHeaders });
 
         // VERIFY IF HUMAN IS REQUIRED
+        // Use OR to be resilient to non-normalized old data
         const { data: prospect } = await sb.from("crm_prospects")
             .select("requires_human")
             .eq("clinic_id", clinic.id)
-            .eq("phone", from)
+            .or(`phone.eq.${from},phone.eq.+${from}`)
             .limit(1)
             .maybeSingle();
 
@@ -1096,14 +1190,14 @@ Deno.serve(async (req) => {
 
         const asyncProcess = async () => {
             try {
-                // DEBOUNCE - WAIT FOR 30 SECONDS
+                // DEBOUNCE - WAIT FOR 30 SECONDS (Reverted from 10s as requested)
                 await new Promise(r => setTimeout(r, 30000));
 
                 // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
                 const { data: latestMsg } = await sb.from("messages")
                     .select("id")
                     .eq("clinic_id", clinic.id)
-                    .eq("phone_number", from)
+                    .or(`phone_number.eq.${from},phone_number.eq.+${from}`)
                     .eq("direction", "inbound")
                     .order("created_at", { ascending: false })
                     .limit(1)
@@ -1229,7 +1323,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 const { data: recentMsgs } = await sb.from("messages")
                     .select("direction, content, message_type, payload")
                     .eq("clinic_id", clinic.id)
-                    .eq("phone_number", from)
+                    .or(`phone_number.eq.${from},phone_number.eq.+${from}`)
                     .order("created_at", { ascending: false })
                     .limit(15);
 
@@ -1299,11 +1393,11 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     ai_function_result: allFuncResults.length > 0 ? allFuncResults : null
                 });
 
-                // Send reply via WA
                 await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply);
+                await debugLog(sb, `AI Response Sent`, { to: from, msgId: msgRowId });
             } catch (err) {
                 console.error("Async Process Error:", err);
-                await debugLog(sb, "Async Process Error (OpenAI/Otros)", { error: (err as Error).message });
+                await debugLog(sb, "Async Process Error (OpenAI/Otros)", { error: (err as Error).message, phone: from });
 
                 // Respond to user so it doesn't stay silent
                 const fallbackReply = "Lo siento, tuve un problema técnico procesando tu mensaje. Por favor intenta consultarme en unos minutos.";

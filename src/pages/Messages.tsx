@@ -59,7 +59,7 @@ export default function Messages() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: msgs, error } = await (supabase as any)
                 .from('messages')
-                .select('phone_number, content, direction, created_at')
+                .select('phone_number, content, direction, created_at, is_read')
                 .eq('clinic_id', profile.clinic_id)
                 .order('created_at', { ascending: false })
 
@@ -108,11 +108,22 @@ export default function Messages() {
             // Build conversations
             const convs: Conversation[] = Array.from(phoneMap.entries()).map(([phone, data]) => {
                 const latest = data.messages[0]
-                // Count inbound messages that came after the last outbound as "unread"
+                // Use the new is_read column if available, fallback to legacy grouping logic
                 let unread = 0
                 for (const m of data.messages) {
-                    if (m.direction === 'inbound') unread++
-                    else break
+                    if (m.direction === 'inbound') {
+                        // If it has is_read column, use it. Otherwise, use legacy "break on outbound"
+                        if (m.is_read === false) unread++
+                        else if (m.is_read === true) continue // Explicitly read
+                        else {
+                            // Legacy logic (for old messages without is_read)
+                            // We already handled it by breaking on outbound
+                        }
+                    } else {
+                        // For legacy, stop counting at first outbound
+                        // For new messages, it doesn't matter much as they should be marked is_read=true on outbound anyway
+                        break 
+                    }
                 }
                 return {
                     phone_number: phone,
@@ -145,10 +156,21 @@ export default function Messages() {
         if (!profile?.clinic_id || !selectedPhone) return
         setLoadingMessages(true)
         try {
+            // Mark as read first if we have a selection
+            if (selectedPhone) {
+                await (supabase as any)
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('clinic_id', profile.clinic_id)
+                    .eq('phone_number', selectedPhone)
+                    .eq('direction', 'inbound')
+                    .eq('is_read', false)
+            }
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data, error } = await (supabase as any)
                 .from('messages')
-                .select('id, phone_number, direction, content, ai_generated, ai_function_called, created_at')
+                .select('*')
                 .eq('clinic_id', profile.clinic_id)
                 .eq('phone_number', selectedPhone)
                 .order('created_at', { ascending: true })
@@ -185,14 +207,24 @@ export default function Messages() {
                 schema: 'public',
                 table: 'messages',
                 filter: `clinic_id=eq.${profile.clinic_id}`,
-            }, (payload) => {
-                const newMsg = payload.new as Message
-                // Update conversations list
+            }, async (payload) => {
+                const newMsg = payload.new as (Message & { is_read: boolean })
+                
+                // If the message is inbound and belongs to the selected conversation, mark it as read immediately in DB
+                if (newMsg.direction === 'inbound' && newMsg.phone_number === selectedPhoneRef.current) {
+                    await (supabase as any)
+                        .from('messages')
+                        .update({ is_read: true })
+                        .eq('id', newMsg.id)
+                    newMsg.is_read = true
+                }
+
+                // Update conversations list (to refresh unread counts and last message)
                 fetchConversations()
-                // If the message belongs to the selected conversation, add it
+
+                // If the message belongs to the selected conversation, add it to the UI
                 if (newMsg.phone_number === selectedPhoneRef.current) {
                     setMessages(prev => {
-                        // Avoid duplicates if React ran twice or we already fetched it
                         if (prev.some(m => m.id === newMsg.id)) return prev;
                         return [...prev, newMsg];
                     })

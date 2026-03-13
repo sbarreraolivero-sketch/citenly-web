@@ -60,31 +60,23 @@ serve(async (req) => {
             const timeZone = clinic.timezone || 'America/Mexico_City'
             const now = new Date()
 
-            // Get current hour in clinic's timezone
-            const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone,
-                hour: 'numeric',
-                hour12: false
-            })
-            const currentHour = parseInt(formatter.format(now))
+            // Get current clinic time
+            const clinicNow = new Date(now.toLocaleString('en-US', { timeZone }))
+            const currentHour = clinicNow.getHours()
 
             // Get preferred hour (format "HH:MM")
             const [prefHourStr] = (settings.preferred_hour || '09:00').split(':')
             const prefHour = parseInt(prefHourStr)
 
             // Strict check: only run if hours match
-            // Since cron runs hourly, this ensures we only run once per day per clinic
             if (currentHour !== prefHour) {
-                // results.push({ clinicId: clinic.id, status: 'skipped', reason: `Hour mismatch (Current: ${currentHour}, Pref: ${prefHour})` })
                 continue
             }
 
-            log.push(`Processing clinic ${clinic.clinic_name} (${clinic.id}) at hour ${currentHour}`)
+            log.push(`Processing clinic ${clinic.clinic_name} (${clinic.id}) at clinic hour ${currentHour}`)
 
             // 4. Calculate "Tomorrow" in clinic's timezone
-            // We want appointments scheduled for: Today + 1 day
-            const todayInClinic = new Date().toLocaleDateString('en-CA', { timeZone }) // YYYY-MM-DD
-            const tomorrowDate = new Date(todayInClinic)
+            const tomorrowDate = new Date(clinicNow)
             tomorrowDate.setDate(tomorrowDate.getDate() + 1)
             const tomorrowStr = tomorrowDate.toISOString().split('T')[0] // YYYY-MM-DD
 
@@ -175,24 +167,40 @@ serve(async (req) => {
                         body: JSON.stringify(messagePayload)
                     })
 
+                    const responseData = await response.json().catch(() => ({}));
+
                     if (!response.ok) {
-                        const err = await response.json()
-                        console.error('YCloud Error', err)
+                        await supabaseClient.from('reminder_logs').insert({
+                            clinic_id: clinic.id,
+                            appointment_id: appt.id,
+                            type: '24h',
+                            phone_number: appt.phone_number,
+                            status: 'failed',
+                            error_message: JSON.stringify(responseData)
+                        });
                         continue
                     }
 
-                    const result = await response.json()
-
-                    // Log to DB
+                    // Log to DB messages (legacy)
                     await supabaseClient.from('messages').insert({
                         clinic_id: clinic.id,
                         phone_number: appt.phone_number,
                         direction: 'outbound',
-                        content: `Recordatorio automático enviado a ${appt.patient_name}`,
-                        ycloud_message_id: result.id,
+                        content: `Recordatorio automático 24h enviado a ${appt.patient_name}`,
+                        ycloud_message_id: responseData.id,
                         ycloud_status: 'sent',
                         ai_generated: false
                     })
+
+                    // Log to reminder_logs (new)
+                    await supabaseClient.from('reminder_logs').insert({
+                        clinic_id: clinic.id,
+                        appointment_id: appt.id,
+                        type: '24h',
+                        phone_number: appt.phone_number,
+                        status: 'sent',
+                        sent_at: new Date().toISOString()
+                    });
 
                     // Mark appointment
                     await supabaseClient.from('appointments').update({
@@ -348,21 +356,39 @@ serve(async (req) => {
                             body: JSON.stringify(messagePayload)
                         })
 
+                        const responseData = await response.json().catch(() => ({}));
+
                         if (response.ok) {
-                            const result = await response.json()
                             await supabaseClient.from('messages').insert({
                                 clinic_id: clinic.id,
                                 phone_number: appt.phone_number,
                                 direction: 'outbound',
                                 content: `Recordatorio 2h antes enviado a ${appt.patient_name}`,
-                                ycloud_message_id: result.id,
+                                ycloud_message_id: responseData.id,
                                 ycloud_status: 'sent'
                             })
+                            await supabaseClient.from('reminder_logs').insert({
+                                clinic_id: clinic.id,
+                                appointment_id: appt.id,
+                                type: '2h',
+                                phone_number: appt.phone_number,
+                                status: 'sent',
+                                sent_at: new Date().toISOString()
+                            });
                             await supabaseClient.from('appointments').update({
                                 reminder_sent: true,
                                 reminder_sent_at: new Date().toISOString()
                             }).eq('id', appt.id)
                             sentCount++
+                        } else {
+                            await supabaseClient.from('reminder_logs').insert({
+                                clinic_id: clinic.id,
+                                appointment_id: appt.id,
+                                type: '2h',
+                                phone_number: appt.phone_number,
+                                status: 'failed',
+                                error_message: JSON.stringify(responseData)
+                            });
                         }
                     } catch (e) {
                         console.error(e)
@@ -471,7 +497,6 @@ serve(async (req) => {
                                 ]
                             }
                         }
-
                         const response = await fetch('https://api.ycloud.com/v2/whatsapp/messages', {
                             method: 'POST',
                             headers: {
@@ -481,24 +506,38 @@ serve(async (req) => {
                             body: JSON.stringify(messagePayload)
                         })
 
+                        const responseData = await response.json().catch(() => ({}));
+
                         if (response.ok) {
-                            const result = await response.json()
                             await supabaseClient.from('messages').insert({
                                 clinic_id: clinic.id,
                                 phone_number: appt.phone_number,
                                 direction: 'outbound',
                                 content: `Recordatorio 1h antes enviado a ${appt.patient_name}`,
-                                ycloud_message_id: result.id,
+                                ycloud_message_id: responseData.id,
                                 ycloud_status: 'sent'
                             })
+                            await supabaseClient.from('reminder_logs').insert({
+                                clinic_id: clinic.id,
+                                appointment_id: appt.id,
+                                type: '1h',
+                                phone_number: appt.phone_number,
+                                status: 'sent',
+                                sent_at: new Date().toISOString()
+                            });
                             await supabaseClient.from('appointments').update({
                                 reminder_sent: true,
                                 reminder_sent_at: new Date().toISOString()
                             }).eq('id', appt.id)
-                            sentCount++
                         } else {
-                            const err = await response.json()
-                            console.error('YCloud Error (1h)', err)
+                            await supabaseClient.from('reminder_logs').insert({
+                                clinic_id: clinic.id,
+                                appointment_id: appt.id,
+                                type: '1h',
+                                phone_number: appt.phone_number,
+                                status: 'failed',
+                                error_message: JSON.stringify(responseData)
+                            });
                         }
                     } catch (e) {
                         console.error(e)
