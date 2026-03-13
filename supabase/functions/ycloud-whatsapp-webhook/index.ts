@@ -453,6 +453,22 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
     console.log(`[createAppt] Attempting insert: ${appointmentDateWithOffset} for ${args.patient_name}`);
 
+    // Deduplication check: Check if a similar appointment exists within the last 5 minutes (to prevent burst duplicates)
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: existingAppt } = await sb.from("appointments")
+        .select("id")
+        .eq("clinic_id", clinicId)
+        .eq("phone_number", normalizedPhone)
+        .eq("appointment_date", appointmentDateWithOffset)
+        .eq("status", "pending")
+        .gt("created_at", fiveMinsAgo)
+        .maybeSingle();
+
+    if (existingAppt) {
+        console.log(`[createAppt] Duplicate detected for ${normalizedPhone} at ${appointmentDateWithOffset}`);
+        return { success: true, message: "Ya registré esta solicitud. Estoy esperando el comprobante." };
+    }
+
     const { data, error } = await sb.from("appointments").insert({
         clinic_id: clinicId,
         patient_name: args.patient_name,
@@ -1286,18 +1302,25 @@ REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
    a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
    b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO.
    c) Registro: CUANDO TENGAS EL NOMBRE Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
-   d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta. Si la herramienta falló, informa el error y pide otro horario/nombre.
+   d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta.
+      LOS DATOS OFICIALES PARA EL ABONO ($10.000) SON:
+      - Nombre: Elizabeth Hernández
+      - RUT: 18.342.131-k
+      - Banco: Banco Estado
+      - Tipo de cuenta: Cuenta Vista / Chequera electrónica
+      - Número de cuenta: 80070001890
    e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
 10. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
 
 
 REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
 1. Solo ofrece los servicios listados en "Servicios OFICIALES".
-2. FLUJO OBLIGATORIO PARA MICROBLADING: Si el paciente muestra interés en Microblading (en cualquier variante), DEBES seguir este orden EXACTO:
-   a) Primero pregunta: "¿Es tu primera vez realizándote este tratamiento?" (Es obligatorio para calificar al paciente).
-   b) Explica el tratamiento e incluye TODAS las contraindicaciones (embarazo, lactancia, diabetes, problemas cutáneos, etc.).
-   c) Indica el valor oficial.
-   d) Ofrece agendar preguntando qué día le acomoda.
+2. FLUJO DE MICROBLADING: Si el paciente muestra interés en Microblading, sigue este flujo natural:
+   a) Consulta si es su primera vez o si ya tiene un trabajo previo (esto es vital para el precio y técnica).
+   b) Explica brevemente el tratamiento y menciona contraindicaciones solo si es pertinente o si el usuario pregunta detalles (embarazo, lactancia, diabetes, problemas cutáneos).
+   c) Indica el valor y los pasos a seguir.
+   d) Ofrece agendar. 
+   REGLA DE ORO: No repitas las mismas preguntas si el usuario ya las respondió en la frase anterior (ej: si dice "quiero microblading, es mi primera vez", no vuelvas a preguntar si es su primera vez).
 3. Ante preguntas generales sobre servicios, enumera TODOS los servicios oficiales con sus precios.
 4. SIEMPRE usa 'get_knowledge' si te preguntan detalles técnicos o precios que no ves en la lista estática.
 5. SE PROACTIVO con 'tag_patient' para etiquetar intereses y condiciones médicas (embarazo, etc.) de forma interna.

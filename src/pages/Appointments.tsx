@@ -171,10 +171,18 @@ export default function Appointments() {
             ))
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
+            const { error, data } = await (supabase as any)
                 .from('appointments')
                 .update({ status: newStatus })
                 .eq('id', id)
+                .select()
+
+            if (error) {
+                console.error('Error updating status in DB:', error)
+                throw error
+            }
+
+            console.log('Status updated successfully:', data)
 
             if (error) throw error
 
@@ -1110,9 +1118,11 @@ export default function Appointments() {
                                         <div className="w-10 h-10 bg-silk-beige rounded-full flex items-center justify-center flex-shrink-0">
                                             <User className="w-5 h-5 text-charcoal/50" />
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="font-semibold text-charcoal truncate text-base leading-tight">{appointment.patient_name}</p>
-                                            <p className="text-xs text-charcoal/60 flex items-center gap-1 mt-1">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-semibold text-charcoal truncate text-sm sm:text-base leading-tight">
+                                                {appointment.patient_name}
+                                            </p>
+                                            <p className="text-[10px] sm:text-xs text-charcoal/60 flex items-center gap-1 mt-1">
                                                 <Phone className="w-3 h-3" />
                                                 {formatPhoneNumber(appointment.phone_number)}
                                             </p>

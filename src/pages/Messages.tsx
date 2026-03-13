@@ -158,13 +158,17 @@ export default function Messages() {
         try {
             // Mark as read first if we have a selection
             if (selectedPhone) {
-                await (supabase as any)
-                    .from('messages')
-                    .update({ is_read: true })
-                    .eq('clinic_id', profile.clinic_id)
-                    .eq('phone_number', selectedPhone)
-                    .eq('direction', 'inbound')
-                    .eq('is_read', false)
+                try {
+                    await (supabase as any)
+                        .from('messages')
+                        .update({ is_read: true })
+                        .eq('clinic_id', profile.clinic_id)
+                        .eq('phone_number', selectedPhone)
+                        .eq('direction', 'inbound')
+                        .eq('is_read', false)
+                } catch (err) {
+                    console.warn('Could not update is_read (column might be missing):', err)
+                }
             }
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
