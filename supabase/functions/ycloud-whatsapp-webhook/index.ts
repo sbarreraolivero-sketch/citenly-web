@@ -766,20 +766,66 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (existingPatient) {
             patientId = existingPatient.id;
         } else {
-            // Create a minimal patient record
-            const { data: newPatient, error: patientError } = await sb.from("patients")
-                .insert({ clinic_id: clinicId, phone_number: phone, name: "Paciente WhatsApp" })
+            // REDIRECTION: If not a patient, tag in CRM to avoid "Ghost Patients"
+            console.log(`[tagPatient] Patient not found for ${phone}, redirecting to CRM tagging...`);
+            
+            // 1. Ensure prospect exists and get ID
+            const prospectId = await autoUpsertMinimalProspect(sb, clinicId, phone);
+            if (!prospectId) return { success: false, message: "No se pudo identificar al paciente ni al prospecto." };
+
+            // 2. Manage CRM Tag
+            const { data: crmTag } = await sb.from("crm_tags")
                 .select("id")
-                .single();
+                .eq("clinic_id", clinicId)
+                .ilike("name", tagName)
+                .limit(1)
+                .maybeSingle();
+            
+            let crmTagId = crmTag?.id;
 
-            if (patientError) {
-                console.error("[tagPatient] Error creating patient:", patientError);
-                return { success: false, message: "No se pudo encontrar o crear el paciente." };
+            if (!crmTagId) {
+                // Determine color based on common tag names
+                let color = "#3B82F6"; // Default blue
+                const lowerName = tagName.toLowerCase();
+                if (lowerName.includes("piel") || lowerName.includes("médica") || lowerName.includes("embarazada")) color = "#EF4444";
+                if (lowerName.includes("vez") || lowerName.includes("frecuente")) color = "#10B981";
+                if (lowerName.includes("precio")) color = "#F59E0B";
+
+                const { data: newCrmTag, error: createError } = await sb.from("crm_tags")
+                    .insert({ clinic_id: clinicId, name: tagName, color })
+                    .select("id")
+                    .single();
+                
+                if (createError) {
+                    // Possible race condition
+                    const { data: retryTag } = await sb.from("crm_tags")
+                        .select("id")
+                        .eq("clinic_id", clinicId)
+                        .ilike("name", tagName)
+                        .limit(1)
+                        .maybeSingle();
+                    crmTagId = retryTag?.id;
+                } else {
+                    crmTagId = newCrmTag?.id;
+                }
             }
-            patientId = newPatient?.id || null;
-        }
 
-        if (!patientId) return { success: false, message: "No se pudo identificar al paciente." };
+            if (!crmTagId) return { success: false, message: "No se pudo gestionar la etiqueta de CRM." };
+
+            // 3. Link tag in CRM
+            const { data: existingCrmLink } = await sb.from("crm_prospect_tags")
+                .select("*")
+                .eq("prospect_id", prospectId)
+                .eq("tag_id", crmTagId)
+                .limit(1)
+                .maybeSingle();
+            
+            if (!existingCrmLink) {
+                await sb.from("crm_prospect_tags").insert({ prospect_id: prospectId, tag_id: crmTagId });
+            }
+
+            return { success: true, message: "Etiqueta asignada al prospecto en CRM." };
+        }
 
         // 3. Assign tag to patient (skip if already assigned)
         const { data: existingLink } = await sb.from("patient_tags")
@@ -932,9 +978,9 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
             .eq("clinic_id", clinicId)
             .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
             .limit(1)
-            .single();
+            .maybeSingle();
 
-        if (existing) return;
+        if (existing) return existing.id;
         console.log(`[CRM] No prospect found for ${normalizedPhone}, creating...`);
 
         // Try to find "Nuevo Prospecto" specifically, or fallback to default
@@ -942,30 +988,38 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
 
         if (!stageId) {
             const { data: defaultStage } = await sb.from("crm_pipeline_stages")
-                .select("id").eq("clinic_id", clinicId).eq("is_default", true).limit(1).single();
+                .select("id").eq("clinic_id", clinicId).eq("is_default", true).limit(1).maybeSingle();
             stageId = defaultStage?.id;
         }
 
         // Fallback to first
         if (!stageId) {
             const { data: firstStage } = await sb.from("crm_pipeline_stages")
-                .select("id").eq("clinic_id", clinicId).order("position", { ascending: true }).limit(1).single();
+                .select("id").eq("clinic_id", clinicId).order("position", { ascending: true }).limit(1).maybeSingle();
             stageId = firstStage?.id;
         }
 
-        if (!stageId) return;
+        if (!stageId) return null;
 
-        await sb.from("crm_prospects").insert({
+        const { data: newProspect, error: insertError } = await sb.from("crm_prospects").insert({
             clinic_id: clinicId,
             stage_id: stageId,
             name: "Sin nombre (Auto)",
             phone: normalizedPhone,
             source: "whatsapp",
             score: 0
-        });
+        }).select("id").single();
+
+        if (insertError) {
+             console.error("autoUpsertMinimalProspect insert error:", insertError);
+             return null;
+        }
+
         console.log(`Auto-created prospect for phone: ${normalizedPhone}`);
+        return newProspect?.id;
     } catch (e) {
         console.error("autoUpsertMinimalProspect error:", e);
+        return null;
     }
 };
 

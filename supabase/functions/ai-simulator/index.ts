@@ -405,15 +405,48 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (existingPatient) {
             patientId = existingPatient.id;
         } else {
-            const { data: newPatient, error: patientError } = await sb.from("patients")
-                .insert({ clinic_id: clinicId, phone_number: phone, name: "Paciente Simulador" })
-                .select("id")
-                .single();
-            if (patientError) return { success: false, message: "No se pudo encontrar o crear el paciente." };
-            patientId = newPatient?.id || null;
-        }
+            // Simulator REDIRECTION: If not a patient, tag in CRM
+            console.log(`[Simulator tagPatient] Patient not found for ${phone}, redirecting to CRM...`);
+            
+            // 1. Ensure prospect exists
+            const prospectId = await autoUpsertMinimalProspect(sb, clinicId, phone);
+            if (!prospectId) return { success: false, message: "No se pudo identificar al prospecto." };
 
-        if (!patientId) return { success: false, message: "No se pudo identificar al paciente." };
+            // 2. Manage CRM Tag
+            const { data: crmTag } = await sb.from("crm_tags")
+                .select("id")
+                .eq("clinic_id", clinicId)
+                .ilike("name", tagName)
+                .limit(1)
+                .maybeSingle();
+            
+            let crmTagId = crmTag?.id;
+
+            if (!crmTagId) {
+                const { data: newCrmTag, error: createError } = await sb.from("crm_tags")
+                    .insert({ clinic_id: clinicId, name: tagName, color: "#3B82F6" })
+                    .select("id")
+                    .single();
+                
+                crmTagId = createError ? (await sb.from("crm_tags").select("id").eq("clinic_id", clinicId).ilike("name", tagName).limit(1).maybeSingle())?.data?.id : newCrmTag?.id;
+            }
+
+            if (!crmTagId) return { success: false, message: "No se pudo gestionar etiqueta CRM." };
+
+            // 3. Link tag in CRM
+            const { data: existingCrmLink } = await sb.from("crm_prospect_tags")
+                .select("*")
+                .eq("prospect_id", prospectId)
+                .eq("tag_id", crmTagId)
+                .limit(1)
+                .maybeSingle();
+            
+            if (!existingCrmLink) {
+                await sb.from("crm_prospect_tags").insert({ prospect_id: prospectId, tag_id: crmTagId });
+            }
+
+            return { success: true, message: "Etiqueta asignada al prospecto en CRM." };
+        }
 
         // 3. Assign tag to patient
         const { data: existingLink } = await sb.from("patient_tags")
@@ -684,3 +717,40 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
         return new Response(JSON.stringify({ error: err.message || "Error interno." }), { status: 500, headers: corsHeaders });
     }
 });
+
+const autoUpsertMinimalProspect = async (sb: any, clinicId: string, phone: string) => {
+    try {
+        const { data: existing } = await sb.from("crm_prospects")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .eq("phone", phone)
+            .limit(1)
+            .maybeSingle();
+
+        if (existing) return existing.id;
+
+        const { data: stages } = await sb.from("crm_pipeline_stages")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .order("position", { ascending: true })
+            .limit(1);
+        
+        const stageId = stages?.[0]?.id;
+        if (!stageId) return null;
+
+        const { data: newProspect, error } = await sb.from("crm_prospects").insert({
+            clinic_id: clinicId,
+            stage_id: stageId,
+            name: "Sin nombre (Simulador)",
+            phone: phone,
+            source: "whatsapp",
+            score: 0
+        }).select("id").single();
+
+        if (error) return null;
+        return newProspect?.id;
+    } catch (e) {
+        console.error("autoUpsertMinimalProspect error:", e);
+        return null;
+    }
+};
