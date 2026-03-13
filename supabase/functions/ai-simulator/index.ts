@@ -239,7 +239,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             appointment_date: appointmentDateWithOffset,
             duration: duration,
             price,
-            status: "confirmed",
+            status: "pending",
             payment_status: "pending"
         }).select("id").single();
 
