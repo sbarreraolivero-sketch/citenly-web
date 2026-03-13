@@ -56,14 +56,28 @@ export default function Messages() {
         if (!profile?.clinic_id) return
         try {
             // Get all messages grouped by phone number, get latest message per conversation
+            // We use a try-catch pattern or a safer select to handle the missing is_read column
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: msgs, error } = await (supabase as any)
+            let { data: msgs, error } = await (supabase as any)
                 .from('messages')
                 .select('phone_number, content, direction, created_at, is_read')
                 .eq('clinic_id', profile.clinic_id)
                 .order('created_at', { ascending: false })
 
-            if (error) { console.error('Error fetching conversations:', error); return }
+            if (error && error.message?.includes('is_read')) {
+                console.warn('is_read column missing, falling back to basic query')
+                const { data: fallbackMsgs, error: fallbackError } = await (supabase as any)
+                    .from('messages')
+                    .select('phone_number, content, direction, created_at')
+                    .eq('clinic_id', profile.clinic_id)
+                    .order('created_at', { ascending: false })
+                
+                if (fallbackError) throw fallbackError
+                msgs = fallbackMsgs
+            } else if (error) {
+                console.error('Error fetching conversations:', error)
+                return
+            }
             if (!msgs || msgs.length === 0) { setConversations([]); setLoading(false); return }
 
             // Group by phone number

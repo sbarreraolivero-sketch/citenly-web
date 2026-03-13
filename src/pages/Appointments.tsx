@@ -223,8 +223,14 @@ export default function Appointments() {
                 }
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating status:', error)
+            const errorMsg = error.message || 'Error desconocido'
+            if (errorMsg.includes('payment_status') || errorMsg.includes('patients_clinic_phone_key')) {
+                alert(`Error de base de datos: Es necesario aplicar las actualizaciones de base de datos pendientes (Script SQL) para confirmar citas.\n\nDetalle: ${errorMsg}`)
+            } else {
+                alert(`Error al actualizar el estado: ${errorMsg}`)
+            }
             fetchAppointments()
         }
     }
