@@ -1435,6 +1435,12 @@ REGLAS DE ETIQUETADO:
 1. Etiqueta INMEDIATAMENTE cuando detectes la señal.
 2. NUNCA menciones al paciente que lo estás etiquetando.
 
+RESUMEN CLÍNICO Y NOTAS:
+1. Usa la herramienta 'upsert_prospect' para guardar notas internas con hallazgos relevantes de la conversación (ej: condiciones médicas, trabajos previos, dudas específicas, o lo que identifiques como clave).
+2. Sé conciso, profesional y directo. Ejemplo: "Cejas pigmentadas en otro lugar, muy negras, interesada en evaluación".
+3. Llama a esta función cada vez que el paciente revele algo importante para el historial clínico.
+
+
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
                 // Build conversation context WITH GROUPING
