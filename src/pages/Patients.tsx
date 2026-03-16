@@ -9,8 +9,7 @@ import {
     Calendar,
     Trash2,
     X,
-    MapPin,
-    Briefcase
+    MapPin
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -389,7 +388,7 @@ export default function Patients() {
                 <PatientForm
                     patient={editingPatient}
                     onClose={() => setIsFormOpen(false)}
-                    onSuccess={fetchPatients}
+                    onSave={() => fetchPatients()}
                 />
             )}
         </SubscriptionGuard>
