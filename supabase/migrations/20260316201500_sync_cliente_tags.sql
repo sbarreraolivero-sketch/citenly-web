@@ -1,6 +1,7 @@
 -- =============================================
--- Automated "Cliente" Tag Synchronization
+-- Automated "Cliente" Tag Synchronization (v2)
 -- Syncs 'Cliente [Service]' and 'Cliente Frecuente' tags based on appointment history
+-- Handles robust linking and missing service data
 -- =============================================
 
 -- Function to ensure a tag exists and return its ID
@@ -26,96 +27,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Main sync function
-CREATE OR REPLACE FUNCTION public.sync_patient_cliente_tags()
-RETURNS TRIGGER AS $$
-DECLARE
-    v_patient_id UUID;
-    v_clinic_id UUID;
-    v_service_name TEXT;
-    v_tag_name TEXT;
-    v_tag_id UUID;
-    v_appt_count INT;
-BEGIN
-    -- Only proceed for confirmed or completed appointments
-    IF (NEW.status IN ('confirmed', 'completed')) THEN
-        v_patient_id := NEW.patient_id;
-        v_clinic_id := NEW.clinic_id;
-
-        IF v_patient_id IS NOT NULL THEN
-            -- 1. Get Service Name
-            SELECT name INTO v_service_name 
-            FROM public.services 
-            WHERE id = NEW.service_id;
-
-            -- 2. Map Service to Tag Name
-            -- Normalize service name to tag name (e.g., "Microblading de cejas" -> "Cliente Microblading")
-            IF v_service_name ILIKE '%Microblading%' THEN
-                v_tag_name := 'Cliente Microblading';
-            ELSIF v_service_name ILIKE '%labios%' THEN
-                v_tag_name := 'Cliente Labios';
-            ELSIF v_service_name ILIKE '%Ojos%' THEN
-                v_tag_name := 'Cliente Ojos';
-            ELSE
-                v_tag_name := 'Cliente ' || split_part(v_service_name, ' ', 1);
-            END IF;
-
-            -- 3. Ensure Tag Exists and Link it
-            IF v_tag_name IS NOT NULL THEN
-                v_tag_id := public.get_or_create_tag(v_clinic_id, v_tag_name, '#10B981');
-                
-                -- Link tag if not already linked
-                INSERT INTO public.patient_tags (patient_id, tag_id)
-                VALUES (v_patient_id, v_tag_id)
-                ON CONFLICT DO NOTHING;
-            END IF;
-
-            -- 4. Check for "Cliente Frecuente" (> 2 appointments)
-            SELECT COUNT(*) INTO v_appt_count 
-            FROM public.appointments 
-            WHERE patient_id = v_patient_id 
-            AND status IN ('confirmed', 'completed');
-
-            IF v_appt_count >= 2 THEN
-                v_tag_id := public.get_or_create_tag(v_clinic_id, 'Cliente Frecuente', '#10B981');
-                INSERT INTO public.patient_tags (patient_id, tag_id)
-                VALUES (v_patient_id, v_tag_id)
-                ON CONFLICT DO NOTHING;
-            END IF;
-        END IF;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create Trigger
-DROP TRIGGER IF EXISTS trigger_sync_cliente_tags ON public.appointments;
-CREATE TRIGGER trigger_sync_cliente_tags
-AFTER INSERT OR UPDATE OF status ON public.appointments
-FOR EACH ROW
-EXECUTE FUNCTION public.sync_patient_cliente_tags();
-
--- Initial backfill for existing appointments
--- This will tag all current confirmed/completed patients
-DO $$
-DECLARE
-    r RECORD;
-BEGIN
-    FOR r IN 
-        SELECT DISTINCT patient_id, clinic_id, service_id, status 
-        FROM public.appointments 
-        WHERE status IN ('confirmed', 'completed') AND patient_id IS NOT NULL
-    LOOP
-        -- Simple way to trigger the logic for existing ones
-        -- (Manually calling the logic or just inserting into patient_tags)
-        -- We'll just perform a manual insert for the backfill to be safe
-        PERFORM public.sync_patient_cliente_tags_manual(r.patient_id, r.clinic_id, r.service_id);
-    END LOOP;
-END;
-$$;
-
--- Helper for manual backfill
+-- Helper for manual backfill / robust sync
 CREATE OR REPLACE FUNCTION public.sync_patient_cliente_tags_manual(
     p_patient_id UUID,
     p_clinic_id UUID,
@@ -127,23 +39,88 @@ DECLARE
     v_tag_id UUID;
     v_appt_count INT;
 BEGIN
-    SELECT name INTO v_service_name FROM public.services WHERE id = p_service_id;
+    -- 1. Get Service Name (Handle NULL)
+    IF p_service_id IS NOT NULL THEN
+        SELECT name INTO v_service_name FROM public.services WHERE id = p_service_id;
+    END IF;
     
-    IF v_service_name ILIKE '%Microblading%' THEN v_tag_name := 'Cliente Microblading';
-    ELSIF v_service_name ILIKE '%labios%' THEN v_tag_name := 'Cliente Labios';
-    ELSIF v_service_name ILIKE '%Ojos%' THEN v_tag_name := 'Cliente Ojos';
-    ELSE v_tag_name := 'Cliente ' || split_part(v_service_name, ' ', 1);
+    -- 2. Map name or use default
+    IF v_service_name IS NULL THEN
+        v_tag_name := 'Cliente';
+    ELSIF v_service_name ILIKE '%Microblading%' THEN 
+        v_tag_name := 'Cliente Microblading';
+    ELSIF v_service_name ILIKE '%labios%' THEN 
+        v_tag_name := 'Cliente Labios';
+    ELSIF v_service_name ILIKE '%Ojos%' THEN 
+        v_tag_name := 'Cliente Ojos';
+    ELSE 
+        -- Use service name part or just "Cliente"
+        v_tag_name := 'Cliente ' || COALESCE(split_part(v_service_name, ' ', 1), '');
+        -- Cleanup if it ends in space
+        v_tag_name := TRIM(v_tag_name);
     END IF;
 
-    IF v_tag_name IS NOT NULL THEN
+    -- 3. Ensure Tag Exists and Link it
+    IF v_tag_name IS NOT NULL AND v_tag_name != '' THEN
         v_tag_id := public.get_or_create_tag(p_clinic_id, v_tag_name, '#10B981');
-        INSERT INTO public.patient_tags (patient_id, tag_id) VALUES (p_patient_id, v_tag_id) ON CONFLICT DO NOTHING;
+        INSERT INTO public.patient_tags (patient_id, tag_id) 
+        VALUES (p_patient_id, v_tag_id) 
+        ON CONFLICT DO NOTHING;
     END IF;
 
-    SELECT COUNT(*) INTO v_appt_count FROM public.appointments WHERE patient_id = p_patient_id AND status IN ('confirmed', 'completed');
+    -- 4. Cliente Frecuente
+    SELECT COUNT(*) INTO v_appt_count 
+    FROM public.appointments 
+    WHERE patient_id = p_patient_id 
+    AND status IN ('confirmed', 'completed');
+
     IF v_appt_count >= 2 THEN
         v_tag_id := public.get_or_create_tag(p_clinic_id, 'Cliente Frecuente', '#10B981');
-        INSERT INTO public.patient_tags (patient_id, tag_id) VALUES (p_patient_id, v_tag_id) ON CONFLICT DO NOTHING;
+        INSERT INTO public.patient_tags (patient_id, tag_id) 
+        VALUES (p_patient_id, v_tag_id) 
+        ON CONFLICT DO NOTHING;
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Main sync trigger function
+CREATE OR REPLACE FUNCTION public.sync_patient_cliente_tags()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (NEW.status IN ('confirmed', 'completed')) AND NEW.patient_id IS NOT NULL THEN
+        PERFORM public.sync_patient_cliente_tags_manual(NEW.patient_id, NEW.clinic_id, NEW.service_id);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create Trigger
+DROP TRIGGER IF EXISTS trigger_sync_cliente_tags ON public.appointments;
+CREATE TRIGGER trigger_sync_cliente_tags
+AFTER INSERT OR UPDATE OF status ON public.appointments
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_patient_cliente_tags();
+
+-- Re-sync everything phase
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    -- 1. Linking phase: Link appointments to patients if missing but phone matches
+    UPDATE public.appointments a
+    SET patient_id = p.id
+    FROM public.patients p
+    WHERE a.patient_id IS NULL
+    AND regexp_replace(a.phone_number, '\D', '', 'g') = regexp_replace(p.phone_number, '\D', '', 'g')
+    AND a.clinic_id = p.clinic_id;
+
+    -- 2. Tagging phase
+    FOR r IN 
+        SELECT DISTINCT patient_id, clinic_id, service_id 
+        FROM public.appointments 
+        WHERE status IN ('confirmed', 'completed') AND patient_id IS NOT NULL
+    LOOP
+        PERFORM public.sync_patient_cliente_tags_manual(r.patient_id, r.clinic_id, r.service_id);
+    END LOOP;
+END;
+$$;
