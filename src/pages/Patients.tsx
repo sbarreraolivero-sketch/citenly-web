@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import {
     Plus, 
     Search, 
     Edit2, 
@@ -7,7 +6,11 @@ import {
     Phone, 
     Mail, 
     Calendar,
-    Users
+    Users,
+    Trash2,
+    X,
+    MapPin,
+    Briefcase
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -92,7 +95,7 @@ export default function Patients() {
     const fetchTagSummaries = async () => {
         if (!profile?.clinic_id) return
         try {
-            const { data, error } = await supabase.rpc('get_tag_counts', {
+            const { data, error } = await (supabase as any).rpc('get_tag_counts', {
                 p_clinic_id: profile.clinic_id
             })
             if (error) {

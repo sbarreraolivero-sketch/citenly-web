@@ -130,7 +130,7 @@ export default function Campaigns() {
             // for now, let's do a simplified version or count via several queries
             // A more robust way is to use a new RPC 'get_estimated_audience'
             
-            const { data, error } = await supabase.rpc('get_estimated_audience', {
+            const { data, error } = await (supabase as any).rpc('get_estimated_audience', {
                 p_clinic_id: profile.clinic_id,
                 p_inclusion_tags: inc,
                 p_exclusion_tags: exc
