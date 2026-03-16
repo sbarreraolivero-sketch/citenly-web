@@ -150,6 +150,57 @@ export default function DashboardLayout() {
         }
     }
 
+    const markAllAsRead = async () => {
+        const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id)
+        if (unreadIds.length === 0) return
+
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+                .from('notifications')
+                .update({ is_read: true })
+                .in('id', unreadIds)
+
+            setNotifications(prev =>
+                prev.map(n => unreadIds.includes(n.id) ? { ...n, is_read: true } : n)
+            )
+        } catch (error) {
+            console.error('Error marking all as read:', error)
+        }
+    }
+
+    // Handle closing notifications - mark all as read
+    useEffect(() => {
+        if (!showNotifications && notifications.some(n => !n.is_read)) {
+            markAllAsRead()
+        }
+    }, [showNotifications])
+
+    const handleNotificationClick = (notification: Notification) => {
+        markAsRead(notification.id)
+        setShowNotifications(false)
+
+        // Route mapping
+        switch (notification.type) {
+            case 'new_appointment':
+            case 'confirmed':
+            case 'cancelled':
+            case 'pending_reminder':
+                navigate('/app/appointments')
+                break
+            case 'new_message':
+            case 'human_handoff':
+                navigate('/app/messages')
+                break
+            case 'survey_response':
+                navigate('/app/retention')
+                break
+            default:
+                // Fallback to dashboard or stay on current page
+                break
+        }
+    }
+
     const formatTimeAgo = (dateString: string) => {
         const date = new Date(dateString)
         const now = new Date()
@@ -389,7 +440,7 @@ export default function DashboardLayout() {
                                                             "px-4 py-3 hover:bg-ivory/50 cursor-pointer transition-colors",
                                                             !notification.is_read && "bg-primary-50/30"
                                                         )}
-                                                        onClick={() => markAsRead(notification.id)}
+                                                        onClick={() => handleNotificationClick(notification)}
                                                     >
                                                         <div className="flex items-start gap-3">
                                                             <div className="mt-0.5">

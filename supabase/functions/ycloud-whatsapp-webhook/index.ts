@@ -466,20 +466,29 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
     console.log(`[createAppt] Attempting insert: ${appointmentDateWithOffset} for ${args.patient_name}`);
 
-    // Deduplication check: Check if a similar appointment exists within the last 5 minutes (to prevent burst duplicates)
-    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    // Deduplication check: Check if an appointment ALREADY EXISTS for this phone at this exact time
+    // We check for any status that is NOT cancelled, regardless of when it was created.
     const { data: existingAppt } = await sb.from("appointments")
-        .select("id")
+        .select("id, status")
         .eq("clinic_id", clinicId)
         .eq("phone_number", normalizedPhone)
         .eq("appointment_date", appointmentDateWithOffset)
-        .eq("status", "pending")
-        .gt("created_at", fiveMinsAgo)
+        .neq("status", "cancelled")
         .maybeSingle();
 
     if (existingAppt) {
         console.log(`[createAppt] Duplicate detected for ${normalizedPhone} at ${appointmentDateWithOffset}`);
-        return { success: true, message: "Ya registré esta solicitud. Estoy esperando el comprobante." };
+        if (existingAppt.status === 'confirmed') {
+            return { success: true, message: "Ya tienes esta cita confirmada en nuestra agenda. ¡Te esperamos!" };
+        }
+        return { success: true, message: "Ya registré esta solicitud y está pendiente de pago. Por favor envía el comprobante para confirmarla." };
+    }
+
+    // Proactive availability check: Ensure the slot is actually free before inserting
+    const { available } = await checkAvail(sb, clinicId, normalizedPhone, args.date, args.service_name, timezone, profName);
+    if (!available) {
+        console.warn(`[createAppt] Slot no longer available: ${appointmentDateWithOffset}`);
+        return { success: false, message: "Lo siento, ese horario se acaba de ocupar. Por favor consulta la disponibilidad nuevamente para elegir otro momento." };
     }
 
     const { data, error } = await sb.from("appointments").insert({
@@ -1396,6 +1405,7 @@ REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
       - Número de cuenta: 80070001890
    e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
 10. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
+11. UBICACIÓN Y MAPA: Para responder sobre la ubicación, usa EXCLUSIVAMENTE los campos 'Dirección', 'Referencias de Dirección' y 'Mapa Google Maps' proporcionados arriba. Ignora cualquier dirección distinta o incompleta de la base de conocimiento.
 
 
 REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:

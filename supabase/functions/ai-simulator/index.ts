@@ -600,6 +600,8 @@ Deno.serve(async (req: Request) => {
 
 Clínica: ${clinic.clinic_name}
 Dirección: ${clinic.clinic_address || clinic.address || "No especificada"}
+${clinic.address_references ? `Referencias de Dirección: ${clinic.address_references}` : ""}
+${clinic.google_maps_url ? `Mapa Google Maps: ${clinic.google_maps_url}` : ""}
 Horario General de la Clínica: ${hoursSummary}
 FECHA DE HOY (ISO): ${localDateISO} (${todayDay})
 MAÑANA: ${tomorrowDay} ${tomorrowISO}
