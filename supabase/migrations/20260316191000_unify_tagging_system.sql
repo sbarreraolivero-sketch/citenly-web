@@ -1,0 +1,85 @@
+-- =============================================
+-- Unify Tagging System RPCs
+-- Unifies 'tags' and 'crm_tags' for a cohesive experience
+-- =============================================
+
+-- 1. Unified Tag Counts (Patients + Prospects)
+CREATE OR REPLACE FUNCTION public.get_tag_counts(p_clinic_id UUID)
+RETURNS TABLE (
+    tag_id UUID,
+    tag_name TEXT,
+    tag_color TEXT,
+    contact_count BIGINT
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH all_tags AS (
+        SELECT id, name, color, clinic_id FROM public.tags
+        UNION ALL
+        SELECT id, name, color, clinic_id FROM public.crm_tags
+    ),
+    all_links AS (
+        SELECT tag_id, patient_id as contact_id FROM public.patient_tags
+        UNION ALL
+        SELECT tag_id, prospect_id as contact_id FROM public.crm_prospect_tags
+    )
+    SELECT 
+        t.id as tag_id,
+        t.name as tag_name,
+        t.color as tag_color,
+        COUNT(l.contact_id)::BIGINT as contact_count
+    FROM all_tags t
+    LEFT JOIN all_links l ON t.id = l.tag_id
+    WHERE t.clinic_id = p_clinic_id
+    GROUP BY t.id, t.name, t.color
+    ORDER BY contact_count DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 2. Unified Audience Estimation (Patients + Prospects)
+-- Counts unique phone numbers that match the tag criteria
+CREATE OR REPLACE FUNCTION public.get_estimated_audience(
+    p_clinic_id UUID,
+    p_inclusion_tags UUID[],
+    p_exclusion_tags UUID[]
+)
+RETURNS BIGINT AS $$
+DECLARE
+    v_count BIGINT;
+BEGIN
+    WITH all_contacts AS (
+        -- Standardize phone numbers to avoid duplicates between tables
+        SELECT id, clinic_id, regexp_replace(phone_number, '\D', '', 'g') as clean_phone FROM public.patients
+        UNION ALL
+        SELECT id, clinic_id, regexp_replace(phone, '\D', '', 'g') as clean_phone FROM public.crm_prospects
+    ),
+    all_links AS (
+        SELECT patient_id as contact_id, tag_id FROM public.patient_tags
+        UNION ALL
+        SELECT prospect_id as contact_id, tag_id FROM public.crm_prospect_tags
+    )
+    SELECT COUNT(DISTINCT c.clean_phone) INTO v_count
+    FROM all_contacts c
+    WHERE c.clinic_id = p_clinic_id
+    AND (
+        p_inclusion_tags IS NULL OR 
+        ARRAY_LENGTH(p_inclusion_tags, 1) IS NULL OR
+        EXISTS (
+            SELECT 1 FROM all_links l 
+            WHERE l.contact_id = c.id 
+            AND l.tag_id = ANY(p_inclusion_tags)
+        )
+    )
+    AND (
+        p_exclusion_tags IS NULL OR 
+        ARRAY_LENGTH(p_exclusion_tags, 1) IS NULL OR
+        NOT EXISTS (
+            SELECT 1 FROM all_links l 
+            WHERE l.contact_id = c.id 
+            AND l.tag_id = ANY(p_exclusion_tags)
+        )
+    );
+    
+    RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

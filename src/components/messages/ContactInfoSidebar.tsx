@@ -77,26 +77,68 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             if (pError) throw pError
             setProspect(prospectData)
 
+            // Fetch patient (to check for older tags/status)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: patientData } = await (supabase as any)
+                .from('patients')
+                .select('id')
+                .eq('clinic_id', clinicId)
+                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
+                .maybeSingle()
+
+            const allAssignedTags: CrmTag[] = []
+
             if (prospectData) {
-                // Fetch assigned tags
+                // Fetch assigned CRM tags
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: tagData } = await (supabase as any)
+                const { data: crmTagData } = await (supabase as any)
                     .from('crm_prospect_tags')
                     .select('tag:crm_tags(*)')
                     .eq('prospect_id', prospectData.id)
                 
-                setTags(tagData?.map((t: any) => t.tag) || [])
+                if (crmTagData) {
+                    allAssignedTags.push(...crmTagData.map((t: any) => t.tag).filter(Boolean))
+                }
             }
 
-            // Fetch all available tags for the clinic
+            if (patientData) {
+                // Fetch assigned Patient tags
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data: patientTagData } = await (supabase as any)
+                    .from('patient_tags')
+                    .select('tag:tags(*)')
+                    .eq('patient_id', patientData.id)
+                
+                if (patientTagData) {
+                    const mappedTags = patientTagData.map((t: any) => t.tag).filter(Boolean)
+                    // Avoid duplicates by name
+                    mappedTags.forEach((t: any) => {
+                        if (!allAssignedTags.some(at => at.name.toLowerCase() === t.name.toLowerCase())) {
+                            allAssignedTags.push(t)
+                        }
+                    })
+                }
+            }
+
+            setTags(allAssignedTags)
+
+            // Fetch all available tags for the clinic from BOTH systems
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: clinicTags } = await (supabase as any)
-                .from('crm_tags')
-                .select('*')
-                .eq('clinic_id', clinicId)
-                .order('name')
+            const [crmTagsRes, patientTagsRes] = await Promise.all([
+                (supabase as any).from('crm_tags').select('*').eq('clinic_id', clinicId),
+                (supabase as any).from('tags').select('*').eq('clinic_id', clinicId)
+            ])
             
-            setAllTags(clinicTags || [])
+            const unifiedAvailableTags: CrmTag[] = [...(crmTagsRes.data || [])]
+            if (patientTagsRes.data) {
+                patientTagsRes.data.forEach((t: any) => {
+                    if (!unifiedAvailableTags.some(at => at.name.toLowerCase() === t.name.toLowerCase())) {
+                        unifiedAvailableTags.push(t)
+                    }
+                })
+            }
+            
+            setAllTags(unifiedAvailableTags.sort((a, b) => a.name.localeCompare(b.name)))
 
         } catch (err) {
             console.error('Error fetching prospect info:', err)
@@ -126,35 +168,91 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
     }
 
     const addTag = async (tagId: string) => {
-        if (!prospect) return
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('crm_prospect_tags')
-                .insert({ prospect_id: prospect.id, tag_id: tagId })
+            const tagToAdd = allTags.find(t => t.id === tagId)
+            if (!tagToAdd) return
+
+            // 1. Try to find if it's a CRM tag
+            const { data: isCrmTag } = await (supabase as any)
+                .from('crm_tags')
+                .select('id')
+                .eq('id', tagId)
+                .maybeSingle()
+
+            if (isCrmTag && prospect) {
+                const { error } = await (supabase as any)
+                    .from('crm_prospect_tags')
+                    .insert({ prospect_id: prospect.id, tag_id: tagId })
+                if (error && error.code !== '23505') throw error
+            } else {
+                // 2. Try to find if it's a Patient tag
+                const { data: isPatientTag } = await (supabase as any)
+                    .from('tags')
+                    .select('id')
+                    .eq('id', tagId)
+                    .maybeSingle()
+
+                if (isPatientTag) {
+                    // Find patient record
+                    const normalizedPhone = phoneNumber.replace(/\D/g, '')
+                    const { data: patient } = await (supabase as any)
+                        .from('patients')
+                        .select('id')
+                        .eq('clinic_id', clinicId)
+                        .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
+                        .maybeSingle()
+                    
+                    if (patient) {
+                        const { error } = await (supabase as any)
+                            .from('patient_tags')
+                            .insert({ patient_id: patient.id, tag_id: tagId })
+                        if (error && error.code !== '23505') throw error
+                    } else if (prospect) {
+                        // If no patient record, but it's a "patient" tag, we can't easily link it 
+                        // unless we create a CRM tag with the same name.
+                        // For now, let's just alert.
+                        console.warn('Cannot link patient-system tag to a non-patient prospect')
+                    }
+                }
+            }
             
-            if (error) throw error
-            
-            const newTag = allTags.find(t => t.id === tagId)
-            if (newTag) setTags(prev => [...prev, newTag])
+            if (!tags.some(t => t.id === tagId)) {
+                setTags(prev => [...prev, tagToAdd])
+            }
             setShowTagAdd(false)
         } catch (err) {
             console.error('Error adding tag:', err)
-            alert('Error al agregar etiqueta. Verifica los permisos de base de datos.')
+            alert('Error al agregar etiqueta.')
         }
     }
 
     const removeTag = async (tagId: string) => {
-        if (!prospect) return
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('crm_prospect_tags')
-                .delete()
-                .eq('prospect_id', prospect.id)
-                .eq('tag_id', tagId)
+            // Remove from both systems (silent if not exists)
+            if (prospect) {
+                await (supabase as any)
+                    .from('crm_prospect_tags')
+                    .delete()
+                    .eq('prospect_id', prospect.id)
+                    .eq('tag_id', tagId)
+            }
+
+            const normalizedPhone = phoneNumber.replace(/\D/g, '')
+            const { data: patient } = await (supabase as any)
+                .from('patients')
+                .select('id')
+                .eq('clinic_id', clinicId)
+                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
+                .maybeSingle()
             
-            if (error) throw error
+            if (patient) {
+                await (supabase as any)
+                    .from('patient_tags')
+                    .delete()
+                    .eq('patient_id', patient.id)
+                    .eq('tag_id', tagId)
+            }
+
             setTags(prev => prev.filter(t => t.id !== tagId))
         } catch (err) {
             console.error('Error removing tag:', err)

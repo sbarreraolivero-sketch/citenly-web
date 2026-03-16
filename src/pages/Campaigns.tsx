@@ -109,16 +109,33 @@ export default function Campaigns() {
 
     const fetchTags = async () => {
         try {
+            if (!profile?.clinic_id) return
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error } = await (supabase as any)
+            const { data, error } = await (supabase as any).rpc('get_tag_counts', {
+                p_clinic_id: profile.clinic_id
+            })
+
+            if (error) throw error
+            
+            // Map RPC result to Tag interface
+            const mappedTags: Tag[] = (data || []).map((t: any) => ({
+                id: t.tag_id,
+                name: t.tag_name,
+                color: t.tag_color,
+                count: Number(t.contact_count)
+            }))
+            
+            setTags(mappedTags)
+        } catch (error) {
+            console.error('Error fetching tags:', error)
+            
+            // Fallback to legacy behavior if RPC fails
+            const { data } = await (supabase as any)
                 .from('tags')
                 .select('*')
                 .eq('clinic_id', profile?.clinic_id || '')
-
-            if (error) throw error
             setTags(data || [])
-        } catch (error) {
-            console.error('Error fetching tags:', error)
         }
     }
 
