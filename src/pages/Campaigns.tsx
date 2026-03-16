@@ -18,7 +18,9 @@ import { retentionService } from '@/services/retentionService'
 interface Campaign {
     id: string
     name: string
-    segment_tag: string
+    segment_tag: string | null
+    inclusion_tags: string[]
+    exclusion_tags: string[]
     template_name: string
     status: 'draft' | 'scheduled' | 'sending' | 'completed' | 'failed'
     scheduled_at: string | null
@@ -54,7 +56,8 @@ export default function Campaigns() {
     // New Campaign State
     const [step, setStep] = useState(1)
     const [newCampaignName, setNewCampaignName] = useState('')
-    const [selectedTag, setSelectedTag] = useState('')
+    const [inclusionTags, setInclusionTags] = useState<string[]>([])
+    const [exclusionTags, setExclusionTags] = useState<string[]>([])
     const [selectedTemplate, setSelectedTemplate] = useState('')
     const [estimatedAudience, setEstimatedAudience] = useState<number | null>(null)
     const [creating, setCreating] = useState(false)
@@ -79,12 +82,12 @@ export default function Campaigns() {
     }
 
     useEffect(() => {
-        if (selectedTag && profile?.clinic_id) {
-            calculateAudience(selectedTag)
+        if ((inclusionTags.length > 0 || exclusionTags.length > 0) && profile?.clinic_id) {
+            calculateAudience(inclusionTags, exclusionTags)
         } else {
             setEstimatedAudience(null)
         }
-    }, [selectedTag, profile?.clinic_id])
+    }, [inclusionTags, exclusionTags, profile?.clinic_id])
 
     const fetchCampaigns = async () => {
         try {
@@ -119,23 +122,38 @@ export default function Campaigns() {
         }
     }
 
-    const calculateAudience = async (tagId: string) => {
-        if (tagId === 'all') {
-            // Count all patients
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { count } = await (supabase as any)
-                .from('patients')
-                .select('*', { count: 'exact', head: true })
-                .eq('clinic_id', profile?.clinic_id || '')
-            setEstimatedAudience(count)
-        } else {
-            // Count by tag
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { count } = await (supabase as any)
-                .from('patient_tags')
-                .select('*', { count: 'exact', head: true })
-                .eq('tag_id', tagId)
-            setEstimatedAudience(count)
+    const calculateAudience = async (inc: string[], exc: string[]) => {
+        try {
+            if (!profile?.clinic_id) return
+
+            // This is a complex query that we'll perform via RPC in the future
+            // for now, let's do a simplified version or count via several queries
+            // A more robust way is to use a new RPC 'get_estimated_audience'
+            
+            const { data, error } = await supabase.rpc('get_estimated_audience', {
+                p_clinic_id: profile.clinic_id,
+                p_inclusion_tags: inc,
+                p_exclusion_tags: exc
+            })
+
+            if (error) {
+                // Fallback for when RPC is not yet deployed
+                console.warn('RPC get_estimated_audience not found, using fallback count')
+                if (inc.length === 0 && exc.length === 0) {
+                    const { count } = await (supabase as any)
+                        .from('patients')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('clinic_id', profile.clinic_id)
+                    setEstimatedAudience(count)
+                } else {
+                    // Very rough estimate for MVP if RPC fails
+                    setEstimatedAudience(0) 
+                }
+            } else {
+                setEstimatedAudience(data)
+            }
+        } catch (err) {
+            console.error('Error calculating audience:', err)
         }
     }
 
@@ -151,15 +169,10 @@ export default function Campaigns() {
                 .insert({
                     clinic_id: profile.clinic_id,
                     name: newCampaignName,
-                    segment_tag: selectedTag === 'all' ? null : selectedTag,
-                    // Let's store the tag Name or ID. The schema has segment_tag text
-                    // If we store ID, it's better for linking but needs join.
-                    // For simplicity let's store ID if specific, or NULL if all (or special value).
-                    // Schema comment says "Tag to filter patients by".
+                    inclusion_tags: inclusionTags,
+                    exclusion_tags: exclusionTags,
                     template_name: selectedTemplate,
-                    status: 'draft', // Start as draft, then user clicks "Send" separately or we have a "Send Now" button?
-                    // Let's make this button "Create & Send" or just "Create Draft".
-                    // For MVP let's do "Create Draft" then sending is a trigger.
+                    status: 'draft',
                     total_target: estimatedAudience || 0
                 })
                 .select()
@@ -241,7 +254,8 @@ export default function Campaigns() {
     const resetForm = () => {
         setStep(1)
         setNewCampaignName('')
-        setSelectedTag('')
+        setInclusionTags([])
+        setExclusionTags([])
         setSelectedTemplate('')
         setEstimatedAudience(null)
     }
@@ -383,42 +397,88 @@ export default function Campaigns() {
                             </div>
 
                             {step === 1 && (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="label">Nombre de la Campaña</label>
-                                        <input
-                                            type="text"
-                                            className="input w-full"
-                                            placeholder="Ej: Promo Verano 2024"
-                                            value={newCampaignName}
-                                            onChange={(e) => setNewCampaignName(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="label">Segmento (Destinatarios)</label>
-                                        <select
-                                            className="input w-full"
-                                            value={selectedTag}
-                                            onChange={(e) => setSelectedTag(e.target.value)}
-                                        >
-                                            <option value="">Selecciona un segmento...</option>
-                                            <option value="all">Todos los Pacientes</option>
-                                            {tags.map(tag => (
-                                                <option key={tag.id} value={tag.id}>{tag.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {estimatedAudience !== null && (
-                                        <div className="bg-primary-50 text-primary-700 px-4 py-3 rounded-soft text-sm flex items-center gap-2">
-                                            <Users className="w-4 h-4" />
-                                            <span>
-                                                Público estimado: <strong>{estimatedAudience} pacientes</strong>
-                                            </span>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="label text-xs uppercase tracking-wider text-charcoal/40 font-bold mb-2 block">Nombre de la Campaña</label>
+                                            <input
+                                                type="text"
+                                                className="input w-full"
+                                                placeholder="Ej: Promo Verano 2024"
+                                                value={newCampaignName}
+                                                onChange={(e) => setNewCampaignName(e.target.value)}
+                                            />
                                         </div>
-                                    )}
-                                </div>
+
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div>
+                                                <label className="label text-xs uppercase tracking-wider text-charcoal/40 font-bold mb-2 block">Incluir etiquetas (Y)</label>
+                                                <div className="flex flex-wrap gap-2 p-3 bg-ivory rounded-soft border border-silk-beige min-h-[44px]">
+                                                    {tags.map(tag => (
+                                                        <button
+                                                            key={`inc-${tag.id}`}
+                                                            onClick={() => {
+                                                                if (inclusionTags.includes(tag.id)) {
+                                                                    setInclusionTags(inclusionTags.filter(id => id !== tag.id))
+                                                                } else {
+                                                                    setInclusionTags([...inclusionTags, tag.id])
+                                                                    setExclusionTags(exclusionTags.filter(id => id !== tag.id))
+                                                                }
+                                                            }}
+                                                            className={`
+                                                                px-2 py-1 rounded text-xs font-medium border transition-all
+                                                                ${inclusionTags.includes(tag.id)
+                                                                    ? 'bg-primary-500 text-white border-primary-600'
+                                                                    : 'bg-white text-charcoal/60 border-silk-beige hover:border-primary-300'
+                                                                }
+                                                            `}
+                                                        >
+                                                            {tag.name}
+                                                        </button>
+                                                    ))}
+                                                    {tags.length === 0 && <span className="text-xs text-charcoal/30">No hay etiquetas creadas</span>}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="label text-xs uppercase tracking-wider text-charcoal/40 font-bold mb-2 block text-red-600">Excluir etiquetas (NO)</label>
+                                                <div className="flex flex-wrap gap-2 p-3 bg-red-50/30 rounded-soft border border-red-100 min-h-[44px]">
+                                                    {tags.map(tag => (
+                                                        <button
+                                                            key={`exc-${tag.id}`}
+                                                            onClick={() => {
+                                                                if (exclusionTags.includes(tag.id)) {
+                                                                    setExclusionTags(exclusionTags.filter(id => id !== tag.id))
+                                                                } else {
+                                                                    setExclusionTags([...exclusionTags, tag.id])
+                                                                    setInclusionTags(inclusionTags.filter(id => id !== tag.id))
+                                                                }
+                                                            }}
+                                                            className={`
+                                                                px-2 py-1 rounded text-xs font-medium border transition-all
+                                                                ${exclusionTags.includes(tag.id)
+                                                                    ? 'bg-red-500 text-white border-red-600'
+                                                                    : 'bg-white text-charcoal/60 border-silk-beige hover:border-red-300'
+                                                                }
+                                                            `}
+                                                        >
+                                                            {tag.name}
+                                                        </button>
+                                                    ))}
+                                                    {tags.length === 0 && <span className="text-xs text-charcoal/30">No hay etiquetas creadas</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-primary-50 text-primary-700 px-4 py-3 rounded-soft text-sm flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Users className="w-4 h-4" />
+                                                <span>Público estimado:</span>
+                                            </div>
+                                            <strong className="text-lg">
+                                                {estimatedAudience !== null ? `${estimatedAudience} pacientes` : '--'}
+                                            </strong>
+                                        </div>
+                                    </div>
                             )}
 
                             {step === 2 && (
@@ -464,7 +524,7 @@ export default function Campaigns() {
                             {step < 2 ? (
                                 <button
                                     onClick={() => setStep(step + 1)}
-                                    disabled={!newCampaignName || !selectedTag}
+                                    disabled={!newCampaignName || (inclusionTags.length === 0 && exclusionTags.length === 0)}
                                     className="btn-primary"
                                 >
                                     Siguiente
