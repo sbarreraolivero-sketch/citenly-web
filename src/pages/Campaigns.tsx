@@ -492,7 +492,7 @@ export default function Campaigns() {
                                                 <span>Público estimado:</span>
                                             </div>
                                             <strong className="text-lg">
-                                                {estimatedAudience !== null ? `${estimatedAudience} pacientes` : '--'}
+                                                {estimatedAudience !== null ? `${estimatedAudience} ${estimatedAudience === 1 ? 'contacto' : 'contactos'}` : '--'}
                                             </strong>
                                         </div>
                                     </div>

@@ -14,24 +14,24 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     WITH all_tags AS (
-        SELECT id, name, color, clinic_id FROM public.tags
+        SELECT tags.id, tags.name, tags.color, tags.clinic_id FROM public.tags
         UNION ALL
-        SELECT id, name, color, clinic_id FROM public.crm_tags
+        SELECT crm_tags.id, crm_tags.name, crm_tags.color, crm_tags.clinic_id FROM public.crm_tags
     ),
     all_links AS (
-        SELECT tag_id, patient_id as contact_id FROM public.patient_tags
+        SELECT patient_tags.tag_id, patient_tags.patient_id as contact_id FROM public.patient_tags
         UNION ALL
-        SELECT tag_id, prospect_id as contact_id FROM public.crm_prospect_tags
+        SELECT crm_prospect_tags.tag_id, crm_prospect_tags.prospect_id as contact_id FROM public.crm_prospect_tags
     )
     SELECT 
-        t.id as tag_id,
-        t.name as tag_name,
-        t.color as tag_color,
-        COUNT(l.contact_id)::BIGINT as contact_count
-    FROM all_tags t
-    LEFT JOIN all_links l ON t.id = l.tag_id
-    WHERE t.clinic_id = p_clinic_id
-    GROUP BY t.id, t.name, t.color
+        at.id as tag_id,
+        at.name as tag_name,
+        at.color as tag_color,
+        COUNT(al.contact_id)::BIGINT as contact_count
+    FROM all_tags at
+    LEFT JOIN all_links al ON at.id = al.tag_id
+    WHERE at.clinic_id = p_clinic_id
+    GROUP BY at.id, at.name, at.color
     ORDER BY contact_count DESC;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
