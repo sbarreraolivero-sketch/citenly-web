@@ -3,6 +3,7 @@ import { Search, Phone, Send, Sparkles, MoreVertical, MessageSquare, RefreshCw, 
 import { cn, formatPhoneNumber, getInitials } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { ContactInfoSidebar } from '@/components/messages/ContactInfoSidebar'
 
 interface Message {
     id: string
@@ -28,6 +29,7 @@ export default function Messages() {
     const { profile } = useAuth()
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [selectedPhone, setSelectedPhone] = useState<string | null>(null)
+    const [sidebarPhone, setSidebarPhone] = useState<string | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [newMessage, setNewMessage] = useState('')
@@ -35,6 +37,7 @@ export default function Messages() {
     const [loadingMessages, setLoadingMessages] = useState(false)
     const [sending, setSending] = useState(false)
     const [togglingAI, setTogglingAI] = useState(false)
+    const [showSidebar, setShowSidebar] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatRef = useRef<HTMLDivElement>(null)
 
@@ -476,6 +479,16 @@ export default function Messages() {
                                             {conversation.patient_name || formatPhoneNumber(conversation.phone_number)}
                                         </p>
                                         <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSidebarPhone(conversation.phone_number);
+                                                    setShowSidebar(true);
+                                                }}
+                                                className="p-1 text-charcoal/20 hover:text-charcoal hover:bg-silk-beige/50 rounded transition-colors"
+                                            >
+                                                <MoreVertical className="w-3.5 h-3.5" />
+                                            </button>
                                             {conversation.requires_human && (
                                                 <span title="Atención humana requerida" className="flex-shrink-0 flex">
                                                     <BellOff className="w-3.5 h-3.5 text-red-500" />
@@ -552,7 +565,13 @@ export default function Messages() {
                                     )}
                                 </button>
                                 <span className="text-xs text-charcoal/40">{selectedConversation.message_count} msgs</span>
-                                <button className="p-2 text-charcoal/50 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors">
+                                <button
+                                    onClick={() => {
+                                        setSidebarPhone(selectedPhone)
+                                        setShowSidebar(true)
+                                    }}
+                                    className="p-2 text-charcoal/50 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors"
+                                >
                                     <MoreVertical className="w-5 h-5" />
                                 </button>
                             </div>
@@ -688,6 +707,21 @@ export default function Messages() {
                     </div>
                 )}
             </div>
+
+            {/* Contact Info Sidebar */}
+            {showSidebar && sidebarPhone && profile?.clinic_id && (
+                <div className="fixed inset-0 z-50 md:relative md:inset-auto md:z-0 md:flex">
+                    <div 
+                        className="absolute inset-0 bg-charcoal/20 backdrop-blur-sm md:hidden" 
+                        onClick={() => setShowSidebar(false)}
+                    />
+                    <ContactInfoSidebar 
+                        phoneNumber={sidebarPhone}
+                        clinicId={profile.clinic_id}
+                        onClose={() => setShowSidebar(false)}
+                    />
+                </div>
+            )}
         </div>
     )
 }
