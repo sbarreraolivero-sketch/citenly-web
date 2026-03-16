@@ -96,6 +96,8 @@ export default function Settings() {
     const [activeTab, setActiveTab] = useState('profile') // Default to profile for non-owners safety
     const [clinicName, setClinicName] = useState('Clínica Estética Demo')
     const [clinicAddress, setClinicAddress] = useState('')
+    const [addressReferences, setAddressReferences] = useState('')
+    const [googleMapsUrl, setGoogleMapsUrl] = useState('')
     const [services, setServices] = useState<any[]>([])
     const [workingHours, setWorkingHours] = useState<any>(mockWorkingHours)
     const [showMobileList, setShowMobileList] = useState(true)
@@ -357,6 +359,8 @@ export default function Settings() {
                 if (data) {
                     setClinicName(data.clinic_name)
                     setClinicAddress(data.clinic_address || '')
+                    setAddressReferences(data.address_references || '')
+                    setGoogleMapsUrl(data.google_maps_url || '')
                     setCurrency(data.currency || 'MXN')
                     setTimezone(data.timezone || 'America/Mexico_City')
                     setTemplateSurvey(data.template_survey || '')
@@ -744,6 +748,8 @@ export default function Settings() {
                 .update({
                     clinic_name: clinicName,
                     clinic_address: clinicAddress,
+                    address_references: addressReferences,
+                    google_maps_url: googleMapsUrl,
                     currency: currency,
                     timezone: timezone,
                     template_survey: templateSurvey,
@@ -1168,6 +1174,38 @@ export default function Settings() {
                                         />
                                         <p className="text-xs text-charcoal/40 mt-1">
                                             Esta dirección será utilizada por el asistente IA para informar a los clientes
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                            Referencias de la Dirección
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: A un costado de la farmacia, frente al parque..."
+                                            value={addressReferences}
+                                            onChange={(e) => setAddressReferences(e.target.value)}
+                                            className="input-soft"
+                                        />
+                                        <p className="text-xs text-charcoal/40 mt-1">
+                                            Ayuda a tus clientes a llegar más fácilmente
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                            Enlace de Google Maps
+                                        </label>
+                                        <input
+                                            type="url"
+                                            placeholder="https://goo.gl/maps/..."
+                                            value={googleMapsUrl}
+                                            onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                                            className="input-soft"
+                                        />
+                                        <p className="text-xs text-charcoal/40 mt-1">
+                                            El enlace directo para que abran el mapa en su celular
                                         </p>
                                     </div>
 

@@ -35,6 +35,7 @@ interface YCloudPayload {
         };
         wamid?: string;
         context?: any;
+        customerProfile?: { name: string };
     };
 }
 
@@ -209,8 +210,20 @@ const getHistory = async (sb: ReturnType<typeof createClient>, clinicId: string,
     return data?.reverse() || [];
 };
 
+const isValidUUID = (uuid: string) => {
+    const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return regex.test(uuid);
+};
+
 const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, content: string, direction: string, extra = {}) => {
-    const { data, error } = await sb.from("messages").insert({ clinic_id: clinicId, phone_number: phone, content, direction, ...extra }).select("id").single();
+    // Prevent crash if campaign_id is not a valid UUID (e.g. numeric Meta Ad ID)
+    const extraCopy = { ...extra } as any;
+    if (extraCopy.campaign_id && !isValidUUID(extraCopy.campaign_id)) {
+        console.warn(`[saveMsg] Invalid UUID for campaign_id: ${extraCopy.campaign_id}. Setting to null.`);
+        delete extraCopy.campaign_id;
+    }
+
+    const { data, error } = await sb.from("messages").insert({ clinic_id: clinicId, phone_number: phone, content, direction, ...extraCopy }).select("id").single();
     if (error) {
         console.error(`[saveMsg] Error inserting message (dir: ${direction}):`, error);
         throw new Error(`saveMsg failed: ${error.message}`);
@@ -491,8 +504,8 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         return { success: false, message: errorMsg };
     }
 
-    // Update CRM stage to "Cita Agendada"
-    await updateProspectStage(sb, clinicId, normalizedPhone, "Cita Agendada");
+    // Update CRM stage to "Cita Agendada" AND update name if needed
+    await updateProspectStage(sb, clinicId, normalizedPhone, "Cita Agendada", args.patient_name);
 
     const d = new Date(`${args.date}T${args.time}:00`);
     const h = parseInt(args.time.split(":")[0]);
@@ -930,7 +943,7 @@ const getStageId = async (sb: ReturnType<typeof createClient>, clinicId: string,
     return data?.id;
 };
 
-const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, targetStageName: string) => {
+const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, targetStageName: string, name?: string) => {
     const normalizedPhone = normalizePhone(phone);
     // 1. Get target stage ID
     const targetId = await getStageId(sb, clinicId, targetStageName);
@@ -939,7 +952,7 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     // 2. Get current prospect and their stage
     // Use OR to be resilient to non-normalized old data
     const { data: prospect } = await sb.from("crm_prospects")
-        .select("id, stage_id, crm_pipeline_stages(name, position)") // Join to get stage info
+        .select("id, name, stage_id, crm_pipeline_stages(name, position)") // Join to get stage info
         .eq("clinic_id", clinicId)
         .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
         .limit(1)
@@ -953,34 +966,49 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     // Hierarchy: Nuevo Prospecto (low) -> Calificado (med) -> Cita Agendada (high)
     // We don't want to move BACK from Cita Agendada to Calificado just because they asked a question.
 
-    let shouldUpdate = false;
+    let shouldUpdateStage = false;
 
-    if (!prospect.stage_id) shouldUpdate = true;
-    else if (targetStageName.toLowerCase() === "nuevo prospecto") shouldUpdate = false; // Never overwrite with "New" if exists
-    else if (targetStageName.toLowerCase() === "cita agendada") shouldUpdate = true; // Always update to Scheduled (highest priority here)
+    if (!prospect.stage_id) shouldUpdateStage = true;
+    else if (targetStageName.toLowerCase() === "nuevo prospecto") shouldUpdateStage = false; // Never overwrite with "New" if exists
+    else if (targetStageName.toLowerCase() === "cita agendada") shouldUpdateStage = true; // Always update to Scheduled (highest priority here)
     else if (targetStageName.toLowerCase() === "calificado") {
         // Only update to Calificado if current is NOT "Cita Agendada" or "Cerrado"
         const forbidden = ["cita agendada", "cerrado"];
-        if (!forbidden.includes(currentStageName?.toLowerCase() || "")) shouldUpdate = true;
+        if (!forbidden.includes(currentStageName?.toLowerCase() || "")) shouldUpdateStage = true;
     }
 
-    if (shouldUpdate) {
-        await sb.from("crm_prospects").update({ stage_id: targetId }).eq("id", prospect.id);
-        console.log(`[CRM] Moved ${phone} to '${targetStageName}'`);
+    const updates: Record<string, any> = {};
+    if (shouldUpdateStage) updates.stage_id = targetId;
+    
+    // Update name if provided and existing is generic
+    if (name && (!prospect.name || prospect.name.includes("Sin nombre"))) {
+        updates.name = name;
+    }
+
+    if (Object.keys(updates).length > 0) {
+        await sb.from("crm_prospects").update(updates).eq("id", prospect.id);
+        if (updates.stage_id) console.log(`[CRM] Moved ${phone} to '${targetStageName}'`);
+        if (updates.name) console.log(`[CRM] Updated name for ${phone} to '${name}'`);
     }
 };
 
-const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string) => {
+const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, name?: string) => {
     const normalizedPhone = normalizePhone(phone);
     try {
         const { data: existing } = await sb.from("crm_prospects")
-            .select("id")
+            .select("id, name")
             .eq("clinic_id", clinicId)
             .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
             .limit(1)
             .maybeSingle();
 
-        if (existing) return existing.id;
+        if (existing) {
+            // Update name if current is generic and we have a better one
+            if (name && (!existing.name || existing.name.includes("Sin nombre"))) {
+                await sb.from("crm_prospects").update({ name }).eq("id", existing.id);
+            }
+            return existing.id;
+        }
         console.log(`[CRM] No prospect found for ${normalizedPhone}, creating...`);
 
         // Try to find "Nuevo Prospecto" specifically, or fallback to default
@@ -1004,7 +1032,7 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
         const { data: newProspect, error: insertError } = await sb.from("crm_prospects").insert({
             clinic_id: clinicId,
             stage_id: stageId,
-            name: "Sin nombre (Auto)",
+            name: name || "Sin nombre (Auto)",
             phone: normalizedPhone,
             source: "whatsapp",
             score: 0
@@ -1015,7 +1043,7 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
              return null;
         }
 
-        console.log(`Auto-created prospect for phone: ${normalizedPhone}`);
+        console.log(`Auto-created prospect for phone: ${normalizedPhone} (Name: ${name || 'Auto'})`);
         return newProspect?.id;
     } catch (e) {
         console.error("autoUpsertMinimalProspect error:", e);
@@ -1239,7 +1267,8 @@ Deno.serve(async (req) => {
         });
 
         // Auto-create prospect in CRM (best-effort, non-blocking)
-        autoUpsertMinimalProspect(sb, clinic.id, from).catch(e => console.error("Auto-prospect failed:", e));
+        const profileName = msgObj.customerProfile?.name;
+        autoUpsertMinimalProspect(sb, clinic.id, from, profileName).catch(e => console.error("Auto-prospect failed:", e));
 
         if (!clinic.ai_auto_respond) return new Response(JSON.stringify({ status: "saved" }), { headers: corsHeaders });
 
@@ -1329,7 +1358,9 @@ Deno.serve(async (req) => {
                 const sysPrompt = `${clinic.ai_personality}
 
 Clínica: ${clinic.clinic_name}
-Dirección: ${clinic.clinic_address || clinic.address || "No especificada, consultar al equipo."}
+Dirección: ${clinic.clinic_address || clinic.address || "No especificada."}
+${clinic.address_references ? `Referencias de Dirección: ${clinic.address_references}` : ""}
+${clinic.google_maps_url ? `Mapa Google Maps: ${clinic.google_maps_url}` : ""}
 Horario General de la Clínica: ${hoursSummary}
 
 CONTEXTO DE FECHAS (FUENTE DE VERDAD):
