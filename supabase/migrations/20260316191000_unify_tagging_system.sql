@@ -48,7 +48,6 @@ DECLARE
     v_count BIGINT;
 BEGIN
     WITH all_contacts AS (
-        -- Standardize phone numbers to avoid duplicates between tables
         SELECT id, clinic_id, regexp_replace(phone_number, '\D', '', 'g') as clean_phone FROM public.patients
         UNION ALL
         SELECT id, clinic_id, regexp_replace(phone, '\D', '', 'g') as clean_phone FROM public.crm_prospects
@@ -57,11 +56,19 @@ BEGIN
         SELECT patient_id as contact_id, tag_id FROM public.patient_tags
         UNION ALL
         SELECT prospect_id as contact_id, tag_id FROM public.crm_prospect_tags
+    ),
+    phones_to_exclude AS (
+        -- Find all clean_phones that HAVE at least one excluded tag assigned to ANY of their records
+        SELECT DISTINCT c.clean_phone
+        FROM all_contacts c
+        JOIN all_links l ON c.id = l.contact_id
+        WHERE l.tag_id = ANY(p_exclusion_tags)
     )
     SELECT COUNT(DISTINCT c.clean_phone) INTO v_count
     FROM all_contacts c
     WHERE c.clinic_id = p_clinic_id
     AND (
+        -- Inclusion: Has at least one of the tags (if any provided)
         p_inclusion_tags IS NULL OR 
         ARRAY_LENGTH(p_inclusion_tags, 1) IS NULL OR
         EXISTS (
@@ -70,14 +77,11 @@ BEGIN
             AND l.tag_id = ANY(p_inclusion_tags)
         )
     )
+    -- Global Exclusion: Phone number must not be in the exclusion list
     AND (
         p_exclusion_tags IS NULL OR 
         ARRAY_LENGTH(p_exclusion_tags, 1) IS NULL OR
-        NOT EXISTS (
-            SELECT 1 FROM all_links l 
-            WHERE l.contact_id = c.id 
-            AND l.tag_id = ANY(p_exclusion_tags)
-        )
+        c.clean_phone NOT IN (SELECT clean_phone FROM phones_to_exclude)
     );
     
     RETURN v_count;
