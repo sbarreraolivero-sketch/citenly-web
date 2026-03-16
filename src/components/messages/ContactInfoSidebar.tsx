@@ -62,13 +62,16 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
     const fetchProspectData = async () => {
         setLoading(true)
         try {
+            // Normalize phone for lookup (matching webhook logic)
+            const normalizedPhone = phoneNumber.replace(/\D/g, '')
+
             // Fetch prospect
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: prospectData, error: pError } = await (supabase as any)
                 .from('crm_prospects')
                 .select('*')
                 .eq('clinic_id', clinicId)
-                .or(`phone.eq.${phoneNumber},phone.eq.+${phoneNumber}`)
+                .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
                 .maybeSingle()
 
             if (pError) throw pError
@@ -137,6 +140,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             setShowTagAdd(false)
         } catch (err) {
             console.error('Error adding tag:', err)
+            alert('Error al agregar etiqueta. Verifica los permisos de base de datos.')
         }
     }
 
@@ -154,6 +158,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             setTags(prev => prev.filter(t => t.id !== tagId))
         } catch (err) {
             console.error('Error removing tag:', err)
+            alert('Error al eliminar etiqueta.')
         }
     }
 
@@ -173,6 +178,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             setNewNote('')
         } catch (err) {
             console.error('Error saving note:', err)
+            alert('Error al guardar la nota.')
         } finally {
             setSaving(false)
         }
