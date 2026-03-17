@@ -242,6 +242,9 @@ export default function Settings() {
         monthlyUsed: number
     } | null>(null)
 
+    // AI usage state
+    const [aiMessagesUsed, setAiMessagesUsed] = useState(0)
+
     // Payment return message state
     const [paymentMessage, setPaymentMessage] = useState<{ type: 'success' | 'error' | 'pending'; text: string } | null>(null)
 
@@ -394,6 +397,25 @@ export default function Settings() {
                 }
             } catch (error) {
                 console.error('Error loading settings:', error)
+            }
+
+            try {
+                // Fetch AI messages count for current month
+                const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+                const { count, error: countError } = await (supabase as any)
+                    .from('messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('clinic_id', profile.clinic_id)
+                    .eq('ai_generated', true)
+                    .gte('created_at', startOfMonth)
+
+                if (countError) {
+                    console.error('Error fetching AI message count:', countError)
+                } else {
+                    setAiMessagesUsed(count || 0)
+                }
+            } catch (error) {
+                console.error('Error counting AI messages:', error)
             }
 
             try {
@@ -1752,7 +1774,7 @@ export default function Settings() {
                                     <div>
                                         <div className="flex justify-between text-sm mb-2">
                                             <span className="text-charcoal/60">Mensajes de IA</span>
-                                            <span className="font-medium text-charcoal">0 / ∞</span>
+                                            <span className="font-medium text-charcoal">{aiMessagesUsed} / ∞</span>
                                         </div>
                                         <div className="h-2 bg-silk-beige rounded-full overflow-hidden">
                                             <div className="h-full bg-accent-500 rounded-full" style={{ width: '0%' }} />

@@ -13,7 +13,7 @@ interface PremiumFeatureProps {
 export function PremiumFeature({ children, fallback, requiredPlan = 'radiance', showLock = false }: PremiumFeatureProps) {
     const { subscription } = useAuth()
 
-    const plans = ['essence', 'prestige', 'radiance']
+    const plans = ['essence', 'radiance', 'prestige']
     const currentPlan = subscription?.plan || 'essence'
 
     // Check if current plan meets requirement
