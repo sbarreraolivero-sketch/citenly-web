@@ -738,8 +738,20 @@ const escalateToHuman = async (sb: ReturnType<typeof createClient>, clinicId: st
 // =============================================
 const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { tag_name: string; tag_color?: string }) => {
     try {
-        const tagName = args.tag_name.trim();
+        let tagName = args.tag_name.trim();
         if (!tagName) return { success: false, message: "Nombre de etiqueta vacío." };
+
+        // Normalization Layer: Consolidate common interest variants
+        const lowerName = tagName.toLowerCase();
+        if (lowerName.includes("microblading") && (lowerName.includes("ceja") || lowerName.includes("interés"))) {
+            tagName = "Interés Microblading";
+        } else if (lowerName.includes("perfilado") && (lowerName.includes("ceja") || lowerName.includes("interés"))) {
+            tagName = "Interés Perfilado";
+        } else if (lowerName.includes("labio") && (lowerName.includes("interés") || lowerName.includes("micropigmentación"))) {
+            tagName = "Interés Labios";
+        } else if (lowerName.includes("pestaña") || lowerName.includes("lifting") || lowerName.includes("lash")) {
+            tagName = "Interés Pestañas";
+        }
 
         const defaultColor = "#3B82F6"; // Blue
         const tagColor = args.tag_color || defaultColor;
@@ -1411,8 +1423,12 @@ REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
       - Tipo de cuenta: Cuenta Vista / Chequera electrónica
       - Número de cuenta: 80070001890
    e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
-10. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
-11. UBICACIÓN Y MAPA: Para responder sobre la ubicación, usa EXCLUSIVAMENTE los campos 'Dirección', 'Referencias de Dirección' y 'Mapa Google Maps' proporcionados arriba. Ignora cualquier dirección distinta o incompleta de la base de conocimiento.
+10. SEGMENTACIÓN Y CRM (PROACTIVIDAD):
+    - Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
+    - Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
+    - Usa 'Interés [Nombre del Servicio]' como formato preferido para etiquetas de servicio.
+11. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
+12. UBICACIÓN Y MAPA: Para responder sobre la ubicación, usa EXCLUSIVAMENTE los campos 'Dirección', 'Referencias de Dirección' y 'Mapa Google Maps' proporcionados arriba. Ignora cualquier dirección distinta o incompleta de la base de conocimiento.
 
 
 REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
