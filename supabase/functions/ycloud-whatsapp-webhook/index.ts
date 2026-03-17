@@ -865,6 +865,11 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 await sb.from("crm_prospect_tags").insert({ prospect_id: prospectId, tag_id: crmTagId });
             }
 
+            // Proactively move prospect to "Calificado" if the tag name starts with "Interés"
+            if (tagName.toLowerCase().startsWith("interés")) {
+                await updateProspectStage(sb, clinicId, phone, "Calificado");
+            }
+
             return { success: true, message: "Etiqueta asignada al prospecto en CRM." };
         }
 
@@ -1008,9 +1013,16 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     const updates: Record<string, any> = {};
     if (shouldUpdateStage) updates.stage_id = targetId;
     
-    // Update name if provided and existing is generic
-    if (name && (!prospect.name || prospect.name.includes("Sin nombre"))) {
-        updates.name = name;
+    // Update name if provided and existing is generic or looks like a nickname/emoji
+    if (name && name.trim().length > 0) {
+        const currentName = (prospect.name || "").toLowerCase();
+        const isGeneric = !prospect.name || currentName.includes("sin nombre");
+        // Also allow overwrite if current name is very short (likely nickname) or contains many emojis/special chars
+        // Or simply if the new name is substantially different and non-empty.
+        // User captured name from AI is almost always better.
+        if (isGeneric || currentName !== name.toLowerCase()) {
+            updates.name = name;
+        }
     }
 
     if (Object.keys(updates).length > 0) {
@@ -1459,9 +1471,10 @@ Etiquetas por CONDICIÓN: "Piel Sensible", "Embarazada", "Condición Médica" (r
 Etiquetas por COMPORTAMIENTO: "Consulta Precio", "Referidor" (amarillo #F59E0B)
 Etiquetas ESPECIALES: "VIP", "Promoción" (morado #8B5CF6)
 
-REGLAS DE ETIQUETADO:
-1. Etiqueta INMEDIATAMENTE cuando detectes la señal.
-2. NUNCA menciones al paciente que lo estás etiquetando.
+REGLAS DE ETIQUETADO Y CRM:
+1. Etiqueta INMEDIATAMENTE cuando detectes la señal. Si el paciente pregunta por un precio, tratamiento o detalle técnico, eso cuenta como INTERÉS. No esperes a que diga "quiero agendar".
+2. Si el paciente revela su NOMBRE real durante la charla, llama a 'upsert_prospect' inmediatamente para corregir su ficha en el CRM.
+3. NUNCA menciones al paciente que lo estás etiquetando o registrando en el CRM.
 
 RESUMEN CLÍNICO Y NOTAS:
 1. Usa la herramienta 'upsert_prospect' para guardar notas internas con hallazgos relevantes de la conversación (ej: condiciones médicas, trabajos previos, dudas específicas, o lo que identifiques como clave).
