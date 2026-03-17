@@ -29,6 +29,8 @@ import {
     Tag,
     Users,
     ArrowLeft,
+    Instagram,
+    Facebook,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
@@ -98,6 +100,9 @@ export default function Settings() {
     const [clinicAddress, setClinicAddress] = useState('')
     const [addressReferences, setAddressReferences] = useState('')
     const [googleMapsUrl, setGoogleMapsUrl] = useState('')
+    const [instagramUrl, setInstagramUrl] = useState('')
+    const [facebookUrl, setFacebookUrl] = useState('')
+    const [tiktokUrl, setTiktokUrl] = useState('')
     const [services, setServices] = useState<any[]>([])
     const [workingHours, setWorkingHours] = useState<any>(mockWorkingHours)
     const [showMobileList, setShowMobileList] = useState(true)
@@ -364,6 +369,9 @@ export default function Settings() {
                     setClinicAddress(data.clinic_address || '')
                     setAddressReferences(data.address_references || '')
                     setGoogleMapsUrl(data.google_maps_url || '')
+                    setInstagramUrl(data.instagram_url || '')
+                    setFacebookUrl(data.facebook_url || '')
+                    setTiktokUrl(data.tiktok_url || '')
                     setCurrency(data.currency || 'MXN')
                     setTimezone(data.timezone || 'America/Mexico_City')
                     setTemplateSurvey(data.template_survey || '')
@@ -772,6 +780,9 @@ export default function Settings() {
                     clinic_address: clinicAddress,
                     address_references: addressReferences,
                     google_maps_url: googleMapsUrl,
+                    instagram_url: instagramUrl,
+                    facebook_url: facebookUrl,
+                    tiktok_url: tiktokUrl,
                     currency: currency,
                     timezone: timezone,
                     template_survey: templateSurvey,
@@ -1229,6 +1240,48 @@ export default function Settings() {
                                         <p className="text-xs text-charcoal/40 mt-1">
                                             El enlace directo para que abran el mapa en su celular
                                         </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
+                                                <Instagram className="w-4 h-4 text-pink-600" />
+                                                Instagram
+                                            </label>
+                                            <input
+                                                type="url"
+                                                placeholder="https://instagram.com/..."
+                                                value={instagramUrl}
+                                                onChange={(e) => setInstagramUrl(e.target.value)}
+                                                className="input-soft"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
+                                                <Facebook className="w-4 h-4 text-blue-600" />
+                                                Facebook
+                                            </label>
+                                            <input
+                                                type="url"
+                                                placeholder="https://facebook.com/..."
+                                                value={facebookUrl}
+                                                onChange={(e) => setFacebookUrl(e.target.value)}
+                                                className="input-soft"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
+                                                <Globe className="w-4 h-4 text-charcoal/60" />
+                                                TikTok
+                                            </label>
+                                            <input
+                                                type="url"
+                                                placeholder="https://tiktok.com/@..."
+                                                value={tiktokUrl}
+                                                onChange={(e) => setTiktokUrl(e.target.value)}
+                                                className="input-soft"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div>

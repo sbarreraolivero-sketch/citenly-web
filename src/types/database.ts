@@ -35,6 +35,9 @@ export interface Database {
                     trial_end_date: string | null
                     mercadopago_customer_id: string | null
                     mercadopago_card_id: string | null
+                    instagram_url: string | null
+                    facebook_url: string | null
+                    tiktok_url: string | null
                 }
                 Insert: {
                     id?: string
@@ -61,6 +64,9 @@ export interface Database {
                     trial_end_date?: string | null
                     mercadopago_customer_id?: string | null
                     mercadopago_card_id?: string | null
+                    instagram_url?: string | null
+                    facebook_url?: string | null
+                    tiktok_url?: string | null
                 }
                 Update: {
                     id?: string
@@ -87,6 +93,9 @@ export interface Database {
                     trial_end_date?: string | null
                     mercadopago_customer_id?: string | null
                     mercadopago_card_id?: string | null
+                    instagram_url?: string | null
+                    facebook_url?: string | null
+                    tiktok_url?: string | null
                 }
             }
             appointments: {

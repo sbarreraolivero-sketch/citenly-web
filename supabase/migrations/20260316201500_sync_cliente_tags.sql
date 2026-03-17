@@ -66,6 +66,18 @@ BEGIN
         INSERT INTO public.patient_tags (patient_id, tag_id) 
         VALUES (p_patient_id, v_tag_id) 
         ON CONFLICT DO NOTHING;
+
+        -- 3.b Remove "Prospect" tags now that they are a client
+        -- Includes tags starting with "Interés" or exactly "Prospecto" / "Prospect"
+        DELETE FROM public.patient_tags pt
+        USING public.tags t
+        WHERE pt.tag_id = t.id
+        AND pt.patient_id = p_patient_id
+        AND (
+            t.name ILIKE 'Interés %' OR 
+            t.name ILIKE 'Prospecto' OR 
+            t.name ILIKE 'Prospect'
+        );
     END IF;
 
     -- 4. Cliente Frecuente
