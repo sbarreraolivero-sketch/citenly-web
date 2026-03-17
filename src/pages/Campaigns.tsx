@@ -143,34 +143,31 @@ export default function Campaigns() {
         try {
             if (!profile?.clinic_id) return
 
-            // This is a complex query that we'll perform via RPC in the future
-            // for now, let's do a simplified version or count via several queries
-            // A more robust way is to use a new RPC 'get_estimated_audience'
+            // If no tags selected, audience is the total count of unique contacts
+            // But usually campaigns require at least one segment or exclusion.
+            // If the user wants everyone, we might need a "catch-all" or check if both are empty.
+            if (inc.length === 0 && exc.length === 0) {
+                // Simplified total unique contacts count
+                const { data: totalUnique } = await (supabase as any).rpc('get_estimated_audience', {
+                    p_clinic_id: profile.clinic_id,
+                    p_inclusion_tags: null,
+                    p_exclusion_tags: null
+                })
+                setEstimatedAudience(totalUnique || 0)
+                return
+            }
             
             const { data, error } = await (supabase as any).rpc('get_estimated_audience', {
                 p_clinic_id: profile.clinic_id,
-                p_inclusion_tags: inc,
-                p_exclusion_tags: exc
+                p_inclusion_tags: inc.length > 0 ? inc : null,
+                p_exclusion_tags: exc.length > 0 ? exc : null
             })
 
-            if (error) {
-                // Fallback for when RPC is not yet deployed
-                console.warn('RPC get_estimated_audience not found, using fallback count')
-                if (inc.length === 0 && exc.length === 0) {
-                    const { count } = await (supabase as any)
-                        .from('patients')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('clinic_id', profile.clinic_id)
-                    setEstimatedAudience(count)
-                } else {
-                    // Very rough estimate for MVP if RPC fails
-                    setEstimatedAudience(0) 
-                }
-            } else {
-                setEstimatedAudience(data)
-            }
+            if (error) throw error
+            setEstimatedAudience(data)
         } catch (err) {
             console.error('Error calculating audience:', err)
+            setEstimatedAudience(0)
         }
     }
 
@@ -433,19 +430,21 @@ export default function Campaigns() {
                                                     {tags.map(tag => (
                                                         <button
                                                             key={`inc-${tag.id}`}
-                                                            onClick={() => {
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
                                                                 if (inclusionTags.includes(tag.id)) {
-                                                                    setInclusionTags(inclusionTags.filter(id => id !== tag.id))
+                                                                    setInclusionTags(prev => prev.filter(id => id !== tag.id))
                                                                 } else {
-                                                                    setInclusionTags([...inclusionTags, tag.id])
-                                                                    setExclusionTags(exclusionTags.filter(id => id !== tag.id))
+                                                                    setInclusionTags(prev => [...prev, tag.id])
+                                                                    setExclusionTags(prev => prev.filter(id => id !== tag.id))
                                                                 }
                                                             }}
                                                             className={`
-                                                                px-2 py-1 rounded text-xs font-medium border transition-all
+                                                                px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-all
                                                                 ${inclusionTags.includes(tag.id)
-                                                                    ? 'bg-primary-500 text-white border-primary-600'
-                                                                    : 'bg-white text-charcoal/60 border-silk-beige hover:border-primary-300'
+                                                                    ? 'bg-primary-500 text-white border-primary-600 shadow-sm'
+                                                                    : 'bg-white text-charcoal/40 border-silk-beige hover:border-primary-300'
                                                                 }
                                                             `}
                                                         >
@@ -462,19 +461,21 @@ export default function Campaigns() {
                                                     {tags.map(tag => (
                                                         <button
                                                             key={`exc-${tag.id}`}
-                                                            onClick={() => {
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
                                                                 if (exclusionTags.includes(tag.id)) {
-                                                                    setExclusionTags(exclusionTags.filter(id => id !== tag.id))
+                                                                    setExclusionTags(prev => prev.filter(id => id !== tag.id))
                                                                 } else {
-                                                                    setExclusionTags([...exclusionTags, tag.id])
-                                                                    setInclusionTags(inclusionTags.filter(id => id !== tag.id))
+                                                                    setExclusionTags(prev => [...prev, tag.id])
+                                                                    setInclusionTags(prev => prev.filter(id => id !== tag.id))
                                                                 }
                                                             }}
                                                             className={`
-                                                                px-2 py-1 rounded text-xs font-medium border transition-all
+                                                                px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-all
                                                                 ${exclusionTags.includes(tag.id)
-                                                                    ? 'bg-red-500 text-white border-red-600'
-                                                                    : 'bg-white text-charcoal/60 border-silk-beige hover:border-red-300'
+                                                                    ? 'bg-red-500 text-white border-red-600 shadow-sm'
+                                                                    : 'bg-white text-charcoal/40 border-silk-beige hover:border-red-300'
                                                                 }
                                                             `}
                                                         >
