@@ -602,6 +602,10 @@ Clínica: ${clinic.clinic_name}
 Dirección: ${clinic.clinic_address || clinic.address || "No especificada"}
 ${clinic.address_references ? `Referencias de Dirección: ${clinic.address_references}` : ""}
 ${clinic.google_maps_url ? `Mapa Google Maps: ${clinic.google_maps_url}` : ""}
+${clinic.instagram_url ? `- Instagram: ${clinic.instagram_url}` : ""}
+${clinic.facebook_url ? `- Facebook: ${clinic.facebook_url}` : ""}
+${clinic.tiktok_url ? `- TikTok: ${clinic.tiktok_url}` : ""}
+${clinic.website_url ? `- Sitio Web: ${clinic.website_url}` : ""}
 Horario General de la Clínica: ${hoursSummary}
 FECHA DE HOY (ISO): ${localDateISO} (${todayDay})
 MAÑANA: ${tomorrowDay} ${tomorrowISO}
@@ -665,6 +669,9 @@ Usa la función 'tag_patient' PROACTIVAMENTE para segmentar al paciente internam
 REGLAS DE ETIQUETADO:
 1. Etiqueta INMEDIATAMENTE cuando detectes la señal.
 2. NUNCA menciones al paciente que lo estás etiquetando.
+
+11. REDES SOCIALES Y WEB: Si el paciente solicita nuestras redes sociales (Instagram, Facebook o TikTok) o nuestro sitio web, proporciónale exclusivamente los enlaces oficiales listados arriba. Si no hay una red o web configurada, informa amablemente que pronto estarán disponibles.
+12. UBICACIÓN Y MAPA: Usa los campos de Dirección y Mapa proporcionados arriba.
 
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
 
