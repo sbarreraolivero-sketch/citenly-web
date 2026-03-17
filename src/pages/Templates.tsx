@@ -10,6 +10,7 @@ export default function Templates() {
 
     const [templates, setTemplates] = useState<YCloudTemplate[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [isCreating, setIsCreating] = useState(false)
     const [creatingTemplate, setCreatingTemplate] = useState(false)
     const [deletingTemplate, setDeletingTemplate] = useState<string | null>(null)
@@ -63,11 +64,12 @@ export default function Templates() {
         if (!clinicId) return
         try {
             setLoading(true)
+            setError(null)
             const remoteTemplates = await retentionService.getRemoteTemplates(clinicId)
             setTemplates(remoteTemplates)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error loading templates:', err)
-            // Error handling handled internally by service/toast usually, or we can toast here
+            setError(err.message || 'Error al cargar las plantillas de YCloud')
         } finally {
             setLoading(false)
         }
@@ -506,7 +508,26 @@ export default function Templates() {
                     </div>
                 ))}
 
-                {templates.length === 0 && !isCreating && (
+                {error && !isCreating && (
+                    <div className="col-span-full py-16 text-center border-2 border-dashed border-red-200 bg-red-50/30 rounded-2xl">
+                        <ShieldAlert className="w-12 h-12 text-red-500/40 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-red-700 mb-2">Error al sincronizar plantillas</h3>
+                        <p className="text-red-600/70 max-w-sm mx-auto mb-6">
+                            {error === 'Unauthorized' 
+                                ? 'Tu sesión ha expirado o no tienes permisos suficientes. Por favor, intenta cerrar sesión y volver a entrar.'
+                                : `Hubo un problema al conectar con YCloud: ${error}`}
+                        </p>
+                        <button
+                            onClick={loadTemplates}
+                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-sm flex items-center gap-2 mx-auto"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Reintentar Sincronización
+                        </button>
+                    </div>
+                )}
+
+                {!error && templates.length === 0 && !isCreating && (
                     <div className="col-span-full py-16 text-center border-2 border-dashed border-silk-beige rounded-2xl">
                         <FileText className="w-12 h-12 text-charcoal/20 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-charcoal mb-2">No hay plantillas configuradas</h3>

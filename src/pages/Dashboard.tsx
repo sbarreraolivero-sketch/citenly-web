@@ -105,7 +105,7 @@ export default function Dashboard() {
                 // Fetch Upcoming Appointments
                 const { data: appointments } = await supabase
                     .from('appointments')
-                    .select('*')
+                    .select('id, patient_name, service, appointment_date, status')
                     .gte('appointment_date', new Date().toISOString())
                     .eq('clinic_id', profile.clinic_id)
                     .order('appointment_date', { ascending: true })
@@ -114,7 +114,7 @@ export default function Dashboard() {
                 // Fetch Recent Messages
                 const { data: messages } = await supabase
                     .from('messages')
-                    .select('*')
+                    .select('id, phone_number, content, created_at, direction, status')
                     .eq('clinic_id', profile.clinic_id)
                     .order('created_at', { ascending: false })
                     .limit(3)
@@ -200,7 +200,7 @@ export default function Dashboard() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { data: surveys } = await (supabase as any)
                     .from('satisfaction_surveys')
-                    .select('*')
+                    .select('id, status, rating, created_at')
                     .gte('created_at', startOfMonth)
                     .eq('clinic_id', profile.clinic_id)
 

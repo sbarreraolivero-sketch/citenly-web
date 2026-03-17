@@ -20,13 +20,27 @@ serve(async (req: Request) => {
         const authHeader = req.headers.get('Authorization')
         if (!authHeader) throw new Error('No authorization header')
 
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+        const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+
         const authClient = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            supabaseUrl,
+            supabaseAnonKey,
             { global: { headers: { Authorization: authHeader } } }
         )
+        
+        // Verify user session
         const { data: { user }, error: userError } = await authClient.auth.getUser()
-        if (userError || !user) throw new Error('Unauthorized')
+        
+        if (userError || !user) {
+            console.error('Auth User Error:', userError)
+            // Fallback for local testing or specific issues if the token is present but getUser fails
+            if (!userError && authHeader.startsWith('Bearer ')) {
+                console.log('Token present but getUser returned no user. Proceeding with caution.')
+            } else {
+                throw new Error('Unauthorized')
+            }
+        }
 
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',

@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { PatientForm } from '@/components/patients/PatientForm'
 import { PatientDetails } from '@/components/patients/PatientDetails'
 import { SubscriptionGuard } from '@/components/auth/SubscriptionGuard'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { PatientRowSkeleton, PatientCardSkeleton } from '@/components/ui/Skeleton'
 import { CSVUploader } from '@/components/patients/CSVUploader'
 import { cn } from '@/lib/utils'
 
@@ -247,11 +247,13 @@ export default function Patients() {
                                         </thead>
                                         <tbody className="divide-y divide-silk-beige">
                                             {loading ? (
-                                                <tr>
-                                                    <td colSpan={4} className="py-20 text-center">
-                                                        <LoadingSpinner className="mx-auto text-primary-500" />
-                                                    </td>
-                                                </tr>
+                                                <>
+                                                    <PatientRowSkeleton />
+                                                    <PatientRowSkeleton />
+                                                    <PatientRowSkeleton />
+                                                    <PatientRowSkeleton />
+                                                    <PatientRowSkeleton />
+                                                </>
                                             ) : error ? (
                                                 <tr>
                                                     <td colSpan={4} className="py-20 text-center text-red-500">
@@ -360,9 +362,11 @@ export default function Patients() {
                             {/* Mobile List View */}
                             <div className="md:hidden space-y-4">
                                 {loading ? (
-                                    <div className="py-20 text-center bg-white rounded-2xl border border-silk-beige">
-                                        <LoadingSpinner className="mx-auto text-primary-500" />
-                                    </div>
+                                    <>
+                                        <PatientCardSkeleton />
+                                        <PatientCardSkeleton />
+                                        <PatientCardSkeleton />
+                                    </>
                                 ) : error ? (
                                     <div className="py-20 text-center bg-white rounded-2xl border border-silk-beige text-red-500 px-4">
                                         <p className="mb-2 text-sm">Error: {error}</p>

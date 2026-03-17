@@ -142,7 +142,7 @@ serve(async (req) => {
                         type: 'template',
                         template: {
                             name: tplName,
-                            language: { code: 'es_ES' },
+                            language: { code: 'es' },
                             components: [
                                 {
                                     type: 'body',
@@ -331,7 +331,7 @@ serve(async (req) => {
                             type: 'template',
                             template: {
                                 name: tplName2h,
-                                language: { code: 'es_ES' },
+                                language: { code: 'es' },
                                 components: [
                                     {
                                         type: 'body',
@@ -482,7 +482,7 @@ serve(async (req) => {
                             type: 'template',
                             template: {
                                 name: tplName1h,
-                                language: { code: 'es_ES' },
+                                language: { code: 'es' },
                                 components: [
                                     {
                                         type: 'body',
