@@ -1392,6 +1392,7 @@ ${clinic.google_maps_url ? `Mapa Google Maps: ${clinic.google_maps_url}` : ""}
 ${clinic.instagram_url ? `- Instagram: ${clinic.instagram_url}` : ""}
 ${clinic.facebook_url ? `- Facebook: ${clinic.facebook_url}` : ""}
 ${clinic.tiktok_url ? `- TikTok: ${clinic.tiktok_url}` : ""}
+${clinic.website_url ? `- Sitio Web: ${clinic.website_url}` : ""}
 Horario General de la Clínica: ${hoursSummary}
 
 CONTEXTO DE FECHAS (FUENTE DE VERDAD):

@@ -31,6 +31,7 @@ import {
     ArrowLeft,
     Instagram,
     Facebook,
+    Music,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
@@ -103,6 +104,7 @@ export default function Settings() {
     const [instagramUrl, setInstagramUrl] = useState('')
     const [facebookUrl, setFacebookUrl] = useState('')
     const [tiktokUrl, setTiktokUrl] = useState('')
+    const [websiteUrl, setWebsiteUrl] = useState('')
     const [services, setServices] = useState<any[]>([])
     const [workingHours, setWorkingHours] = useState<any>(mockWorkingHours)
     const [showMobileList, setShowMobileList] = useState(true)
@@ -372,6 +374,7 @@ export default function Settings() {
                     setInstagramUrl(data.instagram_url || '')
                     setFacebookUrl(data.facebook_url || '')
                     setTiktokUrl(data.tiktok_url || '')
+                    setWebsiteUrl(data.website_url || '')
                     setCurrency(data.currency || 'MXN')
                     setTimezone(data.timezone || 'America/Mexico_City')
                     setTemplateSurvey(data.template_survey || '')
@@ -783,6 +786,7 @@ export default function Settings() {
                     instagram_url: instagramUrl,
                     facebook_url: facebookUrl,
                     tiktok_url: tiktokUrl,
+                    website_url: websiteUrl,
                     currency: currency,
                     timezone: timezone,
                     template_survey: templateSurvey,
@@ -1242,7 +1246,7 @@ export default function Settings() {
                                         </p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
                                                 <Instagram className="w-4 h-4 text-pink-600" />
@@ -1271,7 +1275,7 @@ export default function Settings() {
                                         </div>
                                         <div>
                                             <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
-                                                <Globe className="w-4 h-4 text-charcoal/60" />
+                                                <Music className="w-4 h-4 text-charcoal/60" />
                                                 TikTok
                                             </label>
                                             <input
@@ -1279,6 +1283,19 @@ export default function Settings() {
                                                 placeholder="https://tiktok.com/@..."
                                                 value={tiktokUrl}
                                                 onChange={(e) => setTiktokUrl(e.target.value)}
+                                                className="input-soft"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
+                                                <Globe className="w-4 h-4 text-charcoal/60" />
+                                                Sitio Web
+                                            </label>
+                                            <input
+                                                type="url"
+                                                placeholder="https://www.tuclinica.com"
+                                                value={websiteUrl}
+                                                onChange={(e) => setWebsiteUrl(e.target.value)}
                                                 className="input-soft"
                                             />
                                         </div>
