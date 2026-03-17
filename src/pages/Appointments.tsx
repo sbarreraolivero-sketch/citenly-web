@@ -1119,25 +1119,27 @@ export default function Appointments() {
                         {filteredAppointments.length > 0 ? filteredAppointments.map((appointment) => (
                             <div key={`mob-${appointment.id}`} className="bg-white rounded-2xl p-5 shadow-sm border border-silk-beige flex flex-col gap-4">
                                 {/* Header: Patient & Status */}
-                                <div className="flex justify-between items-start gap-4">
-                                    <div className="flex items-center gap-3">
+                                <div className="flex justify-between items-start gap-3">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
                                         <div className="w-10 h-10 bg-silk-beige rounded-full flex items-center justify-center flex-shrink-0">
                                             <User className="w-5 h-5 text-charcoal/50" />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-semibold text-charcoal truncate text-sm sm:text-base leading-tight">
+                                            <p className="font-bold text-charcoal truncate text-sm sm:text-base leading-tight">
                                                 {appointment.patient_name}
                                             </p>
-                                            <p className="text-[10px] sm:text-xs text-charcoal/60 flex items-center gap-1 mt-1">
-                                                <Phone className="w-3 h-3" />
-                                                {formatPhoneNumber(appointment.phone_number)}
-                                            </p>
+                                            <div className="flex flex-col gap-1 mt-1">
+                                                <p className="text-[10px] sm:text-xs text-charcoal/40 flex items-center gap-1">
+                                                    <Phone className="w-3 h-3" />
+                                                    {formatPhoneNumber(appointment.phone_number)}
+                                                </p>
+                                                <span className={cn('inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full w-fit font-bold uppercase tracking-wider border mt-1', getStatusColor(appointment.status))}>
+                                                    {getStatusIcon(appointment.status)}
+                                                    {getStatusLabel(appointment.status)}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <span className={cn('inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full flex-shrink-0 font-medium whitespace-nowrap', getStatusColor(appointment.status))}>
-                                        {getStatusIcon(appointment.status)}
-                                        {getStatusLabel(appointment.status)}
-                                    </span>
                                 </div>
 
                                 {/* Body: Service & Time */}

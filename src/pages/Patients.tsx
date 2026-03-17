@@ -42,6 +42,7 @@ interface TagSummary {
 export default function Patients() {
     const { profile } = useAuth()
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [contacts, setContacts] = useState<Contact[]>([])
     const [activeTab, setActiveTab] = useState<'all' | 'patients' | 'prospects'>('all')
     const [showTagSidebar, setShowTagSidebar] = useState(false)
@@ -55,23 +56,26 @@ export default function Patients() {
     // Modal states
     const [isFormOpen, setIsFormOpen] = useState(false)
 
-    useEffect(() => {
-        if (!profile?.clinic_id) return
-        fetchContacts()
-        fetchTagSummaries()
-    }, [profile?.clinic_id])
+    // Initial fetch happens in the debounced search useEffect below
 
     const fetchContacts = async () => {
+        if (!profile?.clinic_id) return
         setLoading(true)
+        setError(null)
         try {
+            console.log('Fetching contacts for clinic:', profile.clinic_id)
             const { data, error } = await (supabase as any).rpc('get_unified_contacts', {
-                p_clinic_id: profile?.clinic_id
+                p_clinic_id: profile.clinic_id
             })
 
-            if (error) throw error
+            if (error) {
+                console.error('RPC Error details:', error)
+                throw error
+            }
             setContacts(data || [])
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching contacts:', error)
+            setError(error.message || 'Error al cargar contactos')
         } finally {
             setLoading(false)
         }
@@ -229,7 +233,7 @@ export default function Patients() {
                                 </button>
                             </div>
 
-                            {/* Table */}
+                            {/* Table (Desktop) */}
                             <div className="card-soft overflow-hidden hidden md:block">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
@@ -246,6 +250,15 @@ export default function Patients() {
                                                 <tr>
                                                     <td colSpan={4} className="py-20 text-center">
                                                         <LoadingSpinner className="mx-auto text-primary-500" />
+                                                    </td>
+                                                </tr>
+                                            ) : error ? (
+                                                <tr>
+                                                    <td colSpan={4} className="py-20 text-center text-red-500">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <p>Error: {error}</p>
+                                                            <button onClick={() => fetchContacts()} className="text-sm underline">Reintentar</button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ) : filteredContacts.length === 0 ? (
@@ -342,6 +355,98 @@ export default function Patients() {
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+
+                            {/* Mobile List View */}
+                            <div className="md:hidden space-y-4">
+                                {loading ? (
+                                    <div className="py-20 text-center bg-white rounded-2xl border border-silk-beige">
+                                        <LoadingSpinner className="mx-auto text-primary-500" />
+                                    </div>
+                                ) : error ? (
+                                    <div className="py-20 text-center bg-white rounded-2xl border border-silk-beige text-red-500 px-4">
+                                        <p className="mb-2 text-sm">Error: {error}</p>
+                                        <button onClick={() => fetchContacts()} className="text-xs underline bg-red-50 px-3 py-1 rounded-full">Reintentar</button>
+                                    </div>
+                                ) : filteredContacts.length === 0 ? (
+                                    <div className="py-20 text-center text-charcoal/50 bg-white rounded-2xl border border-silk-beige">
+                                        {searchQuery ? 'No se encontraron resultados' : 'No hay contactos registrados aún'}
+                                    </div>
+                                ) : (
+                                    filteredContacts.map((contact) => (
+                                        <div
+                                            key={`mob-${contact.id}`}
+                                            className="bg-white rounded-2xl p-4 shadow-sm border border-silk-beige flex flex-col gap-3 active:scale-[0.98] transition-all"
+                                            onClick={() => contact.type === 'patient' && setSelectedContact(contact)}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center font-medium",
+                                                        contact.type === 'patient' ? "bg-primary-100 text-primary-700" : "bg-blue-100 text-blue-700"
+                                                    )}>
+                                                        {contact.name?.charAt(0).toUpperCase() || <UserIcon className="w-5 h-5" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-bold text-charcoal truncate text-sm">{contact.name || 'Sin nombre'}</p>
+                                                        <p className="text-[10px] text-charcoal/40 flex items-center gap-1 mt-0.5">
+                                                            <Phone className="w-3 h-3" /> {contact.phone_number || 'N/A'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex-shrink-0 border",
+                                                    contact.type === 'patient' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-blue-50 text-blue-700 border-blue-100"
+                                                )}>
+                                                    {contact.type === 'patient' ? 'Paciente' : 'Prospecto'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between gap-2 pt-2 border-t border-silk-beige/30">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {contact.tags?.slice(0, 3).map((tag, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            className="px-1.5 py-0.5 rounded text-[8px] font-bold border uppercase"
+                                                            style={{
+                                                                backgroundColor: `${tag.color}10`,
+                                                                color: tag.color,
+                                                                borderColor: `${tag.color}30`
+                                                            }}
+                                                        >
+                                                            {tag.name}
+                                                        </span>
+                                                    ))}
+                                                    {contact.tags?.length > 3 && (
+                                                        <span className="text-[9px] text-charcoal/40 font-medium">+{contact.tags.length - 3}</span>
+                                                    )}
+                                                    {(!contact.tags || contact.tags.length === 0) && (
+                                                        <span className="text-[9px] text-charcoal/20 italic">Sin etiquetas</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                    {contact.type === 'patient' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingPatient(contact)
+                                                                setIsFormOpen(true)
+                                                            }}
+                                                            className="p-1.5 text-charcoal/40 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Edit2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setShowDeleteConfirm(contact.id)}
+                                                        className="p-1.5 text-charcoal/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
