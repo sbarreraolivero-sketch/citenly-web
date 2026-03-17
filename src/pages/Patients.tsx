@@ -5,19 +5,14 @@ import {
     Edit2, 
     User as UserIcon, 
     Phone, 
-    Mail, 
-    Calendar,
     Trash2,
     X,
-    MapPin,
     Filter,
-    Users,
-    ChevronRight,
     Tag
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Database } from '@/types/database'
+
 import { PatientForm } from '@/components/patients/PatientForm'
 import { PatientDetails } from '@/components/patients/PatientDetails'
 import { SubscriptionGuard } from '@/components/auth/SubscriptionGuard'
