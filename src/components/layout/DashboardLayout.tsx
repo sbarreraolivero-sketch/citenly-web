@@ -45,7 +45,7 @@ const navigation = [
     { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
     { name: 'Mensajes', href: '/app/messages', icon: MessageSquare },
     { name: 'Plantillas', href: '/app/templates', icon: FileText },
-    { name: 'Pacientes', href: '/app/patients', icon: Users },
+    { name: 'Contactos', href: '/app/patients', icon: Users },
     { name: 'Citas', href: '/app/appointments', icon: Calendar },
     { name: 'Campañas', href: '/app/campaigns', icon: Megaphone },
     { name: 'Finanzas', href: '/app/finance', icon: DollarSign },
