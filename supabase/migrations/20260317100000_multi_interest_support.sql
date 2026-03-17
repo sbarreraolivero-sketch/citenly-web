@@ -58,6 +58,14 @@ BEGIN
             '[]'::jsonb
         ) as tags
     FROM public.crm_prospects pr
-    WHERE pr.clinic_id = p_clinic_id;
+    WHERE pr.clinic_id = p_clinic_id
+    AND NOT EXISTS (
+        SELECT 1 FROM public.patients p 
+        WHERE p.clinic_id = p_clinic_id 
+        AND (
+            p.phone_number = pr.phone 
+            OR regexp_replace(p.phone_number, '\D', '', 'g') = regexp_replace(pr.phone, '\D', '', 'g')
+        )
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

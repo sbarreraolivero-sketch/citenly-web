@@ -258,8 +258,11 @@ export default function Patients() {
                                                 filteredContacts.map((contact) => (
                                                     <tr
                                                         key={contact.id}
-                                                        className="hover:bg-silk-beige/30 transition-colors cursor-pointer group"
-                                                        onClick={() => setSelectedContact(contact)}
+                                                        className={cn(
+                                                            "transition-colors group",
+                                                            contact.type === 'patient' ? "hover:bg-silk-beige/30 cursor-pointer" : "opacity-90"
+                                                        )}
+                                                        onClick={() => contact.type === 'patient' && setSelectedContact(contact)}
                                                     >
                                                         <td className="py-4 px-6">
                                                             <div className="flex items-center gap-3">
@@ -307,15 +310,17 @@ export default function Patients() {
                                                         </td>
                                                         <td className="py-4 px-6 text-right">
                                                             <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setEditingPatient(contact)
-                                                                        setIsFormOpen(true)
-                                                                    }}
-                                                                    className="p-2 hover:bg-primary-50 text-charcoal/60 hover:text-primary-600 rounded-soft transition-colors"
-                                                                >
-                                                                    <Edit2 className="w-4 h-4" />
-                                                                </button>
+                                                                {contact.type === 'patient' && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingPatient(contact)
+                                                                            setIsFormOpen(true)
+                                                                        }}
+                                                                        className="p-2 hover:bg-primary-50 text-charcoal/60 hover:text-primary-600 rounded-soft transition-colors"
+                                                                    >
+                                                                        <Edit2 className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
                                                                 {showDeleteConfirm === contact.id ? (
                                                                     <div className="flex items-center gap-2 bg-red-50 p-1 rounded-soft">
                                                                         <button
