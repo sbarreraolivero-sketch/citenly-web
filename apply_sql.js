@@ -8,7 +8,7 @@ const projectRef = 'hubjqllcmbzoojyidgcu'
 const accessToken = process.env.SUPABASE_ACCESS_TOKEN
 
 async function applySql() {
-  const sql = fs.readFileSync('supabase/migrations/20260317110000_unify_campaign_audience.sql', 'utf8')
+  const sql = fs.readFileSync('supabase/migrations/20260317120000_name_based_audience.sql', 'utf8')
   
   console.log(`Applying SQL to project ${projectRef}...`)
 

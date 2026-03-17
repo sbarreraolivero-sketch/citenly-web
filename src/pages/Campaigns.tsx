@@ -120,7 +120,7 @@ export default function Campaigns() {
             
             // Map RPC result to Tag interface
             const mappedTags: Tag[] = (data || []).map((t: any) => ({
-                id: t.tag_id,
+                id: t.tag_name, // Use name as ID for unification & filtering
                 name: t.tag_name,
                 color: t.tag_color,
                 count: Number(t.contact_count)
