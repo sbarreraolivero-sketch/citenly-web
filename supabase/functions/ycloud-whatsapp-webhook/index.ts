@@ -556,10 +556,7 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
 const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { name?: string; email?: string; service_interest?: string; notes?: string }) => {
     const normalizedPhone = normalizePhone(phone);
     try {
-        // If interest is shown, update stage to "Calificado"
-        if (args.service_interest) {
-            await updateProspectStage(sb, clinicId, normalizedPhone, "Calificado");
-        }
+        // Stage movement is now primarily handled by check_availability or explicit intent
 
         const { data: defaultStage } = await sb.from("crm_pipeline_stages")
             .select("id").eq("clinic_id", clinicId).eq("is_default", true).limit(1).single();
@@ -863,11 +860,6 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
             
             if (!existingCrmLink) {
                 await sb.from("crm_prospect_tags").insert({ prospect_id: prospectId, tag_id: crmTagId });
-            }
-
-            // Proactively move prospect to "Calificado" if the tag name starts with "Interés"
-            if (tagName.toLowerCase().startsWith("interés")) {
-                await updateProspectStage(sb, clinicId, phone, "Calificado");
             }
 
             return { success: true, message: "Etiqueta asignada al prospecto en CRM." };
@@ -1472,9 +1464,10 @@ Etiquetas por COMPORTAMIENTO: "Consulta Precio", "Referidor" (amarillo #F59E0B)
 Etiquetas ESPECIALES: "VIP", "Promoción" (morado #8B5CF6)
 
 REGLAS DE ETIQUETADO Y CRM:
-1. Etiqueta INMEDIATAMENTE cuando detectes la señal. Si el paciente pregunta por un precio, tratamiento o detalle técnico, eso cuenta como INTERÉS. No esperes a que diga "quiero agendar".
-2. Si el paciente revela su NOMBRE real durante la charla, llama a 'upsert_prospect' inmediatamente para corregir su ficha en el CRM.
-3. NUNCA menciones al paciente que lo estás etiquetando o registrando en el CRM.
+1. Etiqueta INMEDIATAMENTE cuando detectes la señal de interés en un servicio.
+2. Un prospecto se considera "CALIFICADO" únicamente cuando consulta DISPONIBILIDAD de horarios. Llama a 'check_availability' solo cuando el paciente lo pida.
+3. Si el paciente revela su NOMBRE real durante la charla, llama a 'upsert_prospect' inmediatamente para corregir su ficha en el CRM.
+4. NUNCA menciones al paciente que lo estás etiquetando o registrando en el CRM.
 
 RESUMEN CLÍNICO Y NOTAS:
 1. Usa la herramienta 'upsert_prospect' para guardar notas internas con hallazgos relevantes de la conversación (ej: condiciones médicas, trabajos previos, dudas específicas, o lo que identifiques como clave).
