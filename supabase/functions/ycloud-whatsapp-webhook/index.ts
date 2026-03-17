@@ -579,7 +579,14 @@ const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: str
             const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
             if (args.name && args.name !== existing.name) updates.name = args.name;
             if (args.email && args.email !== existing.email) updates.email = args.email;
-            if (args.service_interest) updates.service_interest = args.service_interest;
+            
+            if (args.service_interest) {
+                const currentInterests = existing.service_interest ? existing.service_interest.split(',').map((s: string) => s.trim()) : [];
+                if (!currentInterests.includes(args.service_interest.trim())) {
+                    updates.service_interest = existing.service_interest ? `${existing.service_interest}, ${args.service_interest.trim()}` : args.service_interest.trim();
+                }
+            }
+            
             if (args.notes) updates.notes = existing.notes ? `${existing.notes}\n${args.notes}` : args.notes;
 
             await sb.from("crm_prospects").update(updates).eq("id", existing.id);

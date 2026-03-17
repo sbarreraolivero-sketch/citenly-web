@@ -26,6 +26,8 @@ type Contact = {
     phone_number: string | null
     email: string | null
     type: 'patient' | 'prospect'
+    service: string | null
+    notes: string | null
     created_at: string
     tags: { id: string; name: string; color: string }[]
     total_appointments?: number
