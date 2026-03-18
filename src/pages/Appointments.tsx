@@ -296,6 +296,12 @@ export default function Appointments() {
             const localDate = new Date(year, month - 1, day, hours, minutes)
             const appointmentDate = localDate.toISOString()
 
+            let durationMinutes = 60
+            const selectedServiceObj = services.find(s => s.name === newAppointment.service)
+            if (selectedServiceObj) {
+                durationMinutes = selectedServiceObj.duration
+            }
+
             let appointmentId = editingId
             let googleEventId = null
 
@@ -308,6 +314,7 @@ export default function Appointments() {
                         patient_name: newAppointment.patient_name,
                         phone_number: newAppointment.phone_number,
                         service: newAppointment.service,
+                        duration: durationMinutes,
                         appointment_date: appointmentDate,
                         notes: newAppointment.notes,
                         professional_id: newAppointment.professional_id || null,
@@ -334,6 +341,7 @@ export default function Appointments() {
                             patient_name: newAppointment.patient_name,
                             phone_number: newAppointment.phone_number,
                             service: newAppointment.service,
+                            duration: durationMinutes,
                             appointment_date: appointmentDate,
                             status: 'confirmed',
                             notes: newAppointment.notes,
@@ -349,11 +357,7 @@ export default function Appointments() {
             }
 
             // Sync with Google Calendar (Create or Update)
-            let durationMinutes = 60
-            const selectedServiceObj = services.find(s => s.name === newAppointment.service)
-            if (selectedServiceObj) {
-                durationMinutes = selectedServiceObj.duration
-            }
+            // Note: durationMinutes was calculated at the beginning of the try block
 
             const endDate = new Date(new Date(appointmentDate).getTime() + durationMinutes * 60 * 1000).toISOString()
 
