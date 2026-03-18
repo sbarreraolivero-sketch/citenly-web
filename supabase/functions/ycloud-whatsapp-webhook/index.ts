@@ -239,15 +239,18 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
-    // 1. Enforce 1-day lag policy
+    // 1. Enforce 1-day lag policy (Minimum 24h + skipping tomorrow)
     const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
+    const tomorrowLocal = new Date(nowLocal.getTime() + 24 * 60 * 60 * 1000);
+    
     const todayStr = nowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
+    const tomorrowStr = tomorrowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
     const requestedDateStr = date;
 
-    if (requestedDateStr === todayStr) {
+    if (requestedDateStr === todayStr || requestedDateStr === tomorrowStr) {
         return { 
             available: false, 
-            message: "Lo sentimos, no es posible agendar citas para el mismo día. La política de la clínica requiere agendar con al menos un día de anticipación. Por favor, solicita disponibilidad para mañana o días futuros." 
+            message: "Lo sentimos, la clínica requiere al menos 1 día de holgura para agendar. No es posible agendar para hoy ni para mañana. La disponibilidad más próxima es a partir de PASADO MAÑANA. Por favor, consulta una fecha posterior." 
         };
     }
 
@@ -1431,7 +1434,7 @@ IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una im
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
 0. NO HAY LÍMITES DE ANTICIPACIÓN: Puedes agendar citas para cualquier semana o mes futuro. NUNCA digas que no es posible agendar con anticipación o que está muy lejos.
-1. NO AGENDAR PARA HOY: La política de la clínica requiere al menos 24 horas de anticipación. NUNCA ofrezcas ni agendes citas para el mismo día (hoy). Si el usuario pide para hoy, indícale amablemente que solo agendamos a partir de mañana y ofrece automáticamente los horarios de mañana u otras fechas futuras.
+1. NO AGENDAR PARA HOY NI MAÑANA: La política de la clínica requiere al menos 1 día completo de holgura. NUNCA ofrezcas ni agendes citas para el mismo día (hoy) ni para el día siguiente (mañana). Si el usuario pide para hoy o para mañana, indícale amablemente que solo agendamos a partir de PASADO MAÑANA y ofrece automáticamente los horarios de pasado mañana u otras fechas posteriores.
 2. SI el paciente pregunta por disponibilidad en un día que aparece EXPLÍCITAMENTE como 'CERRADO' en el 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de los días que sí están abiertos. NO asumas que un día está cerrado si no aparece en la lista; si no aparece, pregunta disponibilidad con 'check_availability'.
 3. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, INCLUSO si el usuario pide un horario específico. No asumas que está disponible.
 4. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
