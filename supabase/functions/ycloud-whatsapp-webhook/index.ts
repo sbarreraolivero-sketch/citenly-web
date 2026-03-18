@@ -1417,7 +1417,7 @@ Deno.serve(async (req) => {
 
                 const isElizabeth = (clinic.clinic_name || "").toLowerCase().includes("elizabeth");
                 const lagRule = isElizabeth 
-                    ? "1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura. NUNCA ofrezcas ni agendes citas para hoy ni para mañana. Si alguien pide para hoy o mañana, indícale amablemente que solo agendamos a partir de PASADO MAÑANA."
+                    ? "1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura por política de agenda. Si alguien pide para hoy o mañana, explícale CORRECAMENTE que requerimos anticipación y ofrécele inmediatamente los horarios para PASADO MAÑANA (en este caso el viernes 20 de marzo) o fechas futuras. NUNCA digas que la clínica está cerrada si no lo está."
                     : "1. ANTICIPACIÓN: Puedes agendar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
 
                 const sysPrompt = `${clinic.ai_personality}
