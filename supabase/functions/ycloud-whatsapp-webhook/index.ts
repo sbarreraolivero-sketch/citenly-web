@@ -1417,13 +1417,16 @@ Deno.serve(async (req) => {
 
                 const isElizabeth = (clinic.clinic_name || "").toLowerCase().includes("elizabeth");
                 const lagRule = isElizabeth 
-                    ? `1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura por política de agenda (esto significa que hoy ${todayDay} y mañana ${tomorrowDay} están bloqueados). 
-                       - Si alguien pide para hoy (${todayDay}) o mañana (${tomorrowDay}), explícale que requerimos 24h de anticipación.
-                       - Ofrece inmediatamente los horarios para PASADO MAÑANA (${dayAfterDay} ${dayAfterISO}) o fechas posteriores.
-                       - NUNCA digas que la clínica está cerrada los ${tomorrowDay}s o ${todayDay}s si aparecen abiertos en el horario general.`
+                    ? `1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura por política de agenda.
+                       - HOY (${todayDay} ${localDateISO}) y MAÑANA (${tomorrowDay} ${tomorrowISO}) están BLOQUEADOS para agendar.
+                       - Si el usuario pide para hoy o mañana, explícale que por política de la clínica requerimos 24h de anticipación.
+                       - Ofrece exclusivamente horarios para PASADO MAÑANA (${dayAfterDay} ${dayAfterISO}) o fechas posteriores.
+                       - NUNCA digas que la clínica está cerrada si el horario general indica que está abierta.`
                     : "1. ANTICIPACIÓN: Puedes agendar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
 
-                const sysPrompt = `${clinic.ai_personality}
+                const sysPrompt = `FECHA Y HORA ACTUAL: ${localTime}
+
+${clinic.ai_personality}
 
 Clínica: ${clinic.clinic_name}
 Dirección: ${clinic.clinic_address || clinic.address || "No especificada."}
@@ -1466,8 +1469,6 @@ ${lagRule}
       - RUT: 18.342.131-k
       - Banco: Banco Estado
       - Tipo de cuenta: Cuenta Vista / Chequera electrónica
-      - Número de cuenta: 80070001890
-   e) Validación: Si envía comprobante, agradece y confirma que está pendiente de validación.
 10. SEGMENTACIÓN Y CRM (PROACTIVIDAD):
     - Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
     - Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
