@@ -194,7 +194,7 @@ export default function CRM() {
     const totalConversations = prospects.length
     const qualifiedLeads = prospects.filter(p => {
         const stage = stages.find(s => s.id === p.stage_id)
-        return stage && stage.position >= 2
+        return stage && stage.name.toLowerCase() === 'calificado'
     }).length
     const scheduledAppointments = prospects.filter(p => {
         const stage = stages.find(s => s.id === p.stage_id)

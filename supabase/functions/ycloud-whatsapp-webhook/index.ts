@@ -1035,9 +1035,14 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
             .maybeSingle();
 
         if (existing) {
-            // Update name if current is generic and we have a better one
-            if (name && (!existing.name || existing.name.includes("Sin nombre"))) {
-                await sb.from("crm_prospects").update({ name }).eq("id", existing.id);
+            // Update name if Provided name is better than existing (generic or nickname)
+            if (name && name.trim().length > 0) {
+                const currentName = (existing.name || "").toLowerCase();
+                const isGeneric = !existing.name || currentName.includes("sin nombre");
+                // Allow update if generic or if names differ (implies new capture)
+                if (isGeneric || currentName !== name.toLowerCase()) {
+                    await sb.from("crm_prospects").update({ name }).eq("id", existing.id);
+                }
             }
             return existing.id;
         }
