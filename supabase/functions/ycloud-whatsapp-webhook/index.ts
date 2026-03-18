@@ -239,12 +239,24 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
+    // 1. Enforce 1-day lag policy
+    const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
+    const todayStr = nowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
+    const requestedDateStr = date;
+
+    if (requestedDateStr === todayStr) {
+        return { 
+            available: false, 
+            message: "Lo sentimos, no es posible agendar citas para el mismo día. La política de la clínica requiere agendar con al menos un día de anticipación. Por favor, solicita disponibilidad para mañana o días futuros." 
+        };
+    }
+
     let duration = 60; // Default
     let serviceId: string | null = null;
     let professionalId: string | null = null;
 
     if (serviceName) {
-        // Try to find service duration and ID
+        // Try to find service duration and ID with more robust search
         const { data: svc } = await sb.from("services")
             .select("id, duration")
             .eq("clinic_id", clinicId)
@@ -258,21 +270,21 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         }
     }
 
-    // Try to find requested professional BY NAME/TITLE
+    // 2. Resolve Professional ID if name provided or fallback to service default
     if (profName) {
         const { data: prof } = await sb.from("clinic_members")
-            .select("id:user_id, member_id:id")
+            .select("id, member_id:id, first_name")
             .eq("clinic_id", clinicId)
-            .or(`first_name.ilike.%${profName}%,last_name.ilike.%${profName}%,job_title.ilike.%${profName}%`)
+            .or(`first_name.ilike.%${profName.split(' ')[0]}%,last_name.ilike.%${profName.split(' ').slice(-1)[0]}%,job_title.ilike.%${profName}%`)
             .limit(1)
             .maybeSingle();
 
         if (prof) {
-            professionalId = prof.member_id;
+            professionalId = prof.id;
+            console.log(`[checkAvail] Resolved professional: ${prof.first_name} (${professionalId})`);
         }
     }
 
-    // Fallback to service professional if NO specific professional was requested or found
     if (!professionalId && serviceId) {
         const { data: profs } = await sb.from("service_professionals")
             .select("member_id, is_primary")
@@ -295,7 +307,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 p_clinic_id: clinicId,
                 p_member_id: professionalId,
                 p_duration: duration,
-                p_interval: duration, // Step by duration (no flexible intervals)
+                p_interval: Math.min(duration, 60), // More granular intervals (max 60m)
                 p_timezone: timezone
             });
 
@@ -316,7 +328,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
             p_clinic_id: clinicId,
             p_date: date,
             p_duration: duration,
-            p_interval: duration // Step by duration (no flexible intervals)
+            p_interval: Math.min(duration, 60)
         });
         if (error) {
             console.error("[checkAvail] get_available_slots failed, trying without interval param:", error);
@@ -333,7 +345,10 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     // 5. MANUALLY FILTER SLOTS FOR CLINIC LUNCH BREAK (Double-protection)
-    const dow = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][new Date(date + 'T12:00:00').getDay()];
+    // Use a safer day extraction that doesn't vary by runtime
+    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dowIdx = new Date(date + 'T12:00:00').getDay();
+    const dow = dayNames[dowIdx];
     const dayConfig = clinicWorkingHours?.[dow];
     const lunch = dayConfig?.lunch_break;
 
@@ -1416,13 +1431,14 @@ IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una im
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
 0. NO HAY LÍMITES DE ANTICIPACIÓN: Puedes agendar citas para cualquier semana o mes futuro. NUNCA digas que no es posible agendar con anticipación o que está muy lejos.
-1. SI el paciente pregunta por disponibilidad en un día que aparece EXPLÍCITAMENTE como 'CERRADO' en el 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de los días que sí están abiertos. NO asumas que un día está cerrado si no aparece en la lista; si no aparece, pregunta disponibilidad con 'check_availability'.
-2. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, INCLUSO si el usuario pide un horario específico. No asumas que está disponible.
-3. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
-4. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
-5. El Horario General es tu guía; la herramienta es tu confirmación final.
-6. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
-7. ERRORES DE HERRAMIENTA: No inventes ni asumas que una herramienta falló. Llama a la herramienta y lee su respuesta real. Si 'create_appointment' devuelve un error (ej. DB-AG-01 o DB-CONFLICT), díselo explícitamente al usuario.
+1. NO AGENDAR PARA HOY: La política de la clínica requiere al menos 24 horas de anticipación. NUNCA ofrezcas ni agendes citas para el mismo día (hoy). Si el usuario pide para hoy, indícale amablemente que solo agendamos a partir de mañana y ofrece automáticamente los horarios de mañana u otras fechas futuras.
+2. SI el paciente pregunta por disponibilidad en un día que aparece EXPLÍCITAMENTE como 'CERRADO' en el 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de los días que sí están abiertos. NO asumas que un día está cerrado si no aparece en la lista; si no aparece, pregunta disponibilidad con 'check_availability'.
+3. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, INCLUSO si el usuario pide un horario específico. No asumas que está disponible.
+4. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
+5. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
+6. El Horario General es tu guía; la herramienta es tu confirmación final.
+7. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
+8. ERRORES DE HERRAMIENTA: No inventes ni asumas que una herramienta falló. Llama a la herramienta y lee su respuesta real. Si 'create_appointment' devuelve un error (ej. DB-AG-01 o DB-CONFLICT), díselo explícitamente al usuario.
 8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
 9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
    a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
