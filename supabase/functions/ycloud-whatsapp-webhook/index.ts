@@ -1374,15 +1374,21 @@ Deno.serve(async (req) => {
                 const now = new Date();
                 const localTime = now.toLocaleString("es-CL", { timeZone: clinicTz, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-                // Pre-calculate dates for AI (CRITICAL: use timezone-aware day names, NOT getDay() which is UTC!)
+                const daysMapES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+                const getLocalDayName = (d: Date, tz: string) => {
+                    const s = d.toLocaleString("en-US", { timeZone: tz });
+                    return daysMapES[new Date(s).getDay()];
+                };
+
                 const localDateISO = now.toLocaleDateString("en-CA", { timeZone: clinicTz });
                 const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
                 const dayAfter = new Date(now.getTime() + 48 * 60 * 60 * 1000);
                 const tomorrowISO = tomorrow.toLocaleDateString("en-CA", { timeZone: clinicTz });
                 const dayAfterISO = dayAfter.toLocaleDateString("en-CA", { timeZone: clinicTz });
-                const todayDay = now.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long" });
-                const tomorrowDay = tomorrow.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long" });
-                const dayAfterDay = dayAfter.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long" });
+                
+                const todayDay = getLocalDayName(now, clinicTz);
+                const tomorrowDay = getLocalDayName(tomorrow, clinicTz);
+                const dayAfterDay = getLocalDayName(dayAfter, clinicTz);
 
                 // Fetch knowledge base summary for system prompt
                 const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
