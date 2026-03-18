@@ -39,8 +39,8 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
 
         return (
             <div className={`h-full w-full py-1 px-2 flex flex-col justify-start pointer-events-none ${isCancelled ? 'line-through' : ''}`}>
-                <div className="font-semibold leading-tight text-xs sm:text-sm truncate">{event.title}</div>
-                <div className="text-[10px] sm:text-xs opacity-90 truncate mt-1 font-medium">
+                <div className="font-bold leading-tight text-xs sm:text-sm truncate">{event.title}</div>
+                <div className="text-[10px] sm:text-xs opacity-100 truncate mt-1 font-semibold">
                     {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
                 </div>
             </div>
@@ -78,6 +78,7 @@ export function CalendarView({ events, onSelectEvent, onSelectSlot, onEditEvent 
             <style>{`
                 .rbc-date-cell { padding-right: 8px !important; text-align: center !important; font-weight: 500; font-size: 0.875rem; }
                 .rbc-header { padding: 8px 0 !important; font-size: 0.875rem; }
+                .rbc-event { color: inherit !important; }
                 @media (max-width: 640px) {
                     .rbc-time-view .rbc-header { font-size: 0.70rem; }
                     .rbc-time-view .rbc-time-content { min-width: 150%; } /* Allow horizontal scroll on tight mobile screens */
@@ -148,7 +149,7 @@ const eventPropGetter = (event: CalendarEvent) => {
                 borderLeftWidth: '4px',
                 borderLeftStyle: 'solid' as const,
                 borderLeftColor: professionalColor,
-                backgroundColor: professionalColor + '15', // 15 = ~8% opacity in hex
+                backgroundColor: professionalColor + '25', // 25 = ~15% opacity in hex
             }
         }
     }
@@ -158,16 +159,16 @@ const eventPropGetter = (event: CalendarEvent) => {
     } else {
         switch (status) {
             case 'confirmed':
-                className += " bg-emerald-50 border-emerald-500 text-emerald-800"
+                className += " bg-emerald-100 border-emerald-500 text-emerald-900 font-bold"
                 break
             case 'completed':
-                className += " bg-primary-50 border-primary-500 text-primary-800"
+                className += " bg-primary-100 border-primary-500 text-primary-900 font-bold"
                 break
             case 'cancelled':
-                className += " bg-red-50 border-red-500 text-red-800 opacity-75"
+                className += " bg-red-100 border-red-500 text-red-900 opacity-75 line-through"
                 break
             default: // pending
-                className += " bg-amber-50 border-amber-500 text-amber-800"
+                className += " bg-amber-100 border-amber-500 text-amber-900 font-bold"
         }
     }
 
