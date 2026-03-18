@@ -474,40 +474,40 @@ export default function CRM() {
             {/* Stats */}
             <div className="rounded-soft p-5" style={{ background: 'linear-gradient(135deg, #f5e6c8 0%, #e8c97a 25%, #d4a84b 50%, #e8c97a 75%, #f5e6c8 100%)' }}>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-4 flex items-center gap-3 border border-white/50 shadow-sm">
-                        <div className="w-10 h-10 bg-blue-50 rounded-soft flex items-center justify-center">
-                            <MessageSquare className="w-5 h-5 text-blue-500" />
+                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                         </div>
-                        <div>
-                            <p className="text-xs font-semibold text-charcoal/80">Conversaciones</p>
-                            <p className="text-2xl font-bold text-charcoal">{totalConversations}</p>
-                        </div>
-                    </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-4 flex items-center gap-3 border border-white/50 shadow-sm">
-                        <div className="w-10 h-10 bg-emerald-50 rounded-soft flex items-center justify-center">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold text-charcoal/80">Leads calificados</p>
-                            <p className="text-2xl font-bold text-charcoal">{qualifiedLeads}</p>
+                        <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 truncate sm:whitespace-normal">Conversaciones</p>
+                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{totalConversations}</p>
                         </div>
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-4 flex items-center gap-3 border border-white/50 shadow-sm">
-                        <div className="w-10 h-10 bg-amber-50 rounded-soft flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-amber-500" />
+                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                         </div>
-                        <div>
-                            <p className="text-xs font-semibold text-charcoal/80">Citas agendadas</p>
-                            <p className="text-2xl font-bold text-charcoal">{scheduledAppointments}</p>
+                        <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 leading-tight">Leads calificados</p>
+                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{qualifiedLeads}</p>
                         </div>
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-4 flex items-center gap-3 border border-white/50 shadow-sm">
-                        <div className="w-10 h-10 bg-violet-50 rounded-soft flex items-center justify-center">
-                            <BarChart3 className="w-5 h-5 text-violet-500" />
+                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
                         </div>
-                        <div>
-                            <p className="text-xs font-semibold text-charcoal/80">Leads atribuidos</p>
-                            <p className="text-2xl font-bold text-charcoal">{closedLeads}</p>
+                        <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 leading-tight">Citas agendadas</p>
+                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{scheduledAppointments}</p>
+                        </div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-violet-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 leading-tight">Leads atribuidos</p>
+                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{closedLeads}</p>
                         </div>
                     </div>
                 </div>
