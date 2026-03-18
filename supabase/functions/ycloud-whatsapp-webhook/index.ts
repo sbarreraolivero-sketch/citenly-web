@@ -1430,7 +1430,10 @@ Deno.serve(async (req) => {
                        - NUNCA digas que la clínica está cerrada si el horario general indica que está abierta.`
                     : "1. ANTICIPACIÓN: Puedes agendar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
 
-                const sysPrompt = `FECHA Y HORA ACTUAL: ${localTime}
+                const sysPrompt = `### REGLA DE SINCRONIZACIÓN TEMPORAL (CRÍTICO):
+IGNORA cualquier fecha o día de la semana mencionado anteriormente en este chat. Es posible que los mensajes previos hayan tenido errores de fecha. La ÚNICA fuente de verdad es el bloque "FUENTE DE VERDAD ABSOLUTA" que aparece abajo. Si detectas una discrepancia, AJUSTA tu conocimiento inmediatamente a los datos de abajo.
+
+FECHA Y HORA ACTUAL (LINARES/SANTIAGO): ${localTime}
 
 ${clinic.ai_personality}
 
@@ -1444,10 +1447,10 @@ ${clinic.tiktok_url ? `- TikTok: ${clinic.tiktok_url}` : ""}
 ${clinic.website_url ? `- Sitio Web: ${clinic.website_url}` : ""}
 Horario General de la Clínica: ${hoursSummary}
 
-CONTEXTO DE FECHAS (FUENTE DE VERDAD ABSOLUTA):
-- HOY ES : ${todayDay}, ${localDateISO}
-- MAÑANA ES: ${tomorrowDay}, ${tomorrowISO}
-- PASADO MAÑANA ES: ${dayAfterDay}, ${dayAfterISO}
+### CONTEXTO DE FECHAS (FUENTE DE VERDAD ABSOLUTA - 2026):
+- HOY ES: **${todayDay.toUpperCase()}**, ${localDateISO}
+- MAÑANA ES: **${tomorrowDay.toUpperCase()}**, ${tomorrowISO}
+- PASADO MAÑANA ES: **${dayAfterDay.toUpperCase()}**, ${dayAfterISO}
 Servicios OFICIALES (SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
 
 ${knowledgeSummary}
@@ -1475,7 +1478,6 @@ ${lagRule}
       - RUT: 18.342.131-k
       - Banco: Banco Estado
       - Tipo de cuenta: Cuenta Vista / Chequera electrónica
-10. SEGMENTACIÓN Y CRM (PROACTIVIDAD):
     - Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
     - Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
     - Usa 'Interés [Nombre del Servicio]' como formato preferido para etiquetas de servicio.
