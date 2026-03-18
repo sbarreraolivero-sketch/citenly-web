@@ -1417,7 +1417,10 @@ Deno.serve(async (req) => {
 
                 const isElizabeth = (clinic.clinic_name || "").toLowerCase().includes("elizabeth");
                 const lagRule = isElizabeth 
-                    ? "1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura por política de agenda. Si alguien pide para hoy o mañana, explícale CORRECAMENTE que requerimos anticipación y ofrécele inmediatamente los horarios para PASADO MAÑANA (en este caso el viernes 20 de marzo) o fechas futuras. NUNCA digas que la clínica está cerrada si no lo está."
+                    ? `1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura por política de agenda (esto significa que hoy ${todayDay} y mañana ${tomorrowDay} están bloqueados). 
+                       - Si alguien pide para hoy (${todayDay}) o mañana (${tomorrowDay}), explícale que requerimos 24h de anticipación.
+                       - Ofrece inmediatamente los horarios para PASADO MAÑANA (${dayAfterDay} ${dayAfterISO}) o fechas posteriores.
+                       - NUNCA digas que la clínica está cerrada los ${tomorrowDay}s o ${todayDay}s si aparecen abiertos en el horario general.`
                     : "1. ANTICIPACIÓN: Puedes agendar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
 
                 const sysPrompt = `${clinic.ai_personality}
@@ -1432,10 +1435,10 @@ ${clinic.tiktok_url ? `- TikTok: ${clinic.tiktok_url}` : ""}
 ${clinic.website_url ? `- Sitio Web: ${clinic.website_url}` : ""}
 Horario General de la Clínica: ${hoursSummary}
 
-CONTEXTO DE FECHAS (FUENTE DE VERDAD):
-- HOY: ${todayDay}, ${localDateISO}
-- MAÑANA: ${tomorrowDay}, ${tomorrowISO}
-- PASADO MAÑANA: ${dayAfterDay}, ${dayAfterISO}
+CONTEXTO DE FECHAS (FUENTE DE VERDAD ABSOLUTA):
+- HOY ES : ${todayDay}, ${localDateISO}
+- MAÑANA ES: ${tomorrowDay}, ${tomorrowISO}
+- PASADO MAÑANA ES: ${dayAfterDay}, ${dayAfterISO}
 Servicios OFICIALES (SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
 
 ${knowledgeSummary}
