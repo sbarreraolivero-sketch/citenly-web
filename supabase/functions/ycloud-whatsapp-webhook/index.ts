@@ -242,28 +242,21 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     const clinicWorkingHours = clinicObj?.working_hours;
     const isElizabeth = (clinicObj?.clinic_name || "").toLowerCase().includes("elizabeth");
 
-    // 1. Enforce lag policy
-    const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
-    const tomorrowLocal = new Date(nowLocal.getTime() + 24 * 60 * 60 * 1000);
-    
-    const todayStr = nowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
-    const tomorrowStr = tomorrowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
-    const requestedDateStr = date;
+    // 1. Enforce lag policy ONLY for Elizabeth
+    if (isElizabeth) {
+        const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
+        const tomorrowLocal = new Date(nowLocal.getTime() + 24 * 60 * 60 * 1000);
+        
+        const todayStr = nowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
+        const tomorrowStr = tomorrowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
+        const requestedDateStr = date;
 
-    // RULE 1: BLOCK TODAY FOR EVERYONE
-    if (requestedDateStr === todayStr) {
-        return { 
-            available: false, 
-            message: "Lo sentimos, no es posible agendar citas para el mismo día. Por favor, solicita disponibilidad para mañana o días futuros." 
-        };
-    }
-
-    // RULE 2: BLOCK TOMORROW ONLY FOR ELIZABETH (as requested)
-    if (isElizabeth && requestedDateStr === tomorrowStr) {
-        return { 
-            available: false, 
-            message: "Lo sentimos, para esta sucursal requerimos al menos 1 día completo de holgura. No es posible agendar para mañana. La disponibilidad más próxima es a partir de PASADO MAÑANA." 
-        };
+        if (requestedDateStr === todayStr || requestedDateStr === tomorrowStr) {
+            return { 
+                available: false, 
+                message: "Lo sentimos, para la sucursal de Elizabeth requerimos al menos 1 día completo de holgura. No es posible agendar para hoy ni para mañana. La disponibilidad más próxima es a partir de PASADO MAÑANA. Por favor, consulta una fecha posterior." 
+            };
+        }
     }
 
     let duration = 60; // Default
@@ -1422,6 +1415,11 @@ Deno.serve(async (req) => {
                         return `${dayName}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${lunch?.enabled ? ` (Colación: ${lunch.start}-${lunch.end})` : ""}`;
                     }).join(", ");
 
+                const isElizabeth = (clinic.clinic_name || "").toLowerCase().includes("elizabeth");
+                const lagRule = isElizabeth 
+                    ? "1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura. NUNCA ofrezcas ni agendes citas para hoy ni para mañana. Si alguien pide para hoy o mañana, indícale amablemente que solo agendamos a partir de PASADO MAÑANA."
+                    : "1. ANTICIPACIÓN: Puedes agendar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
+
                 const sysPrompt = `${clinic.ai_personality}
 
 Clínica: ${clinic.clinic_name}
@@ -1446,9 +1444,7 @@ IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una im
 
 REGLAS CRÍTICAS DE FECHAS Y HORARIOS:
 0. NO HAY LÍMITES DE ANTICIPACIÓN: Puedes agendar citas para cualquier semana o mes futuro. NUNCA digas que no es posible agendar con anticipación o que está muy lejos.
-1. REGLAS DE ANTICIPACIÓN:
-   - PARA ESTA SUCURSAL (Elizabeth): Requerimos al menos 1 día completo de holgura. NUNCA ofrezcas ni agendes citas para hoy ni para mañana. Si el usuario pide para hoy o para mañana, indícale amablemente que en esta sucursal solo agendamos a partir de PASADO MAÑANA.
-   - PARA OTRAS SUCURSALES: No es posible agendar para hoy, pero sí para mañana en adelante.
+${lagRule}
 2. SI el paciente pregunta por disponibilidad en un día que aparece EXPLÍCITAMENTE como 'CERRADO' en el 'Horario General' (ej: sábado o domingo), DEBES responder inmediatamente que la clínica está cerrada ese día y ofrece alternativas de los días que sí están abiertos. NO asumas que un día está cerrado si no aparece en la lista; si no aparece, pregunta disponibilidad con 'check_availability'.
 3. SIEMPRE verifica disponibilidad con 'check_availability' antes de confirmar un horario, INCLUSO si el usuario pide un horario específico. No asumas que está disponible.
 4. SI el paciente pregunta por "mañana" o "pasado mañana", usa las fechas ISO proporcionadas arriba.
