@@ -389,7 +389,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                         .eq('user_id', currentUser.id)
                                         .eq('clinic_id', data.clinic_id)
                                         .single()
-                                        .then(({ data, error }) => {
+                                        .then(({ data }) => {
                                             if (data && mounted) setMember(data)
                                         })
                                 }

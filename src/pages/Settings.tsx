@@ -545,9 +545,9 @@ export default function Settings() {
         if (!profile?.clinic_id || !user?.email) return
         try {
             await redirectToCreditsCheckout(profile.clinic_id, user.email, packId)
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error buying credits:', error)
-            alert('Error al procesar el pago. Por favor intenta de nuevo.')
+            alert(error.message || 'Error al procesar el pago. Por favor intenta de nuevo.')
         }
     }
 
