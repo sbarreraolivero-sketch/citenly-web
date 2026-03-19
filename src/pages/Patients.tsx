@@ -289,16 +289,16 @@ export default function Patients() {
                                                                 </div>
                                                                 <div>
                                                                     <p className="font-medium text-charcoal group-hover:text-primary-700 transition-colors">{contact.name || 'Sin nombre'}</p>
-                                                                    <div className="flex items-center gap-2 text-xs text-charcoal/40">
-                                                                        <Phone className="w-3 h-3" /> {contact.phone_number || 'N/A'}
+                                                                    <div className="flex items-center gap-2 text-sm font-semibold text-charcoal/70">
+                                                                        <Phone className="w-3.5 h-3.5" /> {contact.phone_number || 'N/A'}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="py-4 px-6">
                                                             <span className={cn(
-                                                                "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                                                                contact.type === 'patient' ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-blue-100 text-blue-700 border border-blue-200"
+                                                                "px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
+                                                                contact.type === 'patient' ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-blue-100 text-blue-800 border border-blue-300"
                                                             )}>
                                                                 {contact.type === 'patient' ? 'Paciente' : 'Prospecto'}
                                                             </span>
@@ -308,11 +308,11 @@ export default function Patients() {
                                                                 {contact.tags?.map((tag, idx) => (
                                                                     <span
                                                                         key={idx}
-                                                                        className="px-1.5 py-0.5 rounded text-[10px] font-medium border"
+                                                                        className="px-2 py-0.5 rounded text-xs font-bold border uppercase"
                                                                         style={{
-                                                                            backgroundColor: `${tag.color}20`,
+                                                                            backgroundColor: `${tag.color}30`,
                                                                             color: tag.color,
-                                                                            borderColor: `${tag.color}40`
+                                                                            borderColor: `${tag.color}60`
                                                                         }}
                                                                     >
                                                                         {tag.name}
@@ -393,8 +393,8 @@ export default function Patients() {
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="font-bold text-charcoal truncate text-sm">{contact.name || 'Sin nombre'}</p>
-                                                        <p className="text-[10px] text-charcoal/40 flex items-center gap-1 mt-0.5">
-                                                            <Phone className="w-3 h-3" /> {contact.phone_number || 'N/A'}
+                                                        <p className="text-xs font-bold text-charcoal/70 flex items-center gap-1 mt-1">
+                                                            <Phone className="w-3.5 h-3.5" /> {contact.phone_number || 'N/A'}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -472,9 +472,9 @@ export default function Patients() {
                                         )}
                                     >
                                         <span>Todos los contactos</span>
-                                        <span className="text-[10px] bg-white px-1.5 py-0.5 rounded border border-silk-beige">{contacts.length}</span>
+                                        <span className="text-xs font-bold bg-white px-1.5 py-0.5 rounded border border-silk-beige text-charcoal/80">{contacts.length}</span>
                                     </button>
-                                    <div className="pt-2 pb-1 text-[10px] font-bold text-charcoal/30 uppercase tracking-widest px-3">Segmentos</div>
+                                    <div className="pt-2 pb-1 text-[11px] font-black text-charcoal/60 uppercase tracking-widest px-3">Segmentos</div>
                                     {tagSummaries.map(summary => (
                                         <button
                                             key={summary.tag_name}
@@ -488,7 +488,7 @@ export default function Patients() {
                                                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: summary.tag_color }} />
                                                 <span className="truncate">{summary.tag_name}</span>
                                             </div>
-                                            <span className="text-[10px] bg-white px-1.5 py-0.5 rounded border border-silk-beige font-semibold">
+                                            <span className="text-xs font-bold bg-white px-1.5 py-0.5 rounded border border-silk-beige text-charcoal/80">
                                                 {summary.contact_count}
                                             </span>
                                         </button>

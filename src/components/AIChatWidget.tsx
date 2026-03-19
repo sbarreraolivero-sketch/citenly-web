@@ -248,7 +248,7 @@ export function AIChatWidget({ variant = 'sales', clinicId }: AIChatWidgetProps)
                     {/* Mode Specific Info */}
                     <div className={`${activeTab === 'support' ? 'bg-primary-50 border-primary-100 text-primary-700' : 'bg-primary-50 border-primary-100 text-primary-700'} border-b px-4 py-2 flex items-center gap-2 transition-colors`}>
                         {activeTab === 'support' ? <LifeBuoy className="w-3.5 h-3.5 shrink-0" /> : <Bot className="w-3.5 h-3.5 shrink-0" />}
-                        <p className="text-[10px] sm:text-[11px] leading-tight font-medium">
+                        <p className="text-xs leading-tight font-black uppercase tracking-tight">
                             {activeTab === 'sales'
                                 ? 'Pregúntame cómo Citenly puede ayudar a tu clínica a crecer.'
                                 : activeTab === 'simulator'
@@ -269,13 +269,13 @@ export function AIChatWidget({ variant = 'sales', clinicId }: AIChatWidgetProps)
                                     : 'bg-white text-gray-800 rounded-2xl rounded-tl-sm border border-gray-100'
                                     }`}>
                                     <div className="whitespace-pre-wrap">{msg.text}</div>
-                                    <div className={`flex items-center justify-end gap-1 mt-1 ${msg.sender === 'user' ? 'text-white/60' : 'text-gray-400'}`}>
-                                        <span className="text-[9px]">{msg.timestamp}</span>
+                                    <div className={`flex items-center justify-end gap-1 mt-1 ${msg.sender === 'user' ? 'text-white/80' : 'text-gray-500'}`}>
+                                        <span className="text-[10px] font-bold">{msg.timestamp}</span>
                                     </div>
                                 </div>
                                 {msg.sender === 'ai' && Number(msg.toolsUsed) > 0 ? (
-                                    <div className="flex items-center gap-1.5 mt-1 ml-2 text-[10px] text-gray-500 font-medium">
-                                        <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                    <div className="flex items-center gap-2 mt-1.5 ml-2 text-xs text-gray-700 font-black uppercase tracking-tight">
+                                        <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
                                         <span>IA usó {msg.toolsUsed} {msg.toolsUsed === 1 ? 'herramienta' : 'herramientas'}</span>
                                     </div>
                                 ) : null}

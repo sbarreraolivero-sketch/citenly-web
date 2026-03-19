@@ -479,7 +479,7 @@ export default function CRM() {
                             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 truncate sm:whitespace-normal">Conversaciones</p>
+                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 truncate sm:whitespace-normal">Conversaciones</p>
                             <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{totalConversations}</p>
                         </div>
                     </div>
@@ -488,7 +488,7 @@ export default function CRM() {
                             <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 leading-tight">Leads calificados</p>
+                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 leading-tight">Leads calificados</p>
                             <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{qualifiedLeads}</p>
                         </div>
                     </div>
@@ -497,7 +497,7 @@ export default function CRM() {
                             <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 leading-tight">Citas agendadas</p>
+                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 leading-tight">Citas agendadas</p>
                             <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{scheduledAppointments}</p>
                         </div>
                     </div>
@@ -506,7 +506,7 @@ export default function CRM() {
                             <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] sm:text-xs font-semibold text-charcoal/80 leading-tight">Leads atribuidos</p>
+                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 leading-tight">Leads atribuidos</p>
                             <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{closedLeads}</p>
                         </div>
                     </div>
@@ -610,11 +610,11 @@ export default function CRM() {
                                                         <div className="flex items-center gap-1 bg-red-50 px-1 rounded animate-fade-in">
                                                             <button
                                                                 onClick={() => handleDeleteProspect(prospect.id)}
-                                                                className="text-[10px] text-red-600 font-medium px-1"
+                                                                className="text-xs text-red-700 font-black px-1"
                                                             >Sí</button>
                                                             <button
                                                                 onClick={() => setShowDeleteConfirm(null)}
-                                                                className="text-[10px] text-charcoal/50 px-1"
+                                                                className="text-xs text-charcoal/80 font-bold px-1"
                                                             >No</button>
                                                         </div>
                                                     ) : (
@@ -648,7 +648,7 @@ export default function CRM() {
                                                     {getTagsForProspect(prospect.id).map(tag => (
                                                         <span
                                                             key={tag.id}
-                                                            className="text-[10px] px-1.5 py-0.5 rounded-full text-white font-medium"
+                                                            className="text-xs px-2 py-0.5 rounded-full text-white font-black"
                                                             style={{ backgroundColor: tag.color }}
                                                         >
                                                             {tag.name}
@@ -658,11 +658,11 @@ export default function CRM() {
                                             )}
 
                                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-silk-beige/50">
-                                                <span className="text-[10px] text-charcoal/40">
+                                                <span className="text-xs font-semibold text-charcoal/70">
                                                     {formatDate(prospect.created_at)}
                                                 </span>
                                                 {prospect.source && (
-                                                    <span className="text-[10px] text-charcoal/30 bg-ivory px-1.5 py-0.5 rounded">
+                                                    <span className="text-xs font-bold text-charcoal/60 bg-ivory px-2 py-0.5 rounded border border-silk-beige">
                                                         {prospect.source}
                                                     </span>
                                                 )}

@@ -372,10 +372,10 @@ export default function Dashboard() {
                                 <stat.icon className={cn("w-5 h-5", stat.textColor)} />
                             </div>
                             <div className={cn(
-                                "flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full",
-                                stat.isUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                "flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-full shadow-sm",
+                                stat.isUp ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                             )}>
-                                {stat.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                {stat.isUp ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                                 {stat.trend}
                             </div>
                         </div>
@@ -384,7 +384,7 @@ export default function Dashboard() {
                             <div className="flex items-baseline gap-1">
                                 <p className="text-3xl font-bold text-charcoal leading-none">{stat.value}</p>
                             </div>
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-charcoal/40 mt-2">{stat.name}</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-charcoal/70 mt-2">{stat.name}</p>
                         </div>
 
                         {/* Mobile optimizations (sparkline placeholder look) */}

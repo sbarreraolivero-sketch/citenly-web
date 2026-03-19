@@ -1133,11 +1133,11 @@ export default function Appointments() {
                                                 {appointment.patient_name}
                                             </p>
                                             <div className="flex flex-col gap-1 mt-1">
-                                                <p className="text-[10px] sm:text-xs text-charcoal/40 flex items-center gap-1">
-                                                    <Phone className="w-3 h-3" />
+                                                <p className="text-xs sm:text-sm font-bold text-charcoal/80 flex items-center gap-1.5">
+                                                    <Phone className="w-3.5 h-3.5" />
                                                     {formatPhoneNumber(appointment.phone_number)}
                                                 </p>
-                                                <span className={cn('inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full w-fit font-bold uppercase tracking-wider border mt-1', getStatusColor(appointment.status))}>
+                                                <span className={cn('inline-flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full w-fit font-black uppercase tracking-widest border mt-1.5 shadow-sm transition-all', getStatusColor(appointment.status))}>
                                                     {getStatusIcon(appointment.status)}
                                                     {getStatusLabel(appointment.status)}
                                                 </span>
@@ -1149,16 +1149,16 @@ export default function Appointments() {
                                 {/* Body: Service & Time */}
                                 <div className="bg-ivory/80 rounded-xl p-3 flex flex-col gap-2.5">
                                     <div className="flex justify-between items-center gap-2">
-                                        <span className="text-[10px] font-semibold text-charcoal/50 uppercase tracking-widest flex-shrink-0">Servicio</span>
+                                        <span className="text-[11px] font-black text-charcoal/70 uppercase tracking-widest flex-shrink-0">Servicio</span>
                                         <span className="text-sm font-medium text-charcoal text-right truncate">{appointment.service}</span>
                                     </div>
                                     <div className="h-px w-full bg-silk-beige/50"></div>
                                     <div className="flex justify-between items-center gap-2">
-                                        <span className="text-[10px] font-semibold text-charcoal/50 uppercase tracking-widest flex-shrink-0">Fecha / Hora</span>
+                                        <span className="text-[11px] font-black text-charcoal/70 uppercase tracking-widest flex-shrink-0">Fecha / Hora</span>
                                         <div className="text-right">
                                             <span className="text-sm font-semibold text-charcoal block capitalize">{formatDate(appointment.appointment_date)}</span>
-                                            <span className="text-xs text-charcoal/60 flex items-center justify-end gap-1 mt-0.5 font-medium">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
+                                            <span className="text-sm text-charcoal/80 flex items-center justify-end gap-1.5 mt-1 font-bold">
+                                                <div className="w-2 h-2 rounded-full bg-primary-500 shadow-sm animate-pulse"></div>
                                                 {formatTime(appointment.appointment_date)}
                                             </span>
                                         </div>

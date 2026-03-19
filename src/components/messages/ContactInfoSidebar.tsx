@@ -345,7 +345,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                     <Mail className="w-4 h-4 text-charcoal/60" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider">Email</p>
+                                    <p className="text-[11px] font-black text-charcoal/70 uppercase tracking-widest">Email</p>
                                     <p className="text-sm text-charcoal truncate">{prospect.email || 'No proporcionado'}</p>
                                 </div>
                             </div>
@@ -355,7 +355,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                     <Briefcase className="w-4 h-4 text-charcoal/60" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider">Interés</p>
+                                    <p className="text-[11px] font-black text-charcoal/70 uppercase tracking-widest">Interés</p>
                                     <p className="text-sm text-charcoal">{prospect.service_interest || 'Ninguno especificado'}</p>
                                 </div>
                             </div>
@@ -365,8 +365,8 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                     <Target className="w-4 h-4 text-charcoal/60" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider">Fuente</p>
-                                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-ivory border border-silk-beige text-charcoal/60 mt-1 capitalize">
+                                    <p className="text-[11px] font-black text-charcoal/70 uppercase tracking-widest">Fuente</p>
+                                    <span className="inline-block px-2.5 py-1 rounded-full text-xs font-black bg-ivory border border-silk-beige text-charcoal/80 mt-1 capitalize shadow-sm">
                                         {prospect.source || 'Directo'}
                                     </span>
                                 </div>
@@ -382,8 +382,8 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                 <span className="text-sm font-semibold text-charcoal">Respuesta IA</span>
                             </div>
                             <div className={cn(
-                                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                                prospect.requires_human ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                                "px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-widest shadow-sm",
+                                prospect.requires_human ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
                             )}>
                                 {prospect.requires_human ? "Silenciada" : "Activa"}
                             </div>
@@ -430,13 +430,13 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
 
                         {showTagAdd && (
                             <div className="bg-ivory/50 rounded-soft border border-silk-beige p-2 animate-in fade-in zoom-in-95 duration-200">
-                                <p className="text-[10px] font-bold text-charcoal/40 mb-2 px-1">Selecciona para agregar:</p>
+                                <p className="text-xs font-black text-charcoal/70 mb-2 px-1 uppercase tracking-tight">Selecciona para agregar:</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {allTags.filter(at => !tags.some(t => t.id === at.id)).map(tag => (
                                         <button
                                             key={tag.id}
                                             onClick={() => addTag(tag.id)}
-                                            className="text-[10px] px-2 py-1 rounded-full text-white font-medium hover:scale-105 transition-transform"
+                                            className="text-xs px-2.5 py-1 rounded-full text-white font-black hover:scale-105 transition-transform shadow-sm"
                                             style={{ backgroundColor: tag.color }}
                                         >
                                             {tag.name}
@@ -453,7 +453,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                             {tags.map(tag => (
                                 <div 
                                     key={tag.id}
-                                    className="group relative flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full text-white font-semibold transition-all hover:pr-6 overflow-hidden"
+                                    className="group relative flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full text-white font-black transition-all hover:pr-8 overflow-hidden shadow-md"
                                     style={{ backgroundColor: tag.color }}
                                 >
                                     {tag.name}
@@ -505,12 +505,12 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
 
                     {/* Meta Info */}
                     <section className="pt-4 border-t border-silk-beige/50 space-y-2">
-                        <div className="flex items-center justify-between text-[10px] text-charcoal/30">
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Creado:</span>
+                        <div className="flex items-center justify-between text-xs font-bold text-charcoal/60">
+                            <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Creado:</span>
                             <span>{new Date(prospect.created_at).toLocaleDateString()}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[10px] text-charcoal/30">
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Último cambio:</span>
+                        <div className="flex items-center justify-between text-xs font-bold text-charcoal/60">
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Último cambio:</span>
                             <span>{new Date(prospect.updated_at).toLocaleDateString()}</span>
                         </div>
                     </section>

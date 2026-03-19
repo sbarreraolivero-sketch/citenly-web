@@ -454,7 +454,7 @@ const RetentionEngine = () => {
                                                     <span className="text-sm font-medium text-charcoal">{item.label}</span>
                                                     <span className="text-sm font-bold text-charcoal">{item.count}</span>
                                                 </div>
-                                                <p className="text-xs text-charcoal/40">{item.desc}</p>
+                                                <p className="text-xs font-semibold text-charcoal/60">{item.desc}</p>
                                                 {donutData.total > 0 && (
                                                     <div className="mt-1.5 h-1.5 bg-ivory rounded-full overflow-hidden">
                                                         <div
@@ -493,7 +493,7 @@ const RetentionEngine = () => {
                                         )}>
                                             {Math.round(healthIndex)}
                                         </span>
-                                        <span className="text-xs text-charcoal/40">/ 100</span>
+                                        <span className="text-xs font-bold text-charcoal/60">/ 100</span>
                                     </div>
                                 </div>
                                 <p className="text-sm text-charcoal/60 mt-4 text-center">
@@ -504,12 +504,12 @@ const RetentionEngine = () => {
                             {/* Key Metric */}
                             <div className="border-t border-silk-beige pt-4 mt-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs text-charcoal/50">Score Promedio</span>
+                                    <span className="text-xs font-black uppercase tracking-widest text-charcoal/70">Score Promedio</span>
                                     <span className="text-sm font-semibold text-charcoal">{Math.round(stats?.avg_score || 0)}</span>
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-charcoal/50">Último cálculo</span>
-                                    <span className="text-xs text-charcoal/40">
+                                    <span className="text-xs font-black uppercase tracking-widest text-charcoal/70">Último cálculo</span>
+                                    <span className="text-xs font-black text-charcoal/80">
                                         {stats?.last_computed_at
                                             ? new Date(stats.last_computed_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
                                             : 'Nunca'
@@ -541,12 +541,12 @@ const RetentionEngine = () => {
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b border-silk-beige">
-                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Paciente</th>
-                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Score</th>
-                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Riesgo</th>
-                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Retraso</th>
-                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Último Servicio</th>
-                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Ticket Prom.</th>
+                                                <th className="text-left py-3 px-4 text-xs font-black uppercase tracking-widest text-charcoal/70">Paciente</th>
+                                                <th className="text-left py-3 px-4 text-xs font-black uppercase tracking-widest text-charcoal/70">Score</th>
+                                                <th className="text-left py-3 px-4 text-xs font-black uppercase tracking-widest text-charcoal/70">Riesgo</th>
+                                                <th className="text-left py-3 px-4 text-xs font-black uppercase tracking-widest text-charcoal/70">Retraso</th>
+                                                <th className="text-left py-3 px-4 text-xs font-black uppercase tracking-widest text-charcoal/70">Último Servicio</th>
+                                                <th className="text-left py-3 px-4 text-xs font-black uppercase tracking-widest text-charcoal/70">Ticket Prom.</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -562,7 +562,7 @@ const RetentionEngine = () => {
                                                                 </div>
                                                                 <div>
                                                                     <p className="font-medium text-charcoal">{patient.patient_name || 'Sin nombre'}</p>
-                                                                    <p className="text-xs text-charcoal/40">{patient.phone_number}</p>
+                                                                    <p className="text-xs font-bold text-charcoal/60">{patient.phone_number}</p>
                                                                 </div>
                                                             </div>
                                                         </td>

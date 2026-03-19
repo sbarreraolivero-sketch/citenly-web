@@ -413,7 +413,7 @@ export default function Campaigns() {
                             {step === 1 && (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="label text-xs uppercase tracking-wider text-charcoal/40 font-bold mb-2 block">Nombre de la Campaña</label>
+                                            <label className="label text-xs uppercase tracking-widest text-charcoal/80 font-black mb-2 block">Nombre de la Campaña</label>
                                             <input
                                                 type="text"
                                                 className="input w-full"
@@ -425,7 +425,7 @@ export default function Campaigns() {
 
                                         <div className="grid grid-cols-1 gap-4">
                                             <div>
-                                                <label className="label text-xs uppercase tracking-wider text-charcoal/40 font-bold mb-2 block">Incluir etiquetas (Y)</label>
+                                                <label className="label text-xs uppercase tracking-widest text-charcoal/80 font-black mb-2 block">Incluir etiquetas (Y)</label>
                                                 <div className="flex flex-wrap gap-2 p-3 bg-ivory rounded-soft border border-silk-beige min-h-[44px]">
                                                     {tags.map(tag => (
                                                         <button
@@ -441,10 +441,10 @@ export default function Campaigns() {
                                                                 }
                                                             }}
                                                             className={`
-                                                                px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-all
+                                                                px-2 py-1 rounded text-xs font-black uppercase tracking-wider border transition-all
                                                                 ${inclusionTags.includes(tag.id)
-                                                                    ? 'bg-primary-500 text-white border-primary-600 shadow-sm'
-                                                                    : 'bg-white text-charcoal/40 border-silk-beige hover:border-primary-300'
+                                                                    ? 'bg-primary-600 text-white border-primary-700 shadow-sm'
+                                                                    : 'bg-white text-charcoal/70 border-silk-beige hover:border-primary-400'
                                                                 }
                                                             `}
                                                         >
@@ -456,7 +456,7 @@ export default function Campaigns() {
                                             </div>
 
                                             <div>
-                                                <label className="label text-xs uppercase tracking-wider text-charcoal/40 font-bold mb-2 block text-red-600">Excluir etiquetas (NO)</label>
+                                                <label className="label text-xs uppercase tracking-widest text-red-700 font-black mb-2 block">Excluir etiquetas (NO)</label>
                                                 <div className="flex flex-wrap gap-2 p-3 bg-red-50/30 rounded-soft border border-red-100 min-h-[44px]">
                                                     {tags.map(tag => (
                                                         <button
@@ -472,10 +472,10 @@ export default function Campaigns() {
                                                                 }
                                                             }}
                                                             className={`
-                                                                px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-all
+                                                                px-2 py-1 rounded text-xs font-black uppercase tracking-wider border transition-all
                                                                 ${exclusionTags.includes(tag.id)
-                                                                    ? 'bg-red-500 text-white border-red-600 shadow-sm'
-                                                                    : 'bg-white text-charcoal/40 border-silk-beige hover:border-red-300'
+                                                                    ? 'bg-red-600 text-white border-red-700 shadow-sm'
+                                                                    : 'bg-white text-charcoal/70 border-silk-beige hover:border-red-400'
                                                                 }
                                                             `}
                                                         >

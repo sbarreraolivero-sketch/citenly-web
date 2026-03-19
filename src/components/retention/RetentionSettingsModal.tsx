@@ -204,18 +204,18 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                     </h3>
                                     <div className="flex gap-2 items-center">
                                         {usingRemote && (
-                                            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-black flex items-center gap-1.5 shadow-sm">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                                                 Online
                                             </span>
                                         )}
                                         <Link
                                             to="/app/templates"
                                             onClick={() => onClose()}
-                                            className="text-[10px] text-primary-600 hover:text-primary-700 font-bold flex items-center gap-1 transition-colors"
+                                            className="text-xs bg-primary-50 text-primary-700 hover:bg-primary-100 px-2.5 py-1 rounded-full font-black flex items-center gap-1.5 transition-all shadow-sm border border-primary-100"
                                             title="Administrar plantillas de WhatsApp"
                                         >
-                                            Administrar Plantillas <ArrowRight className="w-3 h-3" />
+                                            Administrar Plantillas <ArrowRight className="w-3.5 h-3.5" />
                                         </Link>
                                     </div>
                                 </div>

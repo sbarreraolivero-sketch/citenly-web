@@ -131,11 +131,11 @@ export default function Templates() {
     const getStatusBadge = (status?: string) => {
         switch (status?.toUpperCase()) {
             case 'APPROVED':
-                return <span className="px-2 py-1 text-[10px] font-bold bg-emerald-100 text-emerald-700 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Aprobada</span>
+                return <span className="px-2 py-1 text-xs font-black bg-emerald-100 text-emerald-800 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />Aprobada</span>
             case 'PENDING':
-                return <span className="px-2 py-1 text-[10px] font-bold bg-amber-100 text-amber-700 rounded-full flex items-center gap-1"><Clock className="w-3 h-3" />En Revisión</span>
+                return <span className="px-2 py-1 text-xs font-black bg-amber-100 text-amber-800 rounded-full flex items-center gap-1"><Clock className="w-3.5 h-3.5" />En Revisión</span>
             case 'REJECTED':
-                return <span className="px-2 py-1 text-[10px] font-bold bg-red-100 text-red-700 rounded-full flex items-center gap-1"><ShieldAlert className="w-3 h-3" />Rechazada</span>
+                return <span className="px-2 py-1 text-xs font-black bg-red-100 text-red-800 rounded-full flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" />Rechazada</span>
             default:
                 return null
         }
@@ -272,7 +272,7 @@ export default function Templates() {
                                         placeholder="ej. promocion_verano_2026"
                                         className="w-full p-3 bg-white border border-silk-beige rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
                                     />
-                                    <p className="text-[11px] text-charcoal/40 mt-1">Solo letras minúsculas, números y guiones bajos (_).</p>
+                                    <p className="text-xs font-semibold text-charcoal/60 mt-1">Solo letras minúsculas, números y guiones bajos (_).</p>
                                 </div>
 
                                 <div>
@@ -314,7 +314,7 @@ export default function Templates() {
                                             </button>
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-charcoal/40 mt-2">Haz clic para insertar la variable en donde tienes el cursor del texto.</p>
+                                    <p className="text-xs font-bold text-charcoal/60 mt-2">Haz clic para insertar la variable en donde tienes el cursor del texto.</p>
                                 </div>
 
                                 <textarea
@@ -344,8 +344,8 @@ export default function Templates() {
                                                 {uniqueVars.map((v) => {
                                                     const example = variableExamples[v] || genericExamples[v - 1] || "Ejemplo"
                                                     return (
-                                                        <div key={v} className="flex flex-col bg-white border border-blue-100 rounded-lg p-2 shadow-soft-sm min-w-[100px]">
-                                                            <span className="text-[10px] font-bold text-blue-500 mb-0.5">Variable {'{{' + v + '}}'}</span>
+                                                        <div key={v} className="flex flex-col bg-white border border-blue-200 rounded-lg p-2.5 shadow-soft-sm min-w-[110px]">
+                                                            <span className="text-xs font-black text-blue-600 mb-1">Variable {'{{' + v + '}}'}</span>
                                                             <span className="text-xs font-medium text-charcoal">{example}</span>
                                                         </div>
                                                     )
@@ -405,7 +405,7 @@ export default function Templates() {
                                     </div>
                                     <div>
                                         <p className="text-white text-sm font-semibold leading-tight">Tu Clínica</p>
-                                        <p className="text-white/80 text-[10px]">Cuenta de empresa</p>
+                                        <p className="text-white/95 text-xs font-black tracking-tight">Cuenta de empresa</p>
                                     </div>
                                 </div>
                                 {/* Fondo con Patrón WhatsApp (CSS) */}
@@ -431,7 +431,7 @@ export default function Templates() {
                                             })
                                             return previewBody
                                         })()}
-                                        <div className="text-[10px] text-charcoal/40 text-right mt-1.5 ml-4 select-none">12:00</div>
+                                        <div className="text-[11px] font-bold text-charcoal/50 text-right mt-1.5 ml-4 select-none">12:00</div>
                                     </div>
 
                                     {/* Buttons */}
