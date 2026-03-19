@@ -128,10 +128,10 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                         )} />
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-charcoal text-sm">
+                                        <p className="font-bold text-charcoal text-sm">
                                             {settings.autonomous_mode ? 'Modo Autónomo (Piloto Automático)' : 'Modo Supervisado'}
                                         </p>
-                                        <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
+                                        <p className="text-sm text-charcoal/80 font-medium mt-1 leading-relaxed">
                                             {settings.autonomous_mode
                                                 ? 'La IA enviará los mensajes automáticamente cuando detecte riesgo, sin esperar tu aprobación.'
                                                 : 'La IA generará sugerencias que deberás aprobar manualmente antes de ser enviadas.'}
@@ -150,39 +150,45 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-charcoal/60 uppercase tracking-wide">
+                                        <label className="text-xs font-bold text-charcoal/80 uppercase tracking-wide">
                                             Riesgo Medio
                                         </label>
                                         <div className="flex items-center gap-2">
                                             <input
-                                                type="number"
-                                                min="1"
-                                                max="365"
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 value={settings.medium_risk_delay}
-                                                onChange={e => setSettings(s => ({ ...s, medium_risk_delay: parseInt(e.target.value) || 0 }))}
-                                                className="w-full p-2 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
+                                                    setSettings(s => ({ ...s, medium_risk_delay: parseInt(val) || 0 }))
+                                                }}
+                                                className="w-full h-11 p-3 bg-ivory border-2 border-silk-beige rounded-xl text-base font-bold text-charcoal focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all shadow-sm"
                                             />
-                                            <span className="text-xs text-charcoal/40">días</span>
+                                            <span className="text-sm font-bold text-charcoal/60">días</span>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-charcoal/60 uppercase tracking-wide">
+                                        <label className="text-xs font-bold text-charcoal/80 uppercase tracking-wide">
                                             Riesgo Alto
                                         </label>
                                         <div className="flex items-center gap-2">
                                             <input
-                                                type="number"
-                                                min="1"
-                                                max="365"
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 value={settings.high_risk_delay}
-                                                onChange={e => setSettings(s => ({ ...s, high_risk_delay: parseInt(e.target.value) || 0 }))}
-                                                className="w-full p-2 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
+                                                    setSettings(s => ({ ...s, high_risk_delay: parseInt(val) || 0 }))
+                                                }}
+                                                className="w-full h-11 p-3 bg-ivory border-2 border-silk-beige rounded-xl text-base font-bold text-charcoal focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all shadow-sm"
                                             />
-                                            <span className="text-xs text-charcoal/40">días</span>
+                                            <span className="text-sm font-bold text-charcoal/60">días</span>
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-[10px] text-charcoal/40 italic">
+                                <p className="text-[12px] text-charcoal/70 font-semibold leading-snug">
                                     Define cuántos días deben pasar después de la fecha ideal de regreso para que el paciente cambie de nivel de riesgo.
                                 </p>
                             </div>
@@ -216,7 +222,7 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
 
                                 {/* Medium Risk */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-medium text-charcoal/60 flex items-center gap-1.5 uppercase tracking-wide">
+                                    <label className="text-xs font-bold text-charcoal/80 flex items-center gap-1.5 uppercase tracking-wide">
                                         <Clock className="w-3.5 h-3.5 text-amber-500" />
                                         Riesgo Medio (Retraso Leve)
                                     </label>
@@ -224,21 +230,21 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                         value={settings.medium_risk_template}
                                         onChange={e => setSettings(s => ({ ...s, medium_risk_template: e.target.value }))}
                                         disabled={templates.length === 0}
-                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm font-semibold text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="">{templates.length === 0 ? 'No hay plantillas disponibles en YCloud' : 'Selecciona una plantilla...'}</option>
                                         {templates.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-charcoal/40 px-1 bg-gray-50 p-2 rounded-lg border border-dashed border-gray-200 min-h-[40px]">
+                                    <p className="text-[13px] text-charcoal/80 font-medium px-3 py-2.5 bg-ivory rounded-lg border border-dashed border-silk-beige min-h-[50px] leading-relaxed">
                                         {templates.find(t => t.id === settings.medium_risk_template)?.desc || (templates.length === 0 ? 'Sin plantillas configuradas. Ve a la sección Plantillas para crear o sincronizar.' : 'Selecciona una plantilla para ver previsualización')}
                                     </p>
                                 </div>
 
                                 {/* High Risk */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-medium text-charcoal/60 flex items-center gap-1.5 uppercase tracking-wide">
+                                    <label className="text-xs font-bold text-charcoal/80 flex items-center gap-1.5 uppercase tracking-wide">
                                         <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
                                         Riesgo Alto (Pérdida Inminente)
                                     </label>
@@ -246,14 +252,14 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                         value={settings.high_risk_template}
                                         onChange={e => setSettings(s => ({ ...s, high_risk_template: e.target.value }))}
                                         disabled={templates.length === 0}
-                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-full p-2.5 bg-ivory border border-silk-beige rounded-xl text-sm font-semibold text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="">{templates.length === 0 ? 'No hay plantillas disponibles en YCloud' : 'Selecciona una plantilla...'}</option>
                                         {templates.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-charcoal/40 px-1 bg-gray-50 p-2 rounded-lg border border-dashed border-gray-200 min-h-[40px]">
+                                    <p className="text-[13px] text-charcoal/80 font-medium px-3 py-2.5 bg-ivory rounded-lg border border-dashed border-silk-beige min-h-[50px] leading-relaxed">
                                         {templates.find(t => t.id === settings.high_risk_template)?.desc || (templates.length === 0 ? 'Sin plantillas configuradas. Ve a la sección Plantillas para crear o sincronizar.' : 'Selecciona una plantilla para ver previsualización')}
                                     </p>
                                 </div>
