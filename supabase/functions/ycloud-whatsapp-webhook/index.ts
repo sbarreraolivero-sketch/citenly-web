@@ -1347,6 +1347,32 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
 
+        // --- AI CREDIT CHECK ---
+        const firstDayOfMonth = new Date();
+        firstDayOfMonth.setDate(1);
+        firstDayOfMonth.setHours(0, 0, 0, 0);
+
+        const { count: usageCount } = await sb.from("messages")
+            .select("*", { count: "exact", head: true })
+            .eq("clinic_id", clinic.id)
+            .eq("ai_generated", true)
+            .gte("created_at", firstDayOfMonth.toISOString());
+
+        const monthlyLimit = clinic.ai_credits_monthly_limit || 500;
+        const extraBalance = clinic.ai_credits_extra_balance || 0;
+        const totalCreditsAvailable = monthlyLimit + extraBalance;
+
+        if ((usageCount || 0) >= totalCreditsAvailable) {
+            await debugLog(sb, `IA silenciosa: Créditos agotados`, { 
+                clinic_id: clinic.id, 
+                used: usageCount, 
+                limit: monthlyLimit,
+                extra: extraBalance 
+            });
+            return new Response(JSON.stringify({ status: "saved_silently", reason: "insufficient_credits" }), { headers: corsHeaders });
+        }
+        // -----------------------
+
         const asyncProcess = async () => {
             try {
                 // DEBOUNCE - WAIT FOR 30 SECONDS (Reverted from 10s as requested)

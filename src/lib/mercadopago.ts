@@ -151,3 +151,39 @@ export const PLANS = {
 } as const
 
 export type PlanId = keyof typeof PLANS
+
+/**
+ * AI Credit Packs configuration
+ */
+export const CREDIT_PACKS = {
+    'pack_500': { id: 'pack_500', name: 'Pack Inicial', credits: 500, price: 5, description: "500 Créditos de IA" },
+    'pack_1500': { id: 'pack_1500', name: 'Pack Pro', credits: 1500, price: 12, description: "1500 Créditos de IA" },
+    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 4000, price: 25, description: "4000 Créditos de IA" },
+} as const
+
+export type CreditPackId = keyof typeof CREDIT_PACKS
+
+/**
+ * Redirects user to Mercado Pago for credit pack purchase
+ */
+export async function redirectToCreditsCheckout(clinicId: string, email: string, packId: CreditPackId) {
+    const { data, error } = await supabase.functions.invoke('mercadopago-create-credits-preference', {
+        body: {
+            clinic_id: clinicId,
+            pack_id: packId,
+            email: email,
+            back_urls: {
+                success: `${window.location.origin}/app/settings?tab=subscription&payment=success`,
+                failure: `${window.location.origin}/app/settings?tab=subscription&payment=failure`,
+                pending: `${window.location.origin}/app/settings?tab=subscription&payment=pending`,
+            },
+        },
+    })
+
+    if (error) {
+        console.error('Error creating credit preference:', error)
+        throw new Error('Failed to create payment preference')
+    }
+
+    window.location.href = data.init_point
+}

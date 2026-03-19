@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
     Search, Building2, Users, Shield, ChevronUp,
-    CheckCircle, Clock, XCircle, Loader2, RefreshCw, CreditCard, Eye
+    CheckCircle, Clock, XCircle, Loader2, RefreshCw, CreditCard, Eye, Sparkles, Plus
 } from 'lucide-react'
 
 interface ClinicData {
@@ -17,6 +17,8 @@ interface ClinicData {
     trial_end_date: string | null
     currency: string
     timezone: string
+    ai_credits_monthly_limit: number
+    ai_credits_extra_balance: number
     clinic_members: {
         id: string
         email: string
@@ -65,7 +67,7 @@ export default function AdminClinics() {
 
             // Fetch clinics with members and subscriptions
             const response = await fetch(
-                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
+                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
                 {
                     headers: {
                         'apikey': supabaseKey,
@@ -369,6 +371,18 @@ export default function AdminClinics() {
                                                                         )}
                                                                     </div>
                                                                 </div>
+
+                                                                {/* AI Usage */}
+                                                                <div className="bg-white rounded-lg p-4 border border-gray-100 md:col-span-3">
+                                                                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
+                                                                        <Sparkles className="w-3.5 h-3.5" /> Uso de Inteligencia Artificial (Mes Actual)
+                                                                    </h4>
+                                                                    <AdminAIUsage 
+                                                                        clinicId={clinic.id} 
+                                                                        monthlyLimit={clinic.ai_credits_monthly_limit} 
+                                                                        extraBalance={clinic.ai_credits_extra_balance} 
+                                                                    />
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     )}
@@ -381,6 +395,118 @@ export default function AdminClinics() {
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    )
+}
+
+function AdminAIUsage({ clinicId, monthlyLimit, extraBalance }: { clinicId: string, monthlyLimit: number, extraBalance: number }) {
+    const [used, setUsed] = useState<number | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [isUpdating, setIsUpdating] = useState(false)
+    const [currentExtra, setCurrentExtra] = useState(extraBalance || 0)
+    const [addAmount, setAddAmount] = useState('500')
+
+    useEffect(() => {
+        const fetchUsage = async () => {
+            try {
+                const startOfMonth = new Date()
+                startOfMonth.setDate(1)
+                startOfMonth.setHours(0, 0, 0, 0)
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { count, error } = await (supabase as any)
+                    .from('messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('clinic_id', clinicId)
+                    .eq('ai_generated', true)
+                    .gte('created_at', startOfMonth.toISOString())
+                
+                if (error) throw error
+                setUsed(count || 0)
+            } catch (err) {
+                console.error('Error fetching AI usage:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchUsage()
+    }, [clinicId])
+
+    const handleAddCredits = async () => {
+        if (isUpdating || !addAmount) return
+        setIsUpdating(true)
+        try {
+            const amount = parseInt(addAmount)
+            const newExtra = currentExtra + amount
+            
+            const { error } = await (supabase as any)
+                .from('clinic_settings')
+                .update({ ai_credits_extra_balance: newExtra })
+                .eq('id', clinicId)
+
+            if (error) throw error
+            setCurrentExtra(newExtra)
+            alert('Créditos cargados correctamente')
+        } catch (err) {
+            console.error('Error adding credits:', err)
+            alert('Error al cargar créditos')
+        } finally {
+            setIsUpdating(false)
+        }
+    }
+
+    if (loading) return <div className="animate-pulse h-8 bg-gray-100 rounded-lg"></div>
+
+    const total = (monthlyLimit || 500) + currentExtra
+    const percent = Math.min(100, Math.round(((used || 0) / total) * 100))
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-end">
+                <div className="flex gap-4">
+                    <div className="text-center">
+                        <p className="text-[10px] text-gray-400 uppercase font-bold text-left">Usados</p>
+                        <p className="text-sm font-bold text-gray-900 text-left">{used}</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-[10px] text-gray-400 uppercase font-bold text-left">Límite (Plan + Extra)</p>
+                        <p className="text-sm font-medium text-gray-600 text-left">{monthlyLimit || 500} + {currentExtra} = {total}</p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${percent > 90 ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'}`}>
+                        {percent}%
+                    </span>
+                </div>
+            </div>
+            
+            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner">
+                <div 
+                    className={`h-full transition-all duration-500 ${percent > 90 ? 'bg-red-500' : 'bg-primary-500'}`} 
+                    style={{ width: `${percent}%` }}
+                />
+            </div>
+
+            {/* Manual Credit Loader */}
+            <div className="pt-2 border-t border-gray-50 flex items-center gap-2">
+                <div className="relative flex-1">
+                    <input 
+                        type="number"
+                        value={addAmount}
+                        onChange={(e) => setAddAmount(e.target.value)}
+                        placeholder="Cantidad..."
+                        className="w-full pl-3 pr-4 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    />
+                </div>
+                <button
+                    onClick={handleAddCredits}
+                    disabled={isUpdating}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-all shadow-sm"
+                >
+                    {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                    Cargar Créditos
+                </button>
             </div>
         </div>
     )

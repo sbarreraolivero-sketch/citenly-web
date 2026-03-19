@@ -66,10 +66,10 @@ Deno.serve(async (req: Request) => {
         const payment = await paymentResponse.json();
         console.log("Payment status:", payment.status);
 
-        // Extract clinic_id and plan from metadata or external_reference
+        // Extract clinic_id, plan, and purchase type from metadata or external_reference
         const clinicId = payment.metadata?.clinic_id || payment.external_reference;
-        const plan = payment.metadata?.plan || "radiance";
-
+        const purchaseType = payment.metadata?.type || 'subscription';
+        
         if (!clinicId) {
             console.error("No clinic_id found in payment");
             return new Response("No clinic_id", { status: 400 });
@@ -77,9 +77,46 @@ Deno.serve(async (req: Request) => {
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-        // Update subscription based on payment status
+        // Handle AI Credit Purchases
+        if (purchaseType === 'ai_credits' && payment.status === 'approved') {
+            const creditsToAdd = parseInt(payment.metadata?.credits || '0');
+            
+            if (creditsToAdd > 0) {
+                // Fetch current extra balance
+                const { data: settings, error: fetchError } = await supabase
+                    .from('clinic_settings')
+                    .select('ai_credits_extra_balance')
+                    .eq('id', clinicId)
+                    .single();
+
+                if (fetchError) {
+                    console.error("Error fetching clinic settings:", fetchError);
+                    return new Response("Error fetching settings", { status: 500 });
+                }
+
+                const currentBalance = settings?.ai_credits_extra_balance || 0;
+                const newBalance = currentBalance + creditsToAdd;
+
+                // Update balance
+                const { error: updateError } = await supabase
+                    .from('clinic_settings')
+                    .update({ ai_credits_extra_balance: newBalance })
+                    .eq('id', clinicId);
+
+                if (updateError) {
+                    console.error("Error updating credits:", updateError);
+                    return new Response("Error updating credits", { status: 500 });
+                }
+
+                console.log(`AI Credits updated for ${clinicId}: +${creditsToAdd} -> Total Extra: ${newBalance}`);
+                return new Response("AI Credits OK", { status: 200 });
+            }
+        }
+
+        // Default: Update subscription logic (existing code)
         let subscriptionStatus: string;
         let periodEnd: Date | null = null;
+        // ... (rest of the existing logic)
 
         switch (payment.status) {
             case "approved":

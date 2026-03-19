@@ -37,7 +37,7 @@ import {
     RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
+import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, type CreditPackId, redirectToCreditsCheckout } from '@/lib/mercadopago'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
@@ -146,10 +146,9 @@ export default function Settings() {
     }
 
     // Integration settings
-    const [yCloudApiKey, setYCloudApiKey] = useState('')
-    const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
-
-    const [openaiModel] = useState('gpt-4o')
+    const [openaiModel] = useState('gpt-4o-mini')
+    const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
+    const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
     const [aiBehaviorRules, setAiBehaviorRules] = useState('')
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
@@ -387,10 +386,12 @@ export default function Settings() {
 
                     setYCloudApiKey(data.ycloud_api_key || '')
                     setYCloudPhoneNumber(data.ycloud_phone_number || '')
+                    
+                    setAiCreditsMonthlyLimit(data.ai_credits_monthly_limit || 500)
+                    setAiCreditsExtraBalance(data.ai_credits_extra_balance || 0)
 
                     setAiBehaviorRules(data.ai_behavior_rules || '')
                     setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
-                    // setOpenaiModel(data.openai_model || 'gpt-4o') - removed since model is fixed
                     if (data.working_hours) setWorkingHours(data.working_hours)
                 }
 
@@ -538,6 +539,16 @@ export default function Settings() {
         setTimeout(() => setCopiedWebhook(false), 2000)
     }
 
+    const handleBuyCredits = async (packId: CreditPackId) => {
+        if (!profile?.clinic_id || !user?.email) return
+        try {
+            await redirectToCreditsCheckout(profile.clinic_id, user.email, packId)
+        } catch (error) {
+            console.error('Error buying credits:', error)
+            alert('Error al procesar el pago. Por favor intenta de nuevo.')
+        }
+    }
+
     const saveIntegrations = async () => {
         if (!profile?.clinic_id) return
         setIsSavingIntegrations(true)
@@ -549,7 +560,6 @@ export default function Settings() {
                 .update({
                     ycloud_api_key: yCloudApiKey || null,
                     ycloud_phone_number: yCloudPhoneNumber || null,
-
                     openai_model: openaiModel,
                 })
                 .eq('id', profile.clinic_id)
@@ -1790,6 +1800,60 @@ export default function Settings() {
                                 </div>
                             </div>
 
+                            {/* AI Credit Packs */}
+                            <div id="ai-credits-packs" className="card-soft p-6">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-soft flex items-center justify-center">
+                                        <Sparkles className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-charcoal">Recarga de Créditos IA</h2>
+                                        <p className="text-sm text-charcoal/50">Añade saldo adicional para tu asistente de IA</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {(Object.keys(CREDIT_PACKS) as CreditPackId[]).map((packId) => {
+                                        const pack = CREDIT_PACKS[packId]
+                                        return (
+                                            <div key={packId} className="p-6 bg-white border border-silk-beige rounded-soft hover:border-primary-300 transition-all shadow-sm hover:shadow-md flex flex-col">
+                                                <div className="mb-4">
+                                                    <h3 className="text-lg font-bold text-charcoal">{pack.name}</h3>
+                                                    <div className="flex items-baseline gap-1 mt-1">
+                                                        <span className="text-2xl font-bold text-primary-600">${pack.price}</span>
+                                                        <span className="text-xs text-charcoal/40 font-medium">USD</span>
+                                                    </div>
+                                                </div>
+                                                <ul className="mb-6 space-y-2 flex-grow">
+                                                    <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                        <Check className="w-4 h-4 text-emerald-500" />
+                                                        {pack.credits} mensajes de IA
+                                                    </li>
+                                                    <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                        <Check className="w-4 h-4 text-emerald-500" />
+                                                        Sin fecha de vencimiento
+                                                    </li>
+                                                    <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                        <Check className="w-4 h-4 text-emerald-500" />
+                                                        Activación instantánea
+                                                    </li>
+                                                </ul>
+                                                <button 
+                                                    onClick={() => handleBuyCredits(packId)}
+                                                    className="w-full py-2 bg-primary-600 text-white rounded-soft font-semibold text-sm hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <CreditCard className="w-4 h-4" />
+                                                    Comprar Pack
+                                                </button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                                <p className="mt-6 text-xs text-charcoal/40 italic text-center">
+                                    * Los créditos extra se consumen solo después de agotar el cupo mensual de tu plan.
+                                </p>
+                            </div>
+
                             {/* Plan Comparison */}
                             <div id="compare-plans" className="card-soft p-6">
                                 <h2 className="text-lg font-semibold text-charcoal mb-6">Compara Planes</h2>
@@ -2115,6 +2179,66 @@ export default function Settings() {
                                 </div>
                             </div>
 
+                            <div className="card-soft p-6">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-soft flex items-center justify-center">
+                                        <Sparkles className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-charcoal">Créditos de IA</h2>
+                                        <p className="text-sm text-charcoal/50">Gestión de consumo de inteligencia artificial</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Plan Mensual</p>
+                                            <p className="text-xl font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
+                                            <p className="text-[10px] text-charcoal/40 mt-1">Mensajes incluidos</p>
+                                        </div>
+                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Saldo Extra</p>
+                                            <p className="text-xl font-bold text-charcoal">{aiCreditsExtraBalance}</p>
+                                            <p className="text-[10px] text-charcoal/40 mt-1">Cargas adicionales</p>
+                                        </div>
+                                        <div className="p-4 bg-primary-50 rounded-soft border border-primary-100 shadow-sm">
+                                            <p className="text-[10px] text-primary-600 uppercase font-bold mb-1">Consumo Mes</p>
+                                            <p className="text-xl font-bold text-primary-700">{aiMessagesUsed}</p>
+                                            <p className="text-[10px] text-primary-600/60 mt-1">Utilizados este mes</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-soft">
+                                        <div className="flex gap-3">
+                                            <Zap className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-amber-900">
+                                                    Disponibles: {Math.max(0, (aiCreditsMonthlyLimit + aiCreditsExtraBalance) - aiMessagesUsed)}
+                                                </p>
+                                                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                                                    Al agotar los créditos el asistente dejará de responder automáticamente. Las recargas son instantáneas.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('subscription');
+                                                setTimeout(() => {
+                                                    document.getElementById('ai-credits-packs')?.scrollIntoView({ behavior: 'smooth' });
+                                                }, 100);
+                                            }}
+                                            className="btn-primary w-full md:w-auto flex items-center justify-center gap-2"
+                                        >
+                                            <CreditCard className="w-4 h-4" />
+                                            Recargar Créditos
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Webhooks / n8n */}
                             <div className="card-soft p-6">
