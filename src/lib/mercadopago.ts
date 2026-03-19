@@ -182,7 +182,14 @@ export async function redirectToCreditsCheckout(clinicId: string, email: string,
 
     if (error) {
         console.error('Error creating credit preference:', error)
-        throw new Error('Failed to create payment preference')
+        // Try to extract dynamic error message if available
+        const msg = error.message || 'Error al conectar con la función de pago'
+        throw new Error(`Error en el servidor: ${msg}`)
+    }
+
+    if (!data?.init_point) {
+        console.error('No init_point returned from function:', data)
+        throw new Error('La respuesta del servidor no fue válida')
     }
 
     window.location.href = data.init_point

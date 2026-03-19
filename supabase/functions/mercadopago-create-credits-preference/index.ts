@@ -76,7 +76,34 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Create Mercado Pago preference
+        // Create Mercado Pago preference with normalized back_urls
+        const mpPayload = {
+            items: [
+                {
+                    title: pack.description,
+                    quantity: 1,
+                    unit_price: pack.price,
+                    currency_id: "CLP",
+                },
+            ],
+            payer: {
+                email: email,
+            },
+            back_urls: {
+                success: back_urls?.success || "https://citenly.ai/app/dashboard",
+                failure: back_urls?.failure || "https://citenly.ai/app/dashboard",
+                pending: back_urls?.pending || "https://citenly.ai/app/dashboard"
+            },
+            auto_return: "approved",
+            external_reference: clinic_id,
+            notification_url: `${SUPABASE_URL}/functions/v1/mercadopago-webhook`,
+            metadata: {
+                clinic_id: clinic_id,
+                type: "ai_credits",
+                credits: pack.credits.toString(),
+            },
+        };
+
         const preferenceResponse = await fetch(
             "https://api.mercadopago.com/checkout/preferences",
             {
@@ -85,32 +112,7 @@ Deno.serve(async (req: Request) => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
                 },
-                body: JSON.stringify({
-                    items: [
-                        {
-                            title: pack.description,
-                            quantity: 1,
-                            unit_price: pack.price,
-                            currency_id: "CLP", // Changed to CLP
-                        },
-                    ],
-                    payer: {
-                        email: email,
-                    },
-                    back_urls: {
-                        success: back_urls.success,
-                        failure: back_urls.failure,
-                        pending: back_urls.pending
-                    },
-                    auto_return: "approved",
-                    external_reference: clinic_id,
-                    notification_url: `${SUPABASE_URL}/functions/v1/mercadopago-webhook`,
-                    metadata: {
-                        clinic_id: clinic_id,
-                        type: "ai_credits",
-                        credits: pack.credits.toString(),
-                    },
-                }),
+                body: JSON.stringify(mpPayload),
             }
         );
 

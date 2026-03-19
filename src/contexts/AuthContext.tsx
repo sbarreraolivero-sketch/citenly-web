@@ -360,13 +360,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             async (_event, session) => {
                 if (!mounted) return
                 
-                // Only set loading to true if we don't have a profile yet and we have a user
-                // or if it's an initial session check.
-                const shouldSetLoading = (session?.user && !profile) || _event === 'INITIAL_SESSION'
-                if (shouldSetLoading) setLoading(true)
+                // ONLY set loading to true during the initial setup phase
+                // Once the app is running, auth changes should happen in the background or via direct redirection
+                // This prevents the "stabilizes then goes back to loading" flickers.
+                if (_event === 'INITIAL_SESSION' && !profile) {
+                    setLoading(true)
+                }
                 
                 try {
-                    console.log('🔐 Auth state change:', _event, { hasUser: !!session?.user, hasProfile: !!profile })
+                    console.log('🔐 Auth state change:', _event, { userId: session?.user?.id })
                     setSession(session)
                     
                     const currentUser = session?.user ?? null
@@ -374,12 +376,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setUser(currentUser)
 
                     if (currentUser) {
-                        // Only fetch profile if user changed or if we don't have one
+                        // Background update if user didn't change, but fetch if it's new
                         if (currentUser.id !== prevUserId || !profile) {
                             const { data, status } = await fetchProfile(currentUser.id)
                             if (mounted && data) {
                                 setProfile(data)
-                                fetchUserClinics() // Background refresh
+                                fetchUserClinics() 
                                 if (data.clinic_id) {
                                     fetchSubscription(data.clinic_id).then(sub => mounted && setSubscription(sub))
                                     supabase.from('clinic_members')
@@ -388,12 +390,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                         .eq('clinic_id', data.clinic_id)
                                         .single()
                                         .then(({ data, error }) => {
-                                            if (error) console.error('Auth state change member fetch error:', error)
                                             if (data && mounted) setMember(data)
                                         })
                                 }
                             } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
-                                console.warn('Profile not found from AuthStateChange, clearing session.')
                                 setProfile(null)
                                 setMember(null)
                                 setSubscription(null)
@@ -404,7 +404,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             }
                         }
                     } else {
-                        // User signed out
+                        // User signed out, clear everything
                         setProfile(null)
                         setMember(null)
                         setSubscription(null)
@@ -412,8 +412,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         localStorage.clear()
                     }
                 } catch (err) {
-                    console.error('Error during Auth State transition:', err)
+                    console.error('Error in onAuthStateChange:', err)
                 } finally {
+                    // Only release loading if we were in the initial loading phase
                     if (mounted) setLoading(false)
                 }
             }
