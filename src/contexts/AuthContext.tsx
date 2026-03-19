@@ -45,18 +45,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
-    const [profile, setProfile] = useState<UserProfile | null>(null)
-    const [member, setMember] = useState<ClinicMember | null>(null)
-    const [subscription, setSubscription] = useState<Subscription | null>(null)
-    const [clinics, setClinics] = useState<Clinic[]>([])
-    const [session, setSession] = useState<Session | null>(null)
-    const [loading, setLoading] = useState(true)
-
     // Constants
     const PROFILE_STORAGE_KEY = 'citenly_user_profile'
     const SUBSCRIPTION_STORAGE_KEY = 'citenly_user_subscription'
     const CLINICS_STORAGE_KEY = 'citenly_user_clinics'
+
+    const [user, setUser] = useState<User | null>(null)
+    const [profile, setProfile] = useState<UserProfile | null>(() => {
+        const cached = localStorage.getItem(PROFILE_STORAGE_KEY)
+        try { return cached ? JSON.parse(cached) : null } catch { return null }
+    })
+    const [member, setMember] = useState<ClinicMember | null>(null)
+    const [subscription, setSubscription] = useState<Subscription | null>(null)
+    const [clinics, setClinics] = useState<Clinic[]>(() => {
+        const cached = localStorage.getItem(CLINICS_STORAGE_KEY)
+        try { return cached ? JSON.parse(cached) : null } catch { return [] }
+    })
+    const [session, setSession] = useState<Session | null>(null)
+    const [loading, setLoading] = useState(true)
 
     // Fetch user profile from database with retry logic
     const fetchProfile = async (userId: string, retries = 3, delay = 500): Promise<{ data: UserProfile | null, status: 'found' | 'not_found' | 'error' }> => {
@@ -232,30 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const initializeAuth = async () => {
             try {
-                // 1. Try to load from cache
-                const cachedProfile = localStorage.getItem(PROFILE_STORAGE_KEY)
-                // const cachedSub = localStorage.getItem(SUBSCRIPTION_STORAGE_KEY)
-                const cachedClinics = localStorage.getItem(CLINICS_STORAGE_KEY)
-
-                if (cachedProfile && mounted) {
-                    try {
-                        setProfile(JSON.parse(cachedProfile))
-                    } catch (e) { localStorage.removeItem(PROFILE_STORAGE_KEY) }
-                }
-
-                // if (cachedSub && mounted) {
-                //     try {
-                //         setSubscription(JSON.parse(cachedSub))
-                //     } catch (e) { localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY) }
-                // }
-
-                if (cachedClinics && mounted) {
-                    try {
-                        setClinics(JSON.parse(cachedClinics))
-                    } catch (e) { localStorage.removeItem(CLINICS_STORAGE_KEY) }
-                }
-
-                // 2. Check Supabase session
+                // 1. Check Supabase session
                 const { data: { session } } = await supabase.auth.getSession()
                 if (!mounted) return
 
