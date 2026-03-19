@@ -146,6 +146,8 @@ export default function Settings() {
     }
 
     // Integration settings
+    const [yCloudApiKey, setYCloudApiKey] = useState('')
+    const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
     const [openaiModel] = useState('gpt-4o-mini')
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
