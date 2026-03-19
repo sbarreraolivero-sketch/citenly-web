@@ -60,6 +60,8 @@ export interface RetentionSettings {
     autonomous_mode: boolean
     medium_risk_template: string
     high_risk_template: string
+    medium_risk_delay: number
+    high_risk_delay: number
 }
 
 export interface YCloudTemplate {
@@ -219,16 +221,25 @@ export const retentionService = {
     },
 
     // Get protocol settings
-    async getSettings(clinicId: string): Promise<RetentionSettings> {
-        const { data, error } = await (supabase as any)
-            .from('retention_protocols')
-            .select('risk_level_trigger, execution_mode, actions')
-            .eq('clinic_id', clinicId)
+    async getSettings(clinic_id: string): Promise<RetentionSettings> {
+        // Parallel fetch for clinic thresholds and protocol settings
+        const [protocols, settings] = await Promise.all([
+            (supabase as any)
+                .from('retention_protocols')
+                .select('risk_level_trigger, execution_mode, actions')
+                .eq('clinic_id', clinic_id),
+            (supabase as any)
+                .from('clinic_settings')
+                .select('retention_medium_delay, retention_high_delay')
+                .eq('id', clinic_id)
+                .single()
+        ])
 
-        if (error) throw error
+        if (protocols.error) throw protocols.error
+        if (settings.error) throw settings.error
 
-        const medium = data?.find((p: any) => p.risk_level_trigger === 'medium')
-        const high = data?.find((p: any) => p.risk_level_trigger === 'high')
+        const medium = protocols.data?.find((p: any) => p.risk_level_trigger === 'medium')
+        const high = protocols.data?.find((p: any) => p.risk_level_trigger === 'high')
 
         // Assume autonomous if ANY is autonomous
         const isAutonomous = medium?.execution_mode === 'autonomous' || high?.execution_mode === 'autonomous'
@@ -236,7 +247,9 @@ export const retentionService = {
         return {
             autonomous_mode: isAutonomous,
             medium_risk_template: (medium?.actions as any)?.template_name || 'retention_warning_soft',
-            high_risk_template: (high?.actions as any)?.template_name || 'retention_danger_offer'
+            high_risk_template: (high?.actions as any)?.template_name || 'retention_danger_offer',
+            medium_risk_delay: settings.data?.retention_medium_delay ?? 15,
+            high_risk_delay: settings.data?.retention_high_delay ?? 45
         }
     },
 
@@ -246,9 +259,10 @@ export const retentionService = {
             p_clinic_id: clinicId,
             p_autonomous_mode: settings.autonomous_mode,
             p_medium_template: settings.medium_risk_template,
-            p_high_template: settings.high_risk_template
+            p_high_template: settings.high_risk_template,
+            p_medium_delay: settings.medium_risk_delay,
+            p_high_delay: settings.high_risk_delay
         })
-        if (error) throw error
         if (error) throw error
     },
 

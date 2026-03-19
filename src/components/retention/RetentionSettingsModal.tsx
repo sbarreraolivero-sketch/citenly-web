@@ -18,7 +18,9 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
     const [settings, setSettings] = useState<RetentionSettings>({
         autonomous_mode: false,
         medium_risk_template: 'retention_warning_soft',
-        high_risk_template: 'retention_danger_offer'
+        high_risk_template: 'retention_danger_offer',
+        medium_risk_delay: 15,
+        high_risk_delay: 45
     })
     const [templates, setTemplates] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -136,6 +138,53 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+
+                            <hr className="border-silk-beige" />
+
+                            {/* Risk Thresholds Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-charcoal flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4 text-primary-500" />
+                                    Umbrales de Riesgo (Días de Retraso)
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-charcoal/60 uppercase tracking-wide">
+                                            Riesgo Medio
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="365"
+                                                value={settings.medium_risk_delay}
+                                                onChange={e => setSettings(s => ({ ...s, medium_risk_delay: parseInt(e.target.value) || 0 }))}
+                                                className="w-full p-2 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                            />
+                                            <span className="text-xs text-charcoal/40">días</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-charcoal/60 uppercase tracking-wide">
+                                            Riesgo Alto
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="365"
+                                                value={settings.high_risk_delay}
+                                                onChange={e => setSettings(s => ({ ...s, high_risk_delay: parseInt(e.target.value) || 0 }))}
+                                                className="w-full p-2 bg-ivory border border-silk-beige rounded-xl text-sm text-charcoal focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                            />
+                                            <span className="text-xs text-charcoal/40">días</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-charcoal/40 italic">
+                                    Define cuántos días deben pasar después de la fecha ideal de regreso para que el paciente cambie de nivel de riesgo.
+                                </p>
                             </div>
 
                             <hr className="border-silk-beige" />

@@ -23,7 +23,9 @@ import {
     Eye,
     X,
     Settings,
-    MessageSquare
+    MessageSquare,
+    Info,
+    CheckCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -348,215 +350,265 @@ const RetentionEngine = () => {
 
             {/* Tab: Overview */}
             {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Retention Distribution */}
-                    <div className="card-soft p-6 lg:col-span-2">
-                        <h3 className="text-lg font-semibold text-charcoal mb-6">Distribución de Retención</h3>
-                        <div className="flex flex-col sm:flex-row items-center gap-8">
-                            {/* Visual Donut (CSS-based) */}
-                            <div className="relative w-48 h-48 flex-shrink-0">
-                                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                                    {/* Background circle */}
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f0ece6" strokeWidth="12" />
-                                    {/* Low (green) */}
-                                    {donutData.total > 0 && (
-                                        <>
-                                            <circle
-                                                cx="50" cy="50" r="40" fill="none"
-                                                stroke="#10b981" strokeWidth="12"
-                                                strokeDasharray={`${(donutData.low / donutData.total) * 251.2} 251.2`}
-                                                strokeDashoffset="0"
-                                                className="transition-all duration-700"
-                                            />
-                                            <circle
-                                                cx="50" cy="50" r="40" fill="none"
-                                                stroke="#f59e0b" strokeWidth="12"
-                                                strokeDasharray={`${(donutData.medium / donutData.total) * 251.2} 251.2`}
-                                                strokeDashoffset={`${-(donutData.low / donutData.total) * 251.2} `}
-                                                className="transition-all duration-700"
-                                            />
-                                            <circle
-                                                cx="50" cy="50" r="40" fill="none"
-                                                stroke="#ef4444" strokeWidth="12"
-                                                strokeDasharray={`${(donutData.high / donutData.total) * 251.2} 251.2`}
-                                                strokeDashoffset={`${-((donutData.low + donutData.medium) / donutData.total) * 251.2} `}
-                                                className="transition-all duration-700"
-                                            />
-                                        </>
-                                    )}
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-3xl font-bold text-charcoal">{donutData.total}</span>
-                                    <span className="text-xs text-charcoal/50">pacientes</span>
+                <div className="space-y-6">
+                    {/* Guía Explicativa */}
+                    <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Info className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="space-y-4 flex-1">
+                            <div>
+                                <h3 className="text-lg font-bold text-blue-900">¿Cómo funciona la Retención?</h3>
+                                <p className="text-sm text-blue-800/70 mt-1 leading-relaxed">
+                                    El motor de IA analiza el comportamiento de tus pacientes para identificar quiénes están en riesgo de no volver. 
+                                    Esto se calcula comparando su <strong>fecha ideal de regreso</strong> (según el servicio) con la fecha actual.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="bg-white/80 p-3 rounded-xl border border-blue-100">
+                                    <p className="text-xs font-bold text-blue-900 flex items-center gap-1.5 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500" /> Riesgo Bajo
+                                    </p>
+                                    <p className="text-[11px] text-blue-800/60 leading-tight">
+                                        Pacientes que han vuelto a tiempo o tienen una cita próxima agendada.
+                                    </p>
+                                </div>
+                                <div className="bg-white/80 p-3 rounded-xl border border-blue-100">
+                                    <p className="text-xs font-bold text-blue-900 flex items-center gap-1.5 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-amber-500" /> Riesgo Medio
+                                    </p>
+                                    <p className="text-[11px] text-blue-800/60 leading-tight">
+                                        Pacientes que han superado su fecha de regreso por el margen de días configurado.
+                                    </p>
+                                </div>
+                                <div className="bg-white/80 p-3 rounded-xl border border-blue-100">
+                                    <p className="text-xs font-bold text-blue-900 flex items-center gap-1.5 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-red-500" /> Riesgo Alto
+                                    </p>
+                                    <p className="text-[11px] text-blue-800/60 leading-tight">
+                                        Pacientes con un retraso crítico. Requieren una acción inmediata de la IA.
+                                    </p>
                                 </div>
                             </div>
-                            {/* Legend */}
-                            <div className="flex-1 space-y-5">
-                                {[
-                                    { label: 'Riesgo Bajo', count: donutData.low, color: 'bg-emerald-500', desc: 'Pacientes al día con sus citas' },
-                                    { label: 'Riesgo Medio', count: donutData.medium, color: 'bg-amber-500', desc: 'Se están retrasando en su retorno' },
-                                    { label: 'Riesgo Alto', count: donutData.high, color: 'bg-red-500', desc: 'Riesgo de pérdida inminente' },
-                                ].map(item => (
-                                    <div key={item.label} className="flex items-center gap-4">
-                                        <div className={cn("w-3 h-3 rounded-full flex-shrink-0", item.color)} />
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium text-charcoal">{item.label}</span>
-                                                <span className="text-sm font-bold text-charcoal">{item.count}</span>
-                                            </div>
-                                            <p className="text-xs text-charcoal/40">{item.desc}</p>
-                                            {donutData.total > 0 && (
-                                                <div className="mt-1.5 h-1.5 bg-ivory rounded-full overflow-hidden">
-                                                    <div
-                                                        className={cn("h-full rounded-full transition-all duration-700", item.color)}
-                                                        style={{ width: `${(item.count / donutData.total) * 100}% ` }}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
+                        </div>
+                        <button 
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="flex-shrink-0 px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-50 transition-colors shadow-sm flex items-center gap-2"
+                        >
+                            <Settings className="w-3.5 h-3.5" /> Configurarlos ahora
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Retention Distribution */}
+                        <div className="card-soft p-6 lg:col-span-2">
+                            <h3 className="text-lg font-semibold text-charcoal mb-6">Distribución de Retención</h3>
+                            <div className="flex flex-col sm:flex-row items-center gap-8">
+                                {/* Visual Donut (CSS-based) */}
+                                <div className="relative w-48 h-48 flex-shrink-0">
+                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                                        {/* Background circle */}
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#f0ece6" strokeWidth="12" />
+                                        {/* Low (green) */}
+                                        {donutData.total > 0 && (
+                                            <>
+                                                <circle
+                                                    cx="50" cy="50" r="40" fill="none"
+                                                    stroke="#10b981" strokeWidth="12"
+                                                    strokeDasharray={`${(donutData.low / donutData.total) * 251.2} 251.2`}
+                                                    strokeDashoffset="0"
+                                                    className="transition-all duration-700"
+                                                />
+                                                <circle
+                                                    cx="50" cy="50" r="40" fill="none"
+                                                    stroke="#f59e0b" strokeWidth="12"
+                                                    strokeDasharray={`${(donutData.medium / donutData.total) * 251.2} 251.2`}
+                                                    strokeDashoffset={`${-(donutData.low / donutData.total) * 251.2}`}
+                                                    className="transition-all duration-700"
+                                                />
+                                                <circle
+                                                    cx="50" cy="50" r="40" fill="none"
+                                                    stroke="#ef4444" strokeWidth="12"
+                                                    strokeDasharray={`${(donutData.high / donutData.total) * 251.2} 251.2`}
+                                                    strokeDashoffset={`${-((donutData.low + donutData.medium) / donutData.total) * 251.2}`}
+                                                    className="transition-all duration-700"
+                                                />
+                                            </>
+                                        )}
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span className="text-3xl font-bold text-charcoal">{donutData.total}</span>
+                                        <span className="text-xs text-charcoal/50">pacientes</span>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Health Index */}
-                    <div className="card-soft p-6 flex flex-col">
-                        <h3 className="text-lg font-semibold text-charcoal mb-4">Índice de Salud</h3>
-                        <div className="flex-1 flex flex-col items-center justify-center">
-                            <div className="relative w-36 h-36">
-                                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                                    <circle cx="50" cy="50" r="42" fill="none" stroke="#f0ece6" strokeWidth="8" />
-                                    <circle
-                                        cx="50" cy="50" r="42" fill="none"
-                                        stroke={healthIndex >= 70 ? '#10b981' : healthIndex >= 40 ? '#f59e0b' : '#ef4444'}
-                                        strokeWidth="8"
-                                        strokeDasharray={`${(healthIndex / 100) * 263.9} 263.9`}
-                                        strokeLinecap="round"
-                                        className="transition-all duration-1000"
-                                    />
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className={cn(
-                                        "text-4xl font-bold",
-                                        healthIndex >= 70 ? 'text-emerald-600' : healthIndex >= 40 ? 'text-amber-600' : 'text-red-600'
-                                    )}>
-                                        {Math.round(healthIndex)}
-                                    </span>
-                                    <span className="text-xs text-charcoal/40">/ 100</span>
+                                </div>
+                                {/* Legend */}
+                                <div className="flex-1 space-y-5">
+                                    {[
+                                        { label: 'Riesgo Bajo', count: donutData.low, color: 'bg-emerald-500', desc: 'Pacientes al día con sus citas' },
+                                        { label: 'Riesgo Medio', count: donutData.medium, color: 'bg-amber-500', desc: 'Se están retrasando en su retorno' },
+                                        { label: 'Riesgo Alto', count: donutData.high, color: 'bg-red-500', desc: 'Riesgo de pérdida inminente' },
+                                    ].map(item => (
+                                        <div key={item.label} className="flex items-center gap-4">
+                                            <div className={cn("w-3 h-3 rounded-full flex-shrink-0", item.color)} />
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-medium text-charcoal">{item.label}</span>
+                                                    <span className="text-sm font-bold text-charcoal">{item.count}</span>
+                                                </div>
+                                                <p className="text-xs text-charcoal/40">{item.desc}</p>
+                                                {donutData.total > 0 && (
+                                                    <div className="mt-1.5 h-1.5 bg-ivory rounded-full overflow-hidden">
+                                                        <div
+                                                            className={cn("h-full rounded-full transition-all duration-700", item.color)}
+                                                            style={{ width: `${(item.count / donutData.total) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                            <p className="text-sm text-charcoal/60 mt-4 text-center">
-                                {healthIndex >= 70 ? '🟢 Excelente retención' : healthIndex >= 40 ? '🟡 Retención moderada' : '🔴 Retención crítica'}
-                            </p>
                         </div>
 
-                        {/* Key Metric */}
-                        <div className="border-t border-silk-beige pt-4 mt-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs text-charcoal/50">Score Promedio</span>
-                                <span className="text-sm font-semibold text-charcoal">{Math.round(stats?.avg_score || 0)}</span>
+                        {/* Health Index */}
+                        <div className="card-soft p-6 flex flex-col">
+                            <h3 className="text-lg font-semibold text-charcoal mb-4">Índice de Salud</h3>
+                            <div className="flex-1 flex flex-col items-center justify-center">
+                                <div className="relative w-36 h-36">
+                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                                        <circle cx="50" cy="50" r="42" fill="none" stroke="#f0ece6" strokeWidth="8" />
+                                        <circle
+                                            cx="50" cy="50" r="42" fill="none"
+                                            stroke={healthIndex >= 70 ? '#10b981' : healthIndex >= 40 ? '#f59e0b' : '#ef4444'}
+                                            strokeWidth="8"
+                                            strokeDasharray={`${(healthIndex / 100) * 263.9} 263.9`}
+                                            strokeLinecap="round"
+                                            className="transition-all duration-1000"
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span className={cn(
+                                            "text-4xl font-bold",
+                                            healthIndex >= 70 ? 'text-emerald-600' : healthIndex >= 40 ? 'text-amber-600' : 'text-red-600'
+                                        )}>
+                                            {Math.round(healthIndex)}
+                                        </span>
+                                        <span className="text-xs text-charcoal/40">/ 100</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-charcoal/60 mt-4 text-center">
+                                    {healthIndex >= 70 ? '🟢 Excelente retención' : healthIndex >= 40 ? '🟡 Retención moderada' : '🔴 Retención crítica'}
+                                </p>
                             </div>
-                            <div className="flex items-center justify-between mt-2">
-                                <span className="text-xs text-charcoal/50">Último cálculo</span>
-                                <span className="text-xs text-charcoal/40">
-                                    {stats?.last_computed_at
-                                        ? new Date(stats.last_computed_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
-                                        : 'Nunca'
-                                    }
-                                </span>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Quick List — Top at risk */}
-                    <div className="card-soft p-6 lg:col-span-3">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-charcoal">Top Pacientes en Riesgo</h3>
-                            <button
-                                onClick={() => setActiveTab('patients')}
-                                className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                            >
-                                Ver todos <ArrowUpRight className="w-3.5 h-3.5" />
-                            </button>
+                            {/* Key Metric */}
+                            <div className="border-t border-silk-beige pt-4 mt-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-charcoal/50">Score Promedio</span>
+                                    <span className="text-sm font-semibold text-charcoal">{Math.round(stats?.avg_score || 0)}</span>
+                                </div>
+                                <div className="flex items-center justify-between mt-2">
+                                    <span className="text-xs text-charcoal/50">Último cálculo</span>
+                                    <span className="text-xs text-charcoal/40">
+                                        {stats?.last_computed_at
+                                            ? new Date(stats.last_computed_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
+                                            : 'Nunca'
+                                        }
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        {patients.filter(p => p.risk_level !== 'low').length === 0 ? (
-                            <div className="text-center py-10">
-                                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-                                <p className="text-charcoal/60 font-medium">¡Todos los pacientes están al día!</p>
-                                <p className="text-sm text-charcoal/40 mt-1">No hay pacientes en riesgo actualmente</p>
+
+                        {/* Quick List — Top at risk */}
+                        <div className="card-soft p-6 lg:col-span-3">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-charcoal">Top Pacientes en Riesgo</h3>
+                                <button
+                                    onClick={() => setActiveTab('patients')}
+                                    className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                                >
+                                    Ver todos <ArrowUpRight className="w-3.5 h-3.5" />
+                                </button>
                             </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b border-silk-beige">
-                                            <th className="text-left py-3 px-4 font-medium text-charcoal/50">Paciente</th>
-                                            <th className="text-left py-3 px-4 font-medium text-charcoal/50">Score</th>
-                                            <th className="text-left py-3 px-4 font-medium text-charcoal/50">Riesgo</th>
-                                            <th className="text-left py-3 px-4 font-medium text-charcoal/50">Retraso</th>
-                                            <th className="text-left py-3 px-4 font-medium text-charcoal/50">Último Servicio</th>
-                                            <th className="text-left py-3 px-4 font-medium text-charcoal/50">Ticket Prom.</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {patients
-                                            .filter(p => p.risk_level !== 'low')
-                                            .slice(0, 5)
-                                            .map(patient => (
-                                                <tr key={patient.patient_id} className="border-b border-silk-beige/50 hover:bg-ivory/50 transition-colors">
-                                                    <td className="py-3 px-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-xs font-medium text-primary-700">
-                                                                {(patient.patient_name || '?')[0].toUpperCase()}
+                            {patients.filter(p => p.risk_level !== 'low').length === 0 ? (
+                                <div className="text-center py-10">
+                                    <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                                    <p className="text-charcoal/60 font-medium">¡Todos los pacientes están al día!</p>
+                                    <p className="text-sm text-charcoal/40 mt-1">No hay pacientes en riesgo actualmente</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-silk-beige">
+                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Paciente</th>
+                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Score</th>
+                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Riesgo</th>
+                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Retraso</th>
+                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Último Servicio</th>
+                                                <th className="text-left py-3 px-4 font-medium text-charcoal/50">Ticket Prom.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {patients
+                                                .filter(p => p.risk_level !== 'low')
+                                                .slice(0, 5)
+                                                .map(patient => (
+                                                    <tr key={patient.patient_id} className="border-b border-silk-beige/50 hover:bg-ivory/50 transition-colors">
+                                                        <td className="py-3 px-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-xs font-medium text-primary-700">
+                                                                    {(patient.patient_name || '?')[0].toUpperCase()}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-medium text-charcoal">{patient.patient_name || 'Sin nombre'}</p>
+                                                                    <p className="text-xs text-charcoal/40">{patient.phone_number}</p>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <p className="font-medium text-charcoal">{patient.patient_name || 'Sin nombre'}</p>
-                                                                <p className="text-xs text-charcoal/40">{patient.phone_number}</p>
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-16 h-2 bg-ivory rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className={cn(
+                                                                            "h-full rounded-full transition-all",
+                                                                            patient.score <= 40 ? 'bg-emerald-500' :
+                                                                                patient.score <= 70 ? 'bg-amber-500' : 'bg-red-500'
+                                                                        )}
+                                                                        style={{ width: `${patient.score}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-xs font-mono font-bold text-charcoal">{patient.score}</span>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-16 h-2 bg-ivory rounded-full overflow-hidden">
-                                                                <div
-                                                                    className={cn(
-                                                                        "h-full rounded-full transition-all",
-                                                                        patient.score <= 40 ? 'bg-emerald-500' :
-                                                                            patient.score <= 70 ? 'bg-amber-500' : 'bg-red-500'
-                                                                    )}
-                                                                    style={{ width: `${patient.score}% ` }}
-                                                                />
-                                                            </div>
-                                                            <span className="text-xs font-mono font-bold text-charcoal">{patient.score}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <span className={cn(
-                                                            "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border",
-                                                            getRiskColor(patient.risk_level)
-                                                        )}>
-                                                            {getRiskIcon(patient.risk_level)}
-                                                            {getRiskLabel(patient.risk_level)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <span className="text-sm font-medium text-charcoal">
-                                                            +{patient.delay_days}d
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <span className="text-sm text-charcoal/70">{patient.last_service || '-'}</span>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <span className="text-sm font-medium text-charcoal">{formatCurrency(patient.avg_ticket)}</span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            <span className={cn(
+                                                                "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border",
+                                                                getRiskColor(patient.risk_level)
+                                                            )}>
+                                                                {getRiskIcon(patient.risk_level)}
+                                                                {getRiskLabel(patient.risk_level)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            <span className="text-sm font-medium text-charcoal">
+                                                                +{patient.delay_days}d
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            <span className="text-sm text-charcoal/70">{patient.last_service || '-'}</span>
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            <span className="text-sm font-medium text-charcoal">{formatCurrency(patient.avg_ticket)}</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
