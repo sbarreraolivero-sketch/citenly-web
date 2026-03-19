@@ -359,6 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
                 if (!mounted) return
+                setLoading(true) // Ensure guards wait for profile fetch
                 console.log('🔐 Auth state change:', _event)
                 setSession(session)
                 setUser(session?.user ?? null)
