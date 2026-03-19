@@ -68,8 +68,9 @@ serve(async (req) => {
             const [prefHourStr] = (settings.preferred_hour || '09:00').split(':')
             const prefHour = parseInt(prefHourStr)
 
-            // Strict check: only run if hours match
-            if (currentHour !== prefHour) {
+            // Robust check: run if current hour is >= prefHour AND before end of day (e.g. 18:00)
+            // This ensures that if the cron was missed at exactly 09:00, it still runs later.
+            if (currentHour < prefHour || currentHour >= 18) {
                 continue
             }
 

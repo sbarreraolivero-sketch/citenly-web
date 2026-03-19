@@ -93,7 +93,7 @@ serve(async (req) => {
             throw new Error(result.message || 'Failed to send WhatsApp message')
         }
 
-        // 4. Log to messages table
+        // 4. Log to messages table (legacy/general)
         await supabaseClient.from('messages').insert({
             clinic_id: appointment.clinic_id,
             phone_number: appointment.phone_number,
@@ -103,7 +103,17 @@ serve(async (req) => {
             ycloud_status: 'sent'
         })
 
-        // 5. Update appointment reminder status
+        // 5. Log to reminder_logs (for visual record)
+        await supabaseClient.from('reminder_logs').insert({
+            clinic_id: appointment.clinic_id,
+            appointment_id: appointment_id,
+            type: 'manual',
+            phone_number: appointment.phone_number,
+            status: 'sent',
+            sent_at: new Date().toISOString()
+        })
+
+        // 6. Update appointment reminder status
         await supabaseClient.from('appointments').update({
             reminder_sent: true,
             reminder_sent_at: new Date().toISOString()

@@ -32,6 +32,9 @@ import {
     Instagram,
     Facebook,
     Music,
+    History,
+    ExternalLink,
+    RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
@@ -220,6 +223,8 @@ export default function Settings() {
     })
     const [savingReminders, setSavingReminders] = useState(false)
     const [remindersSaved, setRemindersSaved] = useState(false)
+    const [reminderLogs, setReminderLogs] = useState<any[]>([])
+    const [isLoadingLogs, setIsLoadingLogs] = useState(false)
 
     // Clinic settings state
     const [savingClinic, setSavingClinic] = useState(false)
@@ -496,6 +501,33 @@ export default function Settings() {
 
         fetchSettings()
     }, [profile?.clinic_id])
+
+    // Load reminder logs
+    useEffect(() => {
+        const fetchReminderLogs = async () => {
+            if (!profile?.clinic_id || activeTab !== 'reminders') return
+
+            setIsLoadingLogs(true)
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data, error } = await (supabase as any)
+                    .from('reminder_logs')
+                    .select('*, appointments(patient_name)')
+                    .eq('clinic_id', profile.clinic_id)
+                    .order('sent_at', { ascending: false })
+                    .limit(20)
+
+                if (error) throw error
+                setReminderLogs(data || [])
+            } catch (error) {
+                console.error('Error fetching reminder logs:', error)
+            } finally {
+                setIsLoadingLogs(false)
+            }
+        }
+
+        fetchReminderLogs()
+    }, [activeTab, profile?.clinic_id])
 
     // Webhook URL for YCloud
     const webhookUrl = `${SUPABASE_URL}/functions/v1/ycloud-whatsapp-webhook`
@@ -2699,6 +2731,121 @@ export default function Settings() {
                                         <><Save className="w-4 h-4" /> Guardar Recordatorios</>
                                     )}
                                 </button>
+                            </div>
+
+                            {/* Visual Record / History Section */}
+                            <div className="mt-12">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center">
+                                            <History className="w-5 h-5 text-indigo-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-charcoal">Registro de Envíos</h3>
+                                            <p className="text-sm text-charcoal/50">Historial reciente de recordatorios enviados</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            // Trigger reload
+                                            setActiveTab('profile');
+                                            setTimeout(() => setActiveTab('reminders'), 10);
+                                        }}
+                                        className="btn-ghost text-charcoal/50 hover:bg-ivory flex items-center gap-2 text-sm"
+                                    >
+                                        <RefreshCw className={cn("w-4 h-4", isLoadingLogs && "animate-spin")} />
+                                        Sincronizar
+                                    </button>
+                                </div>
+
+                                <div className="bg-white rounded-soft shadow-soft-md border border-silk-beige overflow-hidden">
+                                    {isLoadingLogs ? (
+                                        <div className="py-12 flex flex-col items-center justify-center gap-3">
+                                            <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+                                            <p className="text-sm text-charcoal/40">Cargando historial...</p>
+                                        </div>
+                                    ) : reminderLogs.length === 0 ? (
+                                        <div className="py-12 text-center">
+                                            <div className="w-16 h-16 bg-silk-beige/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <AlarmClock className="w-8 h-8 text-charcoal/20" />
+                                            </div>
+                                            <p className="text-charcoal/50 font-medium">Sin actividad reciente</p>
+                                            <p className="text-charcoal/40 text-xs mt-1">Los recordatorios enviados aparecerán aquí.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="bg-ivory/50 border-b border-silk-beige text-[11px] uppercase tracking-wider text-charcoal/40 font-bold">
+                                                        <th className="px-6 py-4">Paciente</th>
+                                                        <th className="px-6 py-4">Tipo</th>
+                                                        <th className="px-6 py-4">Estado</th>
+                                                        <th className="px-6 py-4">Fecha/Hora</th>
+                                                        <th className="px-6 py-4 text-right">Detalle</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-silk-beige/50">
+                                                    {reminderLogs.map((log) => (
+                                                        <tr key={log.id} className="hover:bg-ivory/30 transition-colors">
+                                                            <td className="px-6 py-4">
+                                                                <p className="font-semibold text-charcoal text-sm">
+                                                                    {log.appointments?.patient_name || 'Paciente'}
+                                                                </p>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <span className={cn(
+                                                                    "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
+                                                                    log.type === '24h' && "bg-amber-100 text-amber-700",
+                                                                    log.type === '2h' && "bg-blue-100 text-blue-700",
+                                                                    log.type === '1h' && "bg-indigo-100 text-indigo-700",
+                                                                    log.type === 'confirmation' && "bg-emerald-100 text-emerald-700"
+                                                                )}>
+                                                                    {log.type}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    {log.status === 'sent' ? (
+                                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                                    ) : (
+                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
+                                                                    )}
+                                                                    <span className={cn(
+                                                                        "text-xs font-medium",
+                                                                        log.status === 'sent' ? "text-emerald-700" : "text-red-700"
+                                                                    )}>
+                                                                        {log.status === 'sent' ? 'Enviado' : 'Fallido'}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <p className="text-xs text-charcoal/60">
+                                                                    {new Date(log.sent_at).toLocaleString()}
+                                                                </p>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                {log.error_message && (
+                                                                    <div className="group relative inline-block">
+                                                                        <AlertCircle className="w-4 h-4 text-red-400 cursor-help" />
+                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-charcoal text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                                                            {log.error_message}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-4 flex items-center justify-between text-[11px] text-charcoal/40 bg-ivory/20 p-3 rounded-soft border border-dashed border-silk-beige">
+                                    <p><strong>Nota:</strong> Los logs muestran los últimos 20 intentos de envío. Si un recordatorio falla, verifica tu saldo en YCloud o la configuración del número.</p>
+                                    <a href="https://www.ycloud.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary-500 font-bold">
+                                        Ir a YCloud Console <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     )}
