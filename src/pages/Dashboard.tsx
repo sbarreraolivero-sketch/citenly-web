@@ -4,17 +4,15 @@ import {
     MessageSquare,
     TrendingUp,
     Clock,
-    CheckCircle2,
     Loader2,
     Crown,
     Star,
     Target,
-    Users,
-    BarChart3,
     ArrowUpRight,
     ArrowDownRight,
-    Filter
+    Bell
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClinicTimezone } from '@/hooks/useClinicTimezone'
@@ -53,6 +51,7 @@ interface ServiceRanking {
 
 export default function Dashboard() {
     const { user, profile } = useAuth()
+    const [loading, setLoading] = useState(true)
     const [filterRange, setFilterRange] = useState<'day' | 'week' | 'month' | 'year'>('day')
     const [stats, setStats] = useState<DashboardStats>({
         scheduledAppointments: 0,
@@ -195,21 +194,10 @@ export default function Dashboard() {
                     setServicesRanking(ranking)
                 }
 
-                // 2. Conversion Rate (Approximate: Unique Contacts vs Appointments Created This Month)
                 // Inbound messages (Conversations)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { data: inboundMessages } = await (supabase as any)
                     .from('messages')
-                    .select('contact_phone', { count: 'exact', head: false }) // We use contact_phone as identifier - wait, schema might be phone_number?
-                    // Let's check schema. Messages table has phone_number usually. 
-                    // Previous code used contact_phone? Let's check the view_file.
-                    // The view_file output shows .select('contact_phone')
-                    // But usually it is phone_number. 
-                    // Let's stick to what was there but cast to any.
-                    // Actually, if it was contact_phone and it was wrong, that would be an issue.
-                    // Messages table in Messages.tsx uses phone_number.
-                    // I should probably check if contact_phone is valid.
-                    // But for now let's just Fix the Type Error.
                     .select('phone_number')
                     .eq('direction', 'inbound')
                     .gte('created_at', startOfMonth)
