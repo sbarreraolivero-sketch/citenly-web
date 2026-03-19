@@ -316,7 +316,7 @@ export default function MyProfile() {
                                                         }}
                                                         className="px-2 py-0.5 bg-white border border-silk-beige rounded-soft text-[11px] w-20"
                                                     />
-                                                    <span className="text-charcoal/30 text-[10px]">a</span>
+                                                    <span className="text-charcoal/30 text-[10px] font-bold">a</span>
                                                     <input
                                                         type="time"
                                                         value={dayHours.lunch_break.end}

@@ -181,7 +181,7 @@ export function WhatsAppTemplates() {
                                     placeholder="ej: encuestra_satisfaccion"
                                     className="w-full px-4 py-2 bg-white border border-charcoal/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-charcoal"
                                 />
-                                <p className="text-xs text-charcoal/50 mt-1">Solo minúsculas y guiones bajos.</p>
+                                <p className="text-xs text-charcoal font-bold mt-1">Solo minúsculas y guiones bajos.</p>
                             </div>
 
                             <div>
@@ -192,7 +192,7 @@ export function WhatsAppTemplates() {
                                     placeholder="Hola {{1}}, gracias por tu visita a {{2}}..."
                                     className="w-full px-4 py-2 bg-white border border-charcoal/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-charcoal min-h-[100px]"
                                 />
-                                <p className="text-xs text-charcoal/50 mt-1">Usa {"{{1}}"}, {"{{2}}"} para variables que rellenará Citenly AI de forma automática.</p>
+                                <p className="text-xs text-charcoal font-bold mt-1">Usa {"{{1}}"}, {"{{2}}"} para variables que rellenará Citenly AI de forma automática.</p>
                             </div>
 
                             <div>
@@ -220,14 +220,14 @@ export function WhatsAppTemplates() {
                             </div>
                         </div>
 
-                        <button
+                         <button
                             onClick={handleSubmit}
                             disabled={!templateName || !bodyText || isSubmitting}
                             className="w-full px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium mt-4 flex items-center justify-center"
                         >
                             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enviar a Revisión en Meta'}
                         </button>
-                        <p className="text-xs text-center text-charcoal/50">La aprobación suele tardar desde unos minutos hasta 24 horas.</p>
+                        <p className="text-xs text-center text-charcoal font-bold mt-1">La aprobación suele tardar desde unos minutos hasta 24 horas.</p>
                     </div>
 
                     {/* Simulador Vista Previa */}
@@ -268,7 +268,7 @@ export function WhatsAppTemplates() {
                             {tpl.components.find(c => c.type === 'BUTTONS')?.buttons?.length ? (
                                 <div className="flex flex-wrap gap-2 mb-3">
                                     {tpl.components.find(c => c.type === 'BUTTONS')?.buttons?.map((btn, i) => (
-                                        <span key={i} className="text-[10px] font-medium px-2 py-1 bg-[#00A884]/10 text-[#00A884] rounded-md border border-[#00A884]/20 border-b-2">
+                                        <span key={i} className="text-[10px] font-bold px-2 py-1 bg-[#00A884]/10 text-[#00A884] rounded-md border border-[#00A884]/20 border-b-2">
                                             {btn.text}
                                         </span>
                                     ))}

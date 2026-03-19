@@ -1999,7 +1999,7 @@ export default function Settings() {
                                                                     }}
                                                                     className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
                                                                 />
-                                                                <span className="text-charcoal/40 text-[10px]">a</span>
+                                                                <span className="text-charcoal/40 text-[10px] font-bold">a</span>
                                                                 <input
                                                                     type="time"
                                                                     value={(hours as any).lunch_break.end}
@@ -2794,7 +2794,7 @@ export default function Settings() {
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <span className={cn(
-                                                                    "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
+                                                                    "text-[10px] font-bold px-2 py-0.5 rounded-full font-bold uppercase",
                                                                     log.type === '24h' && "bg-amber-100 text-amber-700",
                                                                     log.type === '2h' && "bg-blue-100 text-blue-700",
                                                                     log.type === '1h' && "bg-indigo-100 text-indigo-700",
@@ -2827,7 +2827,7 @@ export default function Settings() {
                                                                 {log.error_message && (
                                                                     <div className="group relative inline-block">
                                                                         <AlertCircle className="w-4 h-4 text-red-400 cursor-help" />
-                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-charcoal text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-charcoal text-white text-[10px] font-bold rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                                                                             {log.error_message}
                                                                         </div>
                                                                     </div>

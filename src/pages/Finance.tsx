@@ -14,17 +14,23 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClinicTimezone } from '@/hooks/useClinicTimezone'
-import { financeService, type FinanceStats, type Expense } from '@/services/financeService'
+import { financeService, type FinanceStats, type Expense, type Income } from '@/services/financeService'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 
-// ── Helpers ──────────────────────────────────────────────────────────
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS_EXPENSE: Record<string, string> = {
     rent: 'Alquiler',
     supplies: 'Insumos',
     payroll: 'Nómina',
     marketing: 'Marketing',
     utilities: 'Servicios Básicos',
+    other: 'Otro',
+}
+
+const CATEGORY_LABELS_INCOME: Record<string, string> = {
+    service: 'Servicio',
+    product: 'Producto',
+    adjustment: 'Ajuste',
     other: 'Otro',
 }
 
@@ -35,7 +41,8 @@ const STATUS_LABELS: Record<string, string> = {
     refunded: 'Reembolsado',
 }
 
-const translateCategory = (cat: string) => CATEGORY_LABELS[cat] ?? cat
+const translateCategoryExpense = (cat: string) => CATEGORY_LABELS_EXPENSE[cat] ?? cat
+const translateCategoryIncome = (cat: string) => CATEGORY_LABELS_INCOME[cat] ?? cat
 const translateStatus = (st: string) => STATUS_LABELS[st] ?? st
 
 // parseLocalDate now comes from useClinicTimezone hook
@@ -56,11 +63,13 @@ const Finance = () => {
 
     const [stats, setStats] = useState<FinanceStats | null>(null)
     const [expenses, setExpenses] = useState<Expense[]>([])
+    const [incomes, setIncomes] = useState<Income[]>([])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [transactions, setTransactions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'expenses'>('dashboard')
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'expenses' | 'incomes'>('dashboard')
     const [showExpenseModal, setShowExpenseModal] = useState(false)
+    const [showIncomeModal, setShowIncomeModal] = useState(false)
     const [filterType, setFilterType] = useState<'day' | 'week' | 'month' | 'year'>('month')
     const [showExportMenu, setShowExportMenu] = useState(false)
 
@@ -99,14 +108,16 @@ const Finance = () => {
         try {
             const { start, end } = getDateRange(filterType)
 
-            const [statsData, expensesData, transactionsData] = await Promise.all([
+            const [statsData, expensesData, incomesData, transactionsData] = await Promise.all([
                 financeService.getStats(clinicId, start, end),
                 financeService.getExpenses(clinicId, start, end),
+                financeService.getIncomes(clinicId, start, end),
                 financeService.getTransactions(clinicId, start, end)
             ])
 
             setStats(statsData)
             setExpenses(expensesData)
+            setIncomes(incomesData)
             setTransactions(transactionsData || [])
         } catch (error) {
             console.error('Error loading finance data:', error)
@@ -166,8 +177,14 @@ const Finance = () => {
                     gastos: expenses.map(exp => ({
                         fecha: formatInTz(exp.date, 'dd/MM/yyyy'),
                         descripcion: exp.description,
-                        categoria: translateCategory(exp.category),
+                        categoria: translateCategoryExpense(exp.category),
                         monto: exp.amount
+                    })),
+                    ingresos_manuales: incomes.map(inc => ({
+                        fecha: formatInTz(inc.date, 'dd/MM/yyyy'),
+                        descripcion: inc.description,
+                        categoria: translateCategoryIncome(inc.category),
+                        monto: inc.amount
                     }))
                 }
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -219,12 +236,29 @@ const Finance = () => {
                         lines.push([
                             formatInTz(exp.date, 'dd/MM/yyyy'),
                             `"${exp.description.replace(/"/g, '""')}"`,
-                            translateCategory(exp.category),
+                            translateCategoryExpense(exp.category),
                             formatCurrency(exp.amount)
                         ].join(sep))
                     })
                 } else {
                     lines.push('Sin gastos en este período')
+                }
+                lines.push('')
+
+                // Manual Incomes
+                lines.push('INGRESOS MANUALES')
+                lines.push(`Fecha${sep}Descripción${sep}Categoría${sep}Monto`)
+                if (incomes.length > 0) {
+                    incomes.forEach(inc => {
+                        lines.push([
+                            formatInTz(inc.date, 'dd/MM/yyyy'),
+                            `"${inc.description.replace(/"/g, '""')}"`,
+                            translateCategoryIncome(inc.category),
+                            formatCurrency(inc.amount)
+                        ].join(sep))
+                    })
+                } else {
+                    lines.push('Sin ingresos manuales en este período')
                 }
 
                 const csvContent = '\uFEFF' + lines.join('\n') // BOM for Excel compatibility
@@ -284,6 +318,51 @@ const Finance = () => {
         }
     }
 
+    // ── Income handlers ──
+    const handleAddIncome = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!clinicId) {
+            toast.error('No se pudo identificar la clínica')
+            return
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const form = e.target as any
+        const description = form.description.value
+        const amount = parseFloat(form.amount.value)
+        const category = form.category.value
+        const date = form.date.value
+
+        try {
+            await financeService.addIncome({
+                clinic_id: clinicId,
+                description,
+                amount,
+                category,
+                date
+            })
+            toast.success('Ingreso registrado exitosamente')
+            setShowIncomeModal(false)
+            loadData()
+        } catch (error) {
+            console.error('Error adding income:', error)
+            toast.error('Error al registrar el ingreso')
+        }
+    }
+
+    const handleDeleteIncome = async (incomeId: string, description: string) => {
+        if (!confirm(`¿Estás seguro de que deseas eliminar el ingreso "${description}"?`)) return
+
+        try {
+            await financeService.deleteIncome(incomeId)
+            toast.success('Ingreso eliminado')
+            loadData()
+        } catch (error) {
+            console.error('Error deleting income:', error)
+            toast.error('Error al eliminar el ingreso')
+        }
+    }
+
     const handleRegisterPayment = async (appointmentId: string) => {
         try {
             await financeService.updatePaymentStatus(appointmentId, 'paid')
@@ -304,6 +383,21 @@ const Finance = () => {
         } catch (error) {
             console.error('Error deleting payment:', error)
             toast.error('Error al eliminar el pago')
+        }
+    }
+
+    const handleClearTransaction = async (appointmentId: string) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar esta transacción pendiente? Esto pondrá el precio en $0 para que no afecte tus reportes ni deudas.')) return
+        try {
+            setLoading(true)
+            await financeService.updateTransactionPrice(appointmentId, 0)
+            toast.success('Transacción eliminada de finanzas')
+            loadData()
+        } catch (error) {
+            console.error('Error clearing transaction:', error)
+            toast.error('Error al eliminar la transacción')
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -372,6 +466,14 @@ const Finance = () => {
                             </button>
                         ))}
                     </div>
+
+                    <button
+                        onClick={() => setShowIncomeModal(true)}
+                        className="btn-secondary flex items-center gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Registrar Ingreso</span>
+                    </button>
 
                     <button
                         onClick={() => setShowExpenseModal(true)}
@@ -484,6 +586,17 @@ const Finance = () => {
                     >
                         Gastos
                     </button>
+                    <button
+                        onClick={() => setActiveTab('incomes')}
+                        className={cn(
+                            "py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                            activeTab === 'incomes'
+                                ? "border-primary-500 text-primary-600"
+                                : "border-transparent text-charcoal/60 hover:text-charcoal"
+                        )}
+                    >
+                        Otros Ingresos
+                    </button>
                 </div>
             </div>
 
@@ -571,12 +684,20 @@ const Finance = () => {
                                             </td>
                                             <td className="px-6 py-3 text-right">
                                                 {tx.payment_status === 'pending' && (
-                                                    <button
-                                                        className="text-xs text-primary-600 font-medium hover:underline"
-                                                        onClick={() => handleRegisterPayment(tx.id)}
-                                                    >
-                                                        Registrar Pago
-                                                    </button>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <button
+                                                            className="text-xs text-primary-600 font-medium hover:underline"
+                                                            onClick={() => handleRegisterPayment(tx.id)}
+                                                        >
+                                                            Registrar Pago
+                                                        </button>
+                                                        <button
+                                                            className="text-xs text-red-500 font-medium hover:underline"
+                                                            onClick={() => handleClearTransaction(tx.id)}
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
                                                 )}
                                                 {tx.payment_status === 'paid' && (
                                                     <button
@@ -627,7 +748,7 @@ const Finance = () => {
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className="bg-gray-100 text-charcoal/70 px-2 py-1 rounded text-xs capitalize">
-                                                    {translateCategory(expense.category)}
+                                                    {translateCategoryExpense(expense.category)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3 font-medium text-right text-red-600">
@@ -648,6 +769,60 @@ const Finance = () => {
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8 text-center text-charcoal/50">
                                                 No hay gastos registrados en este período
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'incomes' && (
+                    <div className="card-soft overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-silk-beige/30 text-charcoal/70 uppercase text-xs">
+                                    <tr>
+                                        <th className="px-6 py-3 font-medium">Fecha</th>
+                                        <th className="px-6 py-3 font-medium">Concepto</th>
+                                        <th className="px-6 py-3 font-medium">Categoría</th>
+                                        <th className="px-6 py-3 font-medium text-right">Monto</th>
+                                        <th className="px-6 py-3 font-medium text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-silk-beige">
+                                    {incomes.map((income) => (
+                                        <tr key={income.id} className="hover:bg-ivory/50">
+                                            <td className="px-6 py-3 text-charcoal/80">
+                                                {formatInTz(income.date, 'dd/MM/yyyy')}
+                                            </td>
+                                            <td className="px-6 py-3 font-medium text-charcoal">
+                                                {income.description}
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <span className="bg-gray-100 text-charcoal/70 px-2 py-1 rounded text-xs capitalize">
+                                                    {translateCategoryIncome(income.category)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-3 font-medium text-right text-emerald-600">
+                                                +{formatCurrency(income.amount)}
+                                            </td>
+                                            <td className="px-6 py-3 text-right">
+                                                <button
+                                                    onClick={() => handleDeleteIncome(income.id, income.description)}
+                                                    className="text-charcoal/40 hover:text-red-500 transition-colors inline-flex items-center gap-1 text-xs"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {incomes.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-8 text-center text-charcoal/50">
+                                                No hay ingresos registrados en este período
                                             </td>
                                         </tr>
                                     )}
@@ -712,12 +887,9 @@ const Finance = () => {
                                     required
                                     className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 >
-                                    <option value="supplies">Insumos</option>
-                                    <option value="rent">Alquiler</option>
-                                    <option value="payroll">Nómina</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="utilities">Servicios Básicos</option>
-                                    <option value="other">Otro</option>
+                                    {(Object.entries(CATEGORY_LABELS_EXPENSE)).map(([val, label]) => (
+                                        <option key={val} value={val}>{label}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -731,6 +903,83 @@ const Finance = () => {
                                 </button>
                                 <button type="submit" className="btn-primary">
                                     Guardar Gasto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Ingresos */}
+            {showIncomeModal && (
+                <div className="fixed inset-0 bg-charcoal/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-soft w-full max-w-md p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-emerald-700">Registrar Nuevo Ingreso</h3>
+                            <button onClick={() => setShowIncomeModal(false)}>
+                                <X className="w-5 h-5 text-charcoal/50 hover:text-charcoal" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAddIncome} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-1">Descripción</label>
+                                <input
+                                    name="description"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Ej. Venta de producto individual"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal mb-1">Monto</label>
+                                    <input
+                                        name="amount"
+                                        type="number"
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal mb-1">Fecha</label>
+                                    <input
+                                        name="date"
+                                        type="date"
+                                        required
+                                        defaultValue={new Date().toISOString().split('T')[0]}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-1">Categoría</label>
+                                <select
+                                    name="category"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                >
+                                    {(Object.entries(CATEGORY_LABELS_INCOME)).map(([val, label]) => (
+                                        <option key={val} value={val}>{label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowIncomeModal(false)}
+                                    className="btn-secondary"
+                                >
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn-primary !bg-emerald-600 border-none">
+                                    Guardar Ingreso
                                 </button>
                             </div>
                         </form>

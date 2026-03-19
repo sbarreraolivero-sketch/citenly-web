@@ -26,6 +26,8 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [usingRemote, setUsingRemote] = useState(false)
+    const [mediumDelayRaw, setMediumDelayRaw] = useState('15')
+    const [highDelayRaw, setHighDelayRaw] = useState('45')
 
     useEffect(() => {
         if (isOpen && clinicId) {
@@ -46,6 +48,8 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
             ])
 
             setSettings(settingsData)
+            setMediumDelayRaw(settingsData.medium_risk_delay.toString())
+            setHighDelayRaw(settingsData.high_risk_delay.toString())
 
             if (remoteTemplates && remoteTemplates.length > 0) {
                 setTemplates(remoteTemplates.map((t: YCloudTemplate) => ({
@@ -70,7 +74,12 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
     const handleSave = async () => {
         setSaving(true)
         try {
-            await retentionService.updateSettings(clinicId, settings)
+            const finalSettings = {
+                ...settings,
+                medium_risk_delay: parseInt(mediumDelayRaw) || 0,
+                high_risk_delay: parseInt(highDelayRaw) || 0
+            }
+            await retentionService.updateSettings(clinicId, finalSettings)
             toast.success('Configuración guardada')
             onSaved()
             onClose()
@@ -131,7 +140,7 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                         <p className="font-bold text-charcoal text-sm">
                                             {settings.autonomous_mode ? 'Modo Autónomo (Piloto Automático)' : 'Modo Supervisado'}
                                         </p>
-                                        <p className="text-sm text-charcoal/80 font-medium mt-1 leading-relaxed">
+                                        <p className="text-sm text-charcoal font-bold mt-1 leading-relaxed">
                                             {settings.autonomous_mode
                                                 ? 'La IA enviará los mensajes automáticamente cuando detecte riesgo, sin esperar tu aprobación.'
                                                 : 'La IA generará sugerencias que deberás aprobar manualmente antes de ser enviadas.'}
@@ -158,14 +167,14 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                                 type="text"
                                                 inputMode="numeric"
                                                 pattern="[0-9]*"
-                                                value={settings.medium_risk_delay}
+                                                value={mediumDelayRaw}
                                                 onChange={e => {
                                                     const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
-                                                    setSettings(s => ({ ...s, medium_risk_delay: parseInt(val) || 0 }))
+                                                    setMediumDelayRaw(val)
                                                 }}
                                                 className="w-full h-11 p-3 bg-ivory border-2 border-silk-beige rounded-xl text-base font-bold text-charcoal focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all shadow-sm"
                                             />
-                                            <span className="text-sm font-bold text-charcoal/60">días</span>
+                                            <span className="text-sm font-black text-charcoal">días</span>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -177,18 +186,18 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                                 type="text"
                                                 inputMode="numeric"
                                                 pattern="[0-9]*"
-                                                value={settings.high_risk_delay}
+                                                value={highDelayRaw}
                                                 onChange={e => {
                                                     const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
-                                                    setSettings(s => ({ ...s, high_risk_delay: parseInt(val) || 0 }))
+                                                    setHighDelayRaw(val)
                                                 }}
                                                 className="w-full h-11 p-3 bg-ivory border-2 border-silk-beige rounded-xl text-base font-bold text-charcoal focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all shadow-sm"
                                             />
-                                            <span className="text-sm font-bold text-charcoal/60">días</span>
+                                            <span className="text-sm font-black text-charcoal">días</span>
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-[12px] text-charcoal/70 font-semibold leading-snug">
+                                <p className="text-[12px] text-charcoal font-black leading-snug">
                                     Define cuántos días deben pasar después de la fecha ideal de regreso para que el paciente cambie de nivel de riesgo.
                                 </p>
                             </div>
@@ -237,7 +246,7 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <p className="text-[13px] text-charcoal/80 font-medium px-3 py-2.5 bg-ivory rounded-lg border border-dashed border-silk-beige min-h-[50px] leading-relaxed">
+                                    <p className="text-[13px] text-charcoal font-bold px-3 py-2.5 bg-ivory rounded-lg border border-dashed border-silk-beige min-h-[50px] leading-relaxed">
                                         {templates.find(t => t.id === settings.medium_risk_template)?.desc || (templates.length === 0 ? 'Sin plantillas configuradas. Ve a la sección Plantillas para crear o sincronizar.' : 'Selecciona una plantilla para ver previsualización')}
                                     </p>
                                 </div>
@@ -259,7 +268,7 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
-                                    <p className="text-[13px] text-charcoal/80 font-medium px-3 py-2.5 bg-ivory rounded-lg border border-dashed border-silk-beige min-h-[50px] leading-relaxed">
+                                    <p className="text-[13px] text-charcoal font-bold px-3 py-2.5 bg-ivory rounded-lg border border-dashed border-silk-beige min-h-[50px] leading-relaxed">
                                         {templates.find(t => t.id === settings.high_risk_template)?.desc || (templates.length === 0 ? 'Sin plantillas configuradas. Ve a la sección Plantillas para crear o sincronizar.' : 'Selecciona una plantilla para ver previsualización')}
                                     </p>
                                 </div>

@@ -270,7 +270,7 @@ export function AIChatWidget({ variant = 'sales', clinicId }: AIChatWidgetProps)
                                     }`}>
                                     <div className="whitespace-pre-wrap">{msg.text}</div>
                                     <div className={`flex items-center justify-end gap-1 mt-1 ${msg.sender === 'user' ? 'text-white/80' : 'text-gray-500'}`}>
-                                        <span className="text-[10px] font-bold">{msg.timestamp}</span>
+                                        <span className="text-[10px] font-bold font-bold">{msg.timestamp}</span>
                                     </div>
                                 </div>
                                 {msg.sender === 'ai' && Number(msg.toolsUsed) > 0 ? (

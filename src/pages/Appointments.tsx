@@ -1137,7 +1137,7 @@ export default function Appointments() {
                                                     <Phone className="w-3.5 h-3.5" />
                                                     {formatPhoneNumber(appointment.phone_number)}
                                                 </p>
-                                                <span className={cn('inline-flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full w-fit font-black uppercase tracking-widest border mt-1.5 shadow-sm transition-all', getStatusColor(appointment.status))}>
+                                                <span className={cn('inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full w-fit font-black uppercase tracking-widest border mt-1.5 shadow-sm transition-all', getStatusColor(appointment.status))}>
                                                     {getStatusIcon(appointment.status)}
                                                     {getStatusLabel(appointment.status)}
                                                 </span>

@@ -11,6 +11,16 @@ export interface Expense {
     created_at: string
 }
 
+export interface Income {
+    id: string
+    clinic_id: string
+    description: string
+    amount: number
+    category: 'service' | 'product' | 'adjustment' | 'other'
+    date: string
+    created_at: string
+}
+
 export interface FinanceStats {
     total_income: number
     total_expenses: number
@@ -81,6 +91,42 @@ export const financeService = {
         if (error) throw error
     },
 
+    // Incomes CRUD (Manual Incomes)
+    async getIncomes(clinicId: string, startDate: Date, endDate: Date) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_clinic_incomes_secure', {
+            p_clinic_id: clinicId,
+            p_start_date: startDate.toISOString(),
+            p_end_date: endDate.toISOString()
+        })
+
+        if (error) throw error
+        return data as Income[]
+    },
+
+    async addIncome(income: Omit<Income, 'id' | 'created_at'>) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('create_clinic_income', {
+            p_clinic_id: income.clinic_id,
+            p_description: income.description,
+            p_amount: income.amount,
+            p_category: income.category,
+            p_date: income.date
+        })
+
+        if (error) throw error
+        return data?.[0] as Income
+    },
+
+    async deleteIncome(id: string) {
+        const { error } = await (supabase as any)
+            .from('incomes')
+            .delete()
+            .eq('id', id)
+
+        if (error) throw error
+    },
+
     // Transactions (Completed Appointments)
     async getTransactions(clinicId: string, startDate?: Date, endDate?: Date) {
         // Default to last 30 days if no range provided, or handle in component?
@@ -107,6 +153,18 @@ export const financeService = {
             p_appointment_id: appointmentId,
             p_status: status
         })
+
+        if (error) throw error
+        return data?.[0]
+    },
+
+    async updateTransactionPrice(appointmentId: string, price: number) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any)
+            .from('appointments')
+            .update({ price })
+            .eq('id', appointmentId)
+            .select()
 
         if (error) throw error
         return data?.[0]
