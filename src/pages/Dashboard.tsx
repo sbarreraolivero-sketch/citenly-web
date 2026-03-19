@@ -10,7 +10,8 @@ import {
     Target,
     ArrowUpRight,
     ArrowDownRight,
-    Bell
+    Bell,
+    CheckCircle2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
@@ -321,29 +322,41 @@ export default function Dashboard() {
     ]
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            {/* Filter and Welcome Row */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                    <h1 className="text-2xl font-bold text-charcoal">¡Hola, {profile?.full_name?.split(' ')[0]}! 👋</h1>
-                    <p className="text-sm text-charcoal/50">Aquí tienes un resumen del rendimiento de tu clínica.</p>
+        <div className="space-y-6 animate-fade-in">            {/* Welcome Banner and Filter Row */}
+            <div className="flex flex-col gap-4">
+                <div className="bg-hero-gradient rounded-softer p-4 text-white shadow-soft-md">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-xl font-bold text-white">¡Hola, {profile?.full_name?.split(' ')[0]}! 👋</h1>
+                            <p className="text-sm text-white/80">Tu asistente IA está activo y listo para gestionar tus citas.</p>
+                        </div>
+                        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm hidden sm:flex">
+                            <CheckCircle2 className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
                 </div>
-                
-                <div className="flex items-center gap-1 p-1 bg-ivory rounded-full border border-silk-beige w-full md:w-auto overflow-x-auto no-scrollbar">
-                    {filterOptions.map((opt) => (
-                        <button
-                            key={opt.id}
-                            onClick={() => setFilterRange(opt.id as any)}
-                            className={cn(
-                                "px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all",
-                                filterRange === opt.id 
-                                    ? "bg-primary-500 text-white shadow-sm"
-                                    : "text-charcoal/50 hover:text-charcoal"
-                            )}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
+
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-charcoal/40 uppercase tracking-widest">Resumen de Rendimiento</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 p-1 bg-ivory rounded-full border border-silk-beige w-full md:w-auto overflow-x-auto no-scrollbar">
+                        {filterOptions.map((opt) => (
+                            <button
+                                key={opt.id}
+                                onClick={() => setFilterRange(opt.id as any)}
+                                className={cn(
+                                    "px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all",
+                                    filterRange === opt.id 
+                                        ? "bg-primary-500 text-white shadow-sm"
+                                        : "text-charcoal/50 hover:text-charcoal"
+                                )}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
