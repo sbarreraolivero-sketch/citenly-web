@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
                             title: PLAN_DESCRIPTIONS[plan],
                             quantity: 1,
                             unit_price: PLAN_PRICES[plan],
-                            currency_id: "ARS",
+                            currency_id: "CLP",
                         },
                     ],
                     payer: {

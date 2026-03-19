@@ -359,48 +359,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
                 if (!mounted) return
-                setLoading(true)
+                
+                // Only set loading to true if we don't have a profile yet and we have a user
+                // or if it's an initial session check.
+                const shouldSetLoading = (session?.user && !profile) || _event === 'INITIAL_SESSION'
+                if (shouldSetLoading) setLoading(true)
+                
                 try {
-                    console.log('🔐 Auth state change:', _event)
+                    console.log('🔐 Auth state change:', _event, { hasUser: !!session?.user, hasProfile: !!profile })
                     setSession(session)
-                    setUser(session?.user ?? null)
+                    
+                    const currentUser = session?.user ?? null
+                    const prevUserId = user?.id
+                    setUser(currentUser)
 
-                    if (session?.user) {
-                        const { data, status } = await fetchProfile(session.user.id)
-                        if (mounted && data) {
-                            setProfile(data)
-                            fetchUserClinics() // Background refresh
-                            if (data.clinic_id) {
-                                fetchSubscription(data.clinic_id).then(sub => mounted && setSubscription(sub))
-                                supabase.from('clinic_members')
-                                    .select('*')
-                                    .eq('user_id', session.user.id)
-                                    .eq('clinic_id', data.clinic_id)
-                                    .single()
-                                    .then(({ data, error }) => {
-                                        if (error) console.error('Auth state change member fetch error:', error)
-                                        if (data && mounted) setMember(data)
-                                    })
+                    if (currentUser) {
+                        // Only fetch profile if user changed or if we don't have one
+                        if (currentUser.id !== prevUserId || !profile) {
+                            const { data, status } = await fetchProfile(currentUser.id)
+                            if (mounted && data) {
+                                setProfile(data)
+                                fetchUserClinics() // Background refresh
+                                if (data.clinic_id) {
+                                    fetchSubscription(data.clinic_id).then(sub => mounted && setSubscription(sub))
+                                    supabase.from('clinic_members')
+                                        .select('*')
+                                        .eq('user_id', currentUser.id)
+                                        .eq('clinic_id', data.clinic_id)
+                                        .single()
+                                        .then(({ data, error }) => {
+                                            if (error) console.error('Auth state change member fetch error:', error)
+                                            if (data && mounted) setMember(data)
+                                        })
+                                }
+                            } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
+                                console.warn('Profile not found from AuthStateChange, clearing session.')
+                                setProfile(null)
+                                setMember(null)
+                                setSubscription(null)
+                                setClinics([])
+                                localStorage.removeItem(PROFILE_STORAGE_KEY)
+                                localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+                                localStorage.removeItem(CLINICS_STORAGE_KEY)
                             }
-                        } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
-                            // Prevent Frankenstein session when JWT changes to a non-profile user (like Admin)
-                            console.warn('Profile not found from AuthStateChange, clearing session.')
-                            setProfile(null)
-                            setMember(null)
-                            setSubscription(null)
-                            setClinics([])
-                            localStorage.removeItem(PROFILE_STORAGE_KEY)
-                            localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
-                            localStorage.removeItem(CLINICS_STORAGE_KEY)
-                        } else if (mounted && status === 'error') {
-                            console.warn('Network error in AuthStateChange, keeping current auth state.')
                         }
                     } else {
+                        // User signed out
                         setProfile(null)
                         setMember(null)
                         setSubscription(null)
                         setClinics([])
-                        localStorage.clear() // Clear all auth data
+                        localStorage.clear()
                     }
                 } catch (err) {
                     console.error('Error during Auth State transition:', err)

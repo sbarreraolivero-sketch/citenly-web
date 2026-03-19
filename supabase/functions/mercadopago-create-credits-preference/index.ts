@@ -34,21 +34,21 @@ interface RequestBody {
 }
 
 Deno.serve(async (req: Request) => {
-    // Handle CORS
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info",
+    };
+
+    // Handle CORS preflight
     if (req.method === "OPTIONS") {
-        return new Response(null, {
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            },
-        });
+        return new Response(null, { headers: corsHeaders });
     }
 
     if (req.method !== "POST") {
         return new Response(JSON.stringify({ error: "Method not allowed" }), {
             status: 405,
-            headers: { "Content-Type": "application/json" },
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
     }
 
@@ -56,12 +56,23 @@ Deno.serve(async (req: Request) => {
         const body: RequestBody = await req.json();
         const { clinic_id, pack_id, email, back_urls } = body;
 
+        console.log(`Creating preference for clinic ${clinic_id}, pack ${pack_id}, email ${email}`);
+
         const pack = CREDIT_PACKS[pack_id];
 
         if (!clinic_id || !pack || !email) {
+            console.error("Missing required fields:", { clinic_id, pack_id, email });
             return new Response(
                 JSON.stringify({ error: "Missing required fields or invalid pack" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        if (!MERCADOPAGO_ACCESS_TOKEN) {
+            console.error("MERCADOPAGO_ACCESS_TOKEN is not set in environment");
+            return new Response(
+                JSON.stringify({ error: "Server configuration error: Missing MP token" }),
+                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
@@ -80,13 +91,17 @@ Deno.serve(async (req: Request) => {
                             title: pack.description,
                             quantity: 1,
                             unit_price: pack.price,
-                            currency_id: "ARS",
+                            currency_id: "CLP", // Changed to CLP
                         },
                     ],
                     payer: {
                         email: email,
                     },
-                    back_urls: back_urls,
+                    back_urls: {
+                        success: back_urls.success,
+                        failure: back_urls.failure,
+                        pending: back_urls.pending
+                    },
                     auto_return: "approved",
                     external_reference: clinic_id,
                     notification_url: `${SUPABASE_URL}/functions/v1/mercadopago-webhook`,
@@ -101,13 +116,15 @@ Deno.serve(async (req: Request) => {
 
         if (!preferenceResponse.ok) {
             const errorData = await preferenceResponse.json();
+            console.error("Mercado Pago API error:", errorData);
             return new Response(
-                JSON.stringify({ error: "Failed to create preference", details: errorData }),
-                { status: 500, headers: { "Content-Type": "application/json" } }
+                JSON.stringify({ error: "Failed to create preference with MP", details: errorData }),
+                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
         const preference = await preferenceResponse.json();
+        console.log("Preference created successfully:", preference.id);
 
         return new Response(
             JSON.stringify({
@@ -117,15 +134,16 @@ Deno.serve(async (req: Request) => {
             }),
             {
                 headers: {
+                    ...corsHeaders,
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
                 },
             }
         );
-    } catch (error) {
+    } catch (error: any) {
+        console.error("Internal processing error:", error);
         return new Response(
-            JSON.stringify({ error: "Internal server error" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            JSON.stringify({ error: "Internal server error", message: error.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
 });
