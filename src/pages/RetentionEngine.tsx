@@ -217,7 +217,7 @@ const RetentionEngine = () => {
             <div className="flex items-center justify-center h-96">
                 <div className="text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-primary-500 mx-auto mb-3" />
-                    <p className="text-charcoal/60 text-sm">Cargando Revenue Control Center...</p>
+                    <p className="text-charcoal/80 text-sm font-bold">Cargando Revenue Control Center...</p>
                 </div>
             </div>
         )
@@ -234,7 +234,7 @@ const RetentionEngine = () => {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-charcoal">Revenue Control Center</h1>
-                            <p className="text-sm text-charcoal/50">Revenue Retention Engine™ — Citenly AI</p>
+                            <p className="text-sm text-charcoal/70 font-bold">Revenue Retention Engine™ — Citenly AI</p>
                         </div>
                     </div>
                 </div>
@@ -262,7 +262,7 @@ const RetentionEngine = () => {
                 {/* Revenue at Risk */}
                 <div className="card-soft p-5 border-l-4 border-red-400">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Ingresos en Riesgo</span>
+                        <span className="text-xs font-black text-charcoal/80 uppercase tracking-widest">Ingresos en Riesgo</span>
                         <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
                             <TrendingDown className="w-4 h-4 text-red-500" />
                         </div>
@@ -270,7 +270,7 @@ const RetentionEngine = () => {
                     <p className="text-2xl font-bold text-red-600">
                         {formatCurrency(stats?.revenue_at_risk || 0)}
                     </p>
-                    <p className="text-xs text-charcoal/40 mt-1">
+                    <p className="text-xs font-bold text-charcoal/60 mt-1">
                         {stats?.patients_high || 0} pacientes alto riesgo
                     </p>
                 </div>
@@ -278,7 +278,7 @@ const RetentionEngine = () => {
                 {/* Clients at Risk */}
                 <div className="card-soft p-5 border-l-4 border-amber-400">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Pacientes en Riesgo</span>
+                        <span className="text-xs font-black text-charcoal/80 uppercase tracking-widest">Pacientes en Riesgo</span>
                         <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
                             <AlertTriangle className="w-4 h-4 text-amber-500" />
                         </div>
@@ -286,7 +286,7 @@ const RetentionEngine = () => {
                     <p className="text-2xl font-bold text-amber-600">
                         {(stats?.patients_medium || 0) + (stats?.patients_high || 0)}
                     </p>
-                    <p className="text-xs text-charcoal/40 mt-1">
+                    <p className="text-xs font-bold text-charcoal/60 mt-1">
                         {stats?.patients_medium || 0} medio + {stats?.patients_high || 0} alto
                     </p>
                 </div>
@@ -294,7 +294,7 @@ const RetentionEngine = () => {
                 {/* Recovery Potential */}
                 <div className="card-soft p-5 border-l-4 border-blue-400">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Potencial Recuperable</span>
+                        <span className="text-xs font-black text-charcoal/80 uppercase tracking-widest">Potencial Recuperable</span>
                         <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                             <TrendingUp className="w-4 h-4 text-blue-500" />
                         </div>
@@ -302,7 +302,7 @@ const RetentionEngine = () => {
                     <p className="text-2xl font-bold text-blue-600">
                         {formatCurrency(stats?.revenue_recoverable || 0)}
                     </p>
-                    <p className="text-xs text-charcoal/40 mt-1">
+                    <p className="text-xs font-bold text-charcoal/60 mt-1">
                         {(stats?.patients_medium || 0) + (stats?.patients_high || 0)} pacientes
                     </p>
                 </div>
@@ -310,7 +310,7 @@ const RetentionEngine = () => {
                 {/* Revenue Recovered */}
                 <div className="card-soft p-5 border-l-4 border-emerald-400">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Recuperado por IA</span>
+                        <span className="text-xs font-black text-charcoal/80 uppercase tracking-widest">Recuperado por IA</span>
                         <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
                             <Sparkles className="w-4 h-4 text-emerald-500" />
                         </div>
@@ -319,7 +319,7 @@ const RetentionEngine = () => {
                         <p className="text-2xl font-bold text-emerald-600">
                             {formatCurrency(stats?.revenue_recovered_month || 0)}
                         </p>
-                        <p className="text-xs text-charcoal/40 mt-1">Este mes</p>
+                        <p className="text-xs font-bold text-charcoal/60 mt-1">Este mes</p>
                     </PremiumFeature>
                 </div>
             </div>
@@ -335,10 +335,10 @@ const RetentionEngine = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={cn(
-                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all',
                             activeTab === tab.id
                                 ? 'bg-white text-charcoal shadow-sm'
-                                : 'text-charcoal/50 hover:text-charcoal'
+                                : 'text-charcoal/60 hover:text-charcoal'
                         )}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -437,7 +437,7 @@ const RetentionEngine = () => {
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                         <span className="text-3xl font-bold text-charcoal">{donutData.total}</span>
-                                        <span className="text-xs text-charcoal/50">pacientes</span>
+                                        <span className="text-xs font-bold text-charcoal/60">pacientes</span>
                                     </div>
                                 </div>
                                 {/* Legend */}
@@ -451,8 +451,8 @@ const RetentionEngine = () => {
                                             <div className={cn("w-3 h-3 rounded-full flex-shrink-0", item.color)} />
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-charcoal">{item.label}</span>
-                                                    <span className="text-sm font-bold text-charcoal">{item.count}</span>
+                                                    <span className="text-sm font-bold text-charcoal">{item.label}</span>
+                                                    <span className="text-sm font-black text-charcoal">{item.count}</span>
                                                 </div>
                                                 <p className="text-xs font-semibold text-charcoal/60">{item.desc}</p>
                                                 {donutData.total > 0 && (
