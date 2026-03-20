@@ -389,7 +389,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                     .single()
                                     .then(({ data: memberData }) => {
                                         if (memberData && mounted) {
-                                            setMember(prev => (prev?.id === memberData.id ? prev : memberData))
+                                            setMember((prev: any) => (prev?.id === (memberData as any).id ? prev : (memberData as any)))
                                         }
                                     })
                             }

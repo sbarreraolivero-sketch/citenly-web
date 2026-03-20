@@ -155,11 +155,12 @@ export default function Dashboard() {
                         converted: appointmentsCount,
                         lost: Math.max(0, uniqueContacts - appointmentsCount),
                         rate: uniqueContacts > 0 ? Math.round((appointmentsCount / uniqueContacts) * 100) : 0
-                    })
+                    });
                 } else {
                     // Fallback to real-time counts if stats table is empty (e.g. initial setup)
-                    console.log('Stats table empty, triggering refresh and using fallback counts')
-                    supabase.rpc('refresh_clinic_stats', { target_clinic_id: clinicId }).catch(console.error)
+                    // @ts-ignore
+                    supabase.rpc('refresh_clinic_stats', { target_clinic_id: clinicId })
+
                     
                     const [ { count: appts }, { count: pros }, { count: rems } ] = await Promise.all([
                         supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).in('status', ['pending', 'confirmed']).gte('appointment_date', startStr).lte('appointment_date', endStr),
