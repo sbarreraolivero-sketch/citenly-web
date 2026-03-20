@@ -2951,25 +2951,8 @@ export default function Settings() {
                                                 GPT-4o (Premium)
                                             </button>
                                         </div>
-                                        <button
-                                            onClick={handleSaveAI}
-                                            disabled={savingAI}
-                                            className="btn-primary-soft flex items-center gap-2"
-                                        >
-                                            {savingAI ? (
-                                                <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                                            ) : (
-                                                <><Save className="w-4 h-4" /> Guardar</>
-                                            )}
-                                        </button>
                                     </div>
                                 </div>
-                                {aiSaved && (
-                                    <div className="mt-4 flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft border border-emerald-100">
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        ¡Cambio de modelo guardado!
-                                    </div>
-                                )}
                                 <div className="mt-4 p-3 bg-blue-50/50 rounded-soft border border-blue-100/50 flex items-start gap-2">
                                     <Info className="w-4 h-4 text-blue-500 mt-0.5" />
                                     <p className="text-xs text-blue-700 leading-relaxed">
@@ -2979,6 +2962,25 @@ export default function Settings() {
                                                 : "GPT-4o-mini es rápido y económico, ideal para responder dudas generales y agendamientos simples."
                                         }
                                     </p>
+                                </div>
+                                <div className="mt-4 flex items-center gap-4">
+                                    <button
+                                        onClick={handleSaveAI}
+                                        disabled={savingAI}
+                                        className="btn-primary flex items-center gap-2"
+                                    >
+                                        {savingAI ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                        ) : (
+                                            <><Save className="w-4 h-4" /> Guardar</>
+                                        )}
+                                    </button>
+                                    {aiSaved && (
+                                        <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft border border-emerald-100">
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            ¡Cambio de modelo guardado!
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
