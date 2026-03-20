@@ -73,8 +73,9 @@ export default function KnowledgeBase() {
     const [saving, setSaving] = useState(false)
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-    // AI Master Prompt state
+    // AI Master Prompt/Behavior Rules state
     const [masterPrompt, setMasterPrompt] = useState('')
+    const [behaviorRules, setBehaviorRules] = useState('')
     const [savingPrompt, setSavingPrompt] = useState(false)
     const [promptSaved, setPromptSaved] = useState(false)
     const [showPromptSection, setShowPromptSection] = useState(true)
@@ -115,10 +116,11 @@ export default function KnowledgeBase() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data } = await (supabase as any)
                 .from('clinic_settings')
-                .select('ai_personality')
+                .select('ai_personality, ai_behavior_rules')
                 .eq('id', profile.clinic_id)
                 .single()
             if (data?.ai_personality) setMasterPrompt(data.ai_personality)
+            if (data?.ai_behavior_rules) setBehaviorRules(data.ai_behavior_rules)
         } catch (e) {
             console.error('Error fetching master prompt:', e)
         }
@@ -133,6 +135,7 @@ export default function KnowledgeBase() {
                 .from('clinic_settings')
                 .update({
                     ai_personality: masterPrompt.trim(),
+                    ai_behavior_rules: behaviorRules.trim(),
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
@@ -140,8 +143,8 @@ export default function KnowledgeBase() {
             setPromptSaved(true)
             setTimeout(() => setPromptSaved(false), 3000)
         } catch (e) {
-            console.error('Error saving master prompt:', e)
-            alert('Error al guardar el prompt. Inténtalo de nuevo.')
+            console.error('Error saving prompt settings:', e)
+            alert('Error al guardar la configuración. Inténtalo de nuevo.')
         } finally {
             setSavingPrompt(false)
         }
@@ -370,21 +373,40 @@ export default function KnowledgeBase() {
 
                 {showPromptSection && (
                     <div className="px-5 pb-5 space-y-4 border-t border-silk-beige/50">
-                        <div className="mt-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="text-sm font-medium text-charcoal">Prompt del Sistema</label>
-                                <span className="text-xs text-charcoal/40">{masterPrompt.length} caracteres</span>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-medium text-charcoal">Master Prompt (Personalidad)</label>
+                                    <span className="text-xs text-charcoal/40">{masterPrompt.length} caracteres</span>
+                                </div>
+                                <textarea
+                                    value={masterPrompt}
+                                    onChange={(e) => setMasterPrompt(e.target.value)}
+                                    placeholder={`Ej: Eres un asistente amable y profesional para una clínica estética.\n\nReglas:\n- Responde de manera cordial, breve y clara\n- Nunca inventes horarios o servicios que no existan\n- Usa emojis con moderación para dar calidez\n- Siempre sugiere agendar una cita cuando el paciente muestre interés\n- Si no sabes algo, ofrece comunicar al paciente con el equipo humano`}
+                                    rows={8}
+                                    className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                                />
+                                <p className="text-[12px] text-charcoal/40 mt-2">
+                                    💡 Este prompt define el <b>tono y personalidad</b> de tu asistente IA.
+                                </p>
                             </div>
-                            <textarea
-                                value={masterPrompt}
-                                onChange={(e) => setMasterPrompt(e.target.value)}
-                                placeholder={`Ej: Eres un asistente amable y profesional para una clínica estética.\n\nReglas:\n- Responde de manera cordial, breve y clara\n- Nunca inventes horarios o servicios que no existan\n- Usa emojis con moderación para dar calidez\n- Siempre sugiere agendar una cita cuando el paciente muestre interés\n- Si no sabes algo, ofrece comunicar al paciente con el equipo humano`}
-                                rows={8}
-                                className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
-                            />
-                            <p className="text-xs text-charcoal/40 mt-2">
-                                💡 Este prompt define cómo se comporta tu asistente IA en todas las conversaciones de WhatsApp. Sé específico sobre el tono, las reglas y el estilo de comunicación.
-                            </p>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-medium text-charcoal">Instrucciones de Comportamiento</label>
+                                    <span className="text-xs text-charcoal/40">{behaviorRules.length} caracteres</span>
+                                </div>
+                                <textarea
+                                    value={behaviorRules}
+                                    onChange={(e) => setBehaviorRules(e.target.value)}
+                                    placeholder={`Instrucciones específicas de atención:\n- Saluda siempre preguntando el nombre si no lo sabes.\n- Si te preguntan por precios, redirige a la tabla de servicios.\n- Si el cliente está molesto, escala a un humano inmediatamente.`}
+                                    rows={8}
+                                    className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                                />
+                                <p className="text-[12px] text-charcoal/40 mt-2">
+                                    ⚡ Define el <b>flujo de atención</b> y reglas críticas de respuesta.
+                                </p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <button

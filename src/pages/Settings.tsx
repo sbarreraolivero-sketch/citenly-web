@@ -152,7 +152,6 @@ export default function Settings() {
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
-    const [aiBehaviorRules, setAiBehaviorRules] = useState('')
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
     const [copiedWebhook, setCopiedWebhook] = useState(false)
@@ -393,7 +392,6 @@ export default function Settings() {
                     setAiCreditsMonthlyLimit(data.ai_credits_monthly_limit || 500)
                     setAiCreditsExtraBalance(data.ai_credits_extra_balance || 0)
 
-                    setAiBehaviorRules(data.ai_behavior_rules || '')
                     setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
                     if (data.working_hours) setWorkingHours(data.working_hours)
                 }
@@ -894,7 +892,6 @@ export default function Settings() {
             const { error } = await (supabase as any)
                 .from('clinic_settings')
                 .update({
-                    ai_behavior_rules: aiBehaviorRules,
                     ai_auto_respond: aiAutoRespond,
                     updated_at: new Date().toISOString()
                 })
@@ -2899,19 +2896,42 @@ export default function Settings() {
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Plan Mensual</p>
+                                            <p className="text-[12px] text-charcoal/40 uppercase font-bold mb-1">Plan Mensual</p>
                                             <p className="text-xl font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
-                                            <p className="text-[10px] text-charcoal/40 mt-1">Mensajes incluidos</p>
+                                            <p className="text-[12px] text-charcoal/40 mt-1">Mensajes incluidos</p>
                                         </div>
                                         <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Saldo Extra</p>
+                                            <p className="text-[12px] text-charcoal/40 uppercase font-bold mb-1">Saldo Extra</p>
                                             <p className="text-xl font-bold text-charcoal">{aiCreditsExtraBalance}</p>
-                                            <p className="text-[10px] text-charcoal/40 mt-1">Cargas adicionales</p>
+                                            <p className="text-[12px] text-charcoal/40 mt-1">Cargas adicionales</p>
                                         </div>
                                         <div className="p-4 bg-primary-50 rounded-soft border border-primary-100 shadow-sm">
-                                            <p className="text-[10px] text-primary-600 uppercase font-bold mb-1">Consumo Mes</p>
+                                            <p className="text-[12px] text-primary-600 uppercase font-bold mb-1">Consumo Mes</p>
                                             <p className="text-xl font-bold text-primary-700">{aiMessagesUsed}</p>
-                                            <p className="text-[10px] text-primary-600/60 mt-1">Utilizados este mes</p>
+                                            <p className="text-[12px] text-primary-600/60 mt-1">Utilizados este mes</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar Visual */}
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-end">
+                                            <p className="text-xs font-medium text-charcoal/60">Progreso de Uso Mensual</p>
+                                            <p className="text-xs font-bold text-charcoal">
+                                                {Math.round((aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) * 100)}%
+                                            </p>
+                                        </div>
+                                        <div className="h-2 bg-charcoal/5 rounded-full overflow-hidden">
+                                            <div
+                                                className={cn(
+                                                    "h-full transition-all duration-500",
+                                                    (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) > 0.9
+                                                        ? "bg-rose-500"
+                                                        : (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) > 0.7
+                                                            ? "bg-amber-500"
+                                                            : "bg-emerald-500"
+                                                )}
+                                                style={{ width: `${Math.min(100, (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) * 100)}%` }}
+                                            />
                                         </div>
                                     </div>
 
@@ -3043,7 +3063,7 @@ export default function Settings() {
                                         })
                                     })()}
                                 </div>
-                                <p className="mt-6 text-xs text-charcoal/40 italic text-center">
+                                <p className="mt-6 text-[12px] text-charcoal/40 italic text-center">
                                     * Los créditos extra se consumen solo después de agotar el cupo mensual de tu plan.
                                 </p>
                             </div>
