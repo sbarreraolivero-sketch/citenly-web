@@ -37,7 +37,6 @@ export default function MyProfile() {
 
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
-    const [jobTitle, setJobTitle] = useState('')
     const [specialty, setSpecialty] = useState('')
     const [color, setColor] = useState('#8B5CF6')
     const [workingHours, setWorkingHours] = useState<Record<string, { enabled: boolean; start: string; end: string; lunch_break?: { enabled: boolean; start: string; end: string } }>>(DEFAULT_HOURS)
@@ -46,7 +45,6 @@ export default function MyProfile() {
         if (member) {
             setFirstName(member.first_name || '')
             setLastName(member.last_name || '')
-            setJobTitle((member as any).job_title || '')
             setSpecialty(member.specialty || '')
             setColor(member.color || '#8B5CF6')
             setWorkingHours((member as any).working_hours || DEFAULT_HOURS)
@@ -76,7 +74,6 @@ export default function MyProfile() {
             await teamService.updateMemberProfile(currentMemberId, {
                 first_name: firstName,
                 last_name: lastName,
-                job_title: jobTitle,
                 specialty,
                 color,
                 working_hours: workingHours,
@@ -160,10 +157,14 @@ export default function MyProfile() {
                         <label className="block text-sm font-medium text-charcoal/70 mb-1.5">Cargo</label>
                         <input
                             type="text"
-                            value={jobTitle}
-                            onChange={(e) => setJobTitle(e.target.value)}
-                            className="input-soft w-full"
-                            placeholder="Ej: Administrador"
+                            value={
+                                member?.role === 'owner' || member?.role === 'admin' ? 'Administrador' :
+                                member?.role === 'professional' ? 'Profesional' :
+                                member?.role === 'receptionist' ? 'Recepción' : ''
+                            }
+                            readOnly
+                            className="input-soft w-full bg-charcoal/5 cursor-not-allowed border-transparent"
+                            placeholder="Cargo asignado"
                         />
                     </div>
                     <div>

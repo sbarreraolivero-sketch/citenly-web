@@ -1594,7 +1594,10 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     msgs.push({ role: "user", content: userContentBlocks });
                 }
 
-                let res = await callOpenAI(openaiApiKey, clinic.openai_model, msgs);
+                const activeModelKey = clinic.ai_active_model === '4o' ? 'gpt-4o' : 'gpt-4o-mini';
+                const activeModelShort = clinic.ai_active_model === '4o' ? '4o' : 'mini';
+
+                let res = await callOpenAI(openaiApiKey, activeModelKey, msgs);
                 let assistant = res.choices[0].message;
                 let funcResult: Record<string, unknown> | null = null;
                 let allFuncResults: Record<string, unknown>[] = [];
@@ -1611,7 +1614,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                         { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
                     );
 
-                    res = await callOpenAI(openaiApiKey, clinic.openai_model, msgs);
+                    res = await callOpenAI(openaiApiKey, activeModelKey, msgs);
                     assistant = res.choices[0].message;
                     maxCalls--;
                 }
@@ -1619,6 +1622,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 const reply = assistant.content || "Error. ¿Puedes repetir?";
                 await saveMsg(sb, clinic.id, from, reply, "outbound", {
                     ai_generated: true,
+                    ai_model: activeModelShort,
                     ai_function_called: allFuncResults.length > 0 ? allFuncResults.map(r => (r as Record<string, unknown>).name).join(", ") : null,
                     ai_function_result: allFuncResults.length > 0 ? allFuncResults : null
                 });

@@ -80,12 +80,14 @@ Deno.serve(async (req: Request) => {
         // Handle AI Credit Purchases
         if (purchaseType === 'ai_credits' && payment.status === 'approved') {
             const creditsToAdd = parseInt(payment.metadata?.credits || '0');
+            const model = payment.metadata?.model || 'mini'; // Default to mini for legacy
+            const balanceField = model === '4o' ? 'ai_credits_extra_4o' : 'ai_credits_extra_balance';
             
             if (creditsToAdd > 0) {
                 // Fetch current extra balance
                 const { data: settings, error: fetchError } = await supabase
                     .from('clinic_settings')
-                    .select('ai_credits_extra_balance')
+                    .select(balanceField)
                     .eq('id', clinicId)
                     .single();
 
@@ -94,22 +96,22 @@ Deno.serve(async (req: Request) => {
                     return new Response("Error fetching settings", { status: 500 });
                 }
 
-                const currentBalance = settings?.ai_credits_extra_balance || 0;
+                const currentBalance = (settings as any)?.[balanceField] || 0;
                 const newBalance = currentBalance + creditsToAdd;
 
                 // Update balance
                 const { error: updateError } = await supabase
                     .from('clinic_settings')
-                    .update({ ai_credits_extra_balance: newBalance })
+                    .update({ [balanceField]: newBalance })
                     .eq('id', clinicId);
 
                 if (updateError) {
-                    console.error("Error updating credits:", updateError);
+                    console.error(`Error updating credits (${balanceField}):`, updateError);
                     return new Response("Error updating credits", { status: 500 });
                 }
 
-                console.log(`AI Credits updated for ${clinicId}: +${creditsToAdd} -> Total Extra: ${newBalance}`);
-                return new Response("AI Credits OK", { status: 200 });
+                console.log(`AI Credits (${model}) updated for ${clinicId}: +${creditsToAdd} -> Total Extra: ${newBalance}`);
+                return new Response(`AI Credits (${model}) OK`, { status: 200 });
             }
         }
 

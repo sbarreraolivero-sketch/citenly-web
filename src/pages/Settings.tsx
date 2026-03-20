@@ -23,6 +23,8 @@ import {
     User,
     Webhook,
     Globe,
+    Bot,
+    Info,
     ToggleLeft,
     ToggleRight,
     Send,
@@ -149,10 +151,14 @@ export default function Settings() {
     const [yCloudApiKey, setYCloudApiKey] = useState('')
     const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
     const [openaiModel] = useState('gpt-4o-mini')
-    const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
+    const [aiCreditsExtra4o, setAiCreditsExtra4o] = useState(0)
+    const [aiMessagesUsed, setAiMessagesUsed] = useState(0)
+    const [aiMessagesUsed4o, setAiMessagesUsed4o] = useState(0)
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
+    const [aiActiveModel, setAiActiveModel] = useState<'mini' | '4o'>('mini')
+    const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
     const [copiedWebhook, setCopiedWebhook] = useState(false)
 
@@ -255,8 +261,7 @@ export default function Settings() {
         monthlyUsed: number
     } | null>(null)
 
-    // AI usage state
-    const [aiMessagesUsed, setAiMessagesUsed] = useState(0)
+    // AI usage state - consolidated at top of component
 
     // Payment return message state
     const [paymentMessage, setPaymentMessage] = useState<{ type: 'success' | 'error' | 'pending'; text: string } | null>(null)
@@ -391,6 +396,8 @@ export default function Settings() {
                     
                     setAiCreditsMonthlyLimit(data.ai_credits_monthly_limit || 500)
                     setAiCreditsExtraBalance(data.ai_credits_extra_balance || 0)
+                    setAiCreditsExtra4o(data.ai_credits_extra_4o || 0)
+                    setAiActiveModel(data.ai_active_model || 'mini')
 
                     setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
                     if (data.working_hours) setWorkingHours(data.working_hours)
@@ -420,7 +427,7 @@ export default function Settings() {
             try {
                 // Fetch AI messages count for current month
                 const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-                const { count, error: countError } = await (supabase as any)
+                const { error: countError } = await (supabase as any)
                     .from('messages')
                     .select('*', { count: 'exact', head: true })
                     .eq('clinic_id', profile.clinic_id)
@@ -430,7 +437,28 @@ export default function Settings() {
                 if (countError) {
                     console.error('Error fetching AI message count:', countError)
                 } else {
-                    setAiMessagesUsed(count || 0)
+                    // Fetch split counts
+                    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+                    
+                    // GPT-4o Messages
+                    const { count: count4o } = await (supabase as any)
+                        .from('messages')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('clinic_id', profile.clinic_id)
+                        .eq('ai_generated', true)
+                        .eq('ai_model', '4o')
+                        .gte('created_at', startOfMonth)
+                    setAiMessagesUsed4o(count4o || 0)
+
+                    // GPT-4o-mini Messages (including legacy null model)
+                    const { count: countMini } = await (supabase as any)
+                        .from('messages')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('clinic_id', profile.clinic_id)
+                        .eq('ai_generated', true)
+                        .or('ai_model.eq.mini,ai_model.is.null')
+                        .gte('created_at', startOfMonth)
+                    setAiMessagesUsed(countMini || 0)
                 }
             } catch (error) {
                 console.error('Error counting AI messages:', error)
@@ -888,17 +916,16 @@ export default function Settings() {
         }
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await (supabase as any)
                 .from('clinic_settings')
                 .update({
                     ai_auto_respond: aiAutoRespond,
+                    ai_active_model: aiActiveModel,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
 
             if (error) throw error
-
             setAiSaved(true)
             setTimeout(() => setAiSaved(false), 3000)
         } catch (error) {
@@ -2881,70 +2908,151 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            {/* AI Credits Usage */}
-                            <div className="card-soft p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-soft flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-blue-600" />
+                            {/* AI Model Switcher (Active Response Mode) */}
+                            <div className="card-soft p-6 mb-6">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-soft flex items-center justify-center transition-colors",
+                                            aiActiveModel === '4o' ? "bg-violet-100" : "bg-emerald-100"
+                                        )}>
+                                            <Bot className={cn("w-6 h-6", aiActiveModel === '4o' ? "text-violet-600" : "text-emerald-600")} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+                                                Motor de Respuesta Activo
+                                                {aiActiveModel === '4o' && <span className="bg-violet-100 text-violet-700 text-[10px] uppercase px-2 py-0.5 rounded-full font-bold">Premium</span>}
+                                            </h3>
+                                            <p className="text-xs text-charcoal/50">Define qué modelo usará la IA para atender a tus pacientes actualmente</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-charcoal">Créditos de IA</h2>
-                                        <p className="text-sm text-charcoal/50">Gestión de consumo de inteligencia artificial</p>
+                                    <div className="flex bg-charcoal/5 p-1 rounded-soft self-start md:self-auto">
+                                        <button
+                                            onClick={() => setAiActiveModel('mini')}
+                                            className={cn(
+                                                "px-4 py-2 text-xs font-bold rounded-soft transition-all",
+                                                aiActiveModel === 'mini' ? "bg-white text-emerald-600 shadow-sm" : "text-charcoal/40 hover:text-charcoal/60"
+                                            )}
+                                        >
+                                            GPT-4o-mini
+                                        </button>
+                                        <button
+                                            onClick={() => setAiActiveModel('4o')}
+                                            className={cn(
+                                                "px-4 py-2 text-xs font-bold rounded-soft transition-all",
+                                                aiActiveModel === '4o' ? "bg-white text-violet-600 shadow-sm" : "text-charcoal/40 hover:text-charcoal/60"
+                                            )}
+                                        >
+                                            GPT-4o (Premium)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="mt-4 p-3 bg-blue-50/50 rounded-soft border border-blue-100/50 flex items-start gap-2">
+                                    <Info className="w-4 h-4 text-blue-500 mt-0.5" />
+                                    <p className="text-xs text-blue-700 leading-relaxed">
+                                        <b>Sugerencia:</b> {aiActiveModel === 'mini' 
+                                            ? "GPT-4o-mini es ideal para conversaciones simples y consultas generales con bajo costo." 
+                                            : "GPT-4o ofrece mayor razonamiento y mejor atención para casos complejos, ideal para ventas y cierres."} 
+                                        Usa el botón "Guardar" arriba para aplicar el cambio de modelo.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* AI Credits Usage */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* MINI DASHBOARD */}
+                                <div className="card-soft p-6 border-l-4 border-l-emerald-500">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 bg-emerald-100 rounded-soft flex items-center justify-center">
+                                            <Sparkles className="w-5 h-5 text-emerald-600" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-md font-bold text-charcoal">Dashboard GPT-4o-mini</h2>
+                                            <p className="text-[10px] text-charcoal/50 uppercase tracking-wider font-bold">Consumo Mensual Incluido</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="p-3 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                                <p className="text-[10px] text-charcoal/60 uppercase font-bold mb-1">Plan</p>
+                                                <p className="text-lg font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
+                                            </div>
+                                            <div className="p-3 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                                <p className="text-[10px] text-charcoal/60 uppercase font-bold mb-1">Extra</p>
+                                                <p className="text-lg font-bold text-charcoal">{aiCreditsExtraBalance}</p>
+                                            </div>
+                                            <div className={cn(
+                                                "p-3 rounded-soft border shadow-sm",
+                                                aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "bg-rose-50 border-rose-100" : "bg-emerald-50 border-emerald-100"
+                                            )}>
+                                                <p className={cn("text-[10px] uppercase font-bold mb-1", aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "text-rose-700" : "text-emerald-700")}>Uso</p>
+                                                <p className={cn("text-lg font-bold", aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "text-rose-800" : "text-emerald-800")}>{aiMessagesUsed}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-end">
+                                                <p className="text-[11px] font-medium text-charcoal/60 uppercase">Estado de Créditos</p>
+                                                <p className="text-[11px] font-bold text-charcoal">
+                                                    {Math.round((aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) * 100)}%
+                                                </p>
+                                            </div>
+                                            <div className="h-1.5 bg-charcoal/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={cn(
+                                                        "h-full transition-all duration-500",
+                                                        (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) > 0.9 ? "bg-rose-500" : "bg-emerald-500"
+                                                    )}
+                                                    style={{ width: `${Math.min(100, (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) * 100)}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[12px] text-charcoal/60 uppercase font-bold mb-1">Plan Mensual</p>
-                                            <p className="text-xl font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
-                                            <p className="text-[12px] text-charcoal/60 mt-1">Mensajes incluidos</p>
+                                {/* GPT-4o DASHBOARD */}
+                                <div className="card-soft p-6 border-l-4 border-l-violet-500">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 bg-violet-100 rounded-soft flex items-center justify-center">
+                                            <Zap className="w-5 h-5 text-violet-600" />
                                         </div>
-                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[12px] text-charcoal/60 uppercase font-bold mb-1">Saldo Extra</p>
-                                            <p className="text-xl font-bold text-charcoal">{aiCreditsExtraBalance}</p>
-                                            <p className="text-[12px] text-charcoal/60 mt-1">Cargas adicionales</p>
-                                        </div>
-                                        <div className="p-4 bg-primary-50 rounded-soft border border-primary-100 shadow-sm">
-                                            <p className="text-[12px] text-primary-700 uppercase font-bold mb-1">Consumo Mes</p>
-                                            <p className="text-xl font-bold text-primary-800">{aiMessagesUsed}</p>
-                                            <p className="text-[12px] text-primary-700/60 mt-1">Utilizados este mes</p>
+                                        <div>
+                                            <h2 className="text-md font-bold text-charcoal">Dashboard GPT-4o</h2>
+                                            <p className="text-[10px] text-charcoal/50 uppercase tracking-wider font-bold">Consumo Premium</p>
                                         </div>
                                     </div>
 
-                                    {/* Progress Bar Visual */}
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-end">
-                                            <p className="text-xs font-medium text-charcoal/60">Progreso de Uso Mensual</p>
-                                            <p className="text-xs font-bold text-charcoal">
-                                                {Math.round((aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) * 100)}%
-                                            </p>
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="p-3 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                                <p className="text-[10px] text-charcoal/60 uppercase font-bold mb-1">Saldo Disponible</p>
+                                                <p className="text-lg font-bold text-charcoal">{aiCreditsExtra4o}</p>
+                                            </div>
+                                            <div className={cn(
+                                                "p-3 rounded-soft border shadow-sm",
+                                                aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "bg-rose-50 border-rose-100" : "bg-violet-50 border-violet-100"
+                                            )}>
+                                                <p className={cn("text-[10px] uppercase font-bold mb-1", aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "text-rose-700" : "text-violet-700")}>Consumido</p>
+                                                <p className={cn("text-lg font-bold", aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "text-rose-800" : "text-violet-800")}>{aiMessagesUsed4o}</p>
+                                            </div>
                                         </div>
-                                        <div className="h-2 bg-charcoal/5 rounded-full overflow-hidden">
-                                            <div
-                                                className={cn(
-                                                    "h-full transition-all duration-500",
-                                                    (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) > 0.9
-                                                        ? "bg-rose-500"
-                                                        : (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) > 0.7
-                                                            ? "bg-amber-500"
-                                                            : "bg-emerald-500"
-                                                )}
-                                                style={{ width: `${Math.min(100, (aiMessagesUsed / (aiCreditsMonthlyLimit + aiCreditsExtraBalance)) * 100)}%` }}
-                                            />
-                                        </div>
-                                    </div>
 
-                                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-soft">
-                                        <div className="flex gap-3">
-                                            <Zap className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-sm font-semibold text-amber-900">
-                                                    Disponibles: {Math.max(0, (aiCreditsMonthlyLimit + aiCreditsExtraBalance) - aiMessagesUsed)}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-end">
+                                                <p className="text-[11px] font-medium text-charcoal/60 uppercase">Estado de Créditos Premium</p>
+                                                <p className="text-[11px] font-bold text-charcoal">
+                                                    {aiCreditsExtra4o > 0 ? Math.round((aiMessagesUsed4o / aiCreditsExtra4o) * 100) : 0}%
                                                 </p>
-                                                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                                                    Al agotar los créditos el asistente dejará de responder automáticamente. Las recargas son instantáneas.
-                                                </p>
+                                            </div>
+                                            <div className="h-1.5 bg-charcoal/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={cn(
+                                                        "h-full transition-all duration-500",
+                                                        aiCreditsExtra4o > 0 && (aiMessagesUsed4o / aiCreditsExtra4o) > 0.9 ? "bg-rose-500" : "bg-violet-500"
+                                                    )}
+                                                    style={{ width: `${aiCreditsExtra4o > 0 ? Math.min(100, (aiMessagesUsed4o / aiCreditsExtra4o) * 100) : 0}%` }}
+                                                />
                                             </div>
                                         </div>
                                     </div>
