@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
             headers: {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, x-client-info, apikey",
             },
         });
     }
@@ -48,7 +48,10 @@ Deno.serve(async (req: Request) => {
     if (req.method !== "POST") {
         return new Response(JSON.stringify({ error: "Method not allowed" }), {
             status: 405,
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
         });
     }
 
@@ -60,7 +63,7 @@ Deno.serve(async (req: Request) => {
         if (!clinic_id || !plan || !email) {
             return new Response(
                 JSON.stringify({ error: "Missing required fields" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+                { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
             );
         }
 
@@ -68,7 +71,7 @@ Deno.serve(async (req: Request) => {
         if (!PLAN_PRICES[plan]) {
             return new Response(
                 JSON.stringify({ error: "Invalid plan" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+                { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
             );
         }
 
@@ -110,7 +113,7 @@ Deno.serve(async (req: Request) => {
             console.error("Mercado Pago error:", errorData);
             return new Response(
                 JSON.stringify({ error: "Failed to create preference", details: errorData }),
-                { status: 500, headers: { "Content-Type": "application/json" } }
+                { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
             );
         }
 
@@ -148,7 +151,7 @@ Deno.serve(async (req: Request) => {
         console.error("Error:", error);
         return new Response(
             JSON.stringify({ error: "Internal server error" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
         );
     }
 });
