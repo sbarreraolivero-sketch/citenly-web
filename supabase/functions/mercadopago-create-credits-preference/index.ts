@@ -4,21 +4,39 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const MERCADOPAGO_ACCESS_TOKEN = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 
-const CREDIT_PACKS: Record<string, { credits: number, price: number, description: string }> = {
+const CREDIT_PACKS_MINI: Record<string, { credits: number, price: number, description: string }> = {
     'pack_500': { 
         credits: 500, 
-        price: 5000, // $5 USD approx in ARS
-        description: "Pack Inicial - 500 Créditos de IA" 
+        price: 5000,
+        description: "Pack Inicial - 500 Créditos de IA (GPT-4o-mini)" 
     },
     'pack_1500': { 
         credits: 1500, 
-        price: 12000, // $12 USD approx in ARS
-        description: "Pack Pro - 1500 Créditos de IA" 
+        price: 12000,
+        description: "Pack Pro - 1500 Créditos de IA (GPT-4o-mini)" 
     },
     'pack_4000': { 
         credits: 4000, 
-        price: 25000, // $25 USD approx in ARS
-        description: "Pack Enterprise - 4000 Créditos de IA" 
+        price: 25000,
+        description: "Pack Enterprise - 4000 Créditos de IA (GPT-4o-mini)" 
+    },
+};
+
+const CREDIT_PACKS_4O: Record<string, { credits: number, price: number, description: string }> = {
+    'pack_500_4o': { 
+        credits: 500, 
+        price: 10000,
+        description: "Pack Inicial - 500 Créditos de IA (GPT-4o)" 
+    },
+    'pack_1500_4o': { 
+        credits: 1500, 
+        price: 30000,
+        description: "Pack Pro - 1500 Créditos de IA (GPT-4o)" 
+    },
+    'pack_4000_4o': { 
+        credits: 4000, 
+        price: 80000,
+        description: "Pack Enterprise - 4000 Créditos de IA (GPT-4o)" 
     },
 };
 
@@ -26,6 +44,7 @@ interface RequestBody {
     clinic_id: string;
     pack_id: string;
     email: string;
+    model?: 'mini' | '4o';
     back_urls: {
         success: string;
         failure: string;
@@ -54,14 +73,17 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body: RequestBody = await req.json();
-        const { clinic_id, pack_id, email, back_urls } = body;
+        const { clinic_id, pack_id, email, model, back_urls } = body;
 
-        console.log(`Creating preference for clinic ${clinic_id}, pack ${pack_id}, email ${email}`);
+        const selectedModel = model || 'mini';
+        const packs = selectedModel === '4o' ? CREDIT_PACKS_4O : CREDIT_PACKS_MINI;
 
-        const pack = CREDIT_PACKS[pack_id];
+        console.log(`Creating preference for clinic ${clinic_id}, pack ${pack_id}, model ${selectedModel}, email ${email}`);
+
+        const pack = packs[pack_id];
 
         if (!clinic_id || !pack || !email) {
-            console.error("Missing required fields:", { clinic_id, pack_id, email });
+            console.error("Missing required fields:", { clinic_id, pack_id, email, selectedModel });
             return new Response(
                 JSON.stringify({ error: "Missing required fields or invalid pack" }),
                 { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -101,6 +123,7 @@ Deno.serve(async (req: Request) => {
                 clinic_id: clinic_id,
                 type: "ai_credits",
                 credits: pack.credits.toString(),
+                model: selectedModel,
             },
         };
 

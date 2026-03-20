@@ -153,7 +153,7 @@ export const PLANS = {
 export type PlanId = keyof typeof PLANS
 
 /**
- * AI Credit Packs configuration
+ * AI Credit Packs configuration — GPT-4o-mini (económico)
  */
 export const CREDIT_PACKS = {
     'pack_500': { id: 'pack_500', name: 'Pack Inicial', credits: 500, price: 5, description: "500 Créditos de IA" },
@@ -161,28 +161,39 @@ export const CREDIT_PACKS = {
     'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 4000, price: 25, description: "4000 Créditos de IA" },
 } as const
 
+/**
+ * AI Credit Packs configuration — GPT-4o (premium, ~50% margin)
+ */
+export const CREDIT_PACKS_4O = {
+    'pack_500_4o': { id: 'pack_500_4o', name: 'Pack Inicial', credits: 500, price: 10, description: "500 Créditos de IA (GPT-4o)" },
+    'pack_1500_4o': { id: 'pack_1500_4o', name: 'Pack Pro', credits: 1500, price: 30, description: "1500 Créditos de IA (GPT-4o)" },
+    'pack_4000_4o': { id: 'pack_4000_4o', name: 'Pack Enterprise', credits: 4000, price: 80, description: "4000 Créditos de IA (GPT-4o)" },
+} as const
+
 export type CreditPackId = keyof typeof CREDIT_PACKS
+export type CreditPack4oId = keyof typeof CREDIT_PACKS_4O
 
 /**
  * Redirects user to Mercado Pago for credit pack purchase
+ * @param model - 'mini' for gpt-4o-mini packs, '4o' for gpt-4o packs
  */
-export async function redirectToCreditsCheckout(clinicId: string, email: string, packId: CreditPackId) {
+export async function redirectToCreditsCheckout(clinicId: string, email: string, packId: string, model: 'mini' | '4o' = 'mini') {
     const { data, error } = await supabase.functions.invoke('mercadopago-create-credits-preference', {
         body: {
             clinic_id: clinicId,
             pack_id: packId,
             email: email,
+            model: model,
             back_urls: {
-                success: `${window.location.origin}/app/settings?tab=subscription&payment=success`,
-                failure: `${window.location.origin}/app/settings?tab=subscription&payment=failure`,
-                pending: `${window.location.origin}/app/settings?tab=subscription&payment=pending`,
+                success: `${window.location.origin}/app/settings?tab=ai&payment=success`,
+                failure: `${window.location.origin}/app/settings?tab=ai&payment=failure`,
+                pending: `${window.location.origin}/app/settings?tab=ai&payment=pending`,
             },
         },
     })
 
     if (error) {
         console.error('Error creating credit preference:', error)
-        // Try to extract dynamic error message if available
         const msg = error.message || 'Error al conectar con la función de pago'
         throw new Error(`Error en el servidor: ${msg}`)
     }

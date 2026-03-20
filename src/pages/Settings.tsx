@@ -37,7 +37,7 @@ import {
     RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, type CreditPackId, redirectToCreditsCheckout } from '@/lib/mercadopago'
+import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, CREDIT_PACKS_4O, redirectToCreditsCheckout } from '@/lib/mercadopago'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
@@ -149,6 +149,7 @@ export default function Settings() {
     const [yCloudApiKey, setYCloudApiKey] = useState('')
     const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
     const [openaiModel] = useState('gpt-4o-mini')
+    const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
     const [aiBehaviorRules, setAiBehaviorRules] = useState('')
@@ -541,10 +542,10 @@ export default function Settings() {
         setTimeout(() => setCopiedWebhook(false), 2000)
     }
 
-    const handleBuyCredits = async (packId: CreditPackId) => {
+    const handleBuyCredits = async (packId: string) => {
         if (!profile?.clinic_id || !user?.email) return
         try {
-            await redirectToCreditsCheckout(profile.clinic_id, user.email, packId)
+            await redirectToCreditsCheckout(profile.clinic_id, user.email, packId, selectedAiModel)
         } catch (error: any) {
             console.error('Error buying credits:', error)
             alert(error.message || 'Error al procesar el pago. Por favor intenta de nuevo.')
@@ -1802,60 +1803,6 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            {/* AI Credit Packs */}
-                            <div id="ai-credits-packs" className="card-soft p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-soft flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-charcoal">Recarga de Créditos IA</h2>
-                                        <p className="text-sm text-charcoal/50">Añade saldo adicional para tu asistente de IA</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {(Object.keys(CREDIT_PACKS) as CreditPackId[]).map((packId) => {
-                                        const pack = CREDIT_PACKS[packId]
-                                        return (
-                                            <div key={packId} className="p-6 bg-white border border-silk-beige rounded-soft hover:border-primary-300 transition-all shadow-sm hover:shadow-md flex flex-col">
-                                                <div className="mb-4">
-                                                    <h3 className="text-lg font-bold text-charcoal">{pack.name}</h3>
-                                                    <div className="flex items-baseline gap-1 mt-1">
-                                                        <span className="text-2xl font-bold text-primary-600">${pack.price}</span>
-                                                        <span className="text-xs text-charcoal/40 font-medium">USD</span>
-                                                    </div>
-                                                </div>
-                                                <ul className="mb-6 space-y-2 flex-grow">
-                                                    <li className="flex items-center gap-2 text-sm text-charcoal/70">
-                                                        <Check className="w-4 h-4 text-emerald-500" />
-                                                        {pack.credits} mensajes de IA
-                                                    </li>
-                                                    <li className="flex items-center gap-2 text-sm text-charcoal/70">
-                                                        <Check className="w-4 h-4 text-emerald-500" />
-                                                        Sin fecha de vencimiento
-                                                    </li>
-                                                    <li className="flex items-center gap-2 text-sm text-charcoal/70">
-                                                        <Check className="w-4 h-4 text-emerald-500" />
-                                                        Activación instantánea
-                                                    </li>
-                                                </ul>
-                                                <button 
-                                                    onClick={() => handleBuyCredits(packId)}
-                                                    className="w-full py-2 bg-primary-600 text-white rounded-soft font-semibold text-sm hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <CreditCard className="w-4 h-4" />
-                                                    Comprar Pack
-                                                </button>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                <p className="mt-6 text-xs text-charcoal/40 italic text-center">
-                                    * Los créditos extra se consumen solo después de agotar el cupo mensual de tu plan.
-                                </p>
-                            </div>
-
                             {/* Plan Comparison */}
                             <div id="compare-plans" className="card-soft p-6">
                                 <h2 className="text-lg font-semibold text-charcoal mb-6">Compara Planes</h2>
@@ -1863,8 +1810,6 @@ export default function Settings() {
                                 <div className="grid md:grid-cols-3 gap-4">
                                     {(Object.keys(PLANS) as PlanId[]).map((planId) => {
                                         const plan = PLANS[planId]
-                                        // Debug plan comparison
-                                        if (planId === 'radiance') console.log('Settings Plan Check:', { planId, currentPlan: subscription?.plan, match: planId === subscription?.plan })
                                         const isCurrentPlan = planId === subscription?.plan
 
                                         return (
@@ -1916,38 +1861,6 @@ export default function Settings() {
                                             </div>
                                         )
                                     })}
-                                </div>
-                            </div>
-
-                            {/* Usage Stats */}
-                            <div className="card-soft p-6">
-                                <h2 className="text-lg font-semibold text-charcoal mb-4">Uso del Mes</h2>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-charcoal/60">Citas agendadas</span>
-                                            <span className="font-medium text-charcoal">
-                                                {subscription?.monthlyUsed || 0} / {subscription?.monthlyLimit ? subscription.monthlyLimit : '∞'}
-                                            </span>
-                                        </div>
-                                        <div className="h-2 bg-silk-beige rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-primary-500 rounded-full transition-all duration-500"
-                                                style={{ width: subscription?.monthlyLimit ? `${Math.min(100, ((subscription?.monthlyUsed || 0) / subscription.monthlyLimit) * 100)}%` : '0%' }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-charcoal/60">Mensajes de IA</span>
-                                            <span className="font-medium text-charcoal">{aiMessagesUsed} / ∞</span>
-                                        </div>
-                                        <div className="h-2 bg-silk-beige rounded-full overflow-hidden">
-                                            <div className="h-full bg-accent-500 rounded-full" style={{ width: '0%' }} />
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2177,67 +2090,6 @@ export default function Settings() {
                                         <p className="text-xs text-charcoal/40 mt-1">
                                             Configura esta URL como webhook en tu panel de YCloud (Developer → Webhooks)
                                         </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="card-soft p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-soft flex items-center justify-center">
-                                        <Sparkles className="w-6 h-6 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-charcoal">Créditos de IA</h2>
-                                        <p className="text-sm text-charcoal/50">Gestión de consumo de inteligencia artificial</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Plan Mensual</p>
-                                            <p className="text-xl font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
-                                            <p className="text-[10px] text-charcoal/40 mt-1">Mensajes incluidos</p>
-                                        </div>
-                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Saldo Extra</p>
-                                            <p className="text-xl font-bold text-charcoal">{aiCreditsExtraBalance}</p>
-                                            <p className="text-[10px] text-charcoal/40 mt-1">Cargas adicionales</p>
-                                        </div>
-                                        <div className="p-4 bg-primary-50 rounded-soft border border-primary-100 shadow-sm">
-                                            <p className="text-[10px] text-primary-600 uppercase font-bold mb-1">Consumo Mes</p>
-                                            <p className="text-xl font-bold text-primary-700">{aiMessagesUsed}</p>
-                                            <p className="text-[10px] text-primary-600/60 mt-1">Utilizados este mes</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-soft">
-                                        <div className="flex gap-3">
-                                            <Zap className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-sm font-semibold text-amber-900">
-                                                    Disponibles: {Math.max(0, (aiCreditsMonthlyLimit + aiCreditsExtraBalance) - aiMessagesUsed)}
-                                                </p>
-                                                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                                                    Al agotar los créditos el asistente dejará de responder automáticamente. Las recargas son instantáneas.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-2">
-                                        <button
-                                            onClick={() => {
-                                                setActiveTab('subscription');
-                                                setTimeout(() => {
-                                                    document.getElementById('ai-credits-packs')?.scrollIntoView({ behavior: 'smooth' });
-                                                }, 100);
-                                            }}
-                                            className="btn-primary w-full md:w-auto flex items-center justify-center gap-2"
-                                        >
-                                            <CreditCard className="w-4 h-4" />
-                                            Recargar Créditos
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2980,19 +2832,19 @@ export default function Settings() {
 
                     {/* AI Settings */}
                     {activeTab === 'ai' && (
-                        <div className="card-soft p-6">
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-12 h-12 bg-violet-100 rounded-soft flex items-center justify-center">
-                                    <Sparkles className="w-6 h-6 text-violet-600" />
+                        <div className="space-y-6">
+                            {/* Header + Auto-Respond */}
+                            <div className="card-soft p-6">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-violet-100 rounded-soft flex items-center justify-center">
+                                        <Sparkles className="w-6 h-6 text-violet-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-charcoal">Configuración de IA</h2>
+                                        <p className="text-sm text-charcoal/50">Gestiona tu asistente de inteligencia artificial</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold text-charcoal">Configuración de IA</h2>
-                                    <p className="text-sm text-charcoal/50">Personaliza el comportamiento del Agente</p>
-                                </div>
-                            </div>
 
-                            <div className="space-y-6">
-                                {/* Auto-Respond Switch */}
                                 <div className="bg-white p-4 rounded-soft border border-silk-beige flex items-center justify-between">
                                     <div>
                                         <h3 className="text-sm font-semibold text-charcoal">Atención Automática IA</h3>
@@ -3011,27 +2863,7 @@ export default function Settings() {
                                     </label>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
-                                        Instrucciones de Comportamiento (System Prompt)
-                                    </label>
-                                    <div className="bg-amber-50 border border-amber-200 rounded-soft p-4 mb-2 text-sm text-amber-800">
-                                        <p className="font-medium mb-1">💡 Reglas que el Agente debe seguir</p>
-                                        <p>Define aquí cómo debe comportarse el asistente, reglas de precios, contraindicaciones obligatorias, y flujo de conversación. Estas reglas se inyectan directamente en el "cerebro" de la IA.</p>
-                                    </div>
-                                    <textarea
-                                        value={aiBehaviorRules}
-                                        onChange={(e) => setAiBehaviorRules(e.target.value)}
-                                        rows={15}
-                                        placeholder="Ej: 1. Siempre saluda cordialmente. 2. No des precios a menos que pregunten..."
-                                        className="input-soft w-full font-mono text-sm leading-relaxed"
-                                    />
-                                    <p className="text-xs text-charcoal/40 mt-2">
-                                        Estas instrucciones tienen prioridad sobre el comportamiento base. Sé claro y específico.
-                                    </p>
-                                </div>
-
-                                <div className="pt-6 border-t border-silk-beige flex items-center gap-4">
+                                <div className="pt-4 flex items-center gap-4">
                                     <button
                                         onClick={handleSaveAI}
                                         disabled={savingAI}
@@ -3040,16 +2872,180 @@ export default function Settings() {
                                         {savingAI ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
                                         ) : (
-                                            <><Save className="w-4 h-4" /> Guardar Reglas</>
+                                            <><Save className="w-4 h-4" /> Guardar</>
                                         )}
                                     </button>
                                     {aiSaved && (
                                         <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft">
                                             <CheckCircle2 className="w-4 h-4" />
-                                            ¡Reglas actualizadas!
+                                            ¡Guardado!
                                         </div>
                                     )}
                                 </div>
+                            </div>
+
+                            {/* AI Credits Usage */}
+                            <div className="card-soft p-6">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-soft flex items-center justify-center">
+                                        <Sparkles className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-charcoal">Créditos de IA</h2>
+                                        <p className="text-sm text-charcoal/50">Gestión de consumo de inteligencia artificial</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Plan Mensual</p>
+                                            <p className="text-xl font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
+                                            <p className="text-[10px] text-charcoal/40 mt-1">Mensajes incluidos</p>
+                                        </div>
+                                        <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
+                                            <p className="text-[10px] text-charcoal/40 uppercase font-bold mb-1">Saldo Extra</p>
+                                            <p className="text-xl font-bold text-charcoal">{aiCreditsExtraBalance}</p>
+                                            <p className="text-[10px] text-charcoal/40 mt-1">Cargas adicionales</p>
+                                        </div>
+                                        <div className="p-4 bg-primary-50 rounded-soft border border-primary-100 shadow-sm">
+                                            <p className="text-[10px] text-primary-600 uppercase font-bold mb-1">Consumo Mes</p>
+                                            <p className="text-xl font-bold text-primary-700">{aiMessagesUsed}</p>
+                                            <p className="text-[10px] text-primary-600/60 mt-1">Utilizados este mes</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-soft">
+                                        <div className="flex gap-3">
+                                            <Zap className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-amber-900">
+                                                    Disponibles: {Math.max(0, (aiCreditsMonthlyLimit + aiCreditsExtraBalance) - aiMessagesUsed)}
+                                                </p>
+                                                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                                                    Al agotar los créditos el asistente dejará de responder automáticamente. Las recargas son instantáneas.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Credit Packs with Model Switch */}
+                            <div id="ai-credits-packs" className="card-soft p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-soft flex items-center justify-center shadow-md">
+                                            <CreditCard className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-charcoal">Recarga de Créditos IA</h2>
+                                            <p className="text-sm text-charcoal/50">Selecciona el modelo y el pack que prefieras</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Model Selector */}
+                                <div className="mb-6 p-4 bg-ivory rounded-soft border border-silk-beige">
+                                    <p className="text-xs font-semibold text-charcoal/60 uppercase tracking-wider mb-3">Modelo de IA</p>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setSelectedAiModel('mini')}
+                                            className={cn(
+                                                "flex-1 py-3 px-4 rounded-soft text-sm font-semibold transition-all border-2",
+                                                selectedAiModel === 'mini'
+                                                    ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                                                    : "bg-white border-silk-beige text-charcoal/60 hover:border-charcoal/20"
+                                            )}
+                                        >
+                                            <div className="text-center">
+                                                <p className="font-bold">GPT-4o-mini</p>
+                                                <p className="text-xs mt-0.5 font-normal opacity-70">Económico · Rápido</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedAiModel('4o')}
+                                            className={cn(
+                                                "flex-1 py-3 px-4 rounded-soft text-sm font-semibold transition-all border-2",
+                                                selectedAiModel === '4o'
+                                                    ? "bg-violet-50 border-violet-500 text-violet-700 shadow-sm"
+                                                    : "bg-white border-silk-beige text-charcoal/60 hover:border-charcoal/20"
+                                            )}
+                                        >
+                                            <div className="text-center">
+                                                <p className="font-bold">GPT-4o</p>
+                                                <p className="text-xs mt-0.5 font-normal opacity-70">Premium · Mayor calidad</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-charcoal/40 mt-3 italic">
+                                        {selectedAiModel === 'mini'
+                                            ? '💡 Ideal para atención general. Respuestas rápidas y económicas.'
+                                            : '⚡ Atención premium con respuestas más detalladas, contextuales y personalizadas. Ideal para clínicas que priorizan la calidad de atención.'}
+                                    </p>
+                                </div>
+
+                                {/* Pack Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {(() => {
+                                        const currentPacks: Record<string, { id: string; name: string; credits: number; price: number; description: string }> = selectedAiModel === '4o' ? { ...CREDIT_PACKS_4O } : { ...CREDIT_PACKS };
+                                        return Object.keys(currentPacks).map((packId) => {
+                                            const pack = currentPacks[packId]
+                                            return (
+                                                <div key={packId} className={cn(
+                                                    "p-6 bg-white border rounded-soft hover:shadow-md transition-all flex flex-col",
+                                                    selectedAiModel === '4o'
+                                                        ? "border-violet-200 hover:border-violet-400"
+                                                        : "border-silk-beige hover:border-primary-300"
+                                                )}>
+                                                    <div className="mb-4">
+                                                        <h3 className="text-lg font-bold text-charcoal">{pack.name}</h3>
+                                                        <div className="flex items-baseline gap-1 mt-1">
+                                                            <span className={cn(
+                                                                "text-2xl font-bold",
+                                                                selectedAiModel === '4o' ? "text-violet-600" : "text-primary-600"
+                                                            )}>${pack.price}</span>
+                                                            <span className="text-xs text-charcoal/40 font-medium">USD</span>
+                                                        </div>
+                                                    </div>
+                                                    <ul className="mb-6 space-y-2 flex-grow">
+                                                        <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                            <Check className="w-4 h-4 text-emerald-500" />
+                                                            {pack.credits} mensajes de IA
+                                                        </li>
+                                                        <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                            <Check className="w-4 h-4 text-emerald-500" />
+                                                            Modelo {selectedAiModel === '4o' ? 'GPT-4o (Premium)' : 'GPT-4o-mini'}
+                                                        </li>
+                                                        <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                            <Check className="w-4 h-4 text-emerald-500" />
+                                                            Sin fecha de vencimiento
+                                                        </li>
+                                                        <li className="flex items-center gap-2 text-sm text-charcoal/70">
+                                                            <Check className="w-4 h-4 text-emerald-500" />
+                                                            Activación instantánea
+                                                        </li>
+                                                    </ul>
+                                                    <button
+                                                        onClick={() => handleBuyCredits(packId)}
+                                                        className={cn(
+                                                            "w-full py-2 text-white rounded-soft font-semibold text-sm transition-colors flex items-center justify-center gap-2",
+                                                            selectedAiModel === '4o'
+                                                                ? "bg-violet-600 hover:bg-violet-700"
+                                                                : "bg-primary-600 hover:bg-primary-700"
+                                                        )}
+                                                    >
+                                                        <CreditCard className="w-4 h-4" />
+                                                        Comprar Pack
+                                                    </button>
+                                                </div>
+                                            )
+                                        })
+                                    })()}
+                                </div>
+                                <p className="mt-6 text-xs text-charcoal/40 italic text-center">
+                                    * Los créditos extra se consumen solo después de agotar el cupo mensual de tu plan.
+                                </p>
                             </div>
                         </div>
                     )}
