@@ -42,9 +42,31 @@ serve(async (req) => {
             throw new Error(`Error fetching settings: ${settingsError.message}`)
         }
 
-        log.push(`Found ${settingsList?.length || 0} clinics with reminders enabled`)
+        log.push(`Found ${settingsList?.length || 0} clinics with 24h reminders enabled`)
 
-        const results = []
+        // Helper to log to debug_logs table
+        const debugLog = async (message: string, payload: any = {}) => {
+            console.log(`[DEBUG] ${message}`, payload);
+            try {
+                const { error } = await supabaseClient.from('debug_logs').insert({
+                    message: `[CronReminders] ${message}`,
+                    payload,
+                    created_at: new Date().toISOString()
+                })
+                if (error) console.error('Error logging to debug_logs:', error);
+            } catch (err) {
+                console.error('Error logging to debug_logs:', err);
+            }
+        }
+
+        await debugLog('Starting 24h reminders check', { clinicsCount: settingsList?.length });
+
+        const results: any = {
+            sent24h: 0,
+            sent2h: 0,
+            sent1h: 0,
+            clinics: []
+        }
 
         // 2. Process each clinic
         for (const settings of (settingsList || [])) {
@@ -210,13 +232,15 @@ serve(async (req) => {
                     }).eq('id', appt.id)
 
                     sentCount++
+                    results.sent24h++
 
                 } catch (err) {
                     console.error('Error processing appointment', appt.id, err)
+                    await debugLog('Error processing 24h appt', { apptId: appt.id, error: err.message });
                 }
             }
 
-            results.push({ clinicId: clinic.id, sent24h: sentCount })
+            results.clinics.push({ clinicId: clinic.id, name: clinic.clinic_name, sent24h: sentCount })
         }
 
         // ==========================================
@@ -240,6 +264,7 @@ serve(async (req) => {
 
         if (!earlyError && earlySettingsList?.length > 0) {
             log.push(`Found ${earlySettingsList.length} clinics with 2h reminders enabled`)
+            await debugLog('Starting 2h reminders check', { clinicsCount: earlySettingsList.length });
 
             for (const settings of earlySettingsList) {
                 const clinic = settings.clinic_settings
@@ -381,6 +406,7 @@ serve(async (req) => {
                                 reminder_sent_at: new Date().toISOString()
                             }).eq('id', appt.id)
                             sentCount++
+                            results.sent2h++
                         } else {
                             await supabaseClient.from('reminder_logs').insert({
                                 clinic_id: clinic.id,
@@ -395,8 +421,9 @@ serve(async (req) => {
                         console.error(e)
                     }
                 }
-                // Append to results if needed, or just log
-                // Append to results if needed, or just log
+                results.clinics.find((c: any) => c.clinicId === clinic.id) 
+                    ? results.clinics.find((c: any) => c.clinicId === clinic.id).sent2h = sentCount
+                    : results.clinics.push({ clinicId: clinic.id, name: clinic.clinic_name, sent2h: sentCount });
             }
         }
 
@@ -420,6 +447,7 @@ serve(async (req) => {
 
         if (!oneHourError && oneHourSettingsList?.length > 0) {
             log.push(`Found ${oneHourSettingsList.length} clinics with 1h reminders enabled`)
+            await debugLog('Starting 1h reminders check', { clinicsCount: oneHourSettingsList.length });
 
             for (const settings of oneHourSettingsList) {
                 const clinic = settings.clinic_settings
@@ -510,6 +538,7 @@ serve(async (req) => {
                         const responseData = await response.json().catch(() => ({}));
 
                         if (response.ok) {
+                            results.sent1h++
                             await supabaseClient.from('messages').insert({
                                 clinic_id: clinic.id,
                                 phone_number: appt.phone_number,
@@ -544,8 +573,13 @@ serve(async (req) => {
                         console.error(e)
                     }
                 }
+                results.clinics.find((c: any) => c.clinicId === clinic.id)
+                    ? results.clinics.find((c: any) => c.clinicId === clinic.id).sent1h = sentCount
+                    : results.clinics.push({ clinicId: clinic.id, name: clinic.clinic_name, sent1h: sentCount });
             }
         }
+
+        await debugLog('Completed cron-process-reminders', { totalSent: results.sent24h + results.sent2h + results.sent1h });
 
         return new Response(
             JSON.stringify({ success: true, log, results }),

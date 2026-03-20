@@ -26,6 +26,23 @@ serve(async (req) => {
 
         console.log(`Checking appointments between ${fortyEightHoursAgo} and ${twentyFourHoursAgo}`)
 
+        // Helper to log to debug_logs table
+        const debugLog = async (message: string, payload: any = {}) => {
+            console.log(`[DEBUG] ${message}`, payload);
+            try {
+                const { error } = await supabaseClient.from('debug_logs').insert({
+                    message: `[CronSurveys] ${message}`,
+                    payload,
+                    created_at: new Date().toISOString()
+                })
+                if (error) console.error('Error logging to debug_logs:', error);
+            } catch (err) {
+                console.error('Error logging to debug_logs:', err);
+            }
+        }
+
+        await debugLog('Starting survey check', { range: { from: fortyEightHoursAgo, to: twentyFourHoursAgo } });
+
         // 2. Find eligible appointments:
         // - Status 'completed'
         // - Updated_at (or appointment_date + duration) is within range. 

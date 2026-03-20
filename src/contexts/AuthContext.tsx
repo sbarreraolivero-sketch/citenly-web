@@ -352,39 +352,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 
                 try {
                     console.log('🔐 Auth state change:', _event, { userId: session?.user?.id })
+                    
+                    // Simple session transition logic
                     setSession(session)
                     
                     const currentUser = session?.user ?? null
-                    const prevUserId = user?.id
-                    setUser(currentUser)
+                    
+                    // Functional updates ensure we always compare against current state
+                    // and return the same reference if nothing changed.
+                    setUser(current => (current?.id === currentUser?.id ? current : currentUser))
 
                     if (currentUser) {
-                        // Background update if user didn't change, but fetch if it's new
-                        if (currentUser.id !== prevUserId || !profile) {
-                            const { data, status } = await fetchProfile(currentUser.id)
-                            if (mounted && data) {
-                                setProfile(data)
-                                fetchUserClinics() 
-                                if (data.clinic_id) {
-                                    fetchSubscription(data.clinic_id).then(sub => mounted && setSubscription(sub))
-                                    supabase.from('clinic_members')
-                                        .select('*')
-                                        .eq('user_id', currentUser.id)
-                                        .eq('clinic_id', data.clinic_id)
-                                        .single()
-                                        .then(({ data }) => {
-                                            if (data && mounted) setMember(data)
+                        const { data, status } = await fetchProfile(currentUser.id)
+                        if (mounted && data) {
+                            setProfile(prev => {
+                                if (prev?.id === data.id && prev?.clinic_id === data.clinic_id) return prev
+                                return data
+                            })
+                            
+                            fetchUserClinics() 
+
+                            if (data.clinic_id) {
+                                fetchSubscription(data.clinic_id).then(sub => {
+                                    if (mounted) {
+                                        setSubscription(prev => {
+                                            if (JSON.stringify(prev) === JSON.stringify(sub)) return prev
+                                            return sub
                                         })
-                                }
-                            } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
-                                setProfile(null)
-                                setMember(null)
-                                setSubscription(null)
-                                setClinics([])
-                                localStorage.removeItem(PROFILE_STORAGE_KEY)
-                                localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
-                                localStorage.removeItem(CLINICS_STORAGE_KEY)
+                                    }
+                                })
+
+                                supabase.from('clinic_members')
+                                    .select('*')
+                                    .eq('user_id', currentUser.id)
+                                    .eq('clinic_id', data.clinic_id)
+                                    .single()
+                                    .then(({ data: memberData }) => {
+                                        if (memberData && mounted) {
+                                            setMember(prev => (prev?.id === memberData.id ? prev : memberData))
+                                        }
+                                    })
                             }
+                        } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
+                            setProfile(null)
+                            setMember(null)
+                            setSubscription(null)
+                            setClinics([])
+                            localStorage.removeItem(PROFILE_STORAGE_KEY)
+                            localStorage.removeItem(SUBSCRIPTION_STORAGE_KEY)
+                            localStorage.removeItem(CLINICS_STORAGE_KEY)
                         }
                     } else {
                         // User signed out, clear everything

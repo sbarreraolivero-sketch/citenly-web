@@ -36,11 +36,13 @@ interface Appointment {
 
 interface Message {
     id: string
-    contact_phone: string
+    phone_number: string
     content: string
     created_at: string
     direction: 'inbound' | 'outbound'
-    status: 'read' | 'unread'
+    status: string
+    ai_generated?: boolean
+    ai_model?: string
 }
 
 interface ServiceRanking {
@@ -90,167 +92,125 @@ export default function Dashboard() {
                 const { start: rangeStart, end: rangeEnd } = getDateRange(filterRange)
                 const startStr = rangeStart.toISOString()
                 const endStr = rangeEnd.toISOString()
-
-                // Common query params
                 const clinicId = profile.clinic_id
 
-                // 1. Scheduled Appointments in range
-                const { count: scheduledCount } = await supabase
-                    .from('appointments')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', clinicId)
-                    .in('status', ['pending', 'confirmed'])
-                    .gte('appointment_date', startStr)
-                    .lte('appointment_date', endStr)
+                // 1. Parallel Fetching of Independent Data (with 10s timeout)
+                const [
+                    { data: clinicStats },
+                    { data: upcoming },
+                    { data: recentMsgs },
+                    { data: rankingData },
+                    { data: surveyData }
+                ] = await Promise.race([
+                    Promise.all([
+                        // A. All pre-calculated stats for this clinic
+                        supabase.from('clinic_stats').select('*').eq('clinic_id', clinicId),
+                        
+                        // B. Upcoming Appointments (Next 5)
+                        supabase.from('appointments')
+                            .select('id, patient_name, service, appointment_date, status')
+                            .eq('clinic_id', clinicId)
+                            .gte('appointment_date', new Date().toISOString())
+                            .order('appointment_date', { ascending: true })
+                            .limit(5),
+                        
+                        // C. Recent Messages (Last 3)
+                        supabase.from('messages')
+                            .select('id, phone_number, content, created_at, direction, status')
+                            .eq('clinic_id', clinicId)
+                            .order('created_at', { ascending: false })
+                            .limit(3),
 
-                // 2. New Prospects in range
-                const { count: prospectsCount } = await supabase
-                    .from('crm_prospects')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', clinicId)
-                    .gte('created_at', startStr)
-                    .lte('created_at', endStr)
+                        // D. Service Ranking (Month to Date)
+                        supabase.from('appointments')
+                            .select('service')
+                            .eq('clinic_id', clinicId)
+                            .gte('appointment_date', getDateRange('month').start.toISOString()),
 
-                // 3. AI Messages Sent (Outbound && AI Generated)
-                const { count: aiMsgsCount } = await supabase
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', clinicId)
-                    .eq('direction', 'outbound')
-                    .eq('ai_generated', true)
-                    .gte('created_at', startStr)
-                    .lte('created_at', endStr)
+                        // E. Satisfaction Surveys (Month to Date)
+                        supabase.from('satisfaction_surveys')
+                            .select('id, status, rating, created_at')
+                            .eq('clinic_id', clinicId)
+                            .gte('created_at', getDateRange('month').start.toISOString())
+                    ]),
+                    new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error('Dashboard timeout')), 10000))
+                ])
 
-                // 4. Reminders Sent (From reminder_logs)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { count: remindersCount } = await (supabase as any)
-                    .from('reminder_logs')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', clinicId)
-                    .eq('status', 'sent')
-                    .gte('sent_at', startStr)
-                    .lte('sent_at', endStr)
+                // 2. Process Stats (Primary: clinic_stats table)
+                if (clinicStats && clinicStats.length > 0) {
+                    const findStat = (type: string) => clinicStats.find((s: any) => s.stat_type === type && s.period === filterRange)?.value || 0
+                    const appointmentsCount = findStat('appointments')
+                    const uniqueContacts = findStat('unique_contacts')
 
-                setStats({
-                    scheduledAppointments: scheduledCount || 0,
-                    newProspects: prospectsCount || 0,
-                    aiMessagesSent: aiMsgsCount || 0,
-                    remindersSent: remindersCount || 0
-                })
+                    setStats({
+                        scheduledAppointments: appointmentsCount,
+                        newProspects: findStat('prospects'),
+                        aiMessagesSent: findStat('ai_messages'),
+                        remindersSent: findStat('reminders')
+                    })
 
-                // Reuse current data for visuals (Ranking/Satisfaction etc. - using Month for consistency)
-                const { start: monthStart } = getDateRange('month')
-                const startOfMonth = monthStart.toISOString()
+                    // Update conversion stats
+                    setConversionStats({
+                        consultations: uniqueContacts,
+                        converted: appointmentsCount,
+                        lost: Math.max(0, uniqueContacts - appointmentsCount),
+                        rate: uniqueContacts > 0 ? Math.round((appointmentsCount / uniqueContacts) * 100) : 0
+                    })
+                } else {
+                    // Fallback to real-time counts if stats table is empty (e.g. initial setup)
+                    console.log('Stats table empty, triggering refresh and using fallback counts')
+                    supabase.rpc('refresh_clinic_stats', { target_clinic_id: clinicId }).catch(console.error)
+                    
+                    const [ { count: appts }, { count: pros }, { count: rems } ] = await Promise.all([
+                        supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).in('status', ['pending', 'confirmed']).gte('appointment_date', startStr).lte('appointment_date', endStr),
+                        supabase.from('crm_prospects').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).gte('created_at', startStr).lte('created_at', endStr),
+                        supabase.from('reminder_logs').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('status', 'sent').gte('sent_at', startStr).lte('sent_at', endStr)
+                    ])
+                    setStats({
+                        scheduledAppointments: appts || 0,
+                        newProspects: pros || 0,
+                        aiMessagesSent: 0, // Fallback for messages is too heavy, skip it
+                        remindersSent: rems || 0
+                    })
+                }
 
-                // Fetch Upcoming Appointments (Next 5)
-                const { data: upcoming } = await supabase
-                    .from('appointments')
-                    .select('id, patient_name, service, appointment_date, status')
-                    .eq('clinic_id', clinicId)
-                    .gte('appointment_date', new Date().toISOString())
-                    .order('appointment_date', { ascending: true })
-                    .limit(5)
+                // 3. Process Secondary Data
                 if (upcoming) setUpcomingAppointments(upcoming)
+                if (recentMsgs) setRecentMessages(recentMsgs as Message[])
 
-                // Fetch Recent Messages (Last 3)
-                const { data: recent } = await supabase
-                    .from('messages')
-                    .select('id, phone_number, content, created_at, direction, status')
-                    .eq('clinic_id', clinicId)
-                    .order('created_at', { ascending: false })
-                    .limit(3)
-                if (recent) setRecentMessages(recent)
-
-                // ==========================================
-                // ANALYTICS CALCULATIONS (Real Data)
-                // ==========================================
-
-                // 1. Service Ranking (This Month)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: monthAppointments } = await (supabase as any)
-                    .from('appointments')
-                    .select('service')
-                    .gte('appointment_date', startOfMonth)
-                    .eq('clinic_id', profile.clinic_id)
-
-                if (monthAppointments && monthAppointments.length > 0) {
+                // Ranking Logic
+                if (rankingData && rankingData.length > 0) {
                     const serviceCounts: Record<string, number> = {}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    monthAppointments.forEach((appt: any) => {
+                    rankingData.forEach((appt: any) => {
                         const service = appt.service || 'General'
                         serviceCounts[service] = (serviceCounts[service] || 0) + 1
                     })
-
-                    const totalAppts = monthAppointments.length
-                    const ranking = Object.entries(serviceCounts)
-                        .map(([name, count]) => ({
-                            name,
-                            count,
-                            percentage: Math.round((count / totalAppts) * 100),
-                            trend: 'stable' as const // Placeholder for trend
-                        }))
+                    const total = rankingData.length
+                    setServicesRanking(Object.entries(serviceCounts)
+                        .map(([name, count]) => ({ name, count, percentage: Math.round((count / total) * 100), trend: 'stable' as const }))
                         .sort((a, b) => b.count - a.count)
-                        .slice(0, 5)
-
-                    setServicesRanking(ranking)
+                        .slice(0, 5))
                 }
 
-                // Inbound messages (Conversations)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: inboundMessages } = await (supabase as any)
-                    .from('messages')
-                    .select('phone_number')
-                    .eq('direction', 'inbound')
-                    .gte('created_at', startOfMonth)
-                    .eq('clinic_id', profile.clinic_id)
+                // Overall Conversion Stats (Approximate using monthly Data)
+                if (rankingData) {
+                    // This is a rough estimate: appointments this month vs unique incoming contacts (not easily available here without full month fetch, skipping for now to favor speed)
+                    // For now, keep conversionStats at 0 or update based on a new stat_type if needed.
+                }
 
-                // Use Set to count unique contacts
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const uniqueContacts = new Set(inboundMessages?.map((m: any) => m.phone_number)).size
-                const monthApptsCount = monthAppointments?.length || 0
-
-                setConversionStats({
-                    consultations: uniqueContacts,
-                    converted: monthApptsCount,
-                    lost: Math.max(0, uniqueContacts - monthApptsCount),
-                    rate: uniqueContacts > 0 ? Math.round((monthApptsCount / uniqueContacts) * 100) : 0
-                })
-
-                // 3. Satisfaction (NPS)
-                // Check if table exists first to avoid crashes if migration not run (though we checked)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: surveys } = await (supabase as any)
-                    .from('satisfaction_surveys')
-                    .select('id, status, rating, created_at')
-                    .gte('created_at', startOfMonth)
-                    .eq('clinic_id', profile.clinic_id)
-
-                if (surveys) {
-                    const sent = surveys.length
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const responded = surveys.filter((s: any) => s.status === 'responded').length
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const ratings = surveys.filter((s: any) => s.status === 'responded' && s.rating).map((s: any) => s.rating!)
-
-                    const average = ratings.length > 0
-                        ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
-                        : 0
-
-                    // NPS Calculation: % Promoters (5) - % Detractors (1-3)
-                    // We treat 4 as Passive.
+                // Satisfaction Surveys Logic
+                if (surveyData) {
+                    const sent = surveyData.length
+                    const responded = surveyData.filter((s: any) => s.status === 'responded').length
+                    const ratings = surveyData.filter((s: any) => s.status === 'responded' && s.rating).map((s: any) => s.rating!)
+                    const average = ratings.length > 0 ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : 0
                     let nps = 0
                     if (ratings.length > 0) {
                         const promoters = ratings.filter((r: number) => r === 5).length
                         const detractors = ratings.filter((r: number) => r <= 3).length
                         nps = Math.round(((promoters - detractors) / ratings.length) * 100)
                     }
-
-                    setSatisfactionStats({
-                        sent,
-                        responded,
-                        nps,
-                        average
-                    })
+                    setSatisfactionStats({ sent, responded, nps, average })
                 }
 
             } catch (error) {
@@ -468,7 +428,7 @@ export default function Dashboard() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2">
-                                                <p className="font-medium text-charcoal truncate">{message.contact_phone}</p>
+                                                <p className="font-medium text-charcoal truncate">{message.phone_number}</p>
                                                 <span className="text-xs text-charcoal/40 flex-shrink-0">
                                                     {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>

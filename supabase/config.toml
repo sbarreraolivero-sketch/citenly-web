@@ -21,3 +21,9 @@ verify_jwt = false
 
 [functions.ai-simulator]
 verify_jwt = false
+
+[functions.cron-process-reminders]
+verify_jwt = false
+
+[functions.cron-process-surveys]
+verify_jwt = false
