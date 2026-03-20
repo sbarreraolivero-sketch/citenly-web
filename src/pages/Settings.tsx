@@ -2896,19 +2896,19 @@ export default function Settings() {
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[12px] text-charcoal/40 uppercase font-bold mb-1">Plan Mensual</p>
+                                            <p className="text-[12px] text-charcoal/60 uppercase font-bold mb-1">Plan Mensual</p>
                                             <p className="text-xl font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
-                                            <p className="text-[12px] text-charcoal/40 mt-1">Mensajes incluidos</p>
+                                            <p className="text-[12px] text-charcoal/60 mt-1">Mensajes incluidos</p>
                                         </div>
                                         <div className="p-4 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                            <p className="text-[12px] text-charcoal/40 uppercase font-bold mb-1">Saldo Extra</p>
+                                            <p className="text-[12px] text-charcoal/60 uppercase font-bold mb-1">Saldo Extra</p>
                                             <p className="text-xl font-bold text-charcoal">{aiCreditsExtraBalance}</p>
-                                            <p className="text-[12px] text-charcoal/40 mt-1">Cargas adicionales</p>
+                                            <p className="text-[12px] text-charcoal/60 mt-1">Cargas adicionales</p>
                                         </div>
                                         <div className="p-4 bg-primary-50 rounded-soft border border-primary-100 shadow-sm">
-                                            <p className="text-[12px] text-primary-600 uppercase font-bold mb-1">Consumo Mes</p>
-                                            <p className="text-xl font-bold text-primary-700">{aiMessagesUsed}</p>
-                                            <p className="text-[12px] text-primary-600/60 mt-1">Utilizados este mes</p>
+                                            <p className="text-[12px] text-primary-700 uppercase font-bold mb-1">Consumo Mes</p>
+                                            <p className="text-xl font-bold text-primary-800">{aiMessagesUsed}</p>
+                                            <p className="text-[12px] text-primary-700/60 mt-1">Utilizados este mes</p>
                                         </div>
                                     </div>
 
@@ -2998,7 +2998,7 @@ export default function Settings() {
                                             </div>
                                         </button>
                                     </div>
-                                    <p className="text-xs text-charcoal/40 mt-3 italic">
+                                    <p className="text-sm text-charcoal/70 mt-3">
                                         {selectedAiModel === 'mini'
                                             ? '💡 Ideal para atención general. Respuestas rápidas y económicas.'
                                             : '⚡ Atención premium con respuestas más detalladas, contextuales y personalizadas. Ideal para clínicas que priorizan la calidad de atención.'}
@@ -3025,7 +3025,7 @@ export default function Settings() {
                                                                 "text-2xl font-bold",
                                                                 selectedAiModel === '4o' ? "text-violet-600" : "text-primary-600"
                                                             )}>${pack.price}</span>
-                                                            <span className="text-xs text-charcoal/40 font-medium">USD</span>
+                                                            <span className="text-xs text-charcoal/60 font-medium">USD</span>
                                                         </div>
                                                     </div>
                                                     <ul className="mb-6 space-y-2 flex-grow">
@@ -3063,7 +3063,7 @@ export default function Settings() {
                                         })
                                     })()}
                                 </div>
-                                <p className="mt-6 text-[12px] text-charcoal/40 italic text-center">
+                                <p className="mt-6 text-sm text-charcoal/60 italic text-center">
                                     * Los créditos extra se consumen solo después de agotar el cupo mensual de tu plan.
                                 </p>
                             </div>

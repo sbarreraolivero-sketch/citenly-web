@@ -386,7 +386,7 @@ export default function KnowledgeBase() {
                                     rows={8}
                                     className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                                 />
-                                <p className="text-[12px] text-charcoal/40 mt-2">
+                                <p className="text-[12px] text-charcoal/60 mt-2">
                                     💡 Este prompt define el <b>tono y personalidad</b> de tu asistente IA.
                                 </p>
                             </div>
@@ -394,7 +394,7 @@ export default function KnowledgeBase() {
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-sm font-medium text-charcoal">Instrucciones de Comportamiento</label>
-                                    <span className="text-xs text-charcoal/40">{behaviorRules.length} caracteres</span>
+                                    <span className="text-xs text-charcoal/60">{behaviorRules.length} caracteres</span>
                                 </div>
                                 <textarea
                                     value={behaviorRules}
@@ -403,7 +403,7 @@ export default function KnowledgeBase() {
                                     rows={8}
                                     className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                                 />
-                                <p className="text-[12px] text-charcoal/40 mt-2">
+                                <p className="text-[12px] text-charcoal/60 mt-2">
                                     ⚡ Define el <b>flujo de atención</b> y reglas críticas de respuesta.
                                 </p>
                             </div>
