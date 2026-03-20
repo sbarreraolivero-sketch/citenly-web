@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 import {
     Search, Building2, Users, Shield, ChevronUp,
     CheckCircle, Clock, XCircle, Loader2, RefreshCw, CreditCard, Eye, Sparkles, Plus
@@ -19,6 +20,7 @@ interface ClinicData {
     timezone: string
     ai_credits_monthly_limit: number
     ai_credits_extra_balance: number
+    ai_credits_extra_4o: number
     clinic_members: {
         id: string
         email: string
@@ -67,7 +69,7 @@ export default function AdminClinics() {
 
             // Fetch clinics with members and subscriptions
             const response = await fetch(
-                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
+                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_monthly_limit,ai_credits_extra_balance,ai_credits_extra_4o,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
                 {
                     headers: {
                         'apikey': supabaseKey,
@@ -381,6 +383,7 @@ export default function AdminClinics() {
                                                                         clinicId={clinic.id} 
                                                                         monthlyLimit={clinic.ai_credits_monthly_limit} 
                                                                         extraBalance={clinic.ai_credits_extra_balance} 
+                                                                        extraBalance4o={clinic.ai_credits_extra_4o} 
                                                                     />
                                                                 </div>
                                                             </div>
@@ -400,12 +403,15 @@ export default function AdminClinics() {
     )
 }
 
-function AdminAIUsage({ clinicId, monthlyLimit, extraBalance }: { clinicId: string, monthlyLimit: number, extraBalance: number }) {
-    const [used, setUsed] = useState<number | null>(null)
+function AdminAIUsage({ clinicId, monthlyLimit, extraBalance, extraBalance4o }: { clinicId: string, monthlyLimit: number, extraBalance: number, extraBalance4o: number }) {
+    const [usedMini, setUsedMini] = useState<number | null>(null)
+    const [used4o, setUsed4o] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
     const [isUpdating, setIsUpdating] = useState(false)
-    const [currentExtra, setCurrentExtra] = useState(extraBalance || 0)
+    const [currentExtraMini, setCurrentExtraMini] = useState(extraBalance || 0)
+    const [currentExtra4o, setCurrentExtra4o] = useState(extraBalance4o || 0)
     const [addAmount, setAddAmount] = useState('500')
+    const [chargeTarget, setChargeTarget] = useState<'mini' | '4o'>('mini')
 
     useEffect(() => {
         const fetchUsage = async () => {
@@ -414,16 +420,30 @@ function AdminAIUsage({ clinicId, monthlyLimit, extraBalance }: { clinicId: stri
                 startOfMonth.setDate(1)
                 startOfMonth.setHours(0, 0, 0, 0)
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { count, error } = await (supabase as any)
+                // Fetch Mini count
+                const { count: countMini, error: errorMini } = await (supabase as any)
                     .from('messages')
                     .select('*', { count: 'exact', head: true })
                     .eq('clinic_id', clinicId)
                     .eq('ai_generated', true)
+                    .or('ai_model.is.null,ai_model.eq.mini')
                     .gte('created_at', startOfMonth.toISOString())
                 
-                if (error) throw error
-                setUsed(count || 0)
+                if (errorMini) throw errorMini
+
+                // Fetch 4o count
+                const { count: count4o, error: error4o } = await (supabase as any)
+                    .from('messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('clinic_id', clinicId)
+                    .eq('ai_generated', true)
+                    .eq('ai_model', '4o')
+                    .gte('created_at', startOfMonth.toISOString())
+
+                if (error4o) throw error4o
+
+                setUsedMini(countMini || 0)
+                setUsed4o(count4o || 0)
             } catch (err) {
                 console.error('Error fetching AI usage:', err)
             } finally {
@@ -438,16 +458,23 @@ function AdminAIUsage({ clinicId, monthlyLimit, extraBalance }: { clinicId: stri
         setIsUpdating(true)
         try {
             const amount = parseInt(addAmount)
-            const newExtra = currentExtra + amount
+            const is4o = chargeTarget === '4o'
+            
+            const updates: any = is4o 
+                ? { ai_credits_extra_4o: currentExtra4o + amount }
+                : { ai_credits_extra_balance: currentExtraMini + amount }
             
             const { error } = await (supabase as any)
                 .from('clinic_settings')
-                .update({ ai_credits_extra_balance: newExtra })
+                .update(updates)
                 .eq('id', clinicId)
 
             if (error) throw error
-            setCurrentExtra(newExtra)
-            alert('Créditos cargados correctamente')
+            
+            if (is4o) setCurrentExtra4o(prev => prev + amount)
+            else setCurrentExtraMini(prev => prev + amount)
+            
+            alert(`Créditos (${chargeTarget === 'mini' ? 'Mini' : 'GPT-4o'}) cargados correctamente`)
         } catch (err) {
             console.error('Error adding credits:', err)
             alert('Error al cargar créditos')
@@ -456,57 +483,107 @@ function AdminAIUsage({ clinicId, monthlyLimit, extraBalance }: { clinicId: stri
         }
     }
 
-    if (loading) return <div className="animate-pulse h-8 bg-gray-100 rounded-lg"></div>
+    if (loading) return <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-gray-100 rounded-lg"></div>
+        <div className="h-8 bg-gray-100 rounded-lg"></div>
+    </div>
 
-    const total = (monthlyLimit || 500) + currentExtra
-    const percent = Math.min(100, Math.round(((used || 0) / total) * 100))
+    const totalMini = (monthlyLimit || 500) + currentExtraMini
+    const percentMini = Math.min(100, Math.round(((usedMini || 0) / totalMini) * 100))
+    
+    // GPT-4o typically doesn't have a plan limit, only extra balance in this logic
+    const total4o = currentExtra4o
+    const percent4o = total4o > 0 ? Math.min(100, Math.round(((used4o || 0) / total4o) * 100)) : 0
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-end">
-                <div className="flex gap-4">
-                    <div className="text-center">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold text-left">Usados</p>
-                        <p className="text-sm font-bold text-gray-900 text-left">{used}</p>
+        <div className="space-y-6">
+            {/* GPT-4o mini Dashboard */}
+            <div className="space-y-3 bg-emerald-50/30 p-3 rounded-lg border border-emerald-100/50">
+                <div className="flex justify-between items-end">
+                    <div className="flex gap-4">
+                        <div className="text-center">
+                            <p className="text-[10px] text-emerald-600 uppercase font-bold text-left">GPT-4o-mini (Usados)</p>
+                            <p className="text-sm font-bold text-gray-900 text-left">{usedMini}</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-[10px] text-emerald-600 uppercase font-bold text-left">Límite (Plan + Extra)</p>
+                            <p className="text-sm font-medium text-gray-600 text-left">{monthlyLimit || 500} + {currentExtraMini} = {totalMini}</p>
+                        </div>
                     </div>
-                    <div className="text-center">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold text-left">Límite (Plan + Extra)</p>
-                        <p className="text-sm font-medium text-gray-600 text-left">{monthlyLimit || 500} + {currentExtra} = {total}</p>
+                    <div className="text-right">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${percentMini > 90 ? 'bg-red-50 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                            {percentMini}%
+                        </span>
                     </div>
                 </div>
-                <div className="text-right">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${percent > 90 ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'}`}>
-                        {percent}%
-                    </span>
+                <div className="w-full bg-emerald-100/30 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div 
+                        className={`h-full transition-all duration-500 ${percentMini > 90 ? 'bg-red-500' : 'bg-emerald-500'}`} 
+                        style={{ width: `${percentMini}%` }}
+                    />
                 </div>
             </div>
-            
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner">
-                <div 
-                    className={`h-full transition-all duration-500 ${percent > 90 ? 'bg-red-500' : 'bg-primary-500'}`} 
-                    style={{ width: `${percent}%` }}
-                />
+
+            {/* GPT-4o Dashboard */}
+            <div className="space-y-3 bg-violet-50/30 p-3 rounded-lg border border-violet-100/50">
+                <div className="flex justify-between items-end">
+                    <div className="flex gap-4">
+                        <div className="text-center">
+                            <p className="text-[10px] text-violet-600 uppercase font-bold text-left">GPT-4o Premium (Usados)</p>
+                            <p className="text-sm font-bold text-gray-900 text-left">{used4o}</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-[10px] text-violet-600 uppercase font-bold text-left">Límite (Solo Extra)</p>
+                            <p className="text-sm font-medium text-gray-600 text-left">{currentExtra4o}</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${percent4o > 90 ? 'bg-red-50 text-red-600' : 'bg-violet-100 text-violet-700'}`}>
+                            {percent4o}%
+                        </span>
+                    </div>
+                </div>
+                <div className="w-full bg-violet-100/30 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div 
+                        className={`h-full transition-all duration-500 ${percent4o > 90 ? 'bg-red-500' : 'bg-violet-500'}`} 
+                        style={{ width: `${percent4o}%` }}
+                    />
+                </div>
             </div>
 
             {/* Manual Credit Loader */}
-            <div className="pt-2 border-t border-gray-50 flex items-center gap-2">
-                <div className="relative flex-1">
-                    <input 
-                        type="number"
-                        value={addAmount}
-                        onChange={(e) => setAddAmount(e.target.value)}
-                        placeholder="Cantidad..."
-                        className="w-full pl-3 pr-4 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                    />
+            <div className="pt-2 border-t border-gray-100">
+                <p className="text-[10px] text-gray-400 font-bold uppercase mb-2">Carga Manual de Créditos</p>
+                <div className="flex items-center gap-2">
+                    <select 
+                        value={chargeTarget}
+                        onChange={(e) => setChargeTarget(e.target.value as any)}
+                        className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    >
+                        <option value="mini">Mini</option>
+                        <option value="4o">GPT-4o</option>
+                    </select>
+                    <div className="relative flex-1">
+                        <input 
+                            type="number"
+                            value={addAmount}
+                            onChange={(e) => setAddAmount(e.target.value)}
+                            placeholder="Cantidad..."
+                            className="w-full pl-3 pr-4 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        />
+                    </div>
+                    <button
+                        onClick={handleAddCredits}
+                        disabled={isUpdating}
+                        className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all shadow-sm disabled:opacity-50",
+                            chargeTarget === '4o' ? "bg-violet-600 hover:bg-violet-700" : "bg-emerald-600 hover:bg-emerald-700"
+                        )}
+                    >
+                        {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                        Cargar Créditos
+                    </button>
                 </div>
-                <button
-                    onClick={handleAddCredits}
-                    disabled={isUpdating}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-all shadow-sm"
-                >
-                    {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                    Cargar Créditos
-                </button>
             </div>
         </div>
     )
