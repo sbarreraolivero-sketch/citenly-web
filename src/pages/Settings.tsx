@@ -2921,39 +2921,63 @@ export default function Settings() {
                                         <div>
                                             <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
                                                 Motor de Respuesta Activo
-                                                {aiActiveModel === '4o' && <span className="bg-violet-100 text-violet-700 text-[10px] uppercase px-2 py-0.5 rounded-full font-bold">Premium</span>}
+                                                {aiActiveModel === '4o' && (
+                                                    <span className="bg-violet-100 text-violet-700 text-[10px] uppercase px-2 py-0.5 rounded-full font-bold animate-pulse-subtle">
+                                                        Premium
+                                                    </span>
+                                                )}
                                             </h3>
-                                            <p className="text-xs text-charcoal/50">Define qué modelo usará la IA para atender a tus pacientes actualmente</p>
+                                            <p className="text-sm font-medium text-charcoal/70">Define qué modelo usará la IA para atender a tus pacientes actualmente</p>
                                         </div>
                                     </div>
-                                    <div className="flex bg-charcoal/5 p-1 rounded-soft self-start md:self-auto">
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <div className="flex bg-charcoal/5 p-1 rounded-soft">
+                                            <button
+                                                onClick={() => setAiActiveModel('mini')}
+                                                className={cn(
+                                                    "px-4 py-2 text-xs font-bold rounded-soft transition-all",
+                                                    aiActiveModel === 'mini' ? "bg-white text-emerald-600 shadow-sm" : "text-charcoal/40 hover:text-charcoal/60"
+                                                )}
+                                            >
+                                                GPT-4o-mini
+                                            </button>
+                                            <button
+                                                onClick={() => setAiActiveModel('4o')}
+                                                className={cn(
+                                                    "px-4 py-2 text-xs font-bold rounded-soft transition-all",
+                                                    aiActiveModel === '4o' ? "bg-white text-violet-600 shadow-sm" : "text-charcoal/40 hover:text-charcoal/60"
+                                                )}
+                                            >
+                                                GPT-4o (Premium)
+                                            </button>
+                                        </div>
                                         <button
-                                            onClick={() => setAiActiveModel('mini')}
-                                            className={cn(
-                                                "px-4 py-2 text-xs font-bold rounded-soft transition-all",
-                                                aiActiveModel === 'mini' ? "bg-white text-emerald-600 shadow-sm" : "text-charcoal/40 hover:text-charcoal/60"
-                                            )}
+                                            onClick={handleSaveAI}
+                                            disabled={savingAI}
+                                            className="btn-primary-soft flex items-center gap-2"
                                         >
-                                            GPT-4o-mini
-                                        </button>
-                                        <button
-                                            onClick={() => setAiActiveModel('4o')}
-                                            className={cn(
-                                                "px-4 py-2 text-xs font-bold rounded-soft transition-all",
-                                                aiActiveModel === '4o' ? "bg-white text-violet-600 shadow-sm" : "text-charcoal/40 hover:text-charcoal/60"
+                                            {savingAI ? (
+                                                <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                            ) : (
+                                                <><Save className="w-4 h-4" /> Guardar</>
                                             )}
-                                        >
-                                            GPT-4o (Premium)
                                         </button>
                                     </div>
                                 </div>
+                                {aiSaved && (
+                                    <div className="mt-4 flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft border border-emerald-100">
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        ¡Cambio de modelo guardado!
+                                    </div>
+                                )}
                                 <div className="mt-4 p-3 bg-blue-50/50 rounded-soft border border-blue-100/50 flex items-start gap-2">
                                     <Info className="w-4 h-4 text-blue-500 mt-0.5" />
                                     <p className="text-xs text-blue-700 leading-relaxed">
-                                        <b>Sugerencia:</b> {aiActiveModel === 'mini' 
-                                            ? "GPT-4o-mini es ideal para conversaciones simples y consultas generales con bajo costo." 
-                                            : "GPT-4o ofrece mayor razonamiento y mejor atención para casos complejos, ideal para ventas y cierres."} 
-                                        Usa el botón "Guardar" arriba para aplicar el cambio de modelo.
+                                        <span className="font-bold">Sugerencia:</span> {
+                                            aiActiveModel === '4o'
+                                                ? "GPT-4o ofrece mayor razonamiento y mejor atención para casos complejos, ideal para ventas y cierres."
+                                                : "GPT-4o-mini es rápido y económico, ideal para responder dudas generales y agendamientos simples."
+                                        }
                                     </p>
                                 </div>
                             </div>
