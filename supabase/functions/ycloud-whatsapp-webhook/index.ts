@@ -1508,11 +1508,7 @@ ${lagRule}
    c) Registro: CUANDO TENGAS EL NOMBRE Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
    d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta.
       LOS DATOS OFICIALES PARA EL ABONO ($10.000) SON:
-      - Nombre: Elizabeth Hernández
-      - RUT: 18.342.131-k
-      - Banco: Banco Estado
-      - Tipo de cuenta: Cuenta Vista / Chequera electrónica
-      - Número de cuenta: 80070001890
+      ${clinic.transfer_details || "- Solicitar datos de transferencia al equipo humano."}
     - Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
     - Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
     - Usa 'Interés [Nombre del Servicio]' como formato preferido para etiquetas de servicio.

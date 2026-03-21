@@ -39,6 +39,7 @@ export interface Database {
                     facebook_url: string | null
                     tiktok_url: string | null
                     website_url: string | null
+                    transfer_details: string | null
                 }
                 Insert: {
                     id?: string
@@ -69,6 +70,7 @@ export interface Database {
                     facebook_url?: string | null
                     tiktok_url?: string | null
                     website_url?: string | null
+                    transfer_details?: string | null
                 }
                 Update: {
                     id?: string
@@ -99,6 +101,7 @@ export interface Database {
                     facebook_url?: string | null
                     tiktok_url?: string | null
                     website_url?: string | null
+                    transfer_details?: string | null
                 }
             }
             appointments: {

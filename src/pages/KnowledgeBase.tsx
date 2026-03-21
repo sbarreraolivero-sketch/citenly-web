@@ -76,6 +76,7 @@ export default function KnowledgeBase() {
     // AI Master Prompt/Behavior Rules state
     const [masterPrompt, setMasterPrompt] = useState('')
     const [behaviorRules, setBehaviorRules] = useState('')
+    const [transferDetails, setTransferDetails] = useState('')
     const [savingPrompt, setSavingPrompt] = useState(false)
     const [promptSaved, setPromptSaved] = useState(false)
     const [showPromptSection, setShowPromptSection] = useState(true)
@@ -116,11 +117,12 @@ export default function KnowledgeBase() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data } = await (supabase as any)
                 .from('clinic_settings')
-                .select('ai_personality, ai_behavior_rules')
+                .select('ai_personality, ai_behavior_rules, transfer_details')
                 .eq('id', profile.clinic_id)
                 .single()
             if (data?.ai_personality) setMasterPrompt(data.ai_personality)
             if (data?.ai_behavior_rules) setBehaviorRules(data.ai_behavior_rules)
+            if (data?.transfer_details) setTransferDetails(data.transfer_details)
         } catch (e) {
             console.error('Error fetching master prompt:', e)
         }
@@ -136,6 +138,7 @@ export default function KnowledgeBase() {
                 .update({
                     ai_personality: masterPrompt.trim(),
                     ai_behavior_rules: behaviorRules.trim(),
+                    transfer_details: transferDetails.trim(),
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
@@ -407,6 +410,23 @@ export default function KnowledgeBase() {
                                     ⚡ Define el <b>flujo de atención</b> y reglas críticas de respuesta.
                                 </p>
                             </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-sm font-medium text-charcoal">Datos Oficiales (Transferencia / Pagos)</label>
+                                <span className="text-xs text-charcoal/40">{transferDetails.length} caracteres</span>
+                            </div>
+                            <textarea
+                                value={transferDetails}
+                                onChange={(e) => setTransferDetails(e.target.value)}
+                                placeholder={`Ej: Datos para el abono ($10.000):\n- Nombre: Elizabeth Hernández\n- RUT: 18.342.131-k\n- Banco: Banco Estado\n- Tipo: Cuenta Vista\n- Número: 80070001890`}
+                                rows={6}
+                                className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                            />
+                            <p className="text-[12px] text-charcoal/60 mt-2">
+                                💳 Estos datos serán proporcionados por la IA <b>después de agendar satisfactoriamente</b>.
+                            </p>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
