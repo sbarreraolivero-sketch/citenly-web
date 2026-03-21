@@ -314,7 +314,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
     }
 
     return (
-        <div className="w-80 h-full bg-white border-l border-silk-beige flex flex-col animate-in slide-in-from-right duration-300 shadow-premium-lg">
+        <div className="w-[85vw] md:w-80 h-full bg-white border-l border-silk-beige flex flex-col relative z-10 animate-in slide-in-from-right duration-300 shadow-premium-lg">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-silk-beige bg-ivory/50">
                 <div className="flex items-center gap-2">

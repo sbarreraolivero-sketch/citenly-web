@@ -710,7 +710,7 @@ export default function Messages() {
 
             {/* Contact Info Sidebar */}
             {showSidebar && sidebarPhone && profile?.clinic_id && (
-                <div className="fixed inset-0 z-50 md:relative md:inset-auto md:z-0 md:flex">
+                <div className="fixed inset-0 z-50 flex justify-end md:relative md:inset-auto md:z-0">
                     <div 
                         className="absolute inset-0 bg-charcoal/20 backdrop-blur-sm md:hidden" 
                         onClick={() => setShowSidebar(false)}
