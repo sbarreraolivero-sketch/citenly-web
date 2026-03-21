@@ -328,7 +328,7 @@ export default function KnowledgeBase() {
                     <div>
                         <h1 className="text-2xl font-bold text-charcoal">Base de Conocimiento</h1>
                         <p className="text-charcoal/50 text-sm mt-1">
-                            Administra la información que tu agente IA utiliza para responder a los clientes.
+                            📚 <b>Tu Biblioteca:</b> Administra la información técnica (precios, servicios, políticas) que tu IA usará de referencia para responder.
                         </p>
                     </div>
                 </div>
@@ -390,7 +390,7 @@ export default function KnowledgeBase() {
                                     className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                                 />
                                 <p className="text-[12px] text-charcoal/60 mt-2">
-                                    💡 Este prompt define el <b>tono y personalidad</b> de tu asistente IA.
+                                    💡 <b>Personalidad:</b> Define el ADN de tu clínica. ¿Es formal o cercana?, ¿Médica o estética?. Ejemplo: "Eres un asesor experto que busca la mejor solución para el paciente".
                                 </p>
                             </div>
 
@@ -407,7 +407,7 @@ export default function KnowledgeBase() {
                                     className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                                 />
                                 <p className="text-[12px] text-charcoal/60 mt-2">
-                                    ⚡ Define el <b>flujo de atención</b> y reglas críticas de respuesta.
+                                    ⚡ <b>Comportamiento:</b> Reglas tácticas de atención. Define cómo saludar, qué preguntas iniciales hacer y cómo manejar objeciones críticas.
                                 </p>
                             </div>
                         </div>
@@ -425,7 +425,7 @@ export default function KnowledgeBase() {
                                 className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                             />
                             <p className="text-[12px] text-charcoal/60 mt-2">
-                                💳 Estos datos serán proporcionados por la IA <b>después de agendar satisfactoriamente</b>.
+                                💳 <b>Datos Oficiales:</b> Toda la información bancaria y de pago. Estos datos se entregan <b>automáticamente</b> solo después de confirmar una cita con éxito.
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
