@@ -23,20 +23,20 @@ export const GuideBox = ({ title, summary, children, className }: GuideBoxProps)
                     </div>
                     <div>
                         <p className="text-xs font-black text-charcoal uppercase tracking-widest">{title}</p>
-                        <p className="text-[11px] text-charcoal/60 mt-0.5 font-medium">{summary}</p>
+                        <p className="text-[11px] text-charcoal/80 mt-0.5 font-semibold">{summary}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-primary-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    <span className="text-[10px] font-bold text-primary-700 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                         {isOpen ? 'Cerrar Guía' : 'Ver Guía Completa'}
                     </span>
-                    {isOpen ? <ChevronUp className="w-4 h-4 text-charcoal/40" /> : <ChevronDown className="w-4 h-4 text-charcoal/40" />}
+                    {isOpen ? <ChevronUp className="w-4 h-4 text-charcoal/60" /> : <ChevronDown className="w-4 h-4 text-charcoal/60" />}
                 </div>
             </button>
             {isOpen && (
                 <div className="px-5 pb-5 animate-slide-up">
-                    <div className="pt-3 border-t border-silk-beige/30 text-[12.5px] text-charcoal/75 leading-relaxed">
-                        <div className="space-y-3">
+                    <div className="pt-3 border-t border-silk-beige/30 text-[13px] text-charcoal leading-relaxed">
+                        <div className="space-y-4">
                             {children}
                         </div>
                     </div>
