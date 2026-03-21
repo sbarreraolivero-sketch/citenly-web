@@ -9,11 +9,14 @@ import {
     X,
     Loader2,
     BarChart3,
-    Trash2
+    Trash2,
+    Lightbulb,
+    CheckCircle2
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { retentionService } from '@/services/retentionService'
+import { GuideBox } from '@/components/ui/GuideBox'
 
 interface Campaign {
     id: string
@@ -296,20 +299,70 @@ export default function Campaigns() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-charcoal">Campañas de Marketing</h1>
-                    <p className="text-charcoal/60">Envía mensajes masivos por WhatsApp a tus pacientes</p>
+            {/* Header Banner */}
+            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
+                            <Megaphone className="w-7 h-7 text-charcoal" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Campañas de Marketing</h1>
+                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                                📣 Envía mensajes masivos por WhatsApp a tus pacientes. Usa segmentación inteligente para llegar al público correcto con mensajes pre-aprobados por Meta.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setShowNewCampaignModal(true)}
+                        className="bg-white text-primary-700 hover:bg-ivory px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2 whitespace-nowrap"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Nueva Campaña
+                    </button>
                 </div>
-                <button
-                    onClick={() => setShowNewCampaignModal(true)}
-                    className="btn-primary flex items-center gap-2"
-                >
-                    <Plus className="w-4 h-4" />
-                    Nueva Campaña
-                </button>
             </div>
 
+            <GuideBox 
+                title="Guía: Campañas que Convierten" 
+                summary="Aprende a segmentar tu audiencia y elegir la mejor estrategia para tus mensajes masivos."
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <p className="text-sm font-bold text-primary-800 flex items-center gap-2">
+                            <Users className="w-4 h-4" /> Segmentación Inteligente
+                        </p>
+                        <ul className="space-y-2">
+                            <li className="flex gap-2 text-[11px] text-charcoal/70 leading-relaxed">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                <strong>Inclusión:</strong> Selecciona etiquetas como "Paciente VIP" o "Tratamiento Acabado" para enfocar tu mensaje.
+                            </li>
+                            <li className="flex gap-2 text-[11px] text-charcoal/70 leading-relaxed">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                                <strong>Exclusión:</strong> Vital para no molestar a quien ya tiene cita. Excluye la etiqueta "Cita Pendiente" en campañas de reactivación.
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-sm font-bold text-primary-800 flex items-center gap-2">
+                            <Send className="w-4 h-4" /> Reglas de Oro
+                        </p>
+                        <ul className="space-y-2">
+                            <li className="flex gap-2 text-[11px] text-charcoal/70 leading-relaxed">
+                                <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                <strong>Horarios:</strong> Evita envíos masivos en la noche. Las mejores horas son de 10:00 AM a 1:00 PM.
+                            </li>
+                            <li className="flex gap-2 text-[11px] text-charcoal/70 leading-relaxed">
+                                <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                <strong>Contenido:</strong> Meta rechaza mensajes muy agresivos. Usa un tono cercano y ofrece valor (ej: "¡Hola! Te extrañamos, tenemos un beneficio para ti").
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </GuideBox>
             {/* Campaign List */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">

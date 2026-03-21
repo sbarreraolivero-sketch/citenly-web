@@ -416,7 +416,7 @@ ${lagRule}
 2. Si un día está CERRADO, indícalo.
 3. Verifica con check_availability antes de confirmar.
 4. Usa las fechas ISO arriba para "mañana".
-5. Los datos para el abono ($10.000) son: Elizabeth Hernández, RUT 18.342.131-k, Banco Estado, Cuenta Vista 80070001890.
+5. Los datos para el abono ($15.000) son: [Nombre de la Clínica], RUT [XX.XXX.XXX-X], [Nombre del Banco], [Tipo de Cuenta] [Número de Cuenta].
 
 ${clinic.ai_behavior_rules || ""}`;
 

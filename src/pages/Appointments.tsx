@@ -23,10 +23,12 @@ import {
     ChevronRight,
     Trash2,
     MessageCircle,
+    Lightbulb
 } from 'lucide-react'
 import { cn, formatPhoneNumber, getStatusColor, getStatusLabel } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { GuideBox } from '@/components/ui/GuideBox'
 import { CalendarView, CalendarEvent } from '@/components/calendar/CalendarView'
 import { MobileCalendarView } from '@/components/calendar/MobileCalendarView'
 import { ClinicalRecordForm } from '@/components/patients/ClinicalRecordForm'
@@ -602,7 +604,6 @@ export default function Appointments() {
                 start,
                 end,
                 resource: {
-                    type: 'local',
                     ...apt,
                     professionalColor: prof?.color || undefined,
                     professionalName: prof ? `${prof.first_name || ''} ${prof.last_name || ''}`.trim() : undefined
@@ -610,36 +611,74 @@ export default function Appointments() {
             }
         }).filter(Boolean) as CalendarEvent[]
 
-
-
     return (
         <div className="space-y-6 animate-fade-in pb-20">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-semibold text-charcoal">Citas</h1>
-                    <p className="text-charcoal/50 mt-1">Gestiona todas las citas de tu clínica</p>
+            {/* Header Banner */}
+            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
+                            <Calendar className="w-7 h-7 text-charcoal" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Citas</h1>
+                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                                📅 Gestiona la agenda de tu clínica. Organiza las consultas de tus profesionales y automatiza los recordatorios para reducir el ausentismo.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            const now = new Date()
+                            setNewAppointment({
+                                patient_name: '',
+                                phone_number: '',
+                                service: '',
+                                appointment_date: format(now, 'yyyy-MM-dd'),
+                                appointment_time: '09:00',
+                                notes: '',
+                                professional_id: ''
+                            })
+                            setShowModal(true)
+                        }}
+                        className="bg-white text-primary-700 hover:bg-ivory px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Nueva Cita
+                    </button>
                 </div>
-                <button
-                    onClick={() => {
-                        const now = new Date()
-                        setNewAppointment({
-                            patient_name: '',
-                            phone_number: '',
-                            service: '',
-                            appointment_date: format(now, 'yyyy-MM-dd'),
-                            appointment_time: '09:00',
-                            notes: '',
-                            professional_id: ''
-                        })
-                        setShowModal(true)
-                    }}
-                    className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
-                >
-                    <Plus className="w-5 h-5" />
-                    Nueva Cita
-                </button>
             </div>
+
+            <GuideBox 
+                title="Guía: Gestión de Agenda" 
+                summary="Aprende a reducir las inasistencias y a vincular las citas con el historial clínico de tus pacientes."
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                            <MessageCircle className="w-3.5 h-3.5" /> Recordatorios de WhatsApp:
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                            Usa el botón de WhatsApp en cada cita para enviar recordatorios manuales o encuestas. El sistema también envía notificaciones automáticas 24h antes para confirmar la asistencia.
+                        </p>
+                    </div>
+                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                            <User className="w-3.5 h-3.5" /> Ficha Clínica Integrada:
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                            Al marcar una cita como "Completada", el sistema te sugerirá abrir la ficha clínica. Esto centraliza la información y facilita el seguimiento evolutivo del paciente.
+                        </p>
+                    </div>
+                </div>
+                <p className="text-[10px] text-charcoal/50 mt-2 italic flex items-center gap-1.5">
+                    <Lightbulb className="w-3 h-3" /> Tip: Si sincronizas tu Google Calendar, evita mover citas manualmente en Google; hazlo siempre desde Elistic para mantener la integridad de tus reportes.
+                </p>
+            </GuideBox>
+
 
             {/* Filters */}
             <div className="card-soft p-4">

@@ -10,13 +10,16 @@ import {
     X,
     FileText,
     ChevronDown,
-    Trash2
+    Trash2,
+    Calendar,
+    Lightbulb
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClinicTimezone } from '@/hooks/useClinicTimezone'
 import { financeService, type FinanceStats, type Expense, type Income } from '@/services/financeService'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
+import { GuideBox } from '@/components/ui/GuideBox'
 
 const CATEGORY_LABELS_EXPENSE: Record<string, string> = {
     rent: 'Alquiler',
@@ -404,90 +407,132 @@ const Finance = () => {
     // ── Render ──
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-charcoal">Finanzas</h1>
-                    <p className="text-charcoal/60">Gestiona los ingresos y gastos de tu clínica</p>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                    {/* Export dropdown */}
-                    <div className="relative" ref={exportMenuRef}>
+            {/* Header Banner */}
+            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
+                            <DollarSign className="w-7 h-7 text-charcoal" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Finanzas</h1>
+                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                                📊 Gestiona los ingresos y gastos de tu clínica. Revisa la rentabilidad, los pagos por cobrar y el historial financiero detallado.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {/* Export dropdown */}
+                        <div className="relative" ref={exportMenuRef}>
+                            <button
+                                onClick={() => setShowExportMenu(!showExportMenu)}
+                                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-soft text-sm font-medium transition-all backdrop-blur-sm border border-white/20 flex items-center gap-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span className="hidden sm:inline">Exportar</span>
+                                <ChevronDown className={cn("w-3 h-3 transition-transform", showExportMenu && "rotate-180")} />
+                            </button>
+
+                            {showExportMenu && (
+                                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-xl border border-silk-beige py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                                    <p className="px-4 py-2 text-xs font-medium text-charcoal/40 uppercase tracking-wide">Formato de archivo</p>
+                                    <button
+                                        onClick={() => handleExport('csv')}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-ivory flex items-center gap-3"
+                                    >
+                                        <FileText className="w-4 h-4 text-emerald-600" />
+                                        <div>
+                                            <p className="font-medium">CSV</p>
+                                            <p className="text-xs text-charcoal/50">Compatible con Excel</p>
+                                        </div>
+                                    </button>
+                                    <button
+                                        onClick={() => handleExport('json')}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-ivory flex items-center gap-3"
+                                    >
+                                        <FileText className="w-4 h-4 text-amber-600" />
+                                        <div>
+                                            <p className="font-medium">JSON</p>
+                                            <p className="text-xs text-charcoal/50">Datos para analítica</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         <button
-                            onClick={() => setShowExportMenu(!showExportMenu)}
-                            className="btn-secondary flex items-center gap-2"
+                            onClick={() => setShowIncomeModal(true)}
+                            className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-50 px-4 py-2 rounded-soft text-sm font-bold transition-all border border-emerald-500/30 flex items-center gap-2"
                         >
-                            <Download className="w-4 h-4" />
-                            <span className="hidden sm:inline">Exportar</span>
-                            <ChevronDown className={cn("w-3 h-3 transition-transform", showExportMenu && "rotate-180")} />
+                            <Plus className="w-4 h-4" />
+                            <span>Ingreso</span>
                         </button>
 
-                        {showExportMenu && (
-                            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2">
-                                <p className="px-4 py-2 text-xs font-medium text-charcoal/40 uppercase tracking-wide">Formato de archivo</p>
-                                <button
-                                    onClick={() => handleExport('csv')}
-                                    className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-gray-50 flex items-center gap-3"
-                                >
-                                    <FileText className="w-4 h-4 text-green-600" />
-                                    <div>
-                                        <p className="font-medium">CSV</p>
-                                        <p className="text-xs text-charcoal/50">Compatible con Excel</p>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => handleExport('json')}
-                                    className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-gray-50 flex items-center gap-3"
-                                >
-                                    <FileText className="w-4 h-4 text-orange-600" />
-                                    <div>
-                                        <p className="font-medium">JSON</p>
-                                        <p className="text-xs text-charcoal/50">Datos estructurados</p>
-                                    </div>
-                                </button>
-                            </div>
-                        )}
+                        <button
+                            onClick={() => setShowExpenseModal(true)}
+                            className="bg-white text-primary-700 hover:bg-ivory px-4 py-2 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Gasto</span>
+                        </button>
                     </div>
-
-                    {/* Date filter pills */}
-                    <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-                        {(['day', 'week', 'month', 'year'] as const).map(f => (
-                            <button
-                                key={f}
-                                onClick={() => setFilterType(f)}
-                                className={cn(
-                                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                                    filterType === f
-                                        ? "bg-primary-50 text-primary-700"
-                                        : "text-charcoal/60 hover:text-charcoal"
-                                )}
-                            >
-                                {f === 'day' ? 'Día' : f === 'week' ? 'Semana' : f === 'month' ? 'Mes' : 'Año'}
-                            </button>
-                        ))}
-                    </div>
-
-                    <button
-                        onClick={() => setShowIncomeModal(true)}
-                        className="btn-secondary flex items-center gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Registrar Ingreso</span>
-                    </button>
-
-                    <button
-                        onClick={() => setShowExpenseModal(true)}
-                        className="btn-primary flex items-center gap-2"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Registrar Gasto</span>
-                    </button>
                 </div>
             </div>
 
-            {/* Active date range label */}
-            <div className="text-sm text-charcoal/50 capitalize -mt-3">
-                📅 {getDateRangeLabel(filterType)}
+            <GuideBox 
+                title="Guía: Salud Financiera" 
+                summary="Aprende a interpretar tus ingresos vs gastos y el flujo de caja de tu clínica."
+            >
+                <p>El control financiero es el corazón de tu negocio. Aquí puedes ver cómo interactúan tus egresos con las ventas generadas por el equipo.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                            <TrendingUp className="w-3.5 h-3.5" /> Ingresos vs Gastos:
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                            Mantén tus gastos generales (nómina, alquiler, insumos) controlados. Una ganancia neta saludable suele estar por encima del 20-30% tras cubrir todos los costos operativos.
+                        </p>
+                    </div>
+                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                            <CreditCard className="w-3.5 h-3.5" /> Pagos por Cobrar:
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                            Las transacciones que aparecen como "Pendientes" son citas realizadas que aún no han sido marcadas como pagadas. Hazles seguimiento para mantener un flujo de caja positivo.
+                        </p>
+                    </div>
+                </div>
+                <p className="text-[10px] text-charcoal/50 mt-2 italic flex items-center gap-1.5">
+                    <Lightbulb className="w-3 h-3" /> Tip: Registra cada ingreso manual (ej: venta de cremas o productos) para que tus reportes de exportación sean 100% precisos al final del mes.
+                </p>
+            </GuideBox>
+
+            {/* Date filter pills & Date display */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="text-sm text-charcoal/50 capitalize font-medium flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-silk-beige w-fit">
+                    <Calendar className="w-4 h-4 text-primary-500" />
+                    {getDateRangeLabel(filterType)}
+                </div>
+                
+                <div className="flex bg-silk-beige/20 rounded-lg border border-silk-beige p-1 w-fit">
+                    {(['day', 'week', 'month', 'year'] as const).map(f => (
+                        <button
+                            key={f}
+                            onClick={() => setFilterType(f)}
+                            className={cn(
+                                "px-4 py-1.5 text-xs font-bold rounded-md transition-all",
+                                filterType === f
+                                    ? "bg-white text-primary-600 shadow-sm border border-silk-beige/50"
+                                    : "text-charcoal/40 hover:text-charcoal"
+                            )}
+                        >
+                            {f === 'day' ? 'Día' : f === 'week' ? 'Semana' : f === 'month' ? 'Mes' : 'Año'}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* KPI Cards */}
