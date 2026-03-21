@@ -1000,9 +1000,10 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     // 2. Get current prospect and their stage
     // Use OR to be resilient to non-normalized old data
     const { data: prospect } = await sb.from("crm_prospects")
-        .select("id, name, stage_id, crm_pipeline_stages(name, position)") // Join to get stage info
+        .select("id, name, stage_id, crm_pipeline_stages(name, position)")
         .eq("clinic_id", clinicId)
         .or(`phone.eq.${normalizedPhone},phone.eq.+${normalizedPhone}`)
+        .order('created_at', { ascending: false }) // Use the most recent if somehow duplicates exist
         .limit(1)
         .maybeSingle();
 
@@ -1030,13 +1031,20 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     
     // Update name if provided and existing is generic or looks like a nickname/emoji
     if (name && name.trim().length > 0) {
-        const currentName = (prospect.name || "").toLowerCase();
-        const isGeneric = !prospect.name || currentName.includes("sin nombre");
-        // Also allow overwrite if current name is very short (likely nickname) or contains many emojis/special chars
-        // Or simply if the new name is substantially different and non-empty.
-        // User captured name from AI is almost always better.
-        if (isGeneric || currentName !== name.toLowerCase()) {
-            updates.name = name;
+        const trimmedName = name.trim();
+        const currentName = (prospect.name || "").trim().toLowerCase();
+        
+        // Treat '.', '-', '_', or very short names as generic nicknames
+        const isGeneric = !prospect.name || 
+                        currentName === "." || 
+                        currentName === "-" || 
+                        currentName === "" ||
+                        currentName.includes("sin nombre") || 
+                        currentName.includes("autoprospect") ||
+                        (currentName.length <= 1);
+        
+        if (isGeneric || currentName !== trimmedName.toLowerCase()) {
+            updates.name = trimmedName;
         }
     }
 
@@ -1058,13 +1066,22 @@ const autoUpsertMinimalProspect = async (sb: ReturnType<typeof createClient>, cl
             .maybeSingle();
 
         if (existing) {
-            // Update name if Provided name is better than existing (generic or nickname)
+            // Update name ONLY if current is generic AND provided name is non-empty
             if (name && name.trim().length > 0) {
-                const currentName = (existing.name || "").toLowerCase();
-                const isGeneric = !existing.name || currentName.includes("sin nombre");
-                // Allow update if generic or if names differ (implies new capture)
-                if (isGeneric || currentName !== name.toLowerCase()) {
-                    await sb.from("crm_prospects").update({ name }).eq("id", existing.id);
+                const currentNameRaw = (existing.name || "").trim();
+                const currentName = currentNameRaw.toLowerCase();
+                
+                const isCurrentGeneric = !existing.name || 
+                                        currentName === "." || 
+                                        currentName === "-" || 
+                                        currentName === "" ||
+                                        currentName.includes("sin nombre") || 
+                                        currentName.includes("autoprospect") ||
+                                        (currentNameRaw.length <= 1);
+                
+                // ONLY overwrite if current is a placeholder/nickname AND new one is different
+                if (isCurrentGeneric && currentName !== name.trim().toLowerCase()) {
+                    await sb.from("crm_prospects").update({ name: name.trim() }).eq("id", existing.id);
                 }
             }
             return existing.id;
