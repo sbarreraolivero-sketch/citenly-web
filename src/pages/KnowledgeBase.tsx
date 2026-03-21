@@ -365,8 +365,8 @@ export default function KnowledgeBase() {
                     className="w-full p-5 flex items-center justify-between hover:bg-ivory/50 transition-colors"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 bg-gradient-to-br from-violet-500 to-purple-600 rounded-soft flex items-center justify-center shadow-md">
-                            <Bot className="w-5.5 h-5.5 text-white" />
+                        <div className="w-11 h-11 bg-premium-gradient rounded-soft flex items-center justify-center shadow-md">
+                            <Bot className="w-5.5 h-5.5 text-charcoal" />
                         </div>
                         <div className="text-left">
                             <h2 className="text-lg font-semibold text-charcoal flex items-center gap-2">
@@ -497,14 +497,16 @@ export default function KnowledgeBase() {
             </div>
 
             {/* Search & Filters */}
-            <div className="mt-8 mb-4">
-                <h2 className="text-lg font-bold text-charcoal flex items-center gap-2 mb-1">
-                    Documentos de Conocimiento
-                    <BookOpen className="w-4 h-4 text-primary-500" />
-                </h2>
-                <p className="text-[12px] text-charcoal/60">
-                    📚 <b>Conocimiento Estático:</b> Aquí guardas toda la información técnica (Precios, Servicios, Políticas) que la IA consultará como su base de datos principal para responder a los pacientes.
-                </p>
+            <div className="mt-8 mb-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-premium-gradient rounded-soft flex items-center justify-center shadow-sm shrink-0">
+                    <BookOpen className="w-5 h-5 text-charcoal" />
+                </div>
+                <div>
+                    <h2 className="text-lg font-bold text-charcoal">Documentos de Conocimiento</h2>
+                    <p className="text-[12px] text-charcoal/60">
+                        📚 <b>Conocimiento Estático:</b> Aquí guardas toda la información técnica (Precios, Servicios, Políticas) que la IA consultará como su base de datos principal para responder a los pacientes.
+                    </p>
+                </div>
             </div>
 
             <div className="card-soft p-4">
