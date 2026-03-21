@@ -420,7 +420,7 @@ export default function KnowledgeBase() {
                             <textarea
                                 value={transferDetails}
                                 onChange={(e) => setTransferDetails(e.target.value)}
-                                placeholder={`Ej: Datos para el abono ($10.000):\n- Nombre: Elizabeth Hernández\n- RUT: 18.342.131-k\n- Banco: Banco Estado\n- Tipo: Cuenta Vista\n- Número: 80070001890`}
+                                placeholder={`Ej: Datos para el abono de reserva ($15.000):\n- Nombre: [Nombre del Titular]\n- RUT: [12.345.678-9]\n- Banco: [Nombre del Banco]\n- Tipo de Cuenta: [Corriente/Vista]\n- Número de Cuenta: [1234567890]\n- Email: pagos@tuclínica.com`}
                                 rows={6}
                                 className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                             />
