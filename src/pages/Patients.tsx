@@ -165,8 +165,8 @@ export default function Patients() {
                                 <div>
                                     <h1 className="text-2xl font-bold text-white tracking-tight">Contactos</h1>
                                     <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
-                                        👥 Gestiona pacientes y prospectos en un solo lugar. Mantén el historial completo de cada interacción.
-                                    </p>
+                                👥 Gestiona tu base de datos de pacientes y prospectos. Organiza información, etiquetas y potencia tus campañas y recordatorios.
+                            </p>
                                 </div>
                             </div>
 

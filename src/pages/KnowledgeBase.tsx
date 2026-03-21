@@ -335,7 +335,7 @@ export default function KnowledgeBase() {
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Base de Conocimiento</h1>
                             <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
-                                📚 <b>Tu Biblioteca:</b> Administra la información técnica (precios, servicios, políticas) que tu IA usará de referencia para responder con precisión quirúrgica.
+                                🧠 Entrena a tu Agente IA con datos sobre tu clínica, servicios y procedimientos para que atienda a tus pacientes, maneje recordatorios y resuelva dudas sin errores.
                             </p>
                         </div>
                     </div>

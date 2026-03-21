@@ -164,7 +164,7 @@ export default function Templates() {
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Plantillas de WhatsApp</h1>
                             <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
-                                💬 Mensajes pre-aprobados por Meta. Úsalos en tus recordatorios, campañas de marketing y motor de retención.
+                                💬 Mensajes pre-aprobados por Meta. Úsalos en tus recordatorios de citas, campañas de marketing y motor de retención.
                             </p>
                         </div>
                     </div>
