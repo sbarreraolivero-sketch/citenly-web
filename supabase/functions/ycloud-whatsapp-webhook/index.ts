@@ -1512,6 +1512,7 @@ ${lagRule}
       - RUT: 18.342.131-k
       - Banco: Banco Estado
       - Tipo de cuenta: Cuenta Vista / Chequera electrónica
+      - Número de cuenta: 80070001890
     - Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
     - Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
     - Usa 'Interés [Nombre del Servicio]' como formato preferido para etiquetas de servicio.
