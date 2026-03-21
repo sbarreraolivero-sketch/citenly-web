@@ -20,10 +20,13 @@ import {
     Briefcase,
     Settings2,
     ChevronUp,
+    Check,
+    Lightbulb,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { GuideBox } from '@/components/ui/GuideBox'
 
 // Types
 interface PipelineStage {
@@ -492,6 +495,36 @@ export default function CRM() {
                     </div>
                 </div>
             </div>
+
+            <GuideBox 
+                title="Guía: Optimiza tu Pipeline de Ventas" 
+                summary="Aprende a gestionar prospectos y cerrar más citas con el embudo visual."
+            >
+                <p>El <b>Pipeline</b> es el reflejo visual de tu proceso de venta. Cada tarjeta representa un prospecto que la IA está gestionando o que requiere tu atención.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                            <Check className="w-3.5 h-3.5" /> Movimiento de Tarjetas:
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                            Arrastra y suelta los prospectos de izquierda a derecha a medida que avanzan en su decisión. 
+                            El objetivo final es moverlos todos a la etapa de <b>"Cita Agendada"</b> o <b>"Venta Exitosa"</b>.
+                        </p>
+                    </div>
+                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                            <Target className="w-3.5 h-3.5" /> Segmentación con Etiquetas:
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                            Usa las etiquetas para diferenciar el interés del cliente (ej: <b>#TratamientoCapilar</b>, <b>#EvaluacionGratis</b>). 
+                            Esto te permitirá hacer campañas de marketing mucho más efectivas después.
+                        </p>
+                    </div>
+                </div>
+                <p className="text-[10px] text-charcoal/50 mt-2 italic flex items-center gap-1.5">
+                    <Lightbulb className="w-3 h-3" /> Tip: No dejes prospectos en la etapa inicial por más de 48 horas. La velocidad de respuesta es clave para la conversión.
+                </p>
+            </GuideBox>
 
             {/* Stats */}
             <div className="rounded-soft p-5" style={{ background: 'linear-gradient(135deg, #f5e6c8 0%, #e8c97a 25%, #d4a84b 50%, #e8c97a 75%, #f5e6c8 100%)' }}>

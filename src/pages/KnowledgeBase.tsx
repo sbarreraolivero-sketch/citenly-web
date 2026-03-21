@@ -18,10 +18,14 @@ import {
     AlertCircle,
     Bot,
     Sparkles,
+    Lightbulb,
+    Check,
+    Info,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { GuideBox } from '@/components/ui/GuideBox'
 
 interface KnowledgeDocument {
     id: string
@@ -394,9 +398,26 @@ export default function KnowledgeBase() {
                                     rows={8}
                                     className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                                 />
-                                <p className="text-[12px] text-charcoal/60 mt-2">
-                                    💡 <b>Personalidad:</b> Define el ADN de tu clínica. ¿Es formal o cercana?, ¿Médica o estética?. Ejemplo: "Eres un asesor experto que busca la mejor solución para el paciente".
-                                </p>
+                                <GuideBox 
+                                    title="Guía: Personalidad de la IA" 
+                                    summary="Define el tono, voz y alma de tu clínica."
+                                >
+                                    <p>La <b>personalidad</b> determina cómo se siente hablar con tu clínica. Una buena personalidad genera confianza y cercanía inmediata.</p>
+                                    <div className="bg-white/50 p-3 rounded-soft border border-silk-beige/30">
+                                        <p className="font-bold mb-1.5 flex items-center gap-1.5 text-primary-700 text-[11px]">
+                                            <Check className="w-3.5 h-3.5" /> EJEMPLO RECOMENDADO:
+                                        </p>
+                                        <p className="italic text-[11.5px] leading-relaxed text-charcoal/80">"Eres un asesor experto en estética médica. Habla de manera empática pero profesional. Usa 'nosotros' para referirte a la clínica y enfócate siempre en resolver dudas sobre bienestar."</p>
+                                    </div>
+                                    <div className="mt-3 grid grid-cols-2 gap-2 text-[10.5px]">
+                                        <div className="p-2 bg-silk-beige/20 rounded border border-silk-beige/30">
+                                            <b>🎩 Formal:</b> Ideal para clínicas quirúrgicas o de alta complejidad.
+                                        </div>
+                                        <div className="p-2 bg-silk-beige/20 rounded border border-silk-beige/30">
+                                            <b>✨ Cercana:</b> Ideal para centros de estética, spas o kinesiología.
+                                        </div>
+                                    </div>
+                                </GuideBox>
                             </div>
 
                             <div>
@@ -411,9 +432,32 @@ export default function KnowledgeBase() {
                                     rows={8}
                                     className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                                 />
-                                <p className="text-[12px] text-charcoal/60 mt-2">
-                                    ⚡ <b>Comportamiento:</b> Reglas tácticas de atención. Define cómo saludar, qué preguntas iniciales hacer y cómo manejar objeciones críticas.
-                                </p>
+                                <GuideBox 
+                                    title="Guía: Reglas de Atención" 
+                                    summary="Reglas tácticas para manejar conversaciones."
+                                >
+                                    <p>Las <b>reglas de comportamiento</b> dictan qué debe (y qué no) hacer el bot en situaciones críticas de atención al cliente.</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                                        <div className="bg-emerald-50/50 p-2.5 rounded-soft border border-emerald-100">
+                                            <p className="font-bold text-emerald-700 text-[10px] uppercase tracking-wider mb-1.5">✅ LO QUE SÍ DEBE HACER:</p>
+                                            <ul className="text-[10.5px] space-y-1 text-emerald-800/80">
+                                                <li>• Saludar preguntando el nombre.</li>
+                                                <li>• Sugerir cita ante cualquier interés.</li>
+                                                <li>• Usar emojis de bienestar (✨💆‍♀️).</li>
+                                                <li>• Confirmar disponibilidad antes de citar.</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-red-50/50 p-2.5 rounded-soft border border-red-100">
+                                            <p className="font-bold text-red-700 text-[10px] uppercase tracking-wider mb-1.5">❌ LO QUE NO DEBE HACER:</p>
+                                            <ul className="text-[10.5px] space-y-1 text-red-800/80">
+                                                <li>• No dar precios sin explicar el valor.</li>
+                                                <li>• No discutir ni usar lenguaje técnico.</li>
+                                                <li>• No prometer resultados médicos finales.</li>
+                                                <li>• No agendar sin el abono requerido.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </GuideBox>
                             </div>
                         </div>
 
@@ -429,9 +473,28 @@ export default function KnowledgeBase() {
                                 rows={6}
                                 className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
                             />
-                            <p className="text-[12px] text-charcoal/60 mt-2">
-                                💳 <b>Datos Oficiales:</b> Toda la información bancaria y de pago. Estos datos se entregan <b>automáticamente</b> solo después de confirmar una cita con éxito.
-                            </p>
+                            <GuideBox 
+                                title="Guía: Pagos y Datos de Transferencia" 
+                                summary="Configura la información bancaria oficial para reservas."
+                            >
+                                <p>Esta información es <b>crítica</b> para cerrar procesos de reserva. El bot solo la entrega cuando el paciente ya está listo para pagar o confirmar una cita.</p>
+                                <div className="bg-white/50 p-3 rounded-soft border border-silk-beige/30 mt-2">
+                                    <p className="font-bold mb-2 flex items-center gap-1.5 text-amber-700 text-[11px] uppercase tracking-wider">
+                                        <Info className="w-3.5 h-3.5" /> Datos recomendados:
+                                    </p>
+                                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px] text-charcoal/80">
+                                        <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Nombre del Titular</li>
+                                        <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> RUT de la Empresa/Persona</li>
+                                        <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Banco y Tipo de Cuenta</li>
+                                        <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Número de Cuenta</li>
+                                        <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Link de pago (Transbank/Flow)</li>
+                                        <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Política de Devoluciones</li>
+                                    </ul>
+                                </div>
+                                <p className="text-[10px] text-charcoal/50 mt-3 italic flex items-center gap-1.5">
+                                    <Lightbulb className="w-3 h-3" /> Tip: Incluir un email para comprobantes acelera la validación manual por parte de tu equipo.
+                                </p>
+                            </GuideBox>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
@@ -503,9 +566,23 @@ export default function KnowledgeBase() {
                 </div>
                 <div>
                     <h2 className="text-lg font-bold text-charcoal">Documentos de Conocimiento</h2>
-                    <p className="text-[12px] text-charcoal/60">
-                        📚 <b>Conocimiento Estático:</b> Aquí guardas toda la información técnica (Precios, Servicios, Políticas) que la IA consultará como su base de datos principal para responder a los pacientes.
-                    </p>
+                    <GuideBox 
+                        title="Guía: Tu Biblioteca Técnica" 
+                        summary="Usa esto como el cerebro estático de la IA."
+                    >
+                        <p>Aquí vive toda la información técnica que no cambia seguido. El Agente IA la consultará como una enciclopedia antes de responder.</p>
+                        <div className="bg-white/50 p-4 rounded-soft border border-silk-beige/30 flex gap-4 mt-2">
+                            <div className="bg-violet-100 w-12 h-12 rounded-full flex items-center justify-center shrink-0">
+                                <FileText className="w-6 h-6 text-violet-600" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="font-bold text-[13px] text-charcoal">¿Qué es ideal subir aquí?</p>
+                                <p className="text-[11px] text-charcoal/70 leading-relaxed">
+                                    Listas de precios detalladas, descripción de cada tratamiento, horarios de todas las sucursales, ubicación exacta con links a Google Maps y una lista de preguntas frecuentes (FAQ) con sus respuestas ideales.
+                                </p>
+                            </div>
+                        </div>
+                    </GuideBox>
                 </div>
             </div>
 

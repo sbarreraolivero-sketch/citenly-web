@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code } from 'lucide-react'
+import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info } from 'lucide-react'
 import { retentionService, YCloudTemplate } from '@/services/retentionService'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
+import { GuideBox } from '@/components/ui/GuideBox'
 
 export default function Templates() {
     const { profile } = useAuth()
@@ -195,6 +196,37 @@ export default function Templates() {
                             <X className="w-5 h-5" />
                         </button>
                     </div>
+
+                    <GuideBox 
+                        title="Guía: ¿Cómo crear plantillas efectivas?" 
+                        summary="Aprende a usar variables {{n}} y cumplir con las reglas de Meta."
+                    >
+                        <p>Las plantillas de WhatsApp deben ser aprobadas por <b>Meta</b> antes de ser enviadas. Sigue estos consejos para evitar rechazos:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                                <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                                    <Check className="w-3.5 h-3.5" /> Uso de Variables {'{{n}}'}:
+                                </p>
+                                <p className="text-[11px] leading-relaxed text-charcoal/70">
+                                    Usa llaves dobles con números correlativos para datos dinámicos. 
+                                    Ej: <b>{'{{1}}'}</b> para el nombre del paciente, <b>{'{{2}}'}</b> para el nombre del doctor, <b>{'{{3}}'}</b> para la fecha/hora.
+                                </p>
+                            </div>
+                            <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                                <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                                    <Info className="w-3.5 h-3.5" /> Categorías de Meta:
+                                </p>
+                                <p className="text-[11px] leading-relaxed text-charcoal/70 list-disc">
+                                    <b>• Marketing:</b> Promociones, ofertas y reactivación.<br/>
+                                    <b>• Utility:</b> Recordatorios de cita y seguimientos.<br/>
+                                    <b>• Authentication:</b> Solo para códigos de seguridad (OTP).
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-charcoal/50 mt-2 italic flex items-center gap-1.5">
+                            <Lightbulb className="w-3 h-3" /> Tip: Meta suele aprobar rápido (minutos) si el mensaje es claro y profesional. Evita usar demasiadas mayúsculas o signos de exclamación.
+                        </p>
+                    </GuideBox>
 
                     {/* Pre-built Templates Library */}
                     <div className="mb-8 bg-ivory/50 rounded-xl p-4 border border-silk-beige">
