@@ -151,24 +151,36 @@ export default function Patients() {
                 />
             ) : (
                 <div className="space-y-6 animate-fade-in relative min-h-screen pb-20">
-                    {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-charcoal">Contactos</h1>
-                            <p className="text-charcoal/60">Gestiona pacientes y prospectos en un solo lugar</p>
-                        </div>
-                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                            <CSVUploader onSuccess={fetchContacts} />
-                            <button
-                                onClick={() => {
-                                    setEditingPatient(null)
-                                    setIsFormOpen(true)
-                                }}
-                                className="btn-primary flex items-center gap-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Nuevo Contacto
-                            </button>
+                    {/* Header Banner */}
+                    <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                        
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
+                                    <UserIcon className="w-7 h-7 text-charcoal" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-white tracking-tight">Contactos</h1>
+                                    <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                                        👥 Gestiona pacientes y prospectos en un solo lugar. Mantén el historial completo de cada interacción.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <CSVUploader onSuccess={fetchContacts} />
+                                <button
+                                    onClick={() => {
+                                        setEditingPatient(null)
+                                        setIsFormOpen(true)
+                                    }}
+                                    className="bg-white text-primary-700 hover:bg-ivory px-5 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Nuevo Contacto
+                                </button>
+                            </div>
                         </div>
                     </div>
 

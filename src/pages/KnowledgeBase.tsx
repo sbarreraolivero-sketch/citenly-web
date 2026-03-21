@@ -319,37 +319,42 @@ export default function KnowledgeBase() {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-soft flex items-center justify-center shadow-lg">
-                        <BookOpen className="w-6 h-6 text-white" />
+            {/* Header Banner */}
+            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
+                            <BookOpen className="w-7 h-7 text-charcoal" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Base de Conocimiento</h1>
+                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                                📚 <b>Tu Biblioteca:</b> Administra la información técnica (precios, servicios, políticas) que tu IA usará de referencia para responder con precisión quirúrgica.
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-charcoal">Base de Conocimiento</h1>
-                        <p className="text-charcoal/50 text-sm mt-1">
-                            📚 <b>Tu Biblioteca:</b> Administra la información técnica (precios, servicios, políticas) que tu IA usará de referencia para responder.
-                        </p>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <label className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-soft text-sm font-medium text-white transition-all cursor-pointer backdrop-blur-sm">
+                            <Upload className="w-4 h-4" />
+                            {uploadingFile ? 'Leyendo...' : 'Subir Archivo'}
+                            <input
+                                type="file"
+                                accept=".txt,.md,.csv,.json"
+                                onChange={handleFileUpload}
+                                className="hidden"
+                            />
+                        </label>
+                        <button
+                            onClick={openNewModal}
+                            className="bg-white text-primary-700 hover:bg-ivory px-5 py-2 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Nuevo Registro
+                        </button>
                     </div>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                    <label className="flex items-center gap-2 px-4 py-2.5 border border-silk-beige rounded-soft text-sm text-charcoal hover:bg-silk-beige/50 transition-colors cursor-pointer">
-                        <Upload className="w-4 h-4" />
-                        {uploadingFile ? 'Leyendo...' : 'Subir Archivo'}
-                        <input
-                            type="file"
-                            accept=".txt,.md,.csv,.json"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                        />
-                    </label>
-                    <button
-                        onClick={openNewModal}
-                        className="btn-primary flex items-center gap-2"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Nuevo
-                    </button>
                 </div>
             </div>
 
@@ -492,6 +497,16 @@ export default function KnowledgeBase() {
             </div>
 
             {/* Search & Filters */}
+            <div className="mt-8 mb-4">
+                <h2 className="text-lg font-bold text-charcoal flex items-center gap-2 mb-1">
+                    Documentos de Conocimiento
+                    <BookOpen className="w-4 h-4 text-primary-500" />
+                </h2>
+                <p className="text-[12px] text-charcoal/60">
+                    📚 <b>Conocimiento Estático:</b> Aquí guardas toda la información técnica (Precios, Servicios, Políticas) que la IA consultará como su base de datos principal para responder a los pacientes.
+                </p>
+            </div>
+
             <div className="card-soft p-4">
                 <div className="flex flex-col md:flex-row gap-3">
                     <div className="relative flex-1">

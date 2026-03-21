@@ -151,24 +151,33 @@ export default function Templates() {
 
     return (
         <div className="max-w-6xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-charcoal">Plantillas de WhatsApp</h1>
-                    <p className="text-sm text-charcoal/60 mt-1 max-w-2xl">
-                        Gestiona los mensajes pre-aprobados que la IA utiliza para enviarle a tus pacientes.
-                        Estas plantillas se comparten entre <span className="font-semibold text-charcoal">Recordatorios Automáticos</span>, <span className="font-semibold text-charcoal">Campañas de Marketing</span> y el <span className="font-semibold text-charcoal">Motor de Retención</span>.
-                    </p>
+            {/* Header Banner */}
+            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
+                            <FileText className="w-7 h-7 text-charcoal" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Plantillas de WhatsApp</h1>
+                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                                💬 Mensajes pre-aprobados por Meta. Úsalos en tus recordatorios, campañas de marketing y motor de retención.
+                            </p>
+                        </div>
+                    </div>
+
+                    {!isCreating && (
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            className="bg-white text-primary-700 hover:bg-ivory px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Nueva Plantilla</span>
+                        </button>
+                    )}
                 </div>
-                {!isCreating && (
-                    <button
-                        onClick={() => setIsCreating(true)}
-                        className="btn-primary flex flex-row items-center justify-center gap-2 whitespace-nowrap px-6 py-2.5"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>Nueva Plantilla</span>
-                    </button>
-                )}
             </div>
 
             {/* Creation Form */}
