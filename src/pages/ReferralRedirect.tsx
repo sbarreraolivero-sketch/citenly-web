@@ -1,15 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { Loader2, MessageCircle } from 'lucide-react'
+
+// Create a totally isolated client for public redirect to avoid Auth Lock conflicts
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+
+const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false }
+})
 
 export default function ReferralRedirect() {
     const { code } = useParams<{ code: string }>()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const hasRun = useRef(false)
 
     useEffect(() => {
-        if (code) {
+        if (code && !hasRun.current) {
+            hasRun.current = true
             handleRedirect()
         }
     }, [code])
@@ -19,7 +29,7 @@ export default function ReferralRedirect() {
             const cleanCode = code?.trim().toUpperCase() || ''
             
             // 1. Get patient and clinic info from the referral code
-            const { data: patient, error: patientError } = await supabase
+            const { data: patient, error: patientError } = await publicSupabase
                 .from('patients')
                 .select('name, clinic_id')
                 .eq('referral_code', cleanCode)
@@ -39,7 +49,7 @@ export default function ReferralRedirect() {
             }
 
             // 2. Get clinic's WhatsApp number
-            const { data: clinic, error: clinicError } = await supabase
+            const { data: clinic, error: clinicError } = await publicSupabase
                 .from('clinic_settings')
                 .select('ycloud_phone_number, clinic_name')
                 .eq('id', (patient as any).clinic_id)
