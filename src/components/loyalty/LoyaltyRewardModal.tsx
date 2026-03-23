@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
-import { X, Loader2, Save, ShoppingBag, DollarSign, Percent, Gift } from 'lucide-react'
-import { loyaltyService, LoyaltyReward } from '@/services/loyaltyService'
+import { X, Loader2, Save, ShoppingBag, DollarSign, Percent } from 'lucide-react'
+import { loyaltyService } from '@/services/loyaltyService'
 import { toast } from 'react-hot-toast'
 
 interface LoyaltyRewardModalProps {
