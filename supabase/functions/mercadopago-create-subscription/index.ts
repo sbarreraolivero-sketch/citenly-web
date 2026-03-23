@@ -16,9 +16,9 @@ const PLAN_PRICES: Record<string, number> = {
 };
 
 const PLAN_DESCRIPTIONS: Record<string, string> = {
-    essence: "Citenly AI - Plan Essence (2 Usuarios + Soft Luxury Agent)",
-    radiance: "Citenly AI - Plan Radiance (5 Usuarios + Finanzas + Servicios)",
-    prestige: "Citenly AI - Plan Prestige (Usuarios Ilimitados + Multi-sucursal)",
+    essence: "Citenly AI - Plan Essence (Control y Automatización - 2 Usuarios)",
+    radiance: "Citenly AI - Plan Radiance (Escalamiento y Retención - 5 Usuarios)",
+    prestige: "Citenly AI - Plan Prestige (Potencia Empresarial - Usuarios Ilimitados)",
 };
 
 interface RequestBody {

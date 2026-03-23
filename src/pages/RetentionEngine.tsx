@@ -315,7 +315,7 @@ const RetentionEngine = () => {
                             <Sparkles className="w-4 h-4 text-emerald-500" />
                         </div>
                     </div>
-                    <PremiumFeature requiredPlan="prestige" showLock>
+                    <PremiumFeature requiredPlan="radiance" showLock>
                         <p className="text-2xl font-bold text-emerald-600">
                             {formatCurrency(stats?.revenue_recovered_month || 0)}
                         </p>
@@ -777,7 +777,7 @@ const RetentionEngine = () => {
             {/* Tab: AI Actions */}
             {
                 activeTab === 'actions' && (
-                    <PremiumFeature requiredPlan="prestige" showLock>
+                    <PremiumFeature requiredPlan="radiance" showLock>
                         <div className="space-y-6">
                             {/* Header & Configuration */}
                             <div className="flex items-center justify-between">

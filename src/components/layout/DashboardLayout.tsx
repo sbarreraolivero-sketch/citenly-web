@@ -50,6 +50,7 @@ const navigation = [
     { name: 'Campañas', href: '/app/campaigns', icon: Megaphone },
     { name: 'Finanzas', href: '/app/finance', icon: DollarSign },
     { name: 'Retención', href: '/app/retention', icon: ShieldAlert },
+    { name: 'Fidelización', href: '/app/loyalty', icon: Star },
     { name: 'CRM', href: '/app/crm', icon: Target },
     { name: 'Conocimiento', href: '/app/knowledge-base', icon: BookOpen },
     { name: 'Configuración', href: '/app/settings', icon: Settings },

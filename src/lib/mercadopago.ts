@@ -100,23 +100,25 @@ export async function cancelSubscription(subscriptionId: string) {
  * Plan configuration with features
  */
 export const PLANS = {
-    item: {
+    essence: {
         id: 'essence',
         name: 'Essence',
+        tagline: 'Control Esencial y Automatización',
         price: 79,
         currency: 'USD',
         monthlyAppointments: 50,
         features: [
-            'Hasta 2 usuarios',
+            'Hasta 2 usuarios (Acceso compartido)',
             '1 Agente de IA (Soft Luxury)',
             'Hasta 50 citas mensuales',
-            'Dashboard básico',
-            'Integración 1 WhatsApp',
+            'Dashboard básico de Gestión',
+            'Integración 1 WhatsApp Business',
         ],
     },
     radiance: {
         id: 'radiance',
         name: 'Radiance',
+        tagline: 'Escalamiento Profesional y Retención Activa',
         price: 159,
         currency: 'USD',
         monthlyAppointments: -1, // Unlimited
@@ -124,31 +126,33 @@ export const PLANS = {
         features: [
             'Todo lo de Essence, más:',
             'Hasta 5 usuarios (Invitaciones seguras)',
-            'CRM Gestión de prospectos',
+            'CRM Gestión proactiva de prospectos',
             'Campañas de Marketing (WhatsApp masivo)',
-            'Módulo de Finanzas',
-            'Gestión de Servicios + Upselling',
-            'Citas ilimitadas',
+            'Módulo de Finanzas y Reportes',
+            'Gestión de Servicios + Upselling IA',
+            'Citas mensuales ilimitadas',
             'IA Avanzada + Historial Clínico',
-            'Analítica de conversaciones',
+            'Analítica de conversaciones pro',
         ],
     },
     prestige: {
         id: 'prestige',
         name: 'Prestige',
+        tagline: 'Potencia Empresarial y Multi-Sede',
         price: 299,
         currency: 'USD',
         monthlyAppointments: -1, // Unlimited
         features: [
             'Todo lo de Radiance, más:',
-            'Usuarios ilimitados',
-            'Multi-sucursal',
-            'IA Personalizada (Manual de ventas)',
-            'Reportes avanzados',
-            'Concierge Onboarding',
+            'Usuarios ilimitados (Sin restricciones)',
+            'Gestión Multi-sucursal / Sedes',
+            'IA 100% Personalizada (Fine-tuning)',
+            'Reportes avanzados a medida',
+            'Onboarding Concierge VIP',
+            'Soporte Prioritario 24/7',
         ],
     },
-} as const
+} as const;
 
 export type PlanId = keyof typeof PLANS
 
