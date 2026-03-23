@@ -371,7 +371,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
 
             {/* Quick Stats / Info Card */}
             <div className="card-soft p-6 bg-white shadow-sm border border-silk-beige">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
                             <Phone className="w-5 h-5" />
@@ -403,6 +403,15 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                     ? new Date(patient.last_appointment_at).toLocaleDateString()
                                     : 'Sin visitas registradas'}
                             </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
+                            <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-charcoal/50 uppercase font-medium">Código Referido</p>
+                            <p className="text-primary-700 font-bold font-mono">{(patient as any).referral_code || '---'}</p>
                         </div>
                     </div>
                 </div>
@@ -467,6 +476,10 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                 <div>
                                     <label className="text-xs text-charcoal/50 uppercase font-medium">Servicio de Interés</label>
                                     <p className="text-charcoal mt-1">{patient.service || 'No especificado'}</p>
+                                </div>
+                                <div className="pt-2 border-t border-silk-beige/30">
+                                    <label className="text-xs text-primary-600 uppercase font-bold tracking-wider">Código de Referido (Embajador)</label>
+                                    <p className="text-primary-700 font-bold font-mono text-lg mt-0.5">{(patient as any).referral_code || 'No asignado'}</p>
                                 </div>
                             </div>
                         </div>

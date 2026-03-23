@@ -101,7 +101,9 @@ serve(async (req: Request) => {
                 "Lunes 15 de Mayo a las 10:00", // {{3}} Fecha/Hora
                 "Limpieza Dental",           // {{4}} Servicio
                 "FixSalud Clínica",           // {{5}} Clínica
-                "https://citenly.ai/reserva"  // {{6}} Link
+                "https://citenly.ai/reserva", // {{6}} Link
+                "1,500 pts",                 // {{7}} Puntos
+                "JUAN-1234"                  // {{8}} Referido
             ]
 
             // Map each match to an example based on its number

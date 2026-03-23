@@ -48,6 +48,8 @@ export default function Templates() {
         { label: 'Servicio', icon: '🦷', example: 'Limpieza Dental', num: 4 },
         { label: 'Clínica', icon: '🏥', example: 'FixSalud Clínica', num: 5 },
         { label: 'Link', icon: '🔗', example: 'https://citenly.ai/reserva', num: 6 },
+        { label: 'Puntos', icon: '⭐', example: '1,500 pts', num: 7 },
+        { label: 'Ref. Code', icon: '🎟️', example: 'JUAN-1234', num: 8 },
     ]
 
     const [variableExamples, setVariableExamples] = useState<Record<number, string>>({})
@@ -58,7 +60,9 @@ export default function Templates() {
         "Lunes 15 de Mayo a las 10:00",
         "Limpieza Dental",
         "FixSalud Clínica",
-        "https://citenly.ai/reserva"
+        "https://citenly.ai/reserva",
+        "1,500 pts",
+        "JUAN-1234"
     ]
 
     const loadTemplates = async () => {
