@@ -202,7 +202,10 @@ export default function Loyalty() {
                                         </div>
                                         <div>
                                             <p className="font-bold text-charcoal">{patient.name}</p>
-                                            <p className="text-xs text-charcoal/40">{patient.phone_number}</p>
+                                            <div className="flex flex-col">
+                                                <p className="text-[10px] text-charcoal/40 uppercase tracking-tight">{patient.phone_number}</p>
+                                                <p className="text-[10px] font-bold text-primary-500 uppercase tracking-tight">Cód: {patient.referral_code || '---'}</p>
+                                            </div>
                                         </div>
                                     </div>
                                     {patient.loyalty_points >= 5000 && (
