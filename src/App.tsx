@@ -24,6 +24,7 @@ const Pricing = lazy(() => import('./pages/Pricing'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const Landing = lazy(() => import('./pages/Landing'))
+const ReferralRedirect = lazy(() => import('./pages/ReferralRedirect'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
@@ -81,6 +82,7 @@ function MainRoutes() {
             <Suspense fallback={<PageLoader />}>
                 <Routes>
                     {/* Public Routes */}
+                    <Route path="/r/:code" element={<ReferralRedirect />} />
                     <Route path="/" element={<Landing />} />
                     <Route path="/terminos" element={<Terms />} />
                     <Route path="/terms" element={<Navigate to="/terminos" replace />} />

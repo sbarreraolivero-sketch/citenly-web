@@ -268,7 +268,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
             toast.error('Paciente no tiene código de referido')
             return
         }
-        const link = `https://citenly.com/chat?ref=${code}`
+        const link = `https://citenly.com/r/${code}`
         navigator.clipboard.writeText(link)
         toast.success('¡Enlace mágico copiado!')
     }

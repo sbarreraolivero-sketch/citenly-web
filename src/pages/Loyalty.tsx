@@ -92,6 +92,12 @@ export default function Loyalty() {
         }
     }
 
+    const copyReferralLink = (code: string) => {
+        const link = `https://citenly.com/r/${code}`
+        navigator.clipboard.writeText(link)
+        toast.success('¡Enlace mágico copiado!')
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -242,9 +248,7 @@ export default function Loyalty() {
                                     <div className="flex items-center gap-2">
                                         <button 
                                             onClick={() => {
-                                                const url = `${window.location.origin}/chat?ref=${patient.referral_code}`;
-                                                navigator.clipboard.writeText(url);
-                                                toast.success('Magic Link copiado al portapapeles');
+                                                copyReferralLink(patient.referral_code || '');
                                             }}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-full text-[10px] font-bold hover:bg-primary-100 transition-colors"
                                             title="Copiar enlace para el paciente"
