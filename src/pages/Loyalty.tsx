@@ -453,7 +453,23 @@ export default function Loyalty() {
                                         ].map((mode) => (
                                             <button
                                                 key={mode.id}
-                                                onClick={() => setSettings(s => s ? { ...s, loyalty_program_mode: mode.id as any } : null)}
+                                                onClick={() => setSettings(s => {
+                                                    if (!s) return null;
+                                                    let newName = s.loyalty_points_name;
+                                                    let newSymbol = s.loyalty_currency_symbol;
+                                                    
+                                                    // Auto-fill logic based on mode
+                                                    if (mode.id === 'points') { newName = 'Puntos'; newSymbol = 'pts'; }
+                                                    else if (mode.id === 'money') { newName = 'Saldo'; newSymbol = '$'; }
+                                                    else if (mode.id === 'percentage') { newName = 'Descuento'; newSymbol = '%'; }
+                                                    
+                                                    return { 
+                                                        ...s, 
+                                                        loyalty_program_mode: mode.id as any,
+                                                        loyalty_points_name: newName,
+                                                        loyalty_currency_symbol: newSymbol
+                                                    };
+                                                })}
                                                 className={cn(
                                                     "flex flex-col items-center text-center p-6 rounded-softer border-2 transition-all",
                                                     settings?.loyalty_program_mode === mode.id 
