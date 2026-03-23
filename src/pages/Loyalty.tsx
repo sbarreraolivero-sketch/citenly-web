@@ -252,8 +252,8 @@ export default function Loyalty() {
                                         <div>
                                             <p className="font-bold text-charcoal">{patient.name}</p>
                                             <div className="flex flex-col">
-                                                <p className="text-[10px] text-charcoal/40 uppercase tracking-tight">{patient.phone_number}</p>
-                                                <p className="text-[10px] font-bold text-primary-500 uppercase tracking-tight">Cód: {patient.referral_code || '---'}</p>
+                                                <p className="text-xs text-charcoal/40 uppercase tracking-tight">{patient.phone_number}</p>
+                                                <p className="text-xs font-bold text-primary-500 uppercase tracking-tight">Cód: {patient.referral_code || '---'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -264,7 +264,7 @@ export default function Loyalty() {
                                 
                                 <div className="bg-ivory rounded-soft p-3 flex items-center justify-between mb-4 border border-silk-beige/50">
                                     <div>
-                                        <p className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest">Saldo Actual</p>
+                                        <p className="text-xs font-black text-charcoal/30 uppercase tracking-widest">Saldo Actual</p>
                                         <p className="text-xl font-black text-charcoal">{patient.loyalty_points || 0} <span className="text-sm font-bold text-primary-500">{settings?.loyalty_currency_symbol || 'pts'}</span></p>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -291,7 +291,7 @@ export default function Loyalty() {
                                             onClick={() => {
                                                 copyReferralLink(patient.referral_code || '');
                                             }}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-full text-[10px] font-bold hover:bg-primary-100 transition-colors"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-full text-xs font-bold hover:bg-primary-100 transition-colors"
                                             title="Copiar enlace para el paciente"
                                         >
                                             <Share2 className="w-3 h-3" />
@@ -336,7 +336,7 @@ export default function Loyalty() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-lg font-black text-charcoal">{ambassador.referral_count}</p>
-                                            <p className="text-[10px] font-black text-charcoal/30 uppercase">Amigos Referidos</p>
+                                            <p className="text-xs font-black text-charcoal/30 uppercase">Amigos Referidos</p>
                                         </div>
                                     </div>
                                 ))}
@@ -346,8 +346,8 @@ export default function Loyalty() {
                         <div className="space-y-4">
                             <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-softer p-6 text-white shadow-soft-md">
                                 <Target className="w-8 h-8 mb-4 text-indigo-200" />
-                                <h3 className="text-lg font-bold mb-2">Manual de Embajadores</h3>
-                                <p className="text-sm text-indigo-100 mb-4">
+                                <h3 className="text-lg font-bold mb-2 text-amber-200">Manual de Embajadores</h3>
+                                <p className="text-sm text-indigo-50/80 mb-4">
                                     Cada paciente tiene un código único. Cuando un amigo lo mencione o use su link en el Chat IA, ambos reciben beneficios.
                                 </p>
                                 <Link 
@@ -408,17 +408,17 @@ export default function Loyalty() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-xl font-black text-charcoal">{reward.points_cost}</p>
-                                            <p className="text-[10px] font-black text-charcoal/30 uppercase">{settings?.loyalty_points_name || 'puntos'}</p>
+                                            <p className="text-xs font-black text-charcoal/30 uppercase">{settings?.loyalty_points_name || 'puntos'}</p>
                                         </div>
                                     </div>
                                     <h3 className="font-bold text-charcoal mb-1">{reward.name}</h3>
                                     <p className="text-xs text-charcoal/50 mb-4 line-clamp-2">{reward.description || 'Sin descripción'}</p>
                                     
                                     <div className="flex items-center justify-between pt-4 border-t border-silk-beige">
-                                        <div className="text-[10px] font-black uppercase text-emerald-500">
+                                        <div className="text-xs font-black uppercase text-emerald-500">
                                             {reward.is_active ? 'Activa' : 'Inactiva'}
                                         </div>
-                                        <button className="text-[10px] font-black uppercase text-charcoal/30 hover:text-charcoal transition-colors">Editar</button>
+                                        <button className="text-xs font-black uppercase text-charcoal/30 hover:text-charcoal transition-colors">Editar</button>
                                     </div>
                                 </div>
                             </div>
@@ -463,7 +463,7 @@ export default function Loyalty() {
                                             >
                                                 <mode.icon className={cn("w-8 h-8 mb-4", settings?.loyalty_program_mode === mode.id ? "text-primary-500" : "text-charcoal/30")} />
                                                 <p className="font-bold text-sm mb-1">{mode.label}</p>
-                                                <p className="text-[10px] text-charcoal/40 font-medium leading-tight">{mode.desc}</p>
+                                                <p className="text-xs text-charcoal/40 font-medium leading-tight">{mode.desc}</p>
                                             </button>
                                         ))}
                                     </div>
@@ -472,7 +472,7 @@ export default function Loyalty() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-1">Nombre de la Unidad</label>
-                                        <p className="text-[10px] text-charcoal/40 mb-2">Ej: Puntos, Estrellas, Coins, $</p>
+                                        <p className="text-xs text-charcoal/40 mb-2">Ej: Puntos, Estrellas, Coins, $</p>
                                         <input 
                                             type="text" 
                                             value={settings?.loyalty_points_name} 
@@ -482,7 +482,7 @@ export default function Loyalty() {
                                     </div>
                                     <div>
                                         <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-1">Símbolo</label>
-                                        <p className="text-[10px] text-charcoal/40 mb-2">Se mostrará junto al saldo</p>
+                                        <p className="text-xs text-charcoal/40 mb-2">Se mostrará junto al saldo</p>
                                         <input 
                                             type="text" 
                                             value={settings?.loyalty_currency_symbol} 
@@ -520,7 +520,7 @@ export default function Loyalty() {
                                 Define cuántos {settings?.loyalty_points_name} recibe un paciente la primera vez que agenda.
                             </p>
                             <div className="bg-white/10 rounded-soft p-4 border border-white/20">
-                                <label className="text-[10px] uppercase font-black mb-2 block tracking-widest opacity-70">Bono Actual</label>
+                                <label className="text-xs uppercase font-black mb-2 block tracking-widest opacity-70">Bono Actual</label>
                                 <div className="flex items-center gap-2">
                                     <span className="text-2xl font-black">{settings?.loyalty_welcome_bonus}</span>
                                     <span className="text-xs opacity-70 uppercase font-bold">{settings?.loyalty_currency_symbol}</span>
@@ -528,46 +528,49 @@ export default function Loyalty() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-softer border border-silk-beige p-6">
-                            <h4 className="font-bold text-charcoal mb-4 tracking-tight">Reglas de Ganancia</h4>
+                        <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-softer p-6 shadow-soft-md text-white border border-indigo-400">
+                            <h4 className="font-bold mb-4 tracking-tight flex items-center gap-2">
+                                <Coins className="w-5 h-5 text-indigo-200" />
+                                Reglas de Ganancia
+                            </h4>
                             <div className="space-y-6">
                                 <div>
-                                    <label className="text-[10px] font-black text-charcoal/40 uppercase block mb-1 tracking-widest">Bono por Referir (Al Referente)</label>
-                                    <p className="text-[10px] text-charcoal/30 mb-2 leading-tight">Lo que gana la persona que comparte su código.</p>
+                                    <label className="text-xs font-black text-indigo-200 uppercase block mb-1 tracking-widest opacity-80">Bono por Referir (Al Referente)</label>
+                                    <p className="text-xs text-indigo-100/60 mb-2 leading-tight">Lo que gana la persona que comparte su código.</p>
                                     <div className="relative">
                                         <input 
                                             type="number" 
                                             value={settings?.loyalty_referral_bonus} 
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_referral_bonus: parseInt(e.target.value) } : null)}
-                                            className="w-full h-10 pl-4 pr-12 bg-ivory border border-silk-beige rounded-soft text-sm font-bold" 
+                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none" 
                                         />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-charcoal/30">{settings?.loyalty_currency_symbol}</span>
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-200 opacity-60">{settings?.loyalty_currency_symbol}</span>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-black text-charcoal/40 uppercase block mb-1 tracking-widest">Bono de Bienvenida (Al Referido)</label>
-                                    <p className="text-[10px] text-charcoal/30 mb-2 leading-tight">Lo que gana el nuevo cliente al llegar por invitación.</p>
+                                    <label className="text-xs font-black text-indigo-200 uppercase block mb-1 tracking-widest opacity-80">Bono de Bienvenida (Al Referido)</label>
+                                    <p className="text-xs text-indigo-100/60 mb-2 leading-tight">Lo que gana el nuevo cliente al llegar por invitación.</p>
                                     <div className="relative">
                                         <input 
                                             type="number" 
                                             value={settings?.loyalty_welcome_bonus} 
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_welcome_bonus: parseInt(e.target.value) } : null)}
-                                            className="w-full h-10 pl-4 pr-12 bg-ivory border border-silk-beige rounded-soft text-sm font-bold" 
+                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none" 
                                         />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-charcoal/30">{settings?.loyalty_currency_symbol}</span>
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-200 opacity-60">{settings?.loyalty_currency_symbol}</span>
                                     </div>
                                 </div>
-                                <div className="pt-2 border-t border-silk-beige/50">
-                                    <label className="text-[10px] font-black text-charcoal/40 uppercase block mb-1 tracking-widest">Cashback / Acumulación (%)</label>
-                                    <p className="text-[10px] text-charcoal/30 mb-2 leading-tight">Lo que el cliente acumula por sí mismo en cada cita.</p>
+                                <div className="pt-2 border-t border-white/10">
+                                    <label className="text-xs font-black text-indigo-200 uppercase block mb-1 tracking-widest opacity-80">Cashback / Acumulación (%)</label>
+                                    <p className="text-xs text-indigo-100/60 mb-2 leading-tight">Lo que el cliente acumula por sí mismo en cada cita.</p>
                                     <div className="relative">
                                         <input 
                                             type="number" 
                                             value={settings?.loyalty_points_percentage} 
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_points_percentage: parseFloat(e.target.value) } : null)}
-                                            className="w-full h-10 pl-4 pr-12 bg-ivory border border-silk-beige rounded-soft text-sm font-bold" 
+                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none" 
                                         />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-charcoal/30">%</span>
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-200 opacity-60">%</span>
                                     </div>
                                 </div>
                             </div>
