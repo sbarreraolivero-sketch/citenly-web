@@ -63,28 +63,45 @@ serve(async (req: Request) => {
 
         // Call YCloud API
         // GET https://api.ycloud.com/v2/whatsapp/templates
-        const response = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', {
-            method: 'GET',
-            headers: {
-                'X-API-Key': apiKey,
-                'Content-Type': 'application/json'
-            }
-        })
-
-        if (!response.ok) {
-            const err = await response.json()
-            console.error('YCloud Error:', err)
-            throw new Error(err.message || 'Error fetching templates from YCloud')
+        let apiResponse;
+        try {
+            apiResponse = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', {
+                method: 'GET',
+                headers: {
+                    'X-API-Key': apiKey,
+                    'Content-Type': 'application/json'
+                }
+            })
+        } catch (fetchErr) {
+            console.error('Network Error calling YCloud:', fetchErr)
+            throw new Error(`Error de red al conectar con YCloud: ${fetchErr.message}`)
         }
 
-        const result = await response.json()
+        if (!apiResponse.ok) {
+            let errorText = await apiResponse.text().catch(() => 'No error body')
+            let errorData;
+            try { 
+                errorData = JSON.parse(errorText) 
+            } catch { 
+                errorData = { message: errorText } 
+            }
+            
+            console.error('YCloud API Error Response:', {
+                status: apiResponse.status,
+                data: errorData
+            })
+            
+            throw new Error(errorData.message || `YCloud API Error (${apiResponse.status})`)
+        }
+
+        const result = await apiResponse.json()
         const templates = result.items || []
 
         // Filter valid templates and format
         const validTemplates = templates
             .map((t: any) => {
                 // Find body text
-                const bodyComponent = t.components.find((c: any) => c.type === 'BODY')
+                const bodyComponent = t.components?.find((c: any) => c.type === 'BODY')
                 return {
                     id: t.name, // Use name as ID for YCloud
                     name: t.name,
@@ -100,7 +117,12 @@ serve(async (req: Request) => {
         })
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message, isError: true }), {
+        console.error('Final Function Error:', error.message)
+        return new Response(JSON.stringify({ 
+            error: error.message, 
+            isError: true,
+            details: 'Error internal in get-ycloud-templates function'
+        }), {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
