@@ -16,14 +16,23 @@ export default function ReferralRedirect() {
 
     const handleRedirect = async () => {
         try {
+            const cleanCode = code?.trim().toUpperCase() || ''
+            
             // 1. Get patient and clinic info from the referral code
             const { data: patient, error: patientError } = await supabase
                 .from('patients')
                 .select('name, clinic_id')
-                .eq('referral_code', code || '')
+                .eq('referral_code', cleanCode)
                 .maybeSingle()
 
-            if (patientError || !patient) {
+            if (patientError) {
+                console.error('Patient lookup error:', patientError)
+                setError(`Error en la búsqueda: ${patientError.message}`)
+                setLoading(false)
+                return
+            }
+
+            if (!patient) {
                 setError('Código de referido no válido')
                 setLoading(false)
                 return
