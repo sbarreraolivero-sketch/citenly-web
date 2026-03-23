@@ -139,36 +139,36 @@ export default function Loyalty() {
             </div>
 
             {/* Main Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-ivory rounded-full border border-silk-beige w-fit">
+            <div className="flex items-center gap-1 p-1 bg-ivory rounded-full border border-silk-beige w-full md:w-fit overflow-x-auto no-scrollbar">
                 <button
                     onClick={() => setActiveTab('points')}
                     className={cn(
-                        "flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all",
+                        "flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-black transition-all whitespace-nowrap",
                         activeTab === 'points' ? "bg-primary-500 text-white shadow-md" : "text-charcoal/40 hover:text-charcoal"
                     )}
                 >
-                    <Gift className="w-4 h-4" />
-                    Billetera de Puntos
+                    <Gift className="w-3.5 h-3.5" />
+                    Billetera
                 </button>
                 <button
                     onClick={() => setActiveTab('referrals')}
                     className={cn(
-                        "flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all",
+                        "flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-black transition-all whitespace-nowrap",
                         activeTab === 'referrals' ? "bg-primary-500 text-white shadow-md" : "text-charcoal/40 hover:text-charcoal"
                     )}
                 >
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5" />
                     Referidos
                 </button>
                 <button
                     onClick={() => setActiveTab('alerts')}
                     className={cn(
-                        "flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all",
+                        "flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-black transition-all whitespace-nowrap",
                         activeTab === 'alerts' ? "bg-primary-500 text-white shadow-md" : "text-charcoal/40 hover:text-charcoal"
                     )}
                 >
-                    <Bell className="w-4 h-4" />
-                    Alertas IA
+                    <Bell className="w-3.5 h-3.5" />
+                    Alertas
                 </button>
             </div>
 

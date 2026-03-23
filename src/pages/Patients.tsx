@@ -170,16 +170,16 @@ export default function Patients() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                                 <CSVUploader onSuccess={fetchContacts} />
                                 <button
                                     onClick={() => {
                                         setEditingPatient(null)
                                         setIsFormOpen(true)
                                     }}
-                                    className="bg-white text-primary-700 hover:bg-ivory px-5 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                                    className="bg-white text-primary-700 hover:bg-ivory px-4 py-2 rounded-soft text-xs font-bold transition-all shadow-sm flex items-center gap-2 whitespace-nowrap"
                                 >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-3.5 h-3.5" />
                                     Nuevo Contacto
                                 </button>
                             </div>
