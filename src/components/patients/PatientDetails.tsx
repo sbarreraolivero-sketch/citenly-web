@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import {
     Phone, Mail, MapPin, Calendar,
     FileText, Plus, Edit2, Trash2, ArrowLeft,
-    StickyNote, Check, Image as ImageIcon, ArrowLeftRight
+    StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy
 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database'
 import { useAuth } from '@/contexts/AuthContext'
@@ -261,6 +262,17 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
             }))
     ).filter(img => img.url)
 
+    const copyReferralLink = () => {
+        const code = (patient as any).referral_code
+        if (!code) {
+            toast.error('Paciente no tiene código de referido')
+            return
+        }
+        const link = `https://citenly.com/chat?ref=${code}`
+        navigator.clipboard.writeText(link)
+        toast.success('¡Enlace mágico copiado!')
+    }
+
     return (
         <div className="space-y-6 animate-fade-in relative pb-20">
             {/* Header / Navigation */}
@@ -405,14 +417,26 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
-                            <FileText className="w-5 h-5" />
+                    <div className="flex items-center justify-between gap-3 group/ref">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-charcoal/50 uppercase font-medium">Código Referido</p>
+                                <p className="text-primary-700 font-bold font-mono">{(patient as any).referral_code || '---'}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-xs text-charcoal/50 uppercase font-medium">Código Referido</p>
-                            <p className="text-primary-700 font-bold font-mono">{(patient as any).referral_code || '---'}</p>
-                        </div>
+                        {(patient as any).referral_code && (
+                            <button 
+                                onClick={copyReferralLink}
+                                className="p-2 hover:bg-primary-50 text-primary-600 rounded-full transition-all border border-transparent hover:border-primary-100 flex items-center gap-1.5"
+                                title="Copiar Enlace Mágico"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase">Link</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -477,9 +501,20 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                     <label className="text-xs text-charcoal/50 uppercase font-medium">Servicio de Interés</label>
                                     <p className="text-charcoal mt-1">{patient.service || 'No especificado'}</p>
                                 </div>
-                                <div className="pt-2 border-t border-silk-beige/30">
-                                    <label className="text-xs text-primary-600 uppercase font-bold tracking-wider">Código de Referido (Embajador)</label>
-                                    <p className="text-primary-700 font-bold font-mono text-lg mt-0.5">{(patient as any).referral_code || 'No asignado'}</p>
+                                <div className="pt-2 border-t border-silk-beige/30 flex items-center justify-between">
+                                    <div>
+                                        <label className="text-xs text-primary-600 uppercase font-bold tracking-wider">Código de Referido (Embajador)</label>
+                                        <p className="text-primary-700 font-bold font-mono text-lg mt-0.5">{(patient as any).referral_code || 'No asignado'}</p>
+                                    </div>
+                                    {(patient as any).referral_code && (
+                                        <button 
+                                            onClick={copyReferralLink}
+                                            className="bg-primary-50 text-primary-700 hover:bg-primary-100 px-3 py-2 rounded-soft text-xs font-bold transition-all flex items-center gap-2 border border-primary-200"
+                                        >
+                                            <Copy className="w-3.5 h-3.5" />
+                                            Copiar Link Mágico
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
