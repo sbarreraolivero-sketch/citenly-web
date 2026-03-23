@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save, MapPin, Briefcase } from 'lucide-react'
+import { X, Loader2, Save, MapPin, Briefcase, Share2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Database } from '@/types/database'
@@ -30,7 +30,8 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
         email: '',
         address: '',
         service: '',
-        notes: ''
+        notes: '',
+        referred_by_code: ''
     })
 
     // Fetch services for dropdown
@@ -60,7 +61,8 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 email: patient.email || '',
                 address: patient.address || '',
                 service: patient.service || '',
-                notes: patient.notes || ''
+                notes: patient.notes || '',
+                referred_by_code: (patient as any).referred_by_code || ''
             })
         }
     }, [patient])
@@ -85,7 +87,7 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 throw new Error('El número de teléfono debe tener al menos 10 dígitos')
             }
 
-            const patientData: Database['public']['Tables']['patients']['Insert'] = {
+            const patientData: any = {
                 clinic_id: profile.clinic_id,
                 name: formData.name,
                 phone_number: cleanPhone,
@@ -93,6 +95,7 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 address: formData.address || null,
                 service: formData.service || null,
                 notes: formData.notes || null,
+                referred_by_code: formData.referred_by_code || null,
             }
 
             let savedPatient: Patient | null = null
@@ -273,6 +276,22 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                                 className="input-soft min-h-[100px] resize-y"
                                 placeholder="Alergias, preferencias, historial..."
                             />
+                        </div>
+                        <div className="pt-4 border-t border-silk-beige mt-4">
+                            <label className="block text-sm font-bold text-primary-700 mb-2 uppercase tracking-wide flex items-center gap-2">
+                                <Share2 className="w-4 h-4" />
+                                Código de Referido (Opcional)
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.referred_by_code}
+                                onChange={(e) => setFormData({ ...formData, referred_by_code: e.target.value.toUpperCase() })}
+                                className="input-soft font-mono"
+                                placeholder="Ej: BERN-7073"
+                            />
+                            <p className="text-[10px] text-charcoal/40 mt-1 italic">
+                                Si el paciente viene de parte de alguien, ingresa el código aquí para asignar puntos al referente al completar su cita.
+                            </p>
                         </div>
                     </div>
                 </form>
