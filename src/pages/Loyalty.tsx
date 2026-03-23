@@ -530,8 +530,10 @@ export default function Loyalty() {
 
                         <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-softer p-6 shadow-soft-md text-white border border-indigo-400">
                             <h4 className="font-bold mb-4 tracking-tight flex items-center gap-2">
-                                <Coins className="w-5 h-5 text-indigo-200" />
-                                Reglas de Ganancia
+                                <Coins className="w-5 h-5 text-amber-200" />
+                                <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
+                                    Reglas de Ganancia
+                                </span>
                             </h4>
                             <div className="space-y-6">
                                 <div>
