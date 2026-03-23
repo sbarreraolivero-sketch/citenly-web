@@ -65,7 +65,7 @@ export default function ReferralRedirect() {
             const clinicData = clinic as any
             const patientData = patient as any
             const cleanPhone = clinicData.ycloud_phone_number.replace(/\D/g, '')
-            const message = `¡Hola! 👋 Vengo de parte de ${patientData.name} con el código de referido: ${code}. Me gustaría agendar una cita en ${clinicData.clinic_name}.`
+            const message = `¡Hola! Vengo de parte de ${patientData.name} con el código de referido: ${code}. Me gustaría agendar una cita en ${clinicData.clinic_name}.`
             const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
 
             // 4. Redirect
