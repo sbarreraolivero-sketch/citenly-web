@@ -11,21 +11,28 @@ import {
     Gift,
     Target,
     Loader2,
-    CheckCircle2,
-    Share2
+    Share2,
+    Settings as SettingsIcon,
+    ShoppingBag,
+    Coins,
+    DollarSign,
+    Percent,
+    Calculator,
+    Trophy
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
-import { loyaltyService, LoyaltySettings } from '@/services/loyaltyService'
+import { loyaltyService, LoyaltySettings, LoyaltyReward } from '@/services/loyaltyService'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
 
 export default function Loyalty() {
     const { profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'points' | 'referrals' | 'alerts'>('points')
+    const [activeTab, setActiveTab] = useState<'points' | 'referrals' | 'rewards' | 'alerts' | 'settings'>('points')
     const [loading, setLoading] = useState(true)
     const [settings, setSettings] = useState<LoyaltySettings | null>(null)
+    const [rewards, setRewards] = useState<LoyaltyReward[]>([])
     const [patients, setPatients] = useState<any[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     
@@ -41,16 +48,18 @@ export default function Loyalty() {
             if (!profile?.clinic_id) return
             setLoading(true)
             try {
-                const [s, pData] = await Promise.all([
+                const [s, pData, rData] = await Promise.all([
                     loyaltyService.getSettings(profile.clinic_id),
                     supabase
                         .from('patients')
                         .select('*')
                         .eq('clinic_id', profile.clinic_id)
-                        .order('loyalty_points', { ascending: false })
+                        .order('loyalty_points', { ascending: false }),
+                    loyaltyService.getRewards(profile.clinic_id)
                 ])
                 setSettings(s)
                 setPatients(pData.data || [])
+                setRewards(rData || [])
                 
                 // Calculate basic stats
                 const totalPoints = (pData.data || []).reduce((acc, p: any) => acc + (p.loyalty_points || 0), 0)
@@ -93,7 +102,7 @@ export default function Loyalty() {
     }
 
     const copyReferralLink = (code: string) => {
-        const link = `https://citenly.com/r/${code}`
+        const link = `${window.location.origin}/r/${code}`
         navigator.clipboard.writeText(link)
         toast.success('¡Enlace mágico copiado!')
     }
@@ -169,6 +178,16 @@ export default function Loyalty() {
                     Referidos
                 </button>
                 <button
+                    onClick={() => setActiveTab('rewards')}
+                    className={cn(
+                        "flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-black transition-all whitespace-nowrap",
+                        activeTab === 'rewards' ? "bg-primary-500 text-white shadow-md" : "text-charcoal/40 hover:text-charcoal"
+                    )}
+                >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    Catálogo
+                </button>
+                <button
                     onClick={() => setActiveTab('alerts')}
                     className={cn(
                         "flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-black transition-all whitespace-nowrap",
@@ -177,6 +196,16 @@ export default function Loyalty() {
                 >
                     <Bell className="w-3.5 h-3.5" />
                     Alertas
+                </button>
+                <button
+                    onClick={() => setActiveTab('settings')}
+                    className={cn(
+                        "flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-black transition-all whitespace-nowrap",
+                        activeTab === 'settings' ? "bg-primary-500 text-white shadow-md" : "text-charcoal/40 hover:text-charcoal"
+                    )}
+                >
+                    <SettingsIcon className="w-3.5 h-3.5" />
+                    Ajustes
                 </button>
             </div>
 
@@ -224,7 +253,7 @@ export default function Loyalty() {
                                 <div className="bg-ivory rounded-soft p-3 flex items-center justify-between mb-4 border border-silk-beige/50">
                                     <div>
                                         <p className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest">Saldo Actual</p>
-                                        <p className="text-xl font-black text-charcoal">{patient.loyalty_points || 0} pts</p>
+                                        <p className="text-xl font-black text-charcoal">{patient.loyalty_points || 0} <span className="text-sm font-bold text-primary-500">{settings?.loyalty_currency_symbol || 'pts'}</span></p>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <button 
@@ -272,7 +301,7 @@ export default function Loyalty() {
                             <h3 className="text-lg font-bold text-charcoal">Ranking de Embajadores</h3>
                             <div className="flex items-center gap-2 text-primary-500 bg-primary-50 px-3 py-1.5 rounded-full text-xs font-bold">
                                 <Award className="w-4 h-4" />
-                                BONO: {settings?.loyalty_referral_bonus} pts / referido
+                                BONO: {settings?.loyalty_referral_bonus} {settings?.loyalty_currency_symbol || 'pts'} / referido
                             </div>
                         </div>
                         
@@ -336,50 +365,180 @@ export default function Loyalty() {
                 </div>
             )}
 
-            {activeTab === 'alerts' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex items-center gap-4 p-4 bg-emerald-50 border border-emerald-100 rounded-softer">
-                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+            {activeTab === 'rewards' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex items-center justify-between mb-8">
                         <div>
-                            <p className="text-sm font-bold text-emerald-900">Alertas Predictivas Activas</p>
-                            <p className="text-xs text-emerald-700">La IA notificará automáticamente a los pacientes antes de que sus tratamientos expiren.</p>
+                            <h2 className="text-2xl font-black text-charcoal tracking-tight">Catálogo de Recompensas</h2>
+                            <p className="text-sm text-charcoal/50">Define lo que tus pacientes pueden canjear con su saldo acumulado.</p>
                         </div>
+                        <button className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-md hover:bg-primary-600 transition-all">
+                            <Plus className="w-4 h-4" />
+                            Nueva Recompensa
+                        </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Treatment Cards */}
-                        {[
-                            { name: 'Botox', window: '120 días', color: 'bg-primary-500', icon: '💉' },
-                            { name: 'Limpieza Facial', window: '30 días', color: 'bg-emerald-500', icon: '✨' },
-                            { name: 'Dermapen', window: '30 días', color: 'bg-indigo-500', icon: '🧬' },
-                        ].map((item) => (
-                            <div key={item.name} className="bg-white rounded-softer border border-silk-beige overflow-hidden group">
-                                <div className={cn("h-2 w-full", item.color)} />
-                                <div className="p-5">
+                        {rewards.length > 0 ? rewards.map(reward => (
+                            <div key={reward.id} className="card-soft overflow-hidden group">
+                                <div className="p-6">
                                     <div className="flex items-center justify-between mb-4">
-                                        <div className="text-2xl">{item.icon}</div>
-                                        <div className="text-xs font-black text-charcoal/30 uppercase tracking-widest">Renovación</div>
-                                    </div>
-                                    <h4 className="text-lg font-bold text-charcoal mb-1">{item.name}</h4>
-                                    <p className="text-sm text-charcoal/50 mb-4">Frecuencia recomendada: {item.window}</p>
-                                    
-                                    <div className="space-y-2 mb-4">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-charcoal/60">Notificación automática</span>
-                                            <span className="font-bold text-primary-500">Activada</span>
+                                        <div className="p-3 bg-primary-50 rounded-soft text-primary-600">
+                                            {reward.reward_type === 'money' && <DollarSign className="w-6 h-6" />}
+                                            {reward.reward_type === 'percentage' && <Percent className="w-6 h-6" />}
+                                            {(reward.reward_type === 'gift' || reward.reward_type === 'treatment') && <Gift className="w-6 h-6" />}
                                         </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-charcoal/60">Tasa de retorno</span>
-                                            <span className="font-bold text-emerald-500">82%</span>
+                                        <div className="text-right">
+                                            <p className="text-xl font-black text-charcoal">{reward.points_cost}</p>
+                                            <p className="text-[10px] font-black text-charcoal/30 uppercase">{settings?.loyalty_points_name || 'puntos'}</p>
                                         </div>
                                     </div>
+                                    <h3 className="font-bold text-charcoal mb-1">{reward.name}</h3>
+                                    <p className="text-xs text-charcoal/50 mb-4 line-clamp-2">{reward.description || 'Sin descripción'}</p>
                                     
-                                    <button className="w-full py-2 bg-ivory hover:bg-silk-beige rounded-soft text-xs font-black text-charcoal uppercase tracking-widest transition-all">
-                                        Editar Protocolo
-                                    </button>
+                                    <div className="flex items-center justify-between pt-4 border-t border-silk-beige">
+                                        <div className="text-[10px] font-black uppercase text-emerald-500">
+                                            {reward.is_active ? 'Activa' : 'Inactiva'}
+                                        </div>
+                                        <button className="text-[10px] font-black uppercase text-charcoal/30 hover:text-charcoal transition-colors">Editar</button>
+                                    </div>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="col-span-full py-12 flex flex-col items-center justify-center text-charcoal/30 border-2 border-dashed border-silk-beige rounded-softer bg-ivory">
+                                <ShoppingBag className="w-12 h-12 mb-4 opacity-20" />
+                                <p className="font-bold uppercase tracking-widest text-sm">No hay recompensas configuradas</p>
+                                <p className="text-xs">Crea tu primer beneficio para que los pacientes puedan canjear.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'settings' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="lg:col-span-2 space-y-6">
+                        <section className="bg-white rounded-softer border border-silk-beige p-8 shadow-soft-sm">
+                            <h3 className="text-xl font-black text-charcoal mb-6 flex items-center gap-2">
+                                <Calculator className="w-6 h-6 text-primary-500" />
+                                Configuración del Programa
+                            </h3>
+                            
+                            <div className="space-y-8">
+                                <div>
+                                    <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-4">Modo del Programa</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {[
+                                            { id: 'points', icon: Coins, label: 'Puntos Clásicos', desc: 'Acumula puntos para canjear en el catálogo.' },
+                                            { id: 'money', icon: DollarSign, label: 'Dinero (Cashback)', desc: 'Acumula saldo en dinero real para el monedero.' },
+                                            { id: 'percentage', icon: Percent, label: '% Descuento', desc: 'Acumula porcentaje de descuento para la próxima cita.' },
+                                        ].map((mode) => (
+                                            <button
+                                                key={mode.id}
+                                                onClick={() => setSettings(s => s ? { ...s, loyalty_program_mode: mode.id as any } : null)}
+                                                className={cn(
+                                                    "flex flex-col items-center text-center p-6 rounded-softer border-2 transition-all",
+                                                    settings?.loyalty_program_mode === mode.id 
+                                                        ? "border-primary-500 bg-primary-50 shadow-inner" 
+                                                        : "border-silk-beige bg-white hover:border-silk-beige/80"
+                                                )}
+                                            >
+                                                <mode.icon className={cn("w-8 h-8 mb-4", settings?.loyalty_program_mode === mode.id ? "text-primary-500" : "text-charcoal/30")} />
+                                                <p className="font-bold text-sm mb-1">{mode.label}</p>
+                                                <p className="text-[10px] text-charcoal/40 font-medium leading-tight">{mode.desc}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-1">Nombre de la Unidad</label>
+                                        <p className="text-[10px] text-charcoal/40 mb-2">Ej: Puntos, Estrellas, Coins, $</p>
+                                        <input 
+                                            type="text" 
+                                            value={settings?.loyalty_points_name} 
+                                            onChange={(e) => setSettings(s => s ? { ...s, loyalty_points_name: e.target.value } : null)}
+                                            className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100" 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-1">Símbolo</label>
+                                        <p className="text-[10px] text-charcoal/40 mb-2">Se mostrará junto al saldo</p>
+                                        <input 
+                                            type="text" 
+                                            value={settings?.loyalty_currency_symbol} 
+                                            onChange={(e) => setSettings(s => s ? { ...s, loyalty_currency_symbol: e.target.value } : null)}
+                                            className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100" 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <div className="flex justify-end pt-4">
+                            <button 
+                                onClick={async () => {
+                                    if (!profile?.clinic_id || !settings) return
+                                    try {
+                                        await loyaltyService.updateSettings(profile.clinic_id, settings)
+                                        toast.success('Configuración guardada')
+                                    } catch (error) {
+                                        toast.error('Error al guardar configuración')
+                                    }
+                                }}
+                                className="px-8 py-3 bg-charcoal text-white rounded-full font-black text-sm hover:bg-charcoal/90 transition-all shadow-lg"
+                            >
+                                Aplicar Cambios Globales
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="bg-amber-500 rounded-softer p-6 text-white shadow-soft-md">
+                            <Trophy className="w-8 h-8 mb-4 text-amber-200" />
+                            <h3 className="text-lg font-bold mb-2">Reglas de Bienvenida</h3>
+                            <p className="text-sm text-amber-100 mb-6">
+                                Define cuántos {settings?.loyalty_points_name} recibe un paciente la primera vez que agenda.
+                            </p>
+                            <div className="bg-white/10 rounded-soft p-4 border border-white/20">
+                                <label className="text-[10px] uppercase font-black mb-2 block tracking-widest opacity-70">Bono Actual</label>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl font-black">{settings?.loyalty_welcome_bonus}</span>
+                                    <span className="text-xs opacity-70 uppercase font-bold">{settings?.loyalty_currency_symbol}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-softer border border-silk-beige p-6">
+                            <h4 className="font-bold text-charcoal mb-4 tracking-tight">Estrategia de Referidos</h4>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-black text-charcoal/40 uppercase block mb-1">Por cada referido exitoso</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="number" 
+                                            value={settings?.loyalty_referral_bonus} 
+                                            onChange={(e) => setSettings(s => s ? { ...s, loyalty_referral_bonus: parseInt(e.target.value) } : null)}
+                                            className="w-full h-10 pl-4 pr-12 bg-ivory border border-silk-beige rounded-soft text-sm font-bold" 
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-charcoal/30">{settings?.loyalty_currency_symbol}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black text-charcoal/40 uppercase block mb-1">Acumulación por compra (%)</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="number" 
+                                            value={settings?.loyalty_points_percentage} 
+                                            onChange={(e) => setSettings(s => s ? { ...s, loyalty_points_percentage: parseFloat(e.target.value) } : null)}
+                                            className="w-full h-10 pl-4 pr-12 bg-ivory border border-silk-beige rounded-soft text-sm font-bold" 
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-charcoal/30">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

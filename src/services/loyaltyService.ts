@@ -22,6 +22,20 @@ export interface LoyaltySettings {
     loyalty_points_percentage: number
     loyalty_referral_bonus: number
     loyalty_welcome_bonus: number
+    loyalty_program_mode: 'points' | 'money' | 'percentage'
+    loyalty_points_name: string
+    loyalty_currency_symbol: string
+}
+
+export interface LoyaltyReward {
+    id: string
+    clinic_id: string
+    name: string
+    description: string
+    points_cost: number
+    reward_type: 'points' | 'money' | 'percentage' | 'gift' | 'treatment'
+    reward_value: number
+    is_active: boolean
 }
 
 export const loyaltyService = {
@@ -72,11 +86,29 @@ export const loyaltyService = {
     async getSettings(clinicId: string): Promise<LoyaltySettings> {
         const { data, error } = await supabase
             .from('clinic_settings')
-            .select('loyalty_enabled, loyalty_points_percentage, loyalty_referral_bonus, loyalty_welcome_bonus')
+            .select('loyalty_enabled, loyalty_points_percentage, loyalty_referral_bonus, loyalty_welcome_bonus, loyalty_program_mode, loyalty_points_name, loyalty_currency_symbol')
             .eq('id', clinicId)
             .single()
         if (error) throw error
         return data as LoyaltySettings
+    },
+
+    // Rewards Catalog management
+    async getRewards(clinicId: string): Promise<LoyaltyReward[]> {
+        const { data, error } = await supabase
+            .from('loyalty_rewards')
+            .select('*')
+            .eq('clinic_id', clinicId)
+            .order('points_cost', { ascending: true })
+        if (error) throw error
+        return data as LoyaltyReward[]
+    },
+
+    async createReward(reward: Omit<LoyaltyReward, 'id' | 'is_active'>) {
+        const { error } = await (supabase as any)
+            .from('loyalty_rewards')
+            .insert(reward)
+        if (error) throw error
     },
 
     // Update loyalty settings
