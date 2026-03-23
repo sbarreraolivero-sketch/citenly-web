@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { loyaltyService, LoyaltySettings, LoyaltyReward } from '@/services/loyaltyService'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
+import { LoyaltyRewardModal } from '@/components/loyalty/LoyaltyRewardModal'
 
 export default function Loyalty() {
     const { profile } = useAuth()
@@ -35,6 +36,7 @@ export default function Loyalty() {
     const [rewards, setRewards] = useState<LoyaltyReward[]>([])
     const [patients, setPatients] = useState<any[]>([])
     const [searchQuery, setSearchQuery] = useState('')
+    const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
     
     // Stats for the header
     const [stats, setStats] = useState({
@@ -78,6 +80,16 @@ export default function Loyalty() {
         }
         fetchData()
     }, [profile?.clinic_id])
+
+    const fetchRewards = async () => {
+        if (!profile?.clinic_id) return
+        try {
+            const rData = await loyaltyService.getRewards(profile.clinic_id)
+            setRewards(rData || [])
+        } catch (error) {
+            console.error('Error fetching rewards:', error)
+        }
+    }
 
     const handleAdjustPoints = async (patientId: string, amount: number, isAdding: boolean) => {
         if (!profile?.clinic_id) return
@@ -372,7 +384,10 @@ export default function Loyalty() {
                             <h2 className="text-2xl font-black text-charcoal tracking-tight">Catálogo de Recompensas</h2>
                             <p className="text-sm text-charcoal/50">Define lo que tus pacientes pueden canjear con su saldo acumulado.</p>
                         </div>
-                        <button className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-md hover:bg-primary-600 transition-all">
+                        <button 
+                            onClick={() => setIsRewardModalOpen(true)}
+                            className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-md hover:bg-primary-600 transition-all"
+                        >
                             <Plus className="w-4 h-4" />
                             Nueva Recompensa
                         </button>
@@ -541,6 +556,14 @@ export default function Loyalty() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {isRewardModalOpen && profile?.clinic_id && (
+                <LoyaltyRewardModal 
+                    clinicId={profile.clinic_id}
+                    onClose={() => setIsRewardModalOpen(false)}
+                    onSave={fetchRewards}
+                />
             )}
         </div>
     )
