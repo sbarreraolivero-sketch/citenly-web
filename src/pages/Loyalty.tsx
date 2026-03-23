@@ -12,8 +12,6 @@ import {
     Target,
     Loader2,
     CheckCircle2,
-    ExternalLink,
-    Copy,
     Share2
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
