@@ -11,8 +11,12 @@ import {
     Gift,
     Target,
     Loader2,
-    CheckCircle2
+    CheckCircle2,
+    ExternalLink,
+    Copy,
+    Share2
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { loyaltyService, LoyaltySettings } from '@/services/loyaltyService'
@@ -237,11 +241,21 @@ export default function Loyalty() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-xs font-medium text-charcoal/50">
-                                    <div className="flex items-center gap-1">
-                                        <Users className="w-3 h-3" />
-                                        {patient.referral_count || 0} referidos
+                                    <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={() => {
+                                                const url = `${window.location.origin}/chat?ref=${patient.referral_code}`;
+                                                navigator.clipboard.writeText(url);
+                                                toast.success('Magic Link copiado al portapapeles');
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-full text-[10px] font-bold hover:bg-primary-100 transition-colors"
+                                            title="Copiar enlace para el paciente"
+                                        >
+                                            <Share2 className="w-3 h-3" />
+                                            Magic Link
+                                        </button>
+                                        <button className="text-charcoal/40 hover:text-charcoal transition-colors">Ver Historial</button>
                                     </div>
-                                    <button className="text-primary-500 hover:underline">Ver Historial</button>
                                 </div>
                             </div>
                         ))}
@@ -292,9 +306,12 @@ export default function Loyalty() {
                             <p className="text-sm text-indigo-100 mb-4">
                                 Cada paciente tiene un código único. Cuando un amigo lo mencione o use su link en el Chat IA, ambos reciben beneficios.
                             </p>
-                            <button className="w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-soft text-sm font-bold transition-all">
+                            <Link 
+                                to="/app/templates"
+                                className="w-full h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-soft text-sm font-bold transition-all border border-white/20"
+                            >
                                 Configurar Campaña
-                            </button>
+                            </Link>
                         </div>
                         
                         <div className="bg-white rounded-softer p-6 border border-silk-beige shadow-soft-sm">
