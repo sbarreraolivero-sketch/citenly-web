@@ -307,70 +307,73 @@ export default function Loyalty() {
             )}
 
             {activeTab === 'referrals' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="lg:col-span-2 card-soft p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-charcoal">Ranking de Embajadores</h3>
-                            <div className="flex items-center gap-2 text-primary-500 bg-primary-50 px-3 py-1.5 rounded-full text-xs font-bold">
-                                <Award className="w-4 h-4" />
-                                BONO: {settings?.loyalty_referral_bonus} {settings?.loyalty_currency_symbol || 'pts'} / referido
+                <div className="animate-in fade-in slide-in-from-bottom-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 card-soft p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-charcoal">Ranking de Embajadores</h3>
+                                <div className="flex items-center gap-2 text-primary-500 bg-primary-50 px-3 py-1.5 rounded-full text-xs font-bold">
+                                    <Award className="w-4 h-4" />
+                                    Bono: {settings?.loyalty_referral_bonus} {settings?.loyalty_currency_symbol || 'pts'} / amigo referido
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                {patients.filter(p => p.referral_count > 0)
+                                    .sort((a, b) => b.referral_count - a.referral_count)
+                                    .slice(0, 10)
+                                    .map((ambassador, idx) => (
+                                    <div key={ambassador.id} className="flex items-center gap-4 p-4 bg-ivory rounded-soft border border-silk-beige/50 hover:border-primary-200 transition-all">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-full flex items-center justify-center font-black text-sm",
+                                            idx === 0 ? "bg-amber-500 text-white" : "bg-silk-beige text-charcoal/50"
+                                        )}>
+                                            {idx + 1}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-charcoal">{ambassador.name}</p>
+                                            <p className="text-xs text-charcoal/40">Código: <span className="font-mono text-primary-500">{ambassador.referral_code}</span></p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-black text-charcoal">{ambassador.referral_count}</p>
+                                            <p className="text-[10px] font-black text-charcoal/30 uppercase">Amigos Referidos</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-                        
-                        <div className="space-y-4">
-                            {patients.filter(p => p.referral_count > 0)
-                                .sort((a, b) => b.referral_count - a.referral_count)
-                                .slice(0, 5)
-                                .map((ambassador, idx) => (
-                                <div key={ambassador.id} className="flex items-center gap-4 p-4 bg-ivory rounded-soft border border-silk-beige/50 hover:border-primary-200 transition-all">
-                                    <div className={cn(
-                                        "w-8 h-8 rounded-full flex items-center justify-center font-black text-sm",
-                                        idx === 0 ? "bg-amber-500 text-white" : "bg-silk-beige text-charcoal/50"
-                                    )}>
-                                        {idx + 1}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-charcoal">{ambassador.name}</p>
-                                        <p className="text-xs text-charcoal/40">Código: <span className="font-mono text-primary-500">{ambassador.referral_code}</span></p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-lg font-black text-charcoal">{ambassador.referral_count}</p>
-                                        <p className="text-[10px] font-black text-charcoal/30 uppercase">Amigos Referidos</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
 
-                    <div className="space-y-4">
-                        <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-softer p-6 text-white shadow-soft-md">
-                            <Target className="w-8 h-8 mb-4 text-indigo-200" />
-                            <h3 className="text-lg font-bold mb-2">Manual de Embajadores</h3>
-                            <p className="text-sm text-indigo-100 mb-4">
-                                Cada paciente tiene un código único. Cuando un amigo lo mencione o use su link en el Chat IA, ambos reciben beneficios.
-                            </p>
-                            <Link 
-                                to="/app/templates"
-                                className="w-full h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-soft text-sm font-bold transition-all border border-white/20"
-                            >
-                                Configurar Campaña
-                            </Link>
-                        </div>
-                        
-                        <div className="bg-white rounded-softer p-6 border border-silk-beige shadow-soft-sm">
-                            <h3 className="font-bold text-charcoal mb-4">Ajustes de Referidos</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-black text-charcoal/40 uppercase block mb-1">Bono por Referir</label>
-                                    <input type="number" defaultValue={settings?.loyalty_referral_bonus} className="w-full p-2 border border-silk-beige rounded-soft text-sm" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-black text-charcoal/40 uppercase block mb-1">Bono de Bienvenida</label>
-                                    <input type="number" defaultValue={settings?.loyalty_welcome_bonus} className="w-full p-2 border border-silk-beige rounded-soft text-sm" />
-                                </div>
-                                <button className="w-full py-2 bg-primary-500 text-white rounded-soft text-sm font-bold hover:bg-primary-600 transition-all">
-                                    Guardar Cambios
-                                </button>
+                        <div className="space-y-4">
+                            <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-softer p-6 text-white shadow-soft-md">
+                                <Target className="w-8 h-8 mb-4 text-indigo-200" />
+                                <h3 className="text-lg font-bold mb-2">Manual de Embajadores</h3>
+                                <p className="text-sm text-indigo-100 mb-4">
+                                    Cada paciente tiene un código único. Cuando un amigo lo mencione o use su link en el Chat IA, ambos reciben beneficios.
+                                </p>
+                                <Link 
+                                    to="/app/templates"
+                                    className="w-full h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-soft text-sm font-bold transition-all border border-white/20"
+                                >
+                                    Personalizar Mensajes
+                                </Link>
+                            </div>
+                            
+                            <div className="bg-white rounded-softer p-6 border border-silk-beige shadow-soft-sm">
+                                <h3 className="font-bold text-charcoal mb-4">¿Cómo funciona?</h3>
+                                <ul className="space-y-3">
+                                    <li className="flex gap-2 text-xs text-charcoal/60">
+                                        <span className="text-primary-500 font-bold">1.</span>
+                                        El paciente comparte su "Magic Link" con un amigo.
+                                    </li>
+                                    <li className="flex gap-2 text-xs text-charcoal/60">
+                                        <span className="text-primary-500 font-bold">2.</span>
+                                        El amigo agenda su primera cita usando ese enlace.
+                                    </li>
+                                    <li className="flex gap-2 text-xs text-charcoal/60">
+                                        <span className="text-primary-500 font-bold">3.</span>
+                                        Al concretar la cita, el amigo recibe su bono de bienvenida y el referente recibe su bono por invitar.
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -526,10 +529,11 @@ export default function Loyalty() {
                         </div>
 
                         <div className="bg-white rounded-softer border border-silk-beige p-6">
-                            <h4 className="font-bold text-charcoal mb-4 tracking-tight">Estrategia de Referidos</h4>
-                            <div className="space-y-4">
+                            <h4 className="font-bold text-charcoal mb-4 tracking-tight">Reglas de Ganancia</h4>
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="text-xs font-black text-charcoal/40 uppercase block mb-1">Por cada referido exitoso</label>
+                                    <label className="text-[10px] font-black text-charcoal/40 uppercase block mb-1 tracking-widest">Bono por Referir (Al Referente)</label>
+                                    <p className="text-[10px] text-charcoal/30 mb-2 leading-tight">Lo que gana la persona que comparte su código.</p>
                                     <div className="relative">
                                         <input 
                                             type="number" 
@@ -541,7 +545,21 @@ export default function Loyalty() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-black text-charcoal/40 uppercase block mb-1">Acumulación por compra (%)</label>
+                                    <label className="text-[10px] font-black text-charcoal/40 uppercase block mb-1 tracking-widest">Bono de Bienvenida (Al Referido)</label>
+                                    <p className="text-[10px] text-charcoal/30 mb-2 leading-tight">Lo que gana el nuevo cliente al llegar por invitación.</p>
+                                    <div className="relative">
+                                        <input 
+                                            type="number" 
+                                            value={settings?.loyalty_welcome_bonus} 
+                                            onChange={(e) => setSettings(s => s ? { ...s, loyalty_welcome_bonus: parseInt(e.target.value) } : null)}
+                                            className="w-full h-10 pl-4 pr-12 bg-ivory border border-silk-beige rounded-soft text-sm font-bold" 
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-charcoal/30">{settings?.loyalty_currency_symbol}</span>
+                                    </div>
+                                </div>
+                                <div className="pt-2 border-t border-silk-beige/50">
+                                    <label className="text-[10px] font-black text-charcoal/40 uppercase block mb-1 tracking-widest">Cashback / Acumulación (%)</label>
+                                    <p className="text-[10px] text-charcoal/30 mb-2 leading-tight">Lo que el cliente acumula por sí mismo en cada cita.</p>
                                     <div className="relative">
                                         <input 
                                             type="number" 
