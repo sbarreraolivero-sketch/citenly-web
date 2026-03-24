@@ -8,9 +8,10 @@ interface LoyaltyRewardModalProps {
     clinicId: string
     onClose: () => void
     onSave: () => void
+    pointsName?: string
 }
 
-export function LoyaltyRewardModal({ clinicId, onClose, onSave }: LoyaltyRewardModalProps) {
+export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Puntos' }: LoyaltyRewardModalProps) {
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         name: '',
@@ -83,7 +84,7 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave }: LoyaltyRewardM
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[10px] font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Costo en Puntos</label>
+                                <label className="text-xs font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Costo en {pointsName}</label>
                                 <input
                                     required
                                     type="number"

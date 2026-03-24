@@ -18,7 +18,8 @@ import {
     DollarSign,
     Percent,
     Calculator,
-    Trophy
+    Trophy,
+    History as HistoryIcon
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -69,8 +70,8 @@ export default function Loyalty() {
                 
                 setStats({
                     totalPointsDist: totalPoints,
-                    totalReferrals: totalRefs,
-                    activeAlerts: 12 // Placeholder for now
+                    totalReferrals: (pData.data || []).filter((p: any) => (p.referral_count || 0) > 0).length,
+                    activeAlerts: (rData || []).filter((r: any) => r.is_active).length
                 })
             } catch (error) {
                 console.error('Error fetching loyalty data:', error)
@@ -174,15 +175,15 @@ export default function Loyalty() {
                     
                     <div className="flex gap-4 w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0">
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/10">
-                            <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">Puntos Totales</p>
+                            <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">{settings?.loyalty_points_name || 'Saldo'} Total</p>
                             <p className="text-2xl font-black">{stats.totalPointsDist.toLocaleString()}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/10">
-                            <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">Círculo Embajadores</p>
+                            <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">Referidores</p>
                             <p className="text-2xl font-black">{stats.totalReferrals}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/10">
-                            <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">Alertas Activas</p>
+                            <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">Recompensas</p>
                             <p className="text-2xl font-black">{stats.activeAlerts}</p>
                         </div>
                     </div>
@@ -228,8 +229,8 @@ export default function Loyalty() {
                         activeTab === 'alerts' ? "bg-primary-500 text-white shadow-md" : "text-charcoal/40 hover:text-charcoal"
                     )}
                 >
-                    <Bell className="w-3.5 h-3.5" />
-                    Alertas
+                    <HistoryIcon className="w-3.5 h-3.5" />
+                    Historial
                 </button>
                 <button
                     onClick={() => setActiveTab('settings')}
@@ -620,8 +621,9 @@ export default function Loyalty() {
             )}
 
             {isRewardModalOpen && profile?.clinic_id && (
-                <LoyaltyRewardModal 
+                <LoyaltyRewardModal
                     clinicId={profile.clinic_id}
+                    pointsName={settings?.loyalty_points_name}
                     onClose={() => setIsRewardModalOpen(false)}
                     onSave={fetchRewards}
                 />
