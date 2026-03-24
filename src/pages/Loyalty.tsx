@@ -47,6 +47,7 @@ export default function Loyalty() {
     })
 
     const [processingPatients, setProcessingPatients] = useState<Set<string>>(new Set());
+    const [patientAmounts, setPatientAmounts] = useState<Record<string, string>>({});
 
     const fetchData = async () => {
         if (!profile?.clinic_id) return
@@ -101,24 +102,22 @@ export default function Loyalty() {
         }
     }
 
-    const handleAdjustPoints = async (patientId: string, amount: number, isAdding: boolean) => {
+    const handleAdjustPoints = async (patientId: string, amountStr: string, isAdding: boolean) => {
+        const amount = parseInt(amountStr || '0');
         if (!profile?.clinic_id || processingPatients.has(patientId) || amount <= 0) return;
         
         const finalAmount = isAdding ? amount : -amount;
         
-        // Optimistic Update: Update local state immediately
+        // Optimistic Update
         setPatients(prev => prev.map(p => 
             p.id === patientId 
                 ? { ...p, loyalty_points: (p.loyalty_points || 0) + finalAmount } 
                 : p
         ));
 
-        // Mark as processing
         setProcessingPatients(prev => new Set(prev).add(patientId));
         
         try {
-            // ONLY Log transaction - Let the DB Trigger 'trg_sync_loyalty_log_to_patient'
-            // handle the actual balance update on the patients table to avoid duplication.
             const { error: logError } = await (supabase as any)
                 .from('loyalty_transactions')
                 .insert({
@@ -131,11 +130,11 @@ export default function Loyalty() {
             
             if (logError) throw logError;
             
-            // Re-fetch everything to sync with DB state
-            await fetchData();
-            toast.success('Saldo actualizado');
+            // Clear the amount for this patient on success
+            setPatientAmounts(prev => ({ ...prev, [patientId]: '0' }));
             
-            // Reset the internal quantity if needed (UI handled below)
+            toast.success('Saldo actualizado');
+            await fetchData();
         } catch (error) {
             console.error('Error adjusting points:', error);
             toast.error('Error al ajustar puntos');
@@ -313,9 +312,9 @@ export default function Loyalty() {
                                     <div className="flex items-center gap-2 pt-2 border-t border-silk-beige/30">
                                         <div className="relative flex-1">
                                             <input 
-                                                id={`amount-${patient.id}`}
                                                 type="number"
-                                                defaultValue="0"
+                                                value={patientAmounts[patient.id] || '0'}
+                                                onChange={(e) => setPatientAmounts(prev => ({ ...prev, [patient.id]: e.target.value }))}
                                                 className="w-full h-9 pl-3 pr-2 bg-white border border-silk-beige rounded-soft text-xs font-black focus:ring-1 focus:ring-primary-500 outline-none"
                                                 placeholder="Monto..."
                                             />
@@ -323,10 +322,7 @@ export default function Loyalty() {
                                         <div className="flex items-center gap-1">
                                             <button 
                                                 disabled={processingPatients.has(patient.id)}
-                                                onClick={() => {
-                                                    const val = (document.getElementById(`amount-${patient.id}`) as HTMLInputElement)?.value;
-                                                    handleAdjustPoints(patient.id, parseInt(val || '0'), false);
-                                                }}
+                                                onClick={() => handleAdjustPoints(patient.id, patientAmounts[patient.id] || '0', false)}
                                                 className={cn(
                                                     "h-9 px-3 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all",
                                                     processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
@@ -337,10 +333,7 @@ export default function Loyalty() {
                                             </button>
                                             <button 
                                                 disabled={processingPatients.has(patient.id)}
-                                                onClick={() => {
-                                                    const val = (document.getElementById(`amount-${patient.id}`) as HTMLInputElement)?.value;
-                                                    handleAdjustPoints(patient.id, parseInt(val || '0'), true);
-                                                }}
+                                                onClick={() => handleAdjustPoints(patient.id, patientAmounts[patient.id] || '0', true)}
                                                 className={cn(
                                                     "h-9 px-3 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all",
                                                     processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
