@@ -41,16 +41,16 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
     }
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-charcoal/30 backdrop-blur-md animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-lg rounded-softer shadow-soft-xl overflow-hidden border border-silk-beige animate-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-silk-beige flex items-center justify-between bg-ivory">
+                <div className="p-6 border-b border-silk-beige flex items-center justify-between bg-ivory shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary-500 text-white rounded-soft">
+                        <div className="p-2 bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-soft shadow-soft-sm">
                             <ShoppingBag className="w-5 h-5" />
                         </div>
                         <div>
                             <h2 className="text-xl font-black text-charcoal tracking-tight">Nueva Recompensa</h2>
-                            <p className="text-xs text-charcoal/40 font-bold uppercase tracking-widest">Configuración Canjeable</p>
+                            <p className="text-xs text-primary-500/60 font-black uppercase tracking-widest">Configuración Canjeable</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-silk-beige rounded-full transition-colors">
@@ -81,24 +81,23 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
                                 className="w-full p-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100 min-h-[80px]"
                             />
                         </div>
-
                         <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[10px] font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1 flex items-center gap-1.5">
-                                        Costo en {pointsName}
-                                        <span className="text-[10px] text-primary-500 normal-case font-bold">(Meta de puntos)</span>
-                                    </label>
-                                    <input
-                                        required
-                                        type="number"
-                                        value={formData.points_cost}
-                                        onChange={e => setFormData({ ...formData, points_cost: parseInt(e.target.value) })}
-                                        className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary-100"
-                                    />
-                                    <p className="text-[10px] text-charcoal/40 mt-1 pl-1 italic">Monto que el paciente "gasta" de su saldo para canjear.</p>
-                                </div>
                             <div>
-                                <label className="text-[10px] font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Tipo de Recompensa</label>
+                                <label className="text-xs font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1 flex items-center gap-1.5">
+                                    Costo en {pointsName}
+                                    <span className="text-[10px] text-primary-500 normal-case font-bold">(Meta necesaria para canje)</span>
+                                </label>
+                                <input
+                                    required
+                                    type="number"
+                                    value={formData.points_cost}
+                                    onChange={e => setFormData({ ...formData, points_cost: parseInt(e.target.value) })}
+                                    className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                />
+                                <p className="text-xs font-bold text-charcoal/40 mt-1 pl-1 italic">Monto que el paciente debe juntar para canjear.</p>
+                            </div>
+                            <div>
+                                <label className="text-xs font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Tipo de Recompensa</label>
                                 <select
                                     value={formData.reward_type}
                                     onChange={e => setFormData({ ...formData, reward_type: e.target.value as any })}
@@ -108,13 +107,13 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
                                     <option value="percentage">Porcentaje (%)</option>
                                     <option value="treatment">Tratamiento / Producto</option>
                                 </select>
-                                <p className="text-[10px] text-charcoal/40 mt-1 pl-1 italic">Usa "Tratamiento" para servicios gratis.</p>
+                                <p className="text-xs font-bold text-charcoal/40 mt-1 pl-1 italic">Elige "Tratamiento" para que sea gratis.</p>
                             </div>
                         </div>
 
                         {formData.reward_type !== 'treatment' && (
                             <div>
-                                <label className="text-[10px] font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Valor de la Recompensa</label>
+                                <label className="text-xs font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Valor de la Recompensa</label>
                                 <div className="relative">
                                     <input
                                         required
@@ -127,7 +126,7 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
                                         {formData.reward_type === 'money' ? <DollarSign className="w-4 h-4 text-charcoal/30" /> : <Percent className="w-4 h-4 text-charcoal/30" />}
                                     </div>
                                 </div>
-                                <p className="text-[10px] text-charcoal/40 mt-1 pl-1 italic">Ej: Si es dinero, ¿cuánto saldo se le regalará?</p>
+                                <p className="text-xs font-bold text-charcoal/40 mt-1.5 pl-1 italic">Ej: Si es dinero, ¿cuánto saldo se carga al monedero luego del canje?</p>
                             </div>
                         )}
                     </div>

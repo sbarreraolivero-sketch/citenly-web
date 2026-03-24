@@ -46,6 +46,8 @@ export default function Loyalty() {
         activeAlerts: 0
     })
 
+    const [processingPatients, setProcessingPatients] = useState<Set<string>>(new Set());
+
     const fetchData = async () => {
         if (!profile?.clinic_id) return
         setLoading(true)
@@ -100,11 +102,22 @@ export default function Loyalty() {
     }
 
     const handleAdjustPoints = async (patientId: string, amount: number, isAdding: boolean) => {
-        if (!profile?.clinic_id) return;
+        if (!profile?.clinic_id || processingPatients.has(patientId)) return;
+        
         const finalAmount = isAdding ? amount : -amount;
         
+        // Optimistic Update: Update local state immediately
+        setPatients(prev => prev.map(p => 
+            p.id === patientId 
+                ? { ...p, loyalty_points: (p.loyalty_points || 0) + finalAmount } 
+                : p
+        ));
+
+        // Mark as processing
+        setProcessingPatients(prev => new Set(prev).add(patientId));
+        
         try {
-            // 1. Get current points
+            // 1. Get current REAL points from DB (to be safe, though optimistic UI already updated local view)
             const { data: pData } = await (supabase as any)
                 .from('patients')
                 .select('loyalty_points')
@@ -122,7 +135,7 @@ export default function Loyalty() {
             
             if (pError) throw pError;
 
-            // 3. Log transaction (using 'bonus' as a safe existing enum value)
+            // 3. Log transaction
             const { error: logError } = await (supabase as any)
                 .from('loyalty_transactions')
                 .insert({
@@ -135,11 +148,20 @@ export default function Loyalty() {
             
             if (logError) throw logError;
             
-            toast.success('Puntos ajustados');
-            fetchData();
+            // Re-fetch everything to sync with DB state and other users
+            await fetchData();
+            toast.success('Saldo actualizado');
         } catch (error) {
             console.error('Error adjusting points:', error);
             toast.error('Error al ajustar puntos');
+            // Rollback optimistic update on error
+            await fetchData();
+        } finally {
+            setProcessingPatients(prev => {
+                const next = new Set(prev);
+                next.delete(patientId);
+                return next;
+            });
         }
     };
 
@@ -299,18 +321,26 @@ export default function Loyalty() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <button 
+                                            disabled={processingPatients.has(patient.id)}
                                             onClick={() => handleAdjustPoints(patient.id, 500, false)}
-                                            className="p-2 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-colors"
+                                            className={cn(
+                                                "p-2 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all",
+                                                processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
+                                            )}
                                             title="Eliminar 500 puntos"
                                         >
-                                            <Minus className="w-4 h-4" />
+                                            {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Minus className="w-4 h-4" />}
                                         </button>
                                         <button 
+                                            disabled={processingPatients.has(patient.id)}
                                             onClick={() => handleAdjustPoints(patient.id, 500, true)}
-                                            className="p-2 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-colors"
+                                            className={cn(
+                                                "p-2 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all",
+                                                processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
+                                            )}
                                             title="Añadir 500 puntos"
                                         >
-                                            <Plus className="w-4 h-4" />
+                                            {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
