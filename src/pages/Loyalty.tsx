@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import {
     Star,
     Users,
-    Bell,
     TrendingUp,
     Plus,
     Minus,
@@ -46,39 +45,39 @@ export default function Loyalty() {
         activeAlerts: 0
     })
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!profile?.clinic_id) return
-            setLoading(true)
-            try {
-                const [s, pData, rData] = await Promise.all([
-                    loyaltyService.getSettings(profile.clinic_id),
-                    supabase
-                        .from('patients')
-                        .select('*')
-                        .eq('clinic_id', profile.clinic_id)
-                        .order('loyalty_points', { ascending: false }),
-                    loyaltyService.getRewards(profile.clinic_id)
-                ])
-                setSettings(s)
-                setPatients(pData.data || [])
-                setRewards(rData || [])
-                
-                // Calculate basic stats
-                const totalPoints = (pData.data || []).reduce((acc, p: any) => acc + (p.loyalty_points || 0), 0)
-                const totalRefs = (pData.data || []).reduce((acc, p: any) => acc + (p.referral_count || 0), 0)
-                
-                setStats({
-                    totalPointsDist: totalPoints,
-                    totalReferrals: (pData.data || []).filter((p: any) => (p.referral_count || 0) > 0).length,
-                    activeAlerts: (rData || []).filter((r: any) => r.is_active).length
-                })
-            } catch (error) {
-                console.error('Error fetching loyalty data:', error)
-            } finally {
-                setLoading(false)
-            }
+    const fetchData = async () => {
+        if (!profile?.clinic_id) return
+        setLoading(true)
+        try {
+            const [s, pData, rData] = await Promise.all([
+                loyaltyService.getSettings(profile.clinic_id),
+                (supabase as any)
+                    .from('patients')
+                    .select('*')
+                    .eq('clinic_id', profile.clinic_id)
+                    .order('loyalty_points', { ascending: false }),
+                loyaltyService.getRewards(profile.clinic_id)
+            ])
+            setSettings(s)
+            setPatients(pData.data || [])
+            setRewards(rData || [])
+            
+            // Calculate basic stats
+            const totalPoints = (pData.data || []).reduce((acc: number, p: any) => acc + (p.loyalty_points || 0), 0)
+            
+            setStats({
+                totalPointsDist: totalPoints,
+                totalReferrals: (pData.data || []).filter((p: any) => (p.referral_count || 0) > 0).length,
+                activeAlerts: (rData || []).filter((r: any) => r.is_active).length
+            })
+        } catch (error) {
+            console.error('Error fetching loyalty data:', error)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         fetchData()
     }, [profile?.clinic_id])
 
@@ -98,7 +97,7 @@ export default function Loyalty() {
         
         try {
             // 1. Get current points
-            const { data: pData } = await supabase
+            const { data: pData } = await (supabase as any)
                 .from('patients')
                 .select('loyalty_points')
                 .eq('id', patientId)
@@ -108,7 +107,7 @@ export default function Loyalty() {
             const newPoints = currentPoints + finalAmount;
 
             // 2. Update player balance
-            const { error: pError } = await supabase
+            const { error: pError } = await (supabase as any)
                 .from('patients')
                 .update({ loyalty_points: newPoints })
                 .eq('id', patientId);
