@@ -11,6 +11,7 @@ import {
     Target,
     Loader2,
     Share2,
+    Save,
     Settings as SettingsIcon,
     ShoppingBag,
     Coins,
@@ -48,6 +49,7 @@ export default function Loyalty() {
 
     const [processingPatients, setProcessingPatients] = useState<Set<string>>(new Set());
     const [patientAmounts, setPatientAmounts] = useState<Record<string, string>>({});
+    const [pendingAdjustments, setPendingAdjustments] = useState<Record<string, number>>({});
     
     // Safety lock for transactions to prevent double-firing even in fast environments
     const adjustmentInProgress = useRef<Set<string>>(new Set());
@@ -105,52 +107,65 @@ export default function Loyalty() {
         }
     }
 
-    const handleAdjustPoints = async (patientId: string, amountStr: string, isAdding: boolean) => {
+    const handleAdjustPoints = (patientId: string, amountStr: string, isAdding: boolean) => {
         const amount = parseInt(amountStr || '0');
-        if (!profile?.clinic_id || adjustmentInProgress.current.has(patientId) || amount <= 0) return;
+        if (!profile?.clinic_id || amount <= 0) return;
         
         const finalAmount = isAdding ? amount : -amount;
         
-        // Lock this patient immediately (Ref is more reliable for checking than State for fast clicks)
-        adjustmentInProgress.current.add(patientId);
-        setProcessingPatients(new Set(adjustmentInProgress.current));
-
-        // Optimistic Update
+        // 1. UPDATE LOCAL UI IMMEDIATELY (Live Sum)
         setPatients(prev => prev.map(p => 
             p.id === patientId 
                 ? { ...p, loyalty_points: (p.loyalty_points || 0) + finalAmount } 
                 : p
         ));
+
+        // 2. TRACK PENDING CHANGE (Do NOT call API yet)
+        setPendingAdjustments(prev => ({
+            ...prev,
+            [patientId]: (prev[patientId] || 0) + finalAmount
+        }));
+
+        // 3. Clear the input for this patient
+        setPatientAmounts(prev => ({ ...prev, [patientId]: '0' }));
+        
+        toast.success(`Ajuste local de ${finalAmount} listo para guardar`);
+    };
+
+    const savePendingAdjustments = async () => {
+        if (!profile?.clinic_id || Object.keys(pendingAdjustments).length === 0) return;
+        
+        setLoading(true);
+        const patientIds = Object.keys(pendingAdjustments);
         
         try {
-            // ONLY Log transformation - Let the DB Trigger 'trg_sync_loyalty_log_to_patient'
-            // handle the actual balance calculation. 
-            // We use 'adjustment' type as it is the standard for manual movements.
-            const { error: logError } = await (supabase as any)
-                .from('loyalty_transactions')
-                .insert({
-                    clinic_id: profile.clinic_id,
-                    patient_id: patientId,
-                    points: finalAmount,
-                    type: 'adjustment',
-                    description: isAdding ? 'Ajuste manual (crédito)' : 'Ajuste manual (débito)'
-                });
+            // Process all pending adjustments
+            for (const pId of patientIds) {
+                const points = pendingAdjustments[pId];
+                if (points === 0) continue;
+
+                const { error } = await (supabase as any)
+                    .from('loyalty_transactions')
+                    .insert({
+                        clinic_id: profile.clinic_id,
+                        patient_id: pId,
+                        points: points,
+                        type: 'adjustment',
+                        description: points > 0 ? 'Ajuste manual (crédito)' : 'Ajuste manual (débito)'
+                    });
+                
+                if (error) throw error;
+            }
             
-            if (logError) throw logError;
-            
-            // Success: clear input for this patient
-            setPatientAmounts(prev => ({ ...prev, [patientId]: '0' }));
-            
-            toast.success('Saldo actualizado');
-            await fetchData();
+            setPendingAdjustments({});
+            toast.success('Todos los movimientos guardados en la nube');
+            await fetchData(); // Final sync after everything is done
         } catch (error) {
-            console.error('Error adjusting points:', error);
-            toast.error('Error al ajustar saldo');
+            console.error('Error saving adjustments:', error);
+            toast.error('Ocurrió un error al guardar. Algunos cambios podrían no haberse guardado.');
             await fetchData();
         } finally {
-            // Release lock
-            adjustmentInProgress.current.delete(patientId);
-            setProcessingPatients(new Set(adjustmentInProgress.current));
+            setLoading(false);
         }
     };
 
@@ -266,16 +281,26 @@ export default function Loyalty() {
             {activeTab === 'points' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="relative w-full md:w-96">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/30" />
-                            <input
-                                type="text"
-                                placeholder="Buscar paciente..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-silk-beige rounded-soft text-sm focus:ring-primary-500 focus:border-primary-500"
-                            />
-                        </div>
+                                <div className="relative flex-1 group">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/20 group-focus-within:text-primary-500 transition-colors" />
+                                    <input 
+                                        type="text"
+                                        placeholder="Buscar por nombre o celular..."
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        className="w-full h-12 pl-12 pr-4 bg-ivory border border-silk-beige rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all font-bold placeholder:text-charcoal/20"
+                                    />
+                                </div>
+                                {Object.keys(pendingAdjustments).length > 0 && (
+                                    <button
+                                        onClick={savePendingAdjustments}
+                                        disabled={loading}
+                                        className="flex items-center gap-2 bg-emerald-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-lg hover:bg-emerald-600 transition-all animate-in zoom-in-95 duration-200 hover:scale-105 active:scale-95"
+                                    >
+                                        <Save className="w-5 h-5" />
+                                        Guardar Movimientos ({Object.keys(pendingAdjustments).length})
+                                    </button>
+                                )}
                         <div className="flex items-center gap-2 text-xs font-bold text-charcoal/40 bg-silk-beige/30 px-4 py-2 rounded-full">
                             <TrendingUp className="w-3 h-3" />
                             REGLA ACTUAL: {settings?.loyalty_points_percentage}% DE ACUMULACIÓN
