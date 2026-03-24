@@ -83,16 +83,20 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-xs font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Costo en {pointsName}</label>
-                                <input
-                                    required
-                                    type="number"
-                                    value={formData.points_cost}
-                                    onChange={e => setFormData({ ...formData, points_cost: parseInt(e.target.value) })}
-                                    className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary-100"
-                                />
-                            </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1 flex items-center gap-1.5">
+                                        Costo en {pointsName}
+                                        <span className="text-[10px] text-primary-500 normal-case font-bold">(Meta de puntos)</span>
+                                    </label>
+                                    <input
+                                        required
+                                        type="number"
+                                        value={formData.points_cost}
+                                        onChange={e => setFormData({ ...formData, points_cost: parseInt(e.target.value) })}
+                                        className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                    />
+                                    <p className="text-[10px] text-charcoal/40 mt-1 pl-1 italic">Monto que el paciente "gasta" de su saldo para canjear.</p>
+                                </div>
                             <div>
                                 <label className="text-[10px] font-black text-charcoal uppercase tracking-widest mb-1.5 block px-1">Tipo de Recompensa</label>
                                 <select
@@ -104,6 +108,7 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
                                     <option value="percentage">Porcentaje (%)</option>
                                     <option value="treatment">Tratamiento / Producto</option>
                                 </select>
+                                <p className="text-[10px] text-charcoal/40 mt-1 pl-1 italic">Usa "Tratamiento" para servicios gratis.</p>
                             </div>
                         </div>
 
@@ -122,6 +127,7 @@ export function LoyaltyRewardModal({ clinicId, onClose, onSave, pointsName = 'Pu
                                         {formData.reward_type === 'money' ? <DollarSign className="w-4 h-4 text-charcoal/30" /> : <Percent className="w-4 h-4 text-charcoal/30" />}
                                     </div>
                                 </div>
+                                <p className="text-[10px] text-charcoal/40 mt-1 pl-1 italic">Ej: Si es dinero, ¿cuánto saldo se le regalará?</p>
                             </div>
                         )}
                     </div>

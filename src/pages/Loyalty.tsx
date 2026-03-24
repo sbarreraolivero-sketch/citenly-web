@@ -37,6 +37,7 @@ export default function Loyalty() {
     const [patients, setPatients] = useState<any[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
+    const [transactions, setTransactions] = useState<any[]>([])
     
     // Stats for the header
     const [stats, setStats] = useState({
@@ -49,18 +50,25 @@ export default function Loyalty() {
         if (!profile?.clinic_id) return
         setLoading(true)
         try {
-            const [s, pData, rData] = await Promise.all([
+            const [s, pData, rData, tData] = await Promise.all([
                 loyaltyService.getSettings(profile.clinic_id),
                 (supabase as any)
                     .from('patients')
                     .select('*')
                     .eq('clinic_id', profile.clinic_id)
                     .order('loyalty_points', { ascending: false }),
-                loyaltyService.getRewards(profile.clinic_id)
+                loyaltyService.getRewards(profile.clinic_id),
+                (supabase as any)
+                    .from('loyalty_transactions')
+                    .select('*, patients(name)')
+                    .eq('clinic_id', profile.clinic_id)
+                    .order('created_at', { ascending: false })
+                    .limit(50)
             ])
             setSettings(s)
             setPatients(pData.data || [])
             setRewards(rData || [])
+            setTransactions(tData.data || [])
             
             // Calculate basic stats
             const totalPoints = (pData.data || []).reduce((acc: number, p: any) => acc + (p.loyalty_points || 0), 0)
@@ -451,6 +459,45 @@ export default function Loyalty() {
                                 <p className="text-xs">Crea tu primer beneficio para que los pacientes puedan canjear.</p>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+            {activeTab === 'alerts' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6">
+                    <div className="card-soft p-6">
+                        <h3 className="text-lg font-bold text-charcoal mb-4 flex items-center gap-2">
+                            <HistoryIcon className="w-5 h-5 text-primary-500" />
+                            Historial Global de Movimientos
+                        </h3>
+                        <div className="space-y-3">
+                            {transactions.length > 0 ? transactions.map(tx => (
+                                <div key={tx.id} className="flex items-center justify-between p-4 bg-ivory rounded-soft border border-silk-beige/50">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full flex items-center justify-center",
+                                            tx.points > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                        )}>
+                                            {tx.points > 0 ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-charcoal">{tx.patients?.name || 'Paciente desconocido'}</p>
+                                            <p className="text-xs text-charcoal/40">{tx.description} • {new Date(tx.created_at).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={cn("font-black", tx.points > 0 ? "text-emerald-500" : "text-red-500")}>
+                                            {tx.points > 0 ? '+' : ''}{tx.points} {settings?.loyalty_currency_symbol}
+                                        </p>
+                                        <p className="text-[10px] uppercase font-bold text-charcoal/20">{tx.type}</p>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="text-center py-12 text-charcoal/30">
+                                    <HistoryIcon className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                                    <p className="font-bold uppercase tracking-widest text-sm">Sin movimientos registrados</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
