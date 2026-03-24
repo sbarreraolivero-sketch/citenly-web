@@ -48,6 +48,9 @@ export default function Loyalty() {
 
     const [processingPatients, setProcessingPatients] = useState<Set<string>>(new Set());
     const [patientAmounts, setPatientAmounts] = useState<Record<string, string>>({});
+    
+    // Safety lock for transactions to prevent double-firing even in fast environments
+    const adjustmentInProgress = useRef<Set<string>>(new Set());
 
     const fetchData = async () => {
         if (!profile?.clinic_id) return
@@ -104,47 +107,50 @@ export default function Loyalty() {
 
     const handleAdjustPoints = async (patientId: string, amountStr: string, isAdding: boolean) => {
         const amount = parseInt(amountStr || '0');
-        if (!profile?.clinic_id || processingPatients.has(patientId) || amount <= 0) return;
+        if (!profile?.clinic_id || adjustmentInProgress.current.has(patientId) || amount <= 0) return;
         
         const finalAmount = isAdding ? amount : -amount;
         
+        // Lock this patient immediately (Ref is more reliable for checking than State for fast clicks)
+        adjustmentInProgress.current.add(patientId);
+        setProcessingPatients(new Set(adjustmentInProgress.current));
+
         // Optimistic Update
         setPatients(prev => prev.map(p => 
             p.id === patientId 
                 ? { ...p, loyalty_points: (p.loyalty_points || 0) + finalAmount } 
                 : p
         ));
-
-        setProcessingPatients(prev => new Set(prev).add(patientId));
         
         try {
+            // ONLY Log transformation - Let the DB Trigger 'trg_sync_loyalty_log_to_patient'
+            // handle the actual balance calculation. 
+            // We use 'adjustment' type as it is the standard for manual movements.
             const { error: logError } = await (supabase as any)
                 .from('loyalty_transactions')
                 .insert({
                     clinic_id: profile.clinic_id,
                     patient_id: patientId,
                     points: finalAmount,
-                    type: 'bonus',
+                    type: 'adjustment',
                     description: isAdding ? 'Ajuste manual (crédito)' : 'Ajuste manual (débito)'
                 });
             
             if (logError) throw logError;
             
-            // Clear the amount for this patient on success
+            // Success: clear input for this patient
             setPatientAmounts(prev => ({ ...prev, [patientId]: '0' }));
             
             toast.success('Saldo actualizado');
             await fetchData();
         } catch (error) {
             console.error('Error adjusting points:', error);
-            toast.error('Error al ajustar puntos');
+            toast.error('Error al ajustar saldo');
             await fetchData();
         } finally {
-            setProcessingPatients(prev => {
-                const next = new Set(prev);
-                next.delete(patientId);
-                return next;
-            });
+            // Release lock
+            adjustmentInProgress.current.delete(patientId);
+            setProcessingPatients(new Set(adjustmentInProgress.current));
         }
     };
 
@@ -313,10 +319,13 @@ export default function Loyalty() {
                                         <div className="relative flex-1">
                                             <input 
                                                 type="number"
-                                                value={patientAmounts[patient.id] || '0'}
+                                                value={patientAmounts[patient.id] === '0' ? '' : (patientAmounts[patient.id] || '')}
                                                 onChange={(e) => setPatientAmounts(prev => ({ ...prev, [patient.id]: e.target.value }))}
-                                                className="w-full h-9 pl-3 pr-2 bg-white border border-silk-beige rounded-soft text-xs font-black focus:ring-1 focus:ring-primary-500 outline-none"
-                                                placeholder="Monto..."
+                                                onBlur={(e) => {
+                                                    if (!e.target.value) setPatientAmounts(prev => ({ ...prev, [patient.id]: '0' }));
+                                                }}
+                                                className="w-full h-9 pl-3 pr-2 bg-white border border-silk-beige rounded-soft text-xs font-black focus:ring-1 focus:ring-primary-500 outline-none placeholder:text-charcoal/20"
+                                                placeholder="Monto"
                                             />
                                         </div>
                                         <div className="flex items-center gap-1">
