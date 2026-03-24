@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
     Star,
     Users,
@@ -47,12 +47,8 @@ export default function Loyalty() {
         activeAlerts: 0
     })
 
-    const [processingPatients, setProcessingPatients] = useState<Set<string>>(new Set());
     const [patientAmounts, setPatientAmounts] = useState<Record<string, string>>({});
     const [pendingAdjustments, setPendingAdjustments] = useState<Record<string, number>>({});
-    
-    // Safety lock for transactions to prevent double-firing even in fast environments
-    const adjustmentInProgress = useRef<Set<string>>(new Set());
 
     const fetchData = async () => {
         if (!profile?.clinic_id) return
@@ -355,26 +351,18 @@ export default function Loyalty() {
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <button 
-                                                disabled={processingPatients.has(patient.id)}
                                                 onClick={() => handleAdjustPoints(patient.id, patientAmounts[patient.id] || '0', false)}
-                                                className={cn(
-                                                    "h-9 px-3 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all",
-                                                    processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
-                                                )}
+                                                className="h-9 px-3 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all hover:scale-105 active:scale-95"
                                                 title="Quitar saldo personalizado"
                                             >
-                                                {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Minus className="w-4 h-4" />}
+                                                <Minus className="w-4 h-4" />
                                             </button>
                                             <button 
-                                                disabled={processingPatients.has(patient.id)}
                                                 onClick={() => handleAdjustPoints(patient.id, patientAmounts[patient.id] || '0', true)}
-                                                className={cn(
-                                                    "h-9 px-3 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all",
-                                                    processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
-                                                )}
+                                                className="h-9 px-3 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all hover:scale-105 active:scale-95"
                                                 title="Sumar saldo personalizado"
                                             >
-                                                {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                                <Plus className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
