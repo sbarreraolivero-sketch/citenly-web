@@ -92,26 +92,48 @@ export default function Loyalty() {
     }
 
     const handleAdjustPoints = async (patientId: string, amount: number, isAdding: boolean) => {
-        if (!profile?.clinic_id) return
-        const finalAmount = isAdding ? amount : -amount
-        const reason = isAdding ? 'Ajuste manual (Crédito)' : 'Ajuste manual (Débito)'
+        if (!profile?.clinic_id) return;
+        const finalAmount = isAdding ? amount : -amount;
         
         try {
-            await loyaltyService.adjustPoints(profile.clinic_id, patientId, finalAmount, reason)
-            toast.success(`Puntos ${isAdding ? 'añadidos' : 'eliminados'} correctamente`)
-            
-            // Refresh list
-            const { data } = await supabase
+            // 1. Get current points
+            const { data: pData } = await supabase
                 .from('patients')
-                .select('*')
-                .eq('clinic_id', profile.clinic_id)
-                .order('loyalty_points', { ascending: false })
-            setPatients(data || [])
+                .select('loyalty_points')
+                .eq('id', patientId)
+                .single();
+            
+            const currentPoints = pData?.loyalty_points || 0;
+            const newPoints = currentPoints + finalAmount;
+
+            // 2. Update player balance
+            const { error: pError } = await supabase
+                .from('patients')
+                .update({ loyalty_points: newPoints })
+                .eq('id', patientId);
+            
+            if (pError) throw pError;
+
+            // 3. Log transaction (using 'bonus' as a safe existing enum value)
+            const { error: logError } = await (supabase as any)
+                .from('loyalty_transactions')
+                .insert({
+                    clinic_id: profile.clinic_id,
+                    patient_id: patientId,
+                    points: finalAmount,
+                    type: 'bonus',
+                    description: isAdding ? 'Ajuste manual (crédito)' : 'Ajuste manual (débito)'
+                });
+            
+            if (logError) throw logError;
+            
+            toast.success('Puntos ajustados');
+            fetchData();
         } catch (error) {
-            toast.error('Error al ajustar puntos')
-            console.error(error)
+            console.error('Error adjusting points:', error);
+            toast.error('Error al ajustar puntos');
         }
-    }
+    };
 
     const copyReferralLink = (code: string) => {
         const link = `${window.location.origin}/r/${code}`

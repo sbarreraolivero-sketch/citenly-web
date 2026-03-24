@@ -73,13 +73,6 @@ export const loyaltyService = {
                 description: description
             })
         if (txError) throw txError
-
-        // Update patient balance
-        const { error: pError } = await (supabase as any).rpc('increment_loyalty_points', {
-            p_patient_id: patientId,
-            p_amount: points
-        })
-        if (pError) throw pError
     },
 
     // Get clinic settings for loyalty
