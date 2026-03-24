@@ -102,7 +102,7 @@ export default function Loyalty() {
     }
 
     const handleAdjustPoints = async (patientId: string, amount: number, isAdding: boolean) => {
-        if (!profile?.clinic_id || processingPatients.has(patientId)) return;
+        if (!profile?.clinic_id || processingPatients.has(patientId) || amount <= 0) return;
         
         const finalAmount = isAdding ? amount : -amount;
         
@@ -117,25 +117,8 @@ export default function Loyalty() {
         setProcessingPatients(prev => new Set(prev).add(patientId));
         
         try {
-            // 1. Get current REAL points from DB (to be safe, though optimistic UI already updated local view)
-            const { data: pData } = await (supabase as any)
-                .from('patients')
-                .select('loyalty_points')
-                .eq('id', patientId)
-                .single();
-            
-            const currentPoints = pData?.loyalty_points || 0;
-            const newPoints = currentPoints + finalAmount;
-
-            // 2. Update player balance
-            const { error: pError } = await (supabase as any)
-                .from('patients')
-                .update({ loyalty_points: newPoints })
-                .eq('id', patientId);
-            
-            if (pError) throw pError;
-
-            // 3. Log transaction
+            // ONLY Log transaction - Let the DB Trigger 'trg_sync_loyalty_log_to_patient'
+            // handle the actual balance update on the patients table to avoid duplication.
             const { error: logError } = await (supabase as any)
                 .from('loyalty_transactions')
                 .insert({
@@ -148,13 +131,14 @@ export default function Loyalty() {
             
             if (logError) throw logError;
             
-            // Re-fetch everything to sync with DB state and other users
+            // Re-fetch everything to sync with DB state
             await fetchData();
             toast.success('Saldo actualizado');
+            
+            // Reset the internal quantity if needed (UI handled below)
         } catch (error) {
             console.error('Error adjusting points:', error);
             toast.error('Error al ajustar puntos');
-            // Rollback optimistic update on error
             await fetchData();
         } finally {
             setProcessingPatients(prev => {
@@ -314,34 +298,58 @@ export default function Loyalty() {
                                     )}
                                 </div>
                                 
-                                <div className="bg-ivory rounded-soft p-3 flex items-center justify-between mb-4 border border-silk-beige/50">
-                                    <div>
-                                        <p className="text-xs font-black text-charcoal/30 uppercase tracking-widest">Saldo Actual</p>
-                                        <p className="text-xl font-black text-charcoal">{patient.loyalty_points || 0} <span className="text-sm font-bold text-primary-500">{settings?.loyalty_currency_symbol || 'pts'}</span></p>
+                                <div className="bg-ivory rounded-soft p-3 flex flex-col gap-3 mb-4 border border-silk-beige/50">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest leading-none mb-1">Saldo Actual</p>
+                                            <p className="text-xl font-black text-charcoal">{patient.loyalty_points || 0} <span className="text-sm font-bold text-primary-500">{settings?.loyalty_currency_symbol || 'pts'}</span></p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-black text-charcoal/20 uppercase tracking-widest leading-none mb-1">Referidos</p>
+                                            <p className="text-sm font-black text-charcoal">{patient.referral_count || 0}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <button 
-                                            disabled={processingPatients.has(patient.id)}
-                                            onClick={() => handleAdjustPoints(patient.id, 500, false)}
-                                            className={cn(
-                                                "p-2 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all",
-                                                processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
-                                            )}
-                                            title="Eliminar 500 puntos"
-                                        >
-                                            {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Minus className="w-4 h-4" />}
-                                        </button>
-                                        <button 
-                                            disabled={processingPatients.has(patient.id)}
-                                            onClick={() => handleAdjustPoints(patient.id, 500, true)}
-                                            className={cn(
-                                                "p-2 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all",
-                                                processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
-                                            )}
-                                            title="Añadir 500 puntos"
-                                        >
-                                            {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                        </button>
+                                    
+                                    <div className="flex items-center gap-2 pt-2 border-t border-silk-beige/30">
+                                        <div className="relative flex-1">
+                                            <input 
+                                                id={`amount-${patient.id}`}
+                                                type="number"
+                                                defaultValue="0"
+                                                className="w-full h-9 pl-3 pr-2 bg-white border border-silk-beige rounded-soft text-xs font-black focus:ring-1 focus:ring-primary-500 outline-none"
+                                                placeholder="Monto..."
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <button 
+                                                disabled={processingPatients.has(patient.id)}
+                                                onClick={() => {
+                                                    const val = (document.getElementById(`amount-${patient.id}`) as HTMLInputElement)?.value;
+                                                    handleAdjustPoints(patient.id, parseInt(val || '0'), false);
+                                                }}
+                                                className={cn(
+                                                    "h-9 px-3 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all",
+                                                    processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
+                                                )}
+                                                title="Quitar saldo personalizado"
+                                            >
+                                                {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Minus className="w-4 h-4" />}
+                                            </button>
+                                            <button 
+                                                disabled={processingPatients.has(patient.id)}
+                                                onClick={() => {
+                                                    const val = (document.getElementById(`amount-${patient.id}`) as HTMLInputElement)?.value;
+                                                    handleAdjustPoints(patient.id, parseInt(val || '0'), true);
+                                                }}
+                                                className={cn(
+                                                    "h-9 px-3 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all",
+                                                    processingPatients.has(patient.id) && "opacity-30 cursor-not-allowed scale-95"
+                                                )}
+                                                title="Sumar saldo personalizado"
+                                            >
+                                                {processingPatients.has(patient.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
