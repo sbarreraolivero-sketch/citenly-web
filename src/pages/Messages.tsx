@@ -214,7 +214,10 @@ export default function Messages() {
 
     // Fetch messages when conversation changes
     useEffect(() => {
-        if (selectedPhone) fetchMessages()
+        if (selectedPhone) {
+            fetchMessages()
+            setShowSidebar(false)
+        }
     }, [selectedPhone, fetchMessages])
 
     // Real-time subscription for new messages

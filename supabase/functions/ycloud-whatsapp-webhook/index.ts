@@ -115,7 +115,7 @@ const functions = [
                 service_interest: { type: "string", description: "Servicio en el que está interesado" },
                 notes: { type: "string", description: "Notas relevantes de la conversación" }
             },
-            required: ["name"]
+            required: []
         }
     },
     {

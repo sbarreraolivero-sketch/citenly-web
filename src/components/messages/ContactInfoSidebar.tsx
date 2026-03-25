@@ -172,47 +172,31 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             const tagToAdd = allTags.find(t => t.id === tagId)
             if (!tagToAdd) return
 
-            // 1. Try to find if it's a CRM tag
-            const { data: isCrmTag } = await (supabase as any)
-                .from('crm_tags')
-                .select('id')
-                .eq('id', tagId)
-                .maybeSingle()
-
-            if (isCrmTag && prospect) {
-                const { error } = await (supabase as any)
+            // Intenta insertar en CRM prospect tags siempre
+            if (prospect) {
+                const { error: crmErr } = await (supabase as any)
                     .from('crm_prospect_tags')
                     .insert({ prospect_id: prospect.id, tag_id: tagId })
-                if (error && error.code !== '23505') throw error
-            } else {
-                // 2. Try to find if it's a Patient tag
-                const { data: isPatientTag } = await (supabase as any)
-                    .from('tags')
-                    .select('id')
-                    .eq('id', tagId)
-                    .maybeSingle()
+                if (crmErr && crmErr.code !== '23505' && crmErr.code !== '23503') {
+                    console.warn('Could not insert as crm tag', crmErr)
+                }
+            }
 
-                if (isPatientTag) {
-                    // Find patient record
-                    const normalizedPhone = phoneNumber.replace(/\D/g, '')
-                    const { data: patient } = await (supabase as any)
-                        .from('patients')
-                        .select('id')
-                        .eq('clinic_id', clinicId)
-                        .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
-                        .maybeSingle()
-                    
-                    if (patient) {
-                        const { error } = await (supabase as any)
-                            .from('patient_tags')
-                            .insert({ patient_id: patient.id, tag_id: tagId })
-                        if (error && error.code !== '23505') throw error
-                    } else if (prospect) {
-                        // If no patient record, but it's a "patient" tag, we can't easily link it 
-                        // unless we create a CRM tag with the same name.
-                        // For now, let's just alert.
-                        console.warn('Cannot link patient-system tag to a non-patient prospect')
-                    }
+            // Intenta insertar en patient tags siempre (si hay paciente)
+            const normalizedPhone = phoneNumber.replace(/\D/g, '')
+            const { data: patient } = await (supabase as any)
+                .from('patients')
+                .select('id')
+                .eq('clinic_id', clinicId)
+                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
+                .maybeSingle()
+            
+            if (patient) {
+                const { error: patErr } = await (supabase as any)
+                    .from('patient_tags')
+                    .insert({ patient_id: patient.id, tag_id: tagId })
+                if (patErr && patErr.code !== '23505' && patErr.code !== '23503') {
+                    console.warn('Could not insert as patient tag', patErr)
                 }
             }
             
