@@ -65,11 +65,11 @@ serve(async (req) => {
                     {
                         type: 'body',
                         parameters: [
-                            { type: 'text', text: appointment.patient_name }, // {{1}}
-                            { type: 'text', text: appointment.service || 'consulta' }, // {{2}}
-                            { type: 'text', text: formattedDate }, // {{3}}
-                            { type: 'text', text: formattedTime }, // {{4}}
-                            { type: 'text', text: clinic_settings.clinic_name } // {{5}}
+                            { type: 'text', text: appointment.patient_name }, // {{1}} Paciente
+                            { type: 'text', text: clinic_settings.clinic_name }, // {{2}} Clínica
+                            { type: 'text', text: appointment.service || 'consulta' }, // {{3}} Servicio
+                            { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora
+                            { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista
                         ]
                     }
                 ]

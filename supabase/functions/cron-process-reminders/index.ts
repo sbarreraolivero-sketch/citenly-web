@@ -14,6 +14,21 @@ serve(async (req) => {
 
     const log = []
 
+    // Helper functions for safe date/time extraction across runtimes
+    const getSafeDateStr = (date, tz) => {
+        const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date)
+        const year = parts.find(p => p.type === 'year')?.value
+        const month = parts.find(p => p.type === 'month')?.value
+        const day = parts.find(p => p.type === 'day')?.value
+        return `${year}-${month}-${day}`
+    }
+
+    const getSafeHour = (date, tz) => {
+        const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', hour12: false }).formatToParts(date)
+        const hr = parseInt(parts.find(p => p.type === 'hour')?.value || '0')
+        return hr === 24 ? 0 : hr
+    }
+
     try {
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
@@ -82,9 +97,8 @@ serve(async (req) => {
             const timeZone = clinic.timezone || 'America/Mexico_City'
             const now = new Date()
 
-            // Get current clinic time
-            const clinicNow = new Date(now.toLocaleString('en-US', { timeZone }))
-            const currentHour = clinicNow.getHours()
+            // Get current clinic time safely
+            const currentHour = getSafeHour(now, timeZone)
 
             // Get preferred hour (format "HH:MM")
             const [prefHourStr] = (settings.preferred_hour || '09:00').split(':')
@@ -98,10 +112,9 @@ serve(async (req) => {
 
             log.push(`Processing clinic ${clinic.clinic_name} (${clinic.id}) at clinic hour ${currentHour}`)
 
-            // 4. Calculate "Tomorrow" in clinic's timezone
-            const tomorrowDate = new Date(clinicNow)
-            tomorrowDate.setDate(tomorrowDate.getDate() + 1)
-            const tomorrowStr = tomorrowDate.toISOString().split('T')[0] // YYYY-MM-DD
+            // 4. Calculate "Tomorrow" in clinic's timezone safely
+            const tomorrowUTC = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+            const tomorrowStr = getSafeDateStr(tomorrowUTC, timeZone) // YYYY-MM-DD
 
             // 5. Fetch Appointments
             // We fetch a bit loosely and filter in JS to be safe with timestamptz comparisons if needed, 
@@ -142,9 +155,9 @@ serve(async (req) => {
             let sentCount = 0
 
             for (const appt of (appointments || [])) {
-                // Verify date in clinic timezone
+                // Verify date in clinic timezone safely
                 const apptDate = new Date(appt.appointment_date)
-                const apptDateStr = apptDate.toLocaleDateString('en-CA', { timeZone }) // YYYY-MM-DD matches tomorrowStr?
+                const apptDateStr = getSafeDateStr(apptDate, timeZone)
 
                 if (apptDateStr !== tomorrowStr) {
                     continue
@@ -162,6 +175,7 @@ serve(async (req) => {
 
                     const messagePayload = {
                         to: appt.phone_number,
+                        from: clinic.ycloud_phone_number,
                         type: 'template',
                         template: {
                             name: tplName,
@@ -170,11 +184,11 @@ serve(async (req) => {
                                 {
                                     type: 'body',
                                     parameters: [
-                                        { type: 'text', text: appt.patient_name },
-                                        { type: 'text', text: appt.service || 'consulta' },
-                                        { type: 'text', text: formattedDate },
-                                        { type: 'text', text: formattedTime },
-                                        { type: 'text', text: clinic.clinic_name }
+                                        { type: 'text', text: appt.patient_name }, // {{1}} Paciente
+                                        { type: 'text', text: clinic.clinic_name }, // {{2}} Clínica (originalmente {{5}})
+                                        { type: 'text', text: appt.service || 'consulta' }, // {{3}} Servicio (originalmente {{4}})
+                                        { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora (originalmente {{3}})
+                                        { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista (originalmente {{2}})
                                     ]
                                 }
                             ]
@@ -273,42 +287,15 @@ serve(async (req) => {
                 const timeZone = clinic.timezone || 'America/Mexico_City'
                 const now = new Date()
 
-                // Calculate target time: Now + 2 hours
-                // We check a window around it. 
-                // Since cron runs every hour at :00, we look for appointments scheduled between [Now+2h, Now+3h)?
-                // Or simply: appointments starting in the hour of (CurrentHour + 2)
-
-                // Get current hour in clinic's timezone
-                const formatter = new Intl.DateTimeFormat('en-US', {
-                    timeZone,
-                    hour: 'numeric',
-                    hour12: false,
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                })
-
-                // We need to construct the timestamp range for "2 hours from now"
-                // Example: It's 10:00. We want appointments at 12:00.
-                // We fetch appointments strictly for that hour slot.
-
-                // Helper to add hours in a specific timezone is tricky without libraries.
-                // Workaround: Use the ISO string of the appointment and check its hour in the clinic timezone.
-
                 const nowUTC = new Date()
                 const startSearch = new Date(nowUTC.getTime() + 90 * 60 * 1000) // +1.5h
                 const endSearch = new Date(nowUTC.getTime() + 150 * 60 * 1000)   // +2.5h (Allowing some buffer)
 
-                // Actually, best semantic match: "2 hours before".
-                // If appt is at 14:00, send at 12:00.
-                // So at 12:00 cron run, we look for appts at 14:00.
+                // Target: Now + 2 hours safely
+                const targetTimeUTC = new Date(nowUTC.getTime() + 2 * 60 * 60 * 1000)
+                const targetHour = getSafeHour(targetTimeUTC, timeZone)
 
-                // Current clinic time
-                const clinicDate = new Date(new Date().toLocaleString('en-US', { timeZone }))
-                clinicDate.setHours(clinicDate.getHours() + 2) // Target Hour
-
-                const targetHour = clinicDate.getHours()
-                const targetDateStr = clinicDate.toLocaleDateString('en-CA') // YYYY-MM-DD
+                const targetDateStr = getSafeDateStr(targetTimeUTC, timeZone) // YYYY-MM-DD
 
                 // Fetch appointments for that day, then filter by hour
                 // Fetch window: Now + 1h to Now + 3h to be safe
@@ -336,9 +323,9 @@ serve(async (req) => {
                         if (diffHours < 6) continue
                     }
 
-                    // Strict Hour Check in Clinic Timezone
+                    // Strict Hour Check safely
                     const apptDate = new Date(appt.appointment_date)
-                    const apptHour = parseInt(apptDate.toLocaleTimeString('en-US', { hour: 'numeric', hour12: false, timeZone }))
+                    const apptHour = getSafeHour(apptDate, timeZone)
 
                     if (apptHour !== targetHour) continue
 
@@ -354,6 +341,7 @@ serve(async (req) => {
 
                         const messagePayload = {
                             to: appt.phone_number,
+                            from: clinic.ycloud_phone_number,
                             type: 'template',
                             template: {
                                 name: tplName2h,
@@ -362,11 +350,11 @@ serve(async (req) => {
                                     {
                                         type: 'body',
                                         parameters: [
-                                            { type: 'text', text: appt.patient_name },
-                                            { type: 'text', text: appt.service || 'consulta' },
-                                            { type: 'text', text: formattedDate },
-                                            { type: 'text', text: formattedTime },
-                                            { type: 'text', text: clinic.clinic_name }
+                                            { type: 'text', text: appt.patient_name }, // {{1}} Paciente
+                                            { type: 'text', text: clinic.clinic_name }, // {{2}} Clínica
+                                            { type: 'text', text: appt.service || 'consulta' }, // {{3}} Servicio
+                                            { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora
+                                            { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista
                                         ]
                                     }
                                 ]
@@ -455,13 +443,11 @@ serve(async (req) => {
 
                 const timeZone = clinic.timezone || 'America/Mexico_City'
                 const now = new Date()
-
-                // Target: Now + 1 hour
-                const clinicDate = new Date(new Date().toLocaleString('en-US', { timeZone }))
-                clinicDate.setHours(clinicDate.getHours() + 1) // Target Hour
-
-                const targetHour = clinicDate.getHours()
                 const nowUTC = new Date()
+
+                // Target: Now + 1 hour safely
+                const targetTimeUTC = new Date(nowUTC.getTime() + 1 * 60 * 60 * 1000)
+                const targetHour = getSafeHour(targetTimeUTC, timeZone)
 
                 // Buffer window: +30m to +90m from now
                 const startSearch = new Date(nowUTC.getTime() + 30 * 60 * 1000)
@@ -490,9 +476,9 @@ serve(async (req) => {
                         if (diffMinutes < 45) continue // Skip if sent < 45 mins ago
                     }
 
-                    // Strict Hour Check
+                    // Strict Hour Check safely
                     const apptDate = new Date(appt.appointment_date)
-                    const apptHour = parseInt(apptDate.toLocaleTimeString('en-US', { hour: 'numeric', hour12: false, timeZone }))
+                    const apptHour = getSafeHour(apptDate, timeZone)
 
                     if (apptHour !== targetHour) continue
 
@@ -508,6 +494,7 @@ serve(async (req) => {
 
                         const messagePayload = {
                             to: appt.phone_number,
+                            from: clinic.ycloud_phone_number,
                             type: 'template',
                             template: {
                                 name: tplName1h,
@@ -516,11 +503,11 @@ serve(async (req) => {
                                     {
                                         type: 'body',
                                         parameters: [
-                                            { type: 'text', text: appt.patient_name },
-                                            { type: 'text', text: appt.service || 'consulta' },
-                                            { type: 'text', text: formattedDate },
-                                            { type: 'text', text: formattedTime },
-                                            { type: 'text', text: clinic.clinic_name }
+                                            { type: 'text', text: appt.patient_name }, // {{1}} Paciente
+                                            { type: 'text', text: clinic.clinic_name }, // {{2}} Clínica
+                                            { type: 'text', text: appt.service || 'consulta' }, // {{3}} Servicio
+                                            { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora
+                                            { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista
                                         ]
                                     }
                                 ]

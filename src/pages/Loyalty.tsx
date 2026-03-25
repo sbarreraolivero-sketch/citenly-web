@@ -39,7 +39,7 @@ export default function Loyalty() {
     const [searchQuery, setSearchQuery] = useState('')
     const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
     const [transactions, setTransactions] = useState<any[]>([])
-    
+
     // Stats for the header
     const [stats, setStats] = useState({
         totalPointsDist: 0,
@@ -73,10 +73,10 @@ export default function Loyalty() {
             setPatients(pData.data || [])
             setRewards(rData || [])
             setTransactions(tData.data || [])
-            
+
             // Calculate basic stats
             const totalPoints = (pData.data || []).reduce((acc: number, p: any) => acc + (p.loyalty_points || 0), 0)
-            
+
             setStats({
                 totalPointsDist: totalPoints,
                 totalReferrals: (pData.data || []).filter((p: any) => (p.referral_count || 0) > 0).length,
@@ -106,13 +106,13 @@ export default function Loyalty() {
     const handleAdjustPoints = (patientId: string, amountStr: string, isAdding: boolean) => {
         const amount = parseInt(amountStr || '0');
         if (!profile?.clinic_id || amount <= 0) return;
-        
+
         const finalAmount = isAdding ? amount : -amount;
-        
+
         // 1. UPDATE LOCAL UI IMMEDIATELY (Live Sum)
-        setPatients(prev => prev.map(p => 
-            p.id === patientId 
-                ? { ...p, loyalty_points: (p.loyalty_points || 0) + finalAmount } 
+        setPatients(prev => prev.map(p =>
+            p.id === patientId
+                ? { ...p, loyalty_points: (p.loyalty_points || 0) + finalAmount }
                 : p
         ));
 
@@ -124,16 +124,16 @@ export default function Loyalty() {
 
         // 3. Clear the input for this patient
         setPatientAmounts(prev => ({ ...prev, [patientId]: '0' }));
-        
+
         toast.success(`Ajuste local de ${finalAmount} listo para guardar`);
     };
 
     const savePendingAdjustments = async () => {
         if (!profile?.clinic_id || Object.keys(pendingAdjustments).length === 0) return;
-        
+
         setLoading(true);
         const patientIds = Object.keys(pendingAdjustments);
-        
+
         try {
             // Process all pending adjustments
             for (const pId of patientIds) {
@@ -149,10 +149,10 @@ export default function Loyalty() {
                         type: 'adjustment',
                         description: points > 0 ? 'Ajuste manual (crédito)' : 'Ajuste manual (débito)'
                     });
-                
+
                 if (error) throw error;
             }
-            
+
             setPendingAdjustments({});
             toast.success('Todos los movimientos guardados en la nube');
             await fetchData(); // Final sync after everything is done
@@ -179,9 +179,9 @@ export default function Loyalty() {
         )
     }
 
-    const filteredPatients = patients.filter(p => 
-        (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-         p.phone_number?.includes(searchQuery))
+    const filteredPatients = patients.filter(p =>
+    (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.phone_number?.includes(searchQuery))
     )
 
     return (
@@ -190,7 +190,7 @@ export default function Loyalty() {
             <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-amber-700 rounded-softer p-6 text-white shadow-soft-lg">
                 <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
                 <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-amber-900/20 rounded-full blur-3xl" />
-                
+
                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -201,7 +201,7 @@ export default function Loyalty() {
                             Gestiona el programa de lealtad de tu clínica. Premia a tus mejores pacientes y fomenta el crecimiento orgánico.
                         </p>
                     </div>
-                    
+
                     <div className="flex gap-4 w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0">
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/10">
                             <p className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1">{settings?.loyalty_points_name || 'Saldo'} Total</p>
@@ -277,26 +277,26 @@ export default function Loyalty() {
             {activeTab === 'points' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                                <div className="relative flex-1 group">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/20 group-focus-within:text-primary-500 transition-colors" />
-                                    <input 
-                                        type="text"
-                                        placeholder="Buscar por nombre o celular..."
-                                        value={searchQuery}
-                                        onChange={e => setSearchQuery(e.target.value)}
-                                        className="w-full h-12 pl-12 pr-4 bg-ivory border border-silk-beige rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all font-bold placeholder:text-charcoal/20"
-                                    />
-                                </div>
-                                {Object.keys(pendingAdjustments).length > 0 && (
-                                    <button
-                                        onClick={savePendingAdjustments}
-                                        disabled={loading}
-                                        className="flex items-center gap-2 bg-emerald-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-lg hover:bg-emerald-600 transition-all animate-in zoom-in-95 duration-200 hover:scale-105 active:scale-95"
-                                    >
-                                        <Save className="w-5 h-5" />
-                                        Guardar Movimientos ({Object.keys(pendingAdjustments).length})
-                                    </button>
-                                )}
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/20 group-focus-within:text-primary-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por nombre o celular..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full h-12 pl-12 pr-4 bg-ivory border border-silk-beige rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all font-bold placeholder:text-charcoal/20"
+                            />
+                        </div>
+                        {Object.keys(pendingAdjustments).length > 0 && (
+                            <button
+                                onClick={savePendingAdjustments}
+                                disabled={loading}
+                                className="flex items-center gap-2 bg-emerald-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-lg hover:bg-emerald-600 transition-all animate-in zoom-in-95 duration-200 hover:scale-105 active:scale-95"
+                            >
+                                <Save className="w-5 h-5" />
+                                Guardar Movimientos ({Object.keys(pendingAdjustments).length})
+                            </button>
+                        )}
                         <div className="flex items-center gap-2 text-xs font-bold text-charcoal/40 bg-silk-beige/30 px-4 py-2 rounded-full">
                             <TrendingUp className="w-3 h-3" />
                             REGLA ACTUAL: {settings?.loyalty_points_percentage}% DE ACUMULACIÓN
@@ -323,7 +323,7 @@ export default function Loyalty() {
                                         <Award className="w-5 h-5 text-amber-500" />
                                     )}
                                 </div>
-                                
+
                                 <div className="bg-ivory rounded-soft p-3 flex flex-col gap-3 mb-4 border border-silk-beige/50">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -335,10 +335,10 @@ export default function Loyalty() {
                                             <p className="text-sm font-black text-charcoal">{patient.referral_count || 0}</p>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-2 pt-2 border-t border-silk-beige/30">
                                         <div className="relative flex-1">
-                                            <input 
+                                            <input
                                                 type="number"
                                                 value={patientAmounts[patient.id] === '0' ? '' : (patientAmounts[patient.id] || '')}
                                                 onChange={(e) => setPatientAmounts(prev => ({ ...prev, [patient.id]: e.target.value }))}
@@ -350,14 +350,14 @@ export default function Loyalty() {
                                             />
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button 
+                                            <button
                                                 onClick={() => handleAdjustPoints(patient.id, patientAmounts[patient.id] || '0', false)}
                                                 className="h-9 px-3 bg-white text-red-500 hover:bg-red-50 rounded-soft border border-silk-beige shadow-sm transition-all hover:scale-105 active:scale-95"
                                                 title="Quitar saldo personalizado"
                                             >
                                                 <Minus className="w-4 h-4" />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleAdjustPoints(patient.id, patientAmounts[patient.id] || '0', true)}
                                                 className="h-9 px-3 bg-white text-emerald-500 hover:bg-emerald-50 rounded-soft border border-silk-beige shadow-sm transition-all hover:scale-105 active:scale-95"
                                                 title="Sumar saldo personalizado"
@@ -370,7 +370,7 @@ export default function Loyalty() {
 
                                 <div className="flex items-center justify-between text-xs font-medium text-charcoal/50">
                                     <div className="flex items-center gap-2">
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 copyReferralLink(patient.referral_code || '');
                                             }}
@@ -400,29 +400,29 @@ export default function Loyalty() {
                                     Bono: {settings?.loyalty_referral_bonus} {settings?.loyalty_currency_symbol || 'pts'} / amigo referido
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-4">
                                 {patients.filter(p => p.referral_count > 0)
                                     .sort((a, b) => b.referral_count - a.referral_count)
                                     .slice(0, 10)
                                     .map((ambassador, idx) => (
-                                    <div key={ambassador.id} className="flex items-center gap-4 p-4 bg-ivory rounded-soft border border-silk-beige/50 hover:border-primary-200 transition-all">
-                                        <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center font-black text-sm",
-                                            idx === 0 ? "bg-amber-500 text-white" : "bg-silk-beige text-charcoal/50"
-                                        )}>
-                                            {idx + 1}
+                                        <div key={ambassador.id} className="flex items-center gap-4 p-4 bg-ivory rounded-soft border border-silk-beige/50 hover:border-primary-200 transition-all">
+                                            <div className={cn(
+                                                "w-8 h-8 rounded-full flex items-center justify-center font-black text-sm",
+                                                idx === 0 ? "bg-amber-500 text-white" : "bg-silk-beige text-charcoal/50"
+                                            )}>
+                                                {idx + 1}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-charcoal">{ambassador.name}</p>
+                                                <p className="text-xs text-charcoal/40">Código: <span className="font-mono text-primary-500">{ambassador.referral_code}</span></p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-lg font-black text-charcoal">{ambassador.referral_count}</p>
+                                                <p className="text-xs font-black text-charcoal/30 uppercase">Amigos Referidos</p>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-charcoal">{ambassador.name}</p>
-                                            <p className="text-xs text-charcoal/40">Código: <span className="font-mono text-primary-500">{ambassador.referral_code}</span></p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-black text-charcoal">{ambassador.referral_count}</p>
-                                            <p className="text-xs font-black text-charcoal/30 uppercase">Amigos Referidos</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </div>
 
@@ -433,14 +433,14 @@ export default function Loyalty() {
                                 <p className="text-sm text-indigo-50/80 mb-4">
                                     Cada paciente tiene un código único. Cuando un amigo lo mencione o use su link en el Chat IA, ambos reciben beneficios.
                                 </p>
-                                <Link 
+                                <Link
                                     to="/app/templates"
                                     className="w-full h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-soft text-sm font-bold transition-all border border-white/20"
                                 >
                                     Personalizar Mensajes
                                 </Link>
                             </div>
-                            
+
                             <div className="bg-white rounded-softer p-6 border border-silk-beige shadow-soft-sm">
                                 <h3 className="font-bold text-charcoal mb-4">¿Cómo funciona?</h3>
                                 <ul className="space-y-3">
@@ -470,7 +470,7 @@ export default function Loyalty() {
                             <h2 className="text-2xl font-black text-charcoal tracking-tight">Catálogo de Recompensas</h2>
                             <p className="text-sm text-charcoal/50">Define lo que tus pacientes pueden canjear con su saldo acumulado.</p>
                         </div>
-                        <button 
+                        <button
                             onClick={() => setIsRewardModalOpen(true)}
                             className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-full font-black text-sm shadow-md hover:bg-primary-600 transition-all"
                         >
@@ -496,7 +496,7 @@ export default function Loyalty() {
                                     </div>
                                     <h3 className="font-bold text-charcoal mb-1">{reward.name}</h3>
                                     <p className="text-xs text-charcoal/50 mb-4 line-clamp-2">{reward.description || 'Sin descripción'}</p>
-                                    
+
                                     <div className="flex items-center justify-between pt-4 border-t border-silk-beige">
                                         <div className="text-xs font-black uppercase text-emerald-500">
                                             {reward.is_active ? 'Activa' : 'Inactiva'}
@@ -563,7 +563,7 @@ export default function Loyalty() {
                                 <Calculator className="w-6 h-6 text-primary-500" />
                                 Configuración del Programa
                             </h3>
-                            
+
                             <div className="space-y-8">
                                 <div>
                                     <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-4">Modo del Programa</label>
@@ -579,14 +579,14 @@ export default function Loyalty() {
                                                     if (!s) return null;
                                                     let newName = s.loyalty_points_name;
                                                     let newSymbol = s.loyalty_currency_symbol;
-                                                    
+
                                                     // Auto-fill logic based on mode
                                                     if (mode.id === 'points') { newName = 'Puntos'; newSymbol = 'pts'; }
                                                     else if (mode.id === 'money') { newName = 'Saldo'; newSymbol = '$'; }
                                                     else if (mode.id === 'percentage') { newName = 'Descuento'; newSymbol = '%'; }
-                                                    
-                                                    return { 
-                                                        ...s, 
+
+                                                    return {
+                                                        ...s,
                                                         loyalty_program_mode: mode.id as any,
                                                         loyalty_points_name: newName,
                                                         loyalty_currency_symbol: newSymbol
@@ -594,8 +594,8 @@ export default function Loyalty() {
                                                 })}
                                                 className={cn(
                                                     "flex flex-col items-center text-center p-6 rounded-softer border-2 transition-all",
-                                                    settings?.loyalty_program_mode === mode.id 
-                                                        ? "border-primary-500 bg-primary-50 shadow-inner" 
+                                                    settings?.loyalty_program_mode === mode.id
+                                                        ? "border-primary-500 bg-primary-50 shadow-inner"
                                                         : "border-silk-beige bg-white hover:border-silk-beige/80"
                                                 )}
                                             >
@@ -611,29 +611,29 @@ export default function Loyalty() {
                                     <div>
                                         <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-1">Nombre de la Unidad</label>
                                         <p className="text-xs text-charcoal/40 mb-2">Ej: Puntos, Estrellas, Coins, $</p>
-                                        <input 
-                                            type="text" 
-                                            value={settings?.loyalty_points_name} 
+                                        <input
+                                            type="text"
+                                            value={settings?.loyalty_points_name}
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_points_name: e.target.value } : null)}
-                                            className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100" 
+                                            className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100"
                                         />
                                     </div>
                                     <div>
                                         <label className="text-xs font-black text-charcoal uppercase tracking-widest block mb-1">Símbolo</label>
                                         <p className="text-xs text-charcoal/40 mb-2">Se mostrará junto al saldo</p>
-                                        <input 
-                                            type="text" 
-                                            value={settings?.loyalty_currency_symbol} 
+                                        <input
+                                            type="text"
+                                            value={settings?.loyalty_currency_symbol}
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_currency_symbol: e.target.value } : null)}
-                                            className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100" 
+                                            className="w-full h-11 px-4 bg-ivory border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-2 focus:ring-primary-100"
                                         />
                                     </div>
                                 </div>
                             </div>
                         </section>
-                        
+
                         <div className="flex justify-end pt-4">
-                            <button 
+                            <button
                                 onClick={async () => {
                                     if (!profile?.clinic_id || !settings) return
                                     try {
@@ -678,11 +678,11 @@ export default function Loyalty() {
                                     <label className="text-xs font-black text-indigo-200 uppercase block mb-1 tracking-widest opacity-80">Bono por Referir (Al Referente)</label>
                                     <p className="text-xs text-indigo-100/60 mb-2 leading-tight">Lo que gana la persona que comparte su código.</p>
                                     <div className="relative">
-                                        <input 
-                                            type="number" 
-                                            value={settings?.loyalty_referral_bonus} 
+                                        <input
+                                            type="number"
+                                            value={settings?.loyalty_referral_bonus}
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_referral_bonus: parseInt(e.target.value) } : null)}
-                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none" 
+                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none"
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-200 opacity-60">{settings?.loyalty_currency_symbol}</span>
                                     </div>
@@ -691,11 +691,11 @@ export default function Loyalty() {
                                     <label className="text-xs font-black text-indigo-200 uppercase block mb-1 tracking-widest opacity-80">Bono de Bienvenida (Al Referido)</label>
                                     <p className="text-xs text-indigo-100/60 mb-2 leading-tight">Lo que gana el nuevo cliente al llegar por invitación.</p>
                                     <div className="relative">
-                                        <input 
-                                            type="number" 
-                                            value={settings?.loyalty_welcome_bonus} 
+                                        <input
+                                            type="number"
+                                            value={settings?.loyalty_welcome_bonus}
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_welcome_bonus: parseInt(e.target.value) } : null)}
-                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none" 
+                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none"
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-200 opacity-60">{settings?.loyalty_currency_symbol}</span>
                                     </div>
@@ -704,11 +704,11 @@ export default function Loyalty() {
                                     <label className="text-xs font-black text-indigo-200 uppercase block mb-1 tracking-widest opacity-80">Cashback / Acumulación (%)</label>
                                     <p className="text-xs text-indigo-100/60 mb-2 leading-tight">Lo que el cliente acumula por sí mismo en cada cita.</p>
                                     <div className="relative">
-                                        <input 
-                                            type="number" 
-                                            value={settings?.loyalty_points_percentage} 
+                                        <input
+                                            type="number"
+                                            value={settings?.loyalty_points_percentage}
                                             onChange={(e) => setSettings(s => s ? { ...s, loyalty_points_percentage: parseFloat(e.target.value) } : null)}
-                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none" 
+                                            className="w-full h-10 pl-4 pr-12 bg-white/10 border border-white/20 rounded-soft text-sm font-bold text-white focus:bg-white/20 transition-all outline-none"
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-indigo-200 opacity-60">%</span>
                                     </div>

@@ -539,6 +539,9 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // Update CRM stage to "Cita Agendada" AND update name if needed
     await updateProspectStage(sb, clinicId, normalizedPhone, "Cita Agendada", args.patient_name);
 
+    // Automatically tag prospect
+    await tagPatient(sb, clinicId, normalizedPhone, { tag_name: `Interés ${args.service_name}` });
+
     const d = new Date(`${args.date}T${args.time}:00`);
     const h = parseInt(args.time.split(":")[0]);
 
@@ -995,7 +998,6 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     const normalizedPhone = normalizePhone(phone);
     // 1. Get target stage ID
     const targetId = await getStageId(sb, clinicId, targetStageName);
-    if (!targetId) return;
 
     // 2. Get current prospect and their stage
     // Use OR to be resilient to non-normalized old data
@@ -1012,22 +1014,20 @@ const updateProspectStage = async (sb: ReturnType<typeof createClient>, clinicId
     const currentStageName = prospect.crm_pipeline_stages?.name;
 
     // 3. Logic: Only move "forward" or setup initial
-    // Hierarchy: Nuevo Prospecto (low) -> Calificado (med) -> Cita Agendada (high)
-    // We don't want to move BACK from Cita Agendada to Calificado just because they asked a question.
-
     let shouldUpdateStage = false;
 
-    if (!prospect.stage_id) shouldUpdateStage = true;
-    else if (targetStageName.toLowerCase() === "nuevo prospecto") shouldUpdateStage = false; // Never overwrite with "New" if exists
-    else if (targetStageName.toLowerCase() === "cita agendada") shouldUpdateStage = true; // Always update to Scheduled (highest priority here)
-    else if (targetStageName.toLowerCase() === "calificado") {
-        // Only update to Calificado if current is NOT "Cita Agendada" or "Cerrado"
-        const forbidden = ["cita agendada", "cerrado"];
-        if (!forbidden.includes(currentStageName?.toLowerCase() || "")) shouldUpdateStage = true;
+    if (targetId) {
+        if (!prospect.stage_id) shouldUpdateStage = true;
+        else if (targetStageName.toLowerCase() === "nuevo prospecto") shouldUpdateStage = false; // Never overwrite with "New" if exists
+        else if (targetStageName.toLowerCase() === "cita agendada") shouldUpdateStage = true; // Always update to Scheduled
+        else if (targetStageName.toLowerCase() === "calificado") {
+            const forbidden = ["cita agendada", "cerrado"];
+            if (!forbidden.includes(currentStageName?.toLowerCase() || "")) shouldUpdateStage = true;
+        }
     }
 
     const updates: Record<string, any> = {};
-    if (shouldUpdateStage) updates.stage_id = targetId;
+    if (shouldUpdateStage && targetId) updates.stage_id = targetId;
     
     // Update name if provided and existing is generic or looks like a nickname/emoji
     if (name && name.trim().length > 0) {
