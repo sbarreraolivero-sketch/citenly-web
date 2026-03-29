@@ -1,5 +1,8 @@
 import { supabase } from './supabase'
 
+// ──────────────────────────────────────────────
+// Mercado Pago — Chile Local Payments (CLP)
+// ──────────────────────────────────────────────
 
 interface CreateSubscriptionParams {
     clinicId: string
@@ -15,20 +18,19 @@ interface MercadoPagoPreference {
 }
 
 /**
- * Creates a Mercado Pago subscription preference
- * This will redirect the user to Mercado Pago to complete payment
+ * Creates a Mercado Pago subscription preference (CLP)
  */
 export async function createSubscriptionPreference(
     params: CreateSubscriptionParams
 ): Promise<MercadoPagoPreference | null> {
     const { clinicId, planId, email, externalReference } = params
 
-    // Call our Edge Function to create the preference
     const { data, error } = await supabase.functions.invoke('mercadopago-create-subscription', {
         body: {
             clinic_id: clinicId,
             plan: planId,
             email: email,
+            currency: 'CLP',
             external_reference: externalReference || clinicId,
             back_urls: {
                 success: `${window.location.origin}/app/settings?payment=success`,
@@ -47,7 +49,7 @@ export async function createSubscriptionPreference(
 }
 
 /**
- * Redirects user to Mercado Pago checkout
+ * Redirects user to Mercado Pago checkout (CLP)
  */
 export async function redirectToCheckout(params: CreateSubscriptionParams) {
     const preference = await createSubscriptionPreference(params)
@@ -56,10 +58,7 @@ export async function redirectToCheckout(params: CreateSubscriptionParams) {
         throw new Error('Failed to create payment preference')
     }
 
-    // Connect directly to the production endpoint since we're using production keys
-    const checkoutUrl = preference.init_point
-
-    window.location.href = checkoutUrl
+    window.location.href = preference.init_point
 }
 
 /**
@@ -97,59 +96,68 @@ export async function cancelSubscription(subscriptionId: string) {
 }
 
 /**
- * Plan configuration with features
+ * CLP Plan Prices for Mercado Pago (Chile)
  */
 export const PLANS = {
     essence: {
         id: 'essence',
-        name: 'Essence',
-        tagline: 'Control Esencial y Automatización',
-        price: 79,
-        currency: 'USD',
-        monthlyAppointments: 50,
+        name: 'Plan Essence',
+        tagline: 'Ideal para Veterinarios Independientes y Clínicas Pequeñas',
+        price: 93000,
+        currency: 'CLP',
+        monthlyAppointmentsMonthly: 50,
+        maxUsers: 2,
+        maxAgendas: 1,
         features: [
-            'Hasta 2 usuarios (Acceso compartido)',
-            '1 Agente de IA (Soft Luxury)',
-            'Hasta 50 citas mensuales',
-            'Dashboard básico de Gestión',
-            'Integración 1 WhatsApp Business',
+            'Hasta 2 Usuarios',
+            'Agente de IA especializado veterinario',
+            'Integración Google Maps (Geolocalización)',
+            'Hasta 50 citas automatizadas mensuales',
+            'Hasta 1 agenda disponible',
+            'Fichas clínicas + historial médico',
+            'Dashboard con Métricas (Ranking, Conversión)',
+            'Integración oficial WhatsApp (Meta)',
         ],
     },
     radiance: {
         id: 'radiance',
-        name: 'Radiance',
-        tagline: 'Escalamiento Profesional y Retención Activa',
-        price: 159,
-        currency: 'USD',
-        monthlyAppointments: -1, // Unlimited
+        name: 'Plan Radiance',
+        tagline: 'Para clínicas en pleno crecimiento (Móviles o físicas)',
+        price: 150000,
+        currency: 'CLP',
+        monthlyAppointmentsMonthly: -1,
+        maxUsers: 5,
+        maxAgendas: 5,
         popular: true,
         features: [
             'Todo lo de Essence, más:',
-            'Hasta 5 usuarios (Invitaciones seguras)',
-            'CRM Gestión proactiva de prospectos',
-            'Campañas de Marketing (WhatsApp masivo)',
-            'Módulo de Finanzas y Reportes',
-            'Gestión de Servicios + Upselling IA',
-            'Citas mensuales ilimitadas',
-            'IA Avanzada + Historial Clínico',
-            'Analítica de conversaciones pro',
+            'Hasta 5 usuarios (Adm, Prof, Rec)',
+            '5 agendas independientes disponibles',
+            'Recordatorios de vacunas/desparasitación IA',
+            'Recordatorios confirmación (Hasta 50/mes)',
+            'CRM de ventas para prospectos',
+            'Marketing vía WhatsApp masivo',
+            'Sistema Inteligente de Referidos con IA',
+            'Módulo de Gestión Financiera',
+            'Encuestas de satisfacción personalizadas',
         ],
     },
     prestige: {
         id: 'prestige',
         name: 'Prestige',
-        tagline: 'Potencia Empresarial y Multi-Sede',
-        price: 299,
-        currency: 'USD',
-        monthlyAppointments: -1, // Unlimited
+        tagline: 'Top de línea para redes veterinarias',
+        price: 280000,
+        currency: 'CLP',
+        monthlyAppointmentsMonthly: -1,
+        maxUsers: 1000,
+        maxAgendas: 1000,
         features: [
             'Todo lo de Radiance, más:',
-            'Usuarios ilimitados (Sin restricciones)',
-            'Gestión Multi-sucursal / Sedes',
-            'IA 100% Personalizada (Fine-tuning)',
-            'Reportes avanzados a medida',
-            'Onboarding Concierge VIP',
-            'Soporte Prioritario 24/7',
+            'Usuarios ilimitados',
+            'Multi-sucursal / Multi-hospital',
+            'IA personalizada (especialidades)',
+            'Recordatorios confirmación ilimitados',
+            'Benchmark entre sedes. Super Administrador',
         ],
     },
 } as const;
@@ -157,29 +165,28 @@ export const PLANS = {
 export type PlanId = keyof typeof PLANS
 
 /**
- * AI Credit Packs configuration — GPT-4o-mini (económico)
+ * CLP Credit Packs — GPT-4o-mini (económico)
  */
 export const CREDIT_PACKS = {
-    'pack_500': { id: 'pack_500', name: 'Pack Inicial', credits: 500, price: 5, description: "500 Créditos de IA" },
-    'pack_1500': { id: 'pack_1500', name: 'Pack Pro', credits: 1500, price: 12, description: "1500 Créditos de IA" },
-    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 4000, price: 25, description: "4000 Créditos de IA" },
+    'pack_500':  { id: 'pack_500',  name: 'Pack Inicial',    credits: 500,  price: 5000,  description: '500 Créditos de IA' },
+    'pack_1500': { id: 'pack_1500', name: 'Pack Pro',        credits: 1500, price: 12000, description: '1500 Créditos de IA' },
+    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise',  credits: 4000, price: 25000, description: '4000 Créditos de IA' },
 } as const
 
 /**
- * AI Credit Packs configuration — GPT-4o (premium, ~50% margin)
+ * CLP Credit Packs — GPT-4o (premium)
  */
 export const CREDIT_PACKS_4O = {
-    'pack_500_4o': { id: 'pack_500_4o', name: 'Pack Inicial', credits: 500, price: 10, description: "500 Créditos de IA (GPT-4o)" },
-    'pack_1500_4o': { id: 'pack_1500_4o', name: 'Pack Pro', credits: 1500, price: 30, description: "1500 Créditos de IA (GPT-4o)" },
-    'pack_4000_4o': { id: 'pack_4000_4o', name: 'Pack Enterprise', credits: 4000, price: 80, description: "4000 Créditos de IA (GPT-4o)" },
+    'pack_500_4o':  { id: 'pack_500_4o',  name: 'Pack Inicial',    credits: 500,  price: 10000, description: '500 Créditos de IA (GPT-4o)' },
+    'pack_1500_4o': { id: 'pack_1500_4o', name: 'Pack Pro',        credits: 1500, price: 30000, description: '1500 Créditos de IA (GPT-4o)' },
+    'pack_4000_4o': { id: 'pack_4000_4o', name: 'Pack Enterprise',  credits: 4000, price: 80000, description: '4000 Créditos de IA (GPT-4o)' },
 } as const
 
 export type CreditPackId = keyof typeof CREDIT_PACKS
 export type CreditPack4oId = keyof typeof CREDIT_PACKS_4O
 
 /**
- * Redirects user to Mercado Pago for credit pack purchase
- * @param model - 'mini' for gpt-4o-mini packs, '4o' for gpt-4o packs
+ * Redirects user to Mercado Pago for credit pack purchase (CLP)
  */
 export async function redirectToCreditsCheckout(clinicId: string, email: string, packId: string, model: 'mini' | '4o' = 'mini') {
     const { data, error } = await supabase.functions.invoke('mercadopago-create-credits-preference', {
@@ -188,6 +195,7 @@ export async function redirectToCreditsCheckout(clinicId: string, email: string,
             pack_id: packId,
             email: email,
             model: model,
+            currency: 'CLP',
             back_urls: {
                 success: `${window.location.origin}/app/settings?tab=ai&payment=success`,
                 failure: `${window.location.origin}/app/settings?tab=ai&payment=failure`,

@@ -23,6 +23,7 @@ interface SignupRequest {
     clinic_name: string;
     selected_plan?: string;
     card_token?: string;
+    payment_provider?: 'mercadopago' | 'lemonsqueezy';
 }
 
 Deno.serve(async (req: Request) => {
@@ -40,7 +41,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body: SignupRequest = await req.json();
-        const { email, password, full_name, clinic_name, selected_plan = "radiance", card_token } = body;
+        const { email, password, full_name, clinic_name, selected_plan = "radiance", card_token, payment_provider = 'mercadopago' } = body;
 
         // Validate required fields
         if (!email || !password || !full_name || !clinic_name) {
@@ -82,11 +83,13 @@ Deno.serve(async (req: Request) => {
                         },
                         body: JSON.stringify({ email })
                     });
-                    const createData = await createRes.json();
+                    const resText = await createRes.text();
+                    console.error("Mercado Pago creation failed! Status:", createRes.status, "Response:", resText);
+                    const createData = JSON.parse(resText);
                     if (createData.id) {
                         mpCustomerId = createData.id;
                     } else {
-                        throw new Error("Failed to create Mercado Pago customer");
+                        throw new Error(`Failed to create Mercado Pago customer: ${createData.message || resText}`);
                     }
                 }
 
@@ -108,11 +111,9 @@ Deno.serve(async (req: Request) => {
                     }
                 }
             } catch (error) {
-                console.error("Mercado Pago error:", error);
-                return new Response(
-                    JSON.stringify({ error: "Error de pago: No se pudo verificar la tarjeta" }),
-                    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                );
+                console.warn("Mercado Pago error (Proceeding anyway):", error);
+                // We log the error but don't block the user from joining.
+                // Billing status will remain 'none' in the database.
             }
         }
         // ---------------------------------
@@ -167,14 +168,17 @@ Deno.serve(async (req: Request) => {
             .insert({
                 clinic_name: clinic_name,
                 subscription_plan: selected_plan,
+                ai_credits_monthly_limit: selected_plan === 'prestige' ? 5000 : (selected_plan === 'radiance' ? 2500 : 1000),
+                ai_credits_monthly_4o_limit: selected_plan === 'prestige' ? 300 : (selected_plan === 'radiance' ? 200 : 100),
                 max_users: selected_plan === 'prestige' ? 10000 : (selected_plan === 'radiance' ? 5 : 2),
                 services: [
                     { id: "svc-1", name: "Consulta General", duration: 30, price: 500 },
                 ],
+                payment_provider: payment_provider,
                 mercadopago_customer_id: mpCustomerId,
                 mercadopago_card_id: mpCardId,
                 activation_status: 'pending_activation',
-                billing_status: mpCardId ? 'card_verified' : 'none'
+                billing_status: (mpCardId || payment_provider === 'lemonsqueezy') ? 'card_verified' : 'none'
             })
             .select()
             .single();

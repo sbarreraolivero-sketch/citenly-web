@@ -5,21 +5,23 @@ import { cn } from '@/lib/utils'
 const plans = [
     {
         id: 'essence',
-        name: 'Essence',
-        tagline: 'Control Esencial y Automatización',
-        price: 79,
+        name: 'Plan Essence',
+        tagline: 'Ideal para Profesionales Independientes y Centros de Estética Pequeños.',
+        price: 99,
         period: '/mes',
-        description: 'Ideal para profesionales independientes que buscan automatizar sus citas y tener presencia digital básica.',
+        description: 'Lo necesario para gestionar prospectos, pacientes y reservas con IA.',
         highlight: false,
         icon: Sparkles,
         features: [
-            'Hasta 2 usuarios (Acceso compartido)',
-            '1 Agente IA (Soft Luxury)',
-            'Hasta 50 citas mensuales',
-            'Dashboard de Gestión Básico',
-            '1 Integración WhatsApp Business',
-            'Revenue Retention Engine (Diagnóstico)',
-            'Alertas de ingresos en riesgo'
+            'Hasta 2 Usuarios',
+            'Agente de IA especializado en medicina estética y salud',
+            'Integración con Google Maps (Reservas geolocalizadas)',
+            'Hasta 50 citas automatizadas mensuales',
+            'Hasta 1 agenda disponible',
+            'Gestión de servicios y tratamientos',
+            'Fichas clínicas + historial de procedimientos',
+            'Dashboard con Métricas (Ranking, Conversión, etc.)',
+            'Integración oficial de WhatsApp (Meta). Libre de bloqueos',
         ],
         limitations: [],
         cta: 'Comenzar con Essence',
@@ -27,24 +29,25 @@ const plans = [
     },
     {
         id: 'radiance',
-        name: 'Radiance',
-        tagline: 'Escalamiento Profesional y Retención Activa',
+        name: 'Plan Radiance',
+        tagline: 'Para clínicas en pleno crecimiento (Físicas o a domicilio).',
         price: 159,
         period: '/mes',
-        description: 'Diseñado para clínicas en expansión que necesitan un equipo coordinado y retención activa mediante IA.',
+        description: 'La solución completa para captar, retener por tratamiento y automatizar tu clínica.',
         highlight: true,
         icon: Zap,
         features: [
             'Todo lo de Essence, más:',
-            'Hasta 5 usuarios (Invitaciones seguras)',
-            'CRM Gestión proactiva de prospectos',
-            'Campañas WhatsApp masivas (Marketing)',
-            'Módulo de Finanzas y Reportes Pro',
-            'Gestión de servicios + Upselling IA',
-            'Citas mensuales ilimitadas',
-            'IA avanzada + historial clínico',
-            'Revenue Engine Totalmente Autónomo',
-            'Analítica de ingresos recuperados'
+            'Hasta 5 usuarios (Adm, Médicos, Recepcionista)',
+            '5 agendas independientes disponibles',
+            'Recordatorios de sesiones/tratamientos con IA',
+            'Recordatorios confirmación (Hasta 50/mes)',
+            'CRM de ventas para prospectos',
+            'Campañas Marketing masivo (WhatsApp)',
+            'Sistema Inteligente de Referidos con IA',
+            'Módulo de Gestión Financiera',
+            'Citas Ilimitadas',
+            'Encuestas de satisfacción personalizadas',
         ],
         limitations: [],
         cta: 'Elegir Radiance',
@@ -54,27 +57,25 @@ const plans = [
     {
         id: 'prestige',
         name: 'Prestige',
-        tagline: 'Potencia Empresarial y Multi-Sede',
-        price: 299,
+        tagline: 'Potencia empresarial para redes de clínicas y centros médicos.',
+        price: 297,
         period: '/mes',
-        description: 'La solución definitiva para centros médicos con múltiples sedes que requieren control absoluto.',
+        description: 'Infraestructura empresarial absoluta para controlar y escalar múltiples sedes.',
         highlight: false,
         icon: Crown,
         features: [
             'Todo lo de Radiance, más:',
-            'Usuarios ilimitados (Sin restricciones)',
-            'Gestión Multi-sucursal / Sedes',
-            'IA personalizada (Manual de ventas)',
-            'Reportes ejecutivos a medida',
-            'Onboarding Concierge VIP',
-            'Soporte Prioritario 24/7',
-            'Consultoría de Negocio Trimestral'
+            'Usuarios ilimitados',
+            'Multi-sucursal / Multi-sedes',
+            'IA personalizada (especialidades médicas)',
+            'Recordatorios confirmación ilimitados',
+            'Benchmark entre sedes. Super Administrador',
         ],
         limitations: [],
-        cta: 'Elegir Prestige',
+        cta: 'Contactar Ventas',
         gradient: 'from-charcoal to-charcoal/90',
     },
-]
+];
 
 const faqs = [
     {
@@ -83,7 +84,7 @@ const faqs = [
     },
     {
         question: '¿Qué pasa si supero las 50 citas en el plan Essence?',
-        answer: 'Te notificaremos cuando te acerques al límite y podrás comprar un "Refill de Energía" por $29 USD o subir al plan Radiance.',
+        answer: 'Te notificaremos cuando te acerques al límite y podrás comprar un "Pack de Créditos" o subir al plan Radiance.',
     },
     {
         question: '¿Necesito tener WhatsApp Business?',
@@ -137,7 +138,7 @@ export default function Pricing() {
                     </div>
                     <h1 className="text-display text-charcoal mb-6">
                         Tu asistente virtual para
-                        <span className="text-gradient-hero"> clínicas estéticas</span>
+                        <span className="text-gradient-hero"> clínicas estéticas y médicas</span>
                     </h1>
                     <p className="text-xl text-charcoal/60 mb-8 max-w-2xl mx-auto">
                         Automatiza la gestión de citas por WhatsApp con un asistente de IA que entiende

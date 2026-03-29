@@ -40,6 +40,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, CREDIT_PACKS_4O, redirectToCreditsCheckout } from '@/lib/mercadopago'
+import { LS_PLANS, type LSPlanId, LS_CREDIT_PACKS, LS_CREDIT_PACKS_4O, redirectToLemonCheckout, redirectToLemonCreditsCheckout } from '@/lib/lemonsqueezy'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
@@ -112,6 +113,7 @@ export default function Settings() {
     const [websiteUrl, setWebsiteUrl] = useState('')
     const [services, setServices] = useState<any[]>([])
     const [workingHours, setWorkingHours] = useState<any>(mockWorkingHours)
+    const [businessModel, setBusinessModel] = useState<'physical' | 'mobile' | 'hybrid'>('physical')
     const [showMobileList, setShowMobileList] = useState(true)
 
     // Service modal state
@@ -159,6 +161,7 @@ export default function Settings() {
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
     const [aiActiveModel, setAiActiveModel] = useState<'mini' | '4o'>('mini')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
+    const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
     const [copiedWebhook, setCopiedWebhook] = useState(false)
 
@@ -400,6 +403,8 @@ export default function Settings() {
                     setAiActiveModel(data.ai_active_model || 'mini')
 
                     setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
+                    setBusinessModel(data.business_model || 'physical')
+                    setPaymentRegion(data.payment_provider === 'lemonsqueezy' ? 'international' : 'chile')
                     if (data.working_hours) setWorkingHours(data.working_hours)
                 }
 
@@ -571,7 +576,11 @@ export default function Settings() {
     const handleBuyCredits = async (packId: string) => {
         if (!profile?.clinic_id || !user?.email) return
         try {
-            await redirectToCreditsCheckout(profile.clinic_id, user.email, packId, selectedAiModel)
+            if (paymentRegion === 'international') {
+                await redirectToLemonCreditsCheckout(profile.clinic_id, user.email, packId, selectedAiModel)
+            } else {
+                await redirectToCreditsCheckout(profile.clinic_id, user.email, packId, selectedAiModel)
+            }
         } catch (error: any) {
             console.error('Error buying credits:', error)
             alert(error.message || 'Error al procesar el pago. Por favor intenta de nuevo.')
@@ -860,6 +869,7 @@ export default function Settings() {
                     website_url: websiteUrl,
                     currency: currency,
                     timezone: timezone,
+                    business_model: businessModel,
                     template_survey: templateSurvey,
                     template_reactivation: templateReactivation,
                     updated_at: new Date().toISOString()
@@ -956,11 +966,15 @@ export default function Settings() {
         }
 
         try {
-            await redirectToCheckout({
-                clinicId: profile.clinic_id,
-                planId: planId as "essence" | "radiance" | "prestige",
-                email: user.email
-            })
+            if (paymentRegion === 'international') {
+                await redirectToLemonCheckout(profile.clinic_id, user.email, planId as LSPlanId)
+            } else {
+                await redirectToCheckout({
+                    clinicId: profile.clinic_id,
+                    planId: planId as "essence" | "radiance" | "prestige",
+                    email: user.email,
+                })
+            }
         } catch (error) {
             console.error('Checkout error:', error)
             alert('Error al iniciar el proceso de pago. Por favor intenta más tarde.')
@@ -1253,6 +1267,74 @@ export default function Settings() {
                         <div className="space-y-6">
                             <div className="card-soft p-6">
                                 <h2 className="text-lg font-semibold text-charcoal mb-6">Información de la Clínica</h2>
+
+                                <div className="bg-silk-beige/20 p-4 rounded-soft border border-silk-beige/30 mb-8">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 bg-primary-500/10 rounded-full flex items-center justify-center">
+                                            {businessModel === 'physical' ? <Building2 className="w-5 h-5 text-primary-600" /> : businessModel === 'mobile' ? <Zap className="w-5 h-5 text-primary-600" /> : <RefreshCw className="w-5 h-5 text-primary-600" />}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-charcoal leading-none mb-1">Modelo de Atención</h3>
+                                            <p className="text-xs text-charcoal/50">Define cómo opera tu clínica para optimizar al asistente IA</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <button
+                                            onClick={() => setBusinessModel('physical')}
+                                            className={cn(
+                                                "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
+                                                businessModel === 'physical' 
+                                                    ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
+                                                    : "bg-white/40 border-silk-beige hover:border-primary-200"
+                                            )}
+                                        >
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'physical' ? "bg-primary-500 text-white" : "bg-silk-beige/40 text-charcoal/40")}>
+                                                <Building2 className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'physical' ? "text-primary-700" : "text-charcoal")}>Físico</p>
+                                                <p className="text-[9px] text-charcoal/40">Local Fijo</p>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setBusinessModel('mobile')}
+                                            className={cn(
+                                                "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
+                                                businessModel === 'mobile' 
+                                                    ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
+                                                    : "bg-white/40 border-silk-beige hover:border-primary-200"
+                                            )}
+                                        >
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'mobile' ? "bg-primary-500 text-white" : "bg-silk-beige/40 text-charcoal/40")}>
+                                                <Zap className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'mobile' ? "text-primary-700" : "text-charcoal")}>Móvil</p>
+                                                <p className="text-[9px] text-charcoal/40">A Domicilio</p>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setBusinessModel('hybrid')}
+                                            className={cn(
+                                                "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
+                                                businessModel === 'hybrid' 
+                                                    ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
+                                                    : "bg-white/40 border-silk-beige hover:border-primary-200"
+                                            )}
+                                        >
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'hybrid' ? "bg-primary-500 text-white" : "bg-silk-beige/40 text-charcoal/40")}>
+                                                <RefreshCw className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'hybrid' ? "text-primary-700" : "text-charcoal")}>Híbrido</p>
+                                                <p className="text-[9px] text-charcoal/40">Ambos</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
 
                                 <div className="space-y-4">
                                     <div>
@@ -1761,126 +1843,201 @@ export default function Settings() {
                                     {paymentMessage.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> :
                                         paymentMessage.type === 'error' ? <CreditCard className="w-5 h-5 flex-shrink-0" /> :
                                             <Clock className="w-5 h-5 flex-shrink-0" />}
-                                    <p className="text-sm">{paymentMessage.text}</p>
+                                    <p className="text-sm font-bold">{paymentMessage.text}</p>
                                     <button onClick={() => setPaymentMessage(null)} className="ml-auto p-1 hover:opacity-70">✕</button>
                                 </div>
                             )}
+
                             <div className="card-soft p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-charcoal">Tu Plan Actual</h2>
-                                        <p className="text-sm text-charcoal/50">Gestiona tu suscripción</p>
-                                    </div>
-                                    <div className={`px-4 py-2 rounded-full text-sm font-medium ${subscription?.status === 'trial'
-                                        ? 'bg-primary-500/10 text-primary-600'
-                                        : subscription?.status === 'active'
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : 'bg-amber-100 text-amber-700'
-                                        }`}>
-                                        {subscription?.status === 'trial' ? 'Período de Prueba' :
-                                            subscription?.status === 'active' ? 'Activo' : 'Pendiente'}
-                                    </div>
-                                </div>
-
-                                <div className="bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-soft p-6 mb-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-hero-gradient rounded-soft flex items-center justify-center">
-                                            <Sparkles className="w-7 h-7 text-white" />
+                                        <div className="w-12 h-12 bg-primary-100 rounded-soft flex items-center justify-center">
+                                            <CreditCard className="w-6 h-6 text-primary-600" />
                                         </div>
                                         <div>
-                                            <h3 className="text-2xl font-semibold text-charcoal capitalize">
-                                                Plan {subscription?.plan || 'Trial'}
-                                            </h3>
-                                            <p className="text-charcoal/60">
-                                                {subscription?.plan === 'essence' ? '$79 USD/mes' :
-                                                    subscription?.plan === 'radiance' ? '$159 USD/mes' :
-                                                        subscription?.plan === 'prestige' ? '$299 USD/mes' :
-                                                            'Gratis durante el período de prueba'}
-                                            </p>
+                                            <h2 className="text-lg font-bold text-charcoal">Tu Suscripción</h2>
+                                            <p className="text-sm text-charcoal/50">Gestiona tu plan y facturación</p>
                                         </div>
                                     </div>
-                                    {subscription?.trialEndsAt && (
-                                        <div className="mt-4 pt-4 border-t border-silk-beige">
-                                            <p className="text-sm text-charcoal/70">
-                                                Tu período de prueba termina en <span className="font-medium text-primary-600">
-                                                    {Math.max(0, Math.ceil((new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} días
-                                                </span>
-                                            </p>
-                                        </div>
-                                    )}
+                                    <div className={cn(
+                                        "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider",
+                                        subscription?.status === 'trial' ? 'bg-amber-100 text-amber-700' :
+                                        subscription?.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                                        'bg-charcoal/10 text-charcoal/60'
+                                    )}>
+                                        {subscription?.status === 'trial' ? 'En Prueba' :
+                                         subscription?.status === 'active' ? 'Plan Activo' : 'Inactivo'}
+                                    </div>
                                 </div>
 
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={() => handlePlanSelection('radiance')}
-                                        className="btn-primary flex items-center gap-2"
+                                <div className="bg-ivory border border-silk-beige rounded-soft p-6 mb-8">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                        <div>
+                                            <p className="text-xs font-bold text-charcoal/40 uppercase tracking-widest mb-1">Plan Actual</p>
+                                            <h3 className="text-3xl font-black text-charcoal capitalize tracking-tight">
+                                                Plan {subscription?.plan || 'Essence (Trial)'}
+                                            </h3>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <Sparkles className="w-4 h-4 text-primary-500" />
+                                                <p className="text-sm font-medium text-charcoal/70">
+                                                    {subscription?.plan === 'essence' ? 'Control Esencial y Automatización' :
+                                                     subscription?.plan === 'radiance' ? 'Escalamiento Profesional y Retención' :
+                                                     subscription?.plan === 'prestige' ? 'Potencia Empresarial Multi-Sede' :
+                                                     'Prueba gratuita - 7 días de acceso total'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-3xl font-black text-charcoal">
+                                                {paymentRegion === 'international' ? 'US$' : '$'}
+                                                {subscription?.plan && subscription.plan !== 'trial' 
+                                                    ? (paymentRegion === 'international' 
+                                                        ? LS_PLANS[subscription.plan as LSPlanId]?.price
+                                                        : PLANS[subscription.plan as PlanId]?.price)
+                                                    : '0'}
+                                                <span className="text-sm font-medium text-charcoal/40 ml-1">
+                                                    {paymentRegion === 'international' ? 'USD' : 'CLP'} / mes
+                                                </span>
+                                            </p>
+                                            {subscription?.trialEndsAt && (
+                                                <div className="mt-2 flex items-center justify-end gap-2 text-amber-600">
+                                                    <Clock className="w-4 h-4" />
+                                                    <p className="text-xs font-bold">
+                                                        Termina en {Math.max(0, Math.ceil((new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} días
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-4">
+                                    {subscription?.status === 'trial' && (
+                                        <button 
+                                            onClick={() => document.getElementById('compare-plans')?.scrollIntoView({ behavior: 'smooth' })}
+                                            className="btn-primary"
+                                        >
+                                            Activar Plan Premium
+                                        </button>
+                                    )}
+                                    <a 
+                                        href="https://www.mercadopago.com.mx/subscriptions" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="btn-ghost"
                                     >
-                                        <CreditCard className="w-4 h-4" />
-                                        Activar Suscripción
-                                    </button>
-                                    <button
-                                        onClick={() => document.getElementById('compare-plans')?.scrollIntoView({ behavior: 'smooth' })}
-                                        className="btn-ghost text-charcoal/60"
-                                    >
-                                        Cambiar Plan
-                                    </button>
+                                        Gestionar en Mercado Pago
+                                    </a>
                                 </div>
                             </div>
 
-                            {/* Plan Comparison */}
-                            <div id="compare-plans" className="card-soft p-6">
-                                <h2 className="text-lg font-semibold text-charcoal mb-6">Compara Planes</h2>
+                             {/* Plan Cards */}
+                            <div id="compare-plans" className="space-y-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+                                    <div className="flex flex-col">
+                                        <h2 className="text-xl font-black text-charcoal tracking-tight">Compara nuestros planes</h2>
+                                        <div className="bg-primary-500/10 text-primary-600 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mt-1">
+                                            Garantía de Satisfacción
+                                        </div>
+                                    </div>
 
-                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div className="flex items-center gap-3 bg-silk-beige p-1.5 rounded-soft border border-silk-beige shadow-sm">
+                                        <button
+                                            onClick={async () => {
+                                                setPaymentRegion('chile');
+                                                if (profile?.clinic_id) {
+                                                    await (supabase as any).from('clinic_settings').update({ payment_provider: 'mercadopago' }).eq('id', profile.clinic_id);
+                                                }
+                                            }}
+                                            className={cn(
+                                                "px-4 py-2 rounded-soft text-xs font-bold transition-all flex items-center gap-2",
+                                                paymentRegion === 'chile'
+                                                    ? "bg-white text-charcoal shadow-sm"
+                                                    : "text-charcoal/40 hover:text-charcoal/60"
+                                            )}
+                                        >
+                                            🇨🇱 Chile (CLP)
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                setPaymentRegion('international');
+                                                if (profile?.clinic_id) {
+                                                    await (supabase as any).from('clinic_settings').update({ payment_provider: 'lemonsqueezy' }).eq('id', profile.clinic_id);
+                                                }
+                                            }}
+                                            className={cn(
+                                                "px-4 py-2 rounded-soft text-xs font-bold transition-all flex items-center gap-2",
+                                                paymentRegion === 'international'
+                                                    ? "bg-white text-charcoal shadow-sm"
+                                                    : "text-charcoal/40 hover:text-charcoal/60"
+                                            )}
+                                        >
+                                            🌎 Internacional (USD)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {(Object.keys(PLANS) as PlanId[]).map((planId) => {
-                                        const plan = PLANS[planId]
+                                        const mpPlan = PLANS[planId]
+                                        const lsPlan = LS_PLANS[planId as LSPlanId]
+                                        const plan = paymentRegion === 'international' ? lsPlan : mpPlan
+                                        const price = plan.price
+                                        const currencySymbol = paymentRegion === 'international' ? 'US$' : '$'
+                                        const currencyCode = paymentRegion === 'international' ? 'USD' : 'CLP'
                                         const isCurrentPlan = planId === subscription?.plan
+                                        const isRadiance = planId === 'radiance'
 
                                         return (
-                                            <div
+                                            <div 
                                                 key={planId}
                                                 className={cn(
-                                                    "rounded-soft p-5 border-2 transition-all",
-                                                    isCurrentPlan
-                                                        ? "border-primary-500 bg-primary-500/5"
-                                                        : "border-silk-beige hover:border-primary-300"
+                                                    "relative flex flex-col p-6 rounded-soft border-2 transition-all duration-300",
+                                                    isCurrentPlan ? "border-primary-500 bg-primary-500/5 ring-4 ring-primary-500/10" : "border-silk-beige bg-white hover:border-primary-300 hover:shadow-xl",
+                                                    isRadiance && !isCurrentPlan && "md:scale-105 shadow-premium-lg border-primary-500 z-10"
                                                 )}
                                             >
-                                                {'popular' in plan && plan.popular && (
-                                                    <div className="flex justify-end mb-2">
-                                                        <span className="px-2 py-1 bg-accent-500/10 text-accent-600 text-xs font-medium rounded-full flex items-center gap-1">
-                                                            <Zap className="w-3 h-3" />
-                                                            Popular
-                                                        </span>
+                                                {isRadiance && (
+                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-hero-gradient text-white text-[10px] font-black px-4 py-1 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
+                                                        Más Popular
                                                     </div>
                                                 )}
 
-                                                <h3 className="text-lg font-semibold text-charcoal">{plan.name}</h3>
-                                                <p className="text-2xl font-bold text-charcoal mt-2">
-                                                    ${plan.price}
-                                                    <span className="text-sm font-normal text-charcoal/50">/mes</span>
-                                                </p>
+                                                <div className="mb-6">
+                                                    <h3 className="text-xl font-black text-charcoal uppercase tracking-tighter">{plan.name}</h3>
+                                                    <p className="text-xs font-bold text-charcoal/40 mt-1 h-8 leading-tight">{plan.tagline}</p>
+                                                    <div className="mt-4 flex items-baseline gap-1 border-b border-silk-beige pb-4">
+                                                        <span className="text-4xl font-black text-charcoal">
+                                                            {currencySymbol}{price.toLocaleString()}
+                                                        </span>
+                                                        <span className="text-sm font-bold text-charcoal/30 uppercase">{currencyCode}/mes</span>
+                                                    </div>
+                                                </div>
 
-                                                <ul className="mt-4 space-y-2">
-                                                    {plan.features.map((feature, i) => (
-                                                        <li key={i} className="flex items-start gap-2 text-sm text-charcoal/70">
-                                                            <CheckCircle2 className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
-                                                            <span>{feature}</span>
+                                                <ul className="space-y-3 mb-8 flex-grow">
+                                                    {plan.features.map((feature, idx) => (
+                                                        <li key={idx} className="flex items-start gap-3">
+                                                            <div className="mt-1 w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                                            </div>
+                                                            <span className="text-sm font-medium text-charcoal/70 leading-snug">{feature}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
 
                                                 <button
                                                     onClick={() => handlePlanSelection(planId)}
-                                                    className={cn(
-                                                        "w-full mt-4 py-2 rounded-soft font-medium transition-colors",
-                                                        isCurrentPlan
-                                                            ? "bg-primary-500 text-white"
-                                                            : "bg-silk-beige text-charcoal hover:bg-primary-500 hover:text-white"
-                                                    )}
                                                     disabled={isCurrentPlan}
+                                                    className={cn(
+                                                        "w-full py-3 rounded-soft font-black text-sm uppercase tracking-widest transition-all",
+                                                        isCurrentPlan 
+                                                            ? "bg-charcoal/10 text-charcoal/40 cursor-not-allowed" 
+                                                            : isRadiance 
+                                                                ? "bg-hero-gradient text-white shadow-lg hover:shadow-xl hover:scale-[1.02]" 
+                                                                : "bg-charcoal text-white hover:bg-primary-500"
+                                                    )}
                                                 >
-                                                    {isCurrentPlan ? 'Plan Actual' : 'Seleccionar'}
+                                                    {isCurrentPlan ? 'Plan Actual' : 'Seleccionar Plan'}
                                                 </button>
                                             </div>
                                         )
@@ -2002,7 +2159,7 @@ export default function Settings() {
                                                                     }}
                                                                     className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
                                                                 />
-                                                                <span className="text-charcoal/40 text-[10px] font-bold">a</span>
+                                                                <span className="text-charcoal/40 text-xs font-bold font-bold">a</span>
                                                                 <input
                                                                     type="time"
                                                                     value={(hours as any).lunch_break.end}
@@ -2796,7 +2953,7 @@ export default function Settings() {
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <span className={cn(
-                                                                    "text-[10px] font-bold px-2 py-0.5 rounded-full font-bold uppercase",
+                                                                    "text-xs font-bold font-bold px-2 py-0.5 rounded-full font-bold uppercase",
                                                                     log.type === '24h' && "bg-amber-100 text-amber-700",
                                                                     log.type === '2h' && "bg-blue-100 text-blue-700",
                                                                     log.type === '1h' && "bg-indigo-100 text-indigo-700",
@@ -2829,7 +2986,7 @@ export default function Settings() {
                                                                 {log.error_message && (
                                                                     <div className="group relative inline-block">
                                                                         <AlertCircle className="w-4 h-4 text-red-400 cursor-help" />
-                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-charcoal text-white text-[10px] font-bold rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-charcoal text-white text-xs font-bold font-bold rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                                                                             {log.error_message}
                                                                         </div>
                                                                     </div>
@@ -2922,7 +3079,7 @@ export default function Settings() {
                                             <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
                                                 Motor de Respuesta Activo
                                                 {aiActiveModel === '4o' && (
-                                                    <span className="bg-violet-100 text-violet-700 text-[10px] uppercase px-2 py-0.5 rounded-full font-bold animate-pulse-subtle">
+                                                    <span className="bg-violet-100 text-violet-700 text-xs font-bold uppercase px-2 py-0.5 rounded-full font-bold animate-pulse-subtle">
                                                         Premium
                                                     </span>
                                                 )}
@@ -2994,25 +3151,25 @@ export default function Settings() {
                                         </div>
                                         <div>
                                             <h2 className="text-md font-bold text-charcoal">Dashboard GPT-4o-mini</h2>
-                                            <p className="text-[10px] text-charcoal/50 uppercase tracking-wider font-bold">Consumo Mensual Incluido</p>
+                                            <p className="text-xs font-bold text-charcoal/50 uppercase tracking-wider font-bold">Consumo Mensual Incluido</p>
                                         </div>
                                     </div>
 
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-3 gap-2">
                                             <div className="p-3 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                                <p className="text-[10px] text-charcoal/60 uppercase font-bold mb-1">Plan</p>
+                                                <p className="text-xs font-bold text-charcoal/60 uppercase font-bold mb-1">Plan</p>
                                                 <p className="text-lg font-bold text-charcoal">{aiCreditsMonthlyLimit}</p>
                                             </div>
                                             <div className="p-3 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                                <p className="text-[10px] text-charcoal/60 uppercase font-bold mb-1">Extra</p>
+                                                <p className="text-xs font-bold text-charcoal/60 uppercase font-bold mb-1">Extra</p>
                                                 <p className="text-lg font-bold text-charcoal">{aiCreditsExtraBalance}</p>
                                             </div>
                                             <div className={cn(
                                                 "p-3 rounded-soft border shadow-sm",
                                                 aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "bg-rose-50 border-rose-100" : "bg-emerald-50 border-emerald-100"
                                             )}>
-                                                <p className={cn("text-[10px] uppercase font-bold mb-1", aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "text-rose-700" : "text-emerald-700")}>Uso</p>
+                                                <p className={cn("text-xs font-bold uppercase font-bold mb-1", aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "text-rose-700" : "text-emerald-700")}>Uso</p>
                                                 <p className={cn("text-lg font-bold", aiMessagesUsed > (aiCreditsMonthlyLimit + aiCreditsExtraBalance) ? "text-rose-800" : "text-emerald-800")}>{aiMessagesUsed}</p>
                                             </div>
                                         </div>
@@ -3045,21 +3202,21 @@ export default function Settings() {
                                         </div>
                                         <div>
                                             <h2 className="text-md font-bold text-charcoal">Dashboard GPT-4o</h2>
-                                            <p className="text-[10px] text-charcoal/50 uppercase tracking-wider font-bold">Consumo Premium</p>
+                                            <p className="text-xs font-bold text-charcoal/50 uppercase tracking-wider font-bold">Consumo Premium</p>
                                         </div>
                                     </div>
 
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="p-3 bg-white rounded-soft border border-silk-beige shadow-sm">
-                                                <p className="text-[10px] text-charcoal/60 uppercase font-bold mb-1">Saldo Disponible</p>
+                                                <p className="text-xs font-bold text-charcoal/60 uppercase font-bold mb-1">Saldo Disponible</p>
                                                 <p className="text-lg font-bold text-charcoal">{aiCreditsExtra4o}</p>
                                             </div>
                                             <div className={cn(
                                                 "p-3 rounded-soft border shadow-sm",
                                                 aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "bg-rose-50 border-rose-100" : "bg-violet-50 border-violet-100"
                                             )}>
-                                                <p className={cn("text-[10px] uppercase font-bold mb-1", aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "text-rose-700" : "text-violet-700")}>Consumido</p>
+                                                <p className={cn("text-xs font-bold uppercase font-bold mb-1", aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "text-rose-700" : "text-violet-700")}>Consumido</p>
                                                 <p className={cn("text-lg font-bold", aiMessagesUsed4o >= aiCreditsExtra4o && aiCreditsExtra4o > 0 ? "text-rose-800" : "text-violet-800")}>{aiMessagesUsed4o}</p>
                                             </div>
                                         </div>
@@ -3142,9 +3299,15 @@ export default function Settings() {
                                 {/* Pack Cards */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {(() => {
-                                        const currentPacks: Record<string, { id: string; name: string; credits: number; price: number; description: string }> = selectedAiModel === '4o' ? { ...CREDIT_PACKS_4O } : { ...CREDIT_PACKS };
+                                        const mpPacks = selectedAiModel === '4o' ? { ...CREDIT_PACKS_4O } : { ...CREDIT_PACKS };
+                                        const lsPacks = selectedAiModel === '4o' ? { ...LS_CREDIT_PACKS_4O } : { ...LS_CREDIT_PACKS };
+                                        const currentPacks = paymentRegion === 'international' ? lsPacks : mpPacks;
+                                        const currencySymbol = paymentRegion === 'international' ? 'US$' : '$';
+                                        const currencyCode = paymentRegion === 'international' ? 'USD' : 'CLP';
+                                        
                                         return Object.keys(currentPacks).map((packId) => {
-                                            const pack = currentPacks[packId]
+                                            const pack = (currentPacks as any)[packId]
+                                            
                                             return (
                                                 <div key={packId} className={cn(
                                                     "p-6 bg-white border rounded-soft hover:shadow-md transition-all flex flex-col",
@@ -3158,8 +3321,10 @@ export default function Settings() {
                                                             <span className={cn(
                                                                 "text-2xl font-bold",
                                                                 selectedAiModel === '4o' ? "text-violet-600" : "text-primary-600"
-                                                            )}>${pack.price}</span>
-                                                            <span className="text-xs text-charcoal/60 font-medium">USD</span>
+                                                            )}>
+                                                                {currencySymbol}{pack.price.toLocaleString()}
+                                                            </span>
+                                                            <span className="text-xs text-charcoal/60 font-medium">{currencyCode}</span>
                                                         </div>
                                                     </div>
                                                     <ul className="mb-6 space-y-2 flex-grow">

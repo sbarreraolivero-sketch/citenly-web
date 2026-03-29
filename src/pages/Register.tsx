@@ -10,9 +10,9 @@ const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-61
 initMercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' })
 
 const plans = [
-    { id: 'essence', name: 'Essence', price: 79, popular: false },
+    { id: 'essence', name: 'Essence', price: 99, popular: false },
     { id: 'radiance', name: 'Radiance', price: 159, popular: true },
-    { id: 'prestige', name: 'Prestige', price: 299, popular: false },
+    { id: 'prestige', name: 'Prestige', price: 297, popular: false },
 ]
 
 export default function Register() {
@@ -31,6 +31,7 @@ export default function Register() {
     const [loading, setLoading] = useState(false)
 
     const [jobTitle, setJobTitle] = useState('')
+    const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
 
     const { signUp } = useAuth()
     const navigate = useNavigate()
@@ -143,11 +144,15 @@ export default function Register() {
         setError('')
         setLoading(true)
 
-        const { error } = await signUp(email, password, fullName, clinicName, selectedPlan, cardToken)
+        // IMPORT lemonsqueezy redirect
+        const { redirectToLemonCheckout } = await import('@/lib/lemonsqueezy')
+
+        const { error, data }: any = await (signUp as any)(email, password, fullName, clinicName, selectedPlan, cardToken, paymentRegion === 'international' ? 'lemonsqueezy' : 'mercadopago')
 
         if (error) {
-            setError('Error al crear la cuenta. Intenta con otro email o revisa tu tarjeta.')
+            setError(error.message || 'Error al crear la cuenta. Intenta con otro email o revisa tu tarjeta.')
             setLoading(false)
+            console.error('Registration Error:', error)
             return
         }
 
@@ -158,6 +163,21 @@ export default function Register() {
             });
         } catch (e) {
             console.error('Error enviando email de bienvenida:', e);
+        }
+
+        // If LemonSqueezy, redirect to checkout
+        if (paymentRegion === 'international') {
+            try {
+                const clinicId = data?.clinic_id
+                if (clinicId) {
+                    await redirectToLemonCheckout(clinicId, email, selectedPlan as any)
+                    return // Redirecting...
+                }
+            } catch (err: any) {
+                setError('Error al conectar con la pasarela de pago: ' + err.message)
+                setLoading(false)
+                return
+            }
         }
 
         // Success - redirect to pending activation for scheduling
@@ -210,11 +230,32 @@ export default function Register() {
                     </h1>
                     <p className="text-charcoal/60 mb-8">
                         {isJoinMode ? 'Ingresa tus datos para aceptar la invitación' : (
-                            step === 1 ? 'Crea tu cuenta para agendar tu sesión de implementación gratuita de 14 días.' :
+                            step === 1 ? 'Crea tu cuenta para agendar tu sesión de implementación gratuita de 7 días.' :
                                 step === 2 ? 'Configura los datos básicos de tu negocio' :
-                                    'Selecciona el plan que mejor se adapte a ti'
+                                    step === 3 ? 'Selecciona el plan que mejor se adapte a ti' :
+                                        'Finaliza tu registro'
                         )}
                     </p>
+
+                    {/* Region Selector (Only in creation mode) */}
+                    {!isJoinMode && step === 3 && (
+                        <div className="mb-6 flex p-1 bg-silk-beige rounded-soft">
+                            <button
+                                type="button"
+                                onClick={() => setPaymentRegion('chile')}
+                                className={`flex-1 py-2 text-sm font-medium rounded-soft transition-all ${paymentRegion === 'chile' ? 'bg-white shadow-sm text-charcoal' : 'text-charcoal/40'}`}
+                            >
+                                Chile (CLP)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentRegion('international')}
+                                className={`flex-1 py-2 text-sm font-medium rounded-soft transition-all ${paymentRegion === 'international' ? 'bg-white shadow-sm text-charcoal' : 'text-charcoal/40'}`}
+                            >
+                                Internacional (USD)
+                            </button>
+                        </div>
+                    )}
 
                     {/* Error Message */}
                     {error && (
@@ -373,7 +414,7 @@ export default function Register() {
                                     </label>
                                 ))}
                                 <p className="text-sm text-charcoal/50 text-center mt-4">
-                                    Prueba gratis por 14 días. Cancela cuando quieras.
+                                    Prueba gratis por 7 días. Cancela cuando quieras.
                                 </p>
                             </div>
                         )}
@@ -387,46 +428,68 @@ export default function Register() {
                                             <ShieldCheck className="w-4 h-4 text-primary-600" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-charcoal text-sm">Prueba de 14 días sin costo</p>
+                                            <p className="font-semibold text-charcoal text-sm">Prueba de 7 días sin costo</p>
                                             <p className="text-xs text-charcoal/70 mt-1">
-                                                No se realizará ningún cargo hoy. Tu tarjeta es solo para garantizar tu sesión de activación estratégica. Cancela cuando quieras antes de los 14 días.
+                                                No se realizará ningún cargo hoy. Tu tarjeta es solo para garantizar tu sesión de activación estratégica. Cancela cuando quieras antes de los 7 días.
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="border border-gray-200 rounded-soft p-4 bg-white min-h-[400px]">
-                                    <CardPayment
-                                        initialization={{
-                                            amount: plans.find(p => p.id === selectedPlan)?.price || 159
-                                        }}
-                                        customization={{
-                                            visual: {
-                                                style: {
-                                                    theme: 'default'
+
+                                {paymentRegion === 'chile' ? (
+                                    <div className="border border-gray-200 rounded-soft p-4 bg-white min-h-[400px]">
+                                        <CardPayment
+                                            initialization={{
+                                                amount: plans.find(p => p.id === selectedPlan)?.price || 159
+                                            }}
+                                            customization={{
+                                                visual: {
+                                                    style: {
+                                                        theme: 'default'
+                                                    },
+                                                    texts: {
+                                                        formSubmit: 'Comenzar Prueba Gratis'
+                                                    }
                                                 },
-                                                texts: {
-                                                    formSubmit: 'Comenzar Prueba Gratis'
+                                                paymentMethods: {
+                                                    maxInstallments: 1
                                                 }
-                                            },
-                                            paymentMethods: {
-                                                maxInstallments: 1
-                                            }
-                                        }}
-                                        onSubmit={async (formData) => {
-                                            // Handle the token generated by Mercado Pago
-                                            // console.log("Card Token Generated:", formData.token)
-                                            await handleCreate(formData.token);
-                                        }}
-                                        onError={(error) => {
-                                            console.error("Mercado Pago Error:", error);
-                                            setError('Error al procesar la tarjeta. Revisa los datos ingresados.');
-                                        }}
-                                    />
-                                </div>
+                                            }}
+                                            onSubmit={async (formData) => {
+                                                await handleCreate(formData.token);
+                                            }}
+                                            onError={(error) => {
+                                                console.error("Mercado Pago Error:", error);
+                                                setError('Error al procesar la tarjeta. Revisa los datos ingresados.');
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-8 border border-silk-beige rounded-soft bg-white shadow-soft">
+                                        <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Sparkles className="w-8 h-8 text-primary-500" />
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-charcoal mb-2">Pago Internacional (USD)</h3>
+                                        <p className="text-sm text-charcoal/60 mb-6">
+                                            Serás redirigido a nuestra pasarela segura Lemon Squeezy para finalizar tu registro. 
+                                            Tu prueba gratuita de 7 días comenzará de inmediato.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCreate()}
+                                            disabled={loading}
+                                            className="btn-primary w-full py-4 flex items-center justify-center gap-2"
+                                        >
+                                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar y Pagar'}
+                                            <ArrowRight className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="mt-6 flex flex-col items-center gap-2">
                                     <p className="text-sm text-charcoal/60">¿Tienes dudas con el registro o el pago?</p>
                                     <a
-                                        href="https://wa.me/56996600259?text=Hola,%20tengo%20una%20duda%20con%20el%20registro%20en%20Citenly"
+                                        href="https://wa.me/56996600259?text=Hola,%20tengo%20una%20duda%20con%20el%20registro%20en%20Citenly AI"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-bold bg-primary-50 px-4 py-2 rounded-full border border-primary-100 transition-colors"
@@ -483,7 +546,7 @@ export default function Register() {
                     </form>
 
                     <p className="mt-6 text-xs text-center text-charcoal/50">
-                        Al registrarte en Citenly, aceptas nuestros{' '}
+                        Al registrarte en Citenly AI, aceptas nuestros{' '}
                         <Link to="/terms" target="_blank" className="underline hover:text-primary-600">Términos y Condiciones</Link>
                         {' '}y nuestra{' '}
                         <Link to="/privacy" target="_blank" className="underline hover:text-primary-600">Política de Privacidad</Link>.
@@ -514,7 +577,7 @@ export default function Register() {
                     <div className="bg-white/10 backdrop-blur-sm rounded-softer p-6">
                         <p className="text-white/90 italic mb-4">
                             "Antes pasaba 3 horas diarias respondiendo mensajes.
-                            Ahora mi asistente de Citenly lo hace todo mientras
+                            Ahora mi asistente de Citenly AI lo hace todo mientras
                             yo me enfoco en mis pacientes."
                         </p>
                         <div className="flex items-center gap-3">
