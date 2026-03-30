@@ -50,7 +50,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
     const [loading, setLoading] = useState(true)
     const [prospect, setProspect] = useState<Prospect | null>(null)
     const [sidebarTags, setSidebarTags] = useState<CrmTag[]>([])
-    const [allTags, setAllTags] = useState<(CrmTag & { source: 'crm' | 'patient' | 'both' })[]>([])
+    const [allTags, setAllTags] = useState<(CrmTag & { source: 'crm' | 'patient' | 'both', crm_id?: string, patient_id?: string })[]>([])
     const [saving, setSaving] = useState(false)
     const [savingTags, setSavingTags] = useState(false)
     const [showTagAdd, setShowTagAdd] = useState(false)
@@ -130,23 +130,37 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 (supabase as any).from('tags').select('*').eq('clinic_id', clinicId)
             ])
 
-            const patientIds = new Set(patientTagsRes.data?.map((t: any) => t.id) || [])
+            const crmTags = crmTagsRes.data || []
+            const patientTags = patientTagsRes.data || []
 
-            const unifiedAvailableTags: (CrmTag & { source: 'crm' | 'patient' | 'both' })[] = []
+            interface UnifiedTag extends CrmTag {
+                source: 'crm' | 'patient' | 'both'
+                crm_id?: string
+                patient_id?: string
+            }
+
+            const tagMap = new Map<string, UnifiedTag>()
             
-            // From CRM
-            crmTagsRes.data?.forEach((t: any) => {
-                unifiedAvailableTags.push({ ...t, source: patientIds.has(t.id) ? 'both' : 'crm' })
+            // Process CRM tags
+            crmTags.forEach((t: any) => {
+                const nameKey = t.name.toLowerCase().trim()
+                tagMap.set(nameKey, { ...t, source: 'crm', crm_id: t.id })
             })
             
-            // From Patients (only if not already added from CRM)
-            patientTagsRes.data?.forEach((t: any) => {
-                if (!unifiedAvailableTags.some(at => at.id === t.id)) {
-                    unifiedAvailableTags.push({ ...t, source: 'patient' })
+            // Process Patient tags and merge
+            patientTags.forEach((t: any) => {
+                const nameKey = t.name.toLowerCase().trim()
+                const existing = tagMap.get(nameKey)
+                
+                if (existing) {
+                    existing.patient_id = t.id
+                    existing.source = 'both'
+                } else {
+                    tagMap.set(nameKey, { ...t, source: 'patient', patient_id: t.id })
                 }
             })
             
-            setAllTags(unifiedAvailableTags.sort((a, b) => a.name.localeCompare(b.name)))
+            setAllTags(Array.from(tagMap.values()) as any)
             setHasTagChanges(false)
 
         } catch (err) {
@@ -216,15 +230,18 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             const inserts: Promise<any>[] = []
             
             sidebarTags.forEach(tag => {
-                const tagInfo = allTags.find(at => at.id === tag.id)
+                const tagInfo = allTags.find(at => at.name.toLowerCase().trim() === tag.name.toLowerCase().trim())
                 if (!tagInfo) return
+                
+                const crmId = (tagInfo as any).crm_id
+                const patId = (tagInfo as any).patient_id
 
-                if (tagInfo.source === 'crm' || tagInfo.source === 'both') {
-                    inserts.push((supabase as any).from('crm_prospect_tags').insert({ prospect_id: prospect.id, tag_id: tag.id }))
+                if (crmId) {
+                    inserts.push((supabase as any).from('crm_prospect_tags').insert({ prospect_id: prospect.id, tag_id: crmId }))
                 }
                 
-                if (patient && (tagInfo.source === 'patient' || tagInfo.source === 'both')) {
-                    inserts.push((supabase as any).from('patient_tags').insert({ patient_id: patient.id, tag_id: tag.id }))
+                if (patient && patId) {
+                    inserts.push((supabase as any).from('patient_tags').insert({ patient_id: patient.id, tag_id: patId }))
                 }
             })
 
