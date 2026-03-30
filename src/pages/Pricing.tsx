@@ -91,6 +91,10 @@ const faqs = [
         answer: 'Sí, necesitas una cuenta de WhatsApp Business API. Te guiamos en todo el proceso de configuración con YCloud.',
     },
     {
+        question: '¿Desde cuándo comienzan los 7 días de prueba?',
+        answer: 'Tus 7 días de prueba comienzan exclusivamente cuando validamos que el asistente de IA entiende y atiende perfectamente a tu clínica (100% adecuado). Nosotros asumimos el costo y tiempo de la configuración inicial.',
+    },
+    {
         question: '¿Ofrecen descuento por pago anual?',
         answer: 'Sí, al pagar anualmente obtienes 2 meses gratis y bonificamos la tarifa de implementación de $150 USD.',
     },
@@ -140,9 +144,9 @@ export default function Pricing() {
                         Tu asistente virtual para
                         <span className="text-gradient-hero"> clínicas estéticas y médicas</span>
                     </h1>
-                    <p className="text-xl text-charcoal/60 mb-8 max-w-2xl mx-auto">
-                        Automatiza la gestión de citas por WhatsApp con un asistente de IA que entiende
-                        a tus pacientes y representa la elegancia de tu marca.
+                    <p className="text-xl text-charcoal/60 mb-8 max-w-2xl mx-auto leading-relaxed">
+                        No te damos solo la IA, **nosotros la implementamos por ti**. 
+                        Dejamos tu sistema operando al 100% como una recepcionista experta antes de que empiece tu prueba.
                     </p>
                     <div className="flex items-center justify-center gap-4">
                         <a href="#pricing" className="btn-premium flex items-center gap-2 text-lg px-8 py-4">
@@ -164,7 +168,7 @@ export default function Pricing() {
                             Planes diseñados para tu crecimiento
                         </h2>
                         <p className="text-lg text-charcoal/60 mb-8">
-                            Sin compromisos. Cancela cuando quieras.
+                            Sin compromisos. Tu prueba de 7 días comienza cuando el sistema esté 100% operativo.
                         </p>
 
                         {/* Billing Toggle */}

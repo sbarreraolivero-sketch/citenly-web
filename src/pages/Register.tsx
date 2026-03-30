@@ -229,12 +229,12 @@ export default function Register() {
                         )}
                     </h1>
                     <p className="text-charcoal/60 mb-8">
-                        {isJoinMode ? 'Ingresa tus datos para aceptar la invitación' : (
-                            step === 1 ? 'Crea tu cuenta para agendar tu sesión de implementación gratuita de 7 días.' :
+                        {(isJoinMode ? 'Ingresa tus datos para aceptar la invitación' : (
+                            step === 1 ? 'Crea tu cuenta para agendar tu implementación. Tu prueba de 7 días solo comienza cuando el sistema esté 100% operativo.' :
                                 step === 2 ? 'Configura los datos básicos de tu negocio' :
                                     step === 3 ? 'Selecciona el plan que mejor se adapte a ti' :
                                         'Finaliza tu registro'
-                        )}
+                        ))}
                     </p>
 
                     {/* Region Selector (Only in creation mode) */}
@@ -414,7 +414,7 @@ export default function Register() {
                                     </label>
                                 ))}
                                 <p className="text-sm text-charcoal/50 text-center mt-4">
-                                    Prueba gratis por 7 días. Cancela cuando quieras.
+                                    Prueba gratis por 7 días (Inicia tras implementación exitosa).
                                 </p>
                             </div>
                         )}
@@ -428,9 +428,9 @@ export default function Register() {
                                             <ShieldCheck className="w-4 h-4 text-primary-600" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-charcoal text-sm">Prueba de 7 días sin costo</p>
+                                            <p className="font-semibold text-charcoal text-sm">Prueba de 7 días garantizada</p>
                                             <p className="text-xs text-charcoal/70 mt-1">
-                                                No se realizará ningún cargo hoy. Tu tarjeta es solo para garantizar tu sesión de activación estratégica. Cancela cuando quieras antes de los 7 días.
+                                                No se realizará ningún cargo hoy. Tu prueba de 7 días **comienza exclusivamente cuando validamos que el asistente atiende perfectamente a tu clínica**. Nosotros hacemos toda la configuración por ti.
                                             </p>
                                         </div>
                                     </div>

@@ -209,7 +209,7 @@ export default function Landing() {
                     </h1>
 
                     <p className="text-xl sm:text-2xl text-charcoal/80 mb-10 max-w-3xl mx-auto leading-relaxed font-medium">
-                        Citenly AI centraliza CRM, agenda, finanzas y ejecuta decisiones inteligentes automáticamente para <strong>evitar la pérdida de ingresos mensuales</strong> en tu centro estético o clínica.
+                        A diferencia de otros, nosotros no solo te damos la IA. **La implementamos por ti.** Dejamos tu sistema de atención funcionando al 100%, tal como lo haría tu mejor recepcionista.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -507,10 +507,10 @@ export default function Landing() {
                         <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-1 bg-gradient-to-r from-primary-200 via-primary-300 to-primary-200 z-0 rounded-full"></div>
 
                         {[
-                            { step: '1', title: 'Agrupa', desc: 'Centralizamos todos los historiales, canales y agendamientos estéticos en un solo lugar.' },
-                            { step: '2', title: 'Analiza', desc: 'La IA procesa tiempos muertos, frecuencias de citas y tratamientos ya completados.' },
-                            { step: '3', title: 'Detecta', desc: 'Predice financieramente qué paciente exacto está a punto de marginarse de tu centro.' },
-                            { step: '4', title: 'Fideliza', desc: 'Reactiva bases de datos durmientes automáticamente, generando miles de USD de revenue.' }
+                            { step: '1', title: 'Configuramos', desc: 'Nos encargamos de la integración técnica y alimentamos a la IA con los protocolos de tu clínica.' },
+                            { step: '2', title: 'Entrenamos', desc: 'Personalizamos las respuestas del asistente para que hable con el tono y la elegancia de tu marca.' },
+                            { step: '3', title: 'Validamos', desc: 'Hacemos pruebas reales hasta que el sistema fluya sin errores, agendando citas en tu calendario oficial.' },
+                            { step: '4', title: 'Escalas', desc: 'Comienza tu prueba de 7 días con un sistema que ya está generando ingresos desde el minuto uno.' }
                         ].map((s, i) => (
                             <div key={i} className="relative z-10 flex flex-col items-center text-center group">
                                 <div className="w-16 h-16 bg-white border-4 border-silk-beige rounded-full flex items-center justify-center font-extrabold text-2xl text-charcoal mb-6 shadow-lg group-hover:scale-110 group-hover:border-primary-400 group-hover:bg-primary-50 transition-all duration-300 relative">
@@ -642,6 +642,84 @@ export default function Landing() {
                             <p className="font-extrabold text-primary-300 uppercase text-sm mb-6 tracking-widest bg-white/10 inline-block px-4 py-1.5 rounded-full relative z-10 border border-white/20">Citenly AI (Software 2.0)</p>
                             <p className="text-2xl relative z-10 mb-6 font-extrabold leading-tight">Protege, acciona y maximiza ingresos financieros totalmente en automático.</p>
                             <p className="text-base text-white/90 relative z-10 font-medium leading-relaxed">Detecta oportunidades de revenue donde a ti se te escapan, agenda sin tu intervención 24/7, y activa pacientes durmientes sin que tengas que mirar la pantalla.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 8. Garantía de Implementación Concierge */}
+            <section className="py-24 bg-gradient-to-r from-[#0F172A] to-[#1E293B] text-white overflow-hidden relative border-y border-white/5">
+                <div className="absolute inset-0 bg-hero-gradient opacity-10"></div>
+                {/* Decorative circuit lines */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                        <div className="relative text-left">
+                            <span className="inline-block px-4 py-1.5 bg-primary-500/20 text-primary-300 font-bold text-sm uppercase tracking-widest rounded-full mb-6 border border-primary-500/30">
+                                ¿Por qué elegirnos?
+                            </span>
+                            <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight leading-tight">
+                                No te damos solo un software. <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-accent-300">Te entregamos una solución operando.</span>
+                            </h2>
+                            <p className="text-xl text-white/80 mb-8 leading-relaxed font-medium">
+                                La mayoría de los sistemas de IA te entregan un panel de control vacío para que tú "aprendas" a configurarlo. 
+                                En Citenly, **nosotros hacemos todo el trabajo pesado**.
+                            </p>
+                            
+                            <div className="space-y-6 mb-10">
+                                <div className="flex gap-4 items-start bg-white/5 p-4 rounded-2xl border border-white/10">
+                                    <div className="bg-primary-500/20 p-2 rounded-xl"><Check className="text-primary-400 w-6 h-6" /></div>
+                                    <p className="text-lg font-medium text-white/90">Implementamos hasta que tu asistente atienda pacientes al 100%, como lo haría tu recepcionista.</p>
+                                </div>
+                                <div className="flex gap-4 items-start bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
+                                    <div className="bg-emerald-500/20 p-2 rounded-xl"><Sparkles className="text-emerald-400 w-6 h-6" /></div>
+                                    <div>
+                                        <p className="text-lg font-bold text-emerald-300">La Regla de Éxito Citnely</p>
+                                        <p className="text-white/70">Tus 7 días de prueba solo comienzan cuando el asistente ya entiende y atiende perfectamente a tu clínica.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative">
+                            <div className="absolute -inset-4 bg-primary-500/20 blur-3xl rounded-full animate-pulse"></div>
+                            <div className="bg-charcoal/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 relative z-10 shadow-2xl">
+                                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+                                            <Bot className="text-white w-6 h-6" />
+                                        </div>
+                                        <h4 className="font-bold text-white text-xl">Monitor de Implementación</h4>
+                                    </div>
+                                    <span className="text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1 rounded-full text-xs">READY</span>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {[
+                                        { label: 'Integración WhatsApp API', status: '100%', color: 'bg-emerald-500' },
+                                        { label: 'Carga de Protocolos Clínicos', status: '100%', color: 'bg-emerald-500' },
+                                        { label: 'Sincronización de Agendas', status: '100%', color: 'bg-emerald-500' },
+                                        { label: 'Ajuste de Tono de Marca', status: '100%', color: 'bg-primary-500' },
+                                    ].map((item, index) => (
+                                        <div key={index}>
+                                            <div className="flex justify-between text-sm font-bold text-white/60 mb-2">
+                                                <span>{item.label}</span>
+                                                <span className="text-white">{item.status}</span>
+                                            </div>
+                                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                                <div className={`h-full ${item.color} rounded-full`} style={{ width: item.status }}></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                <div className="mt-8 p-6 bg-primary-500/10 rounded-2xl border border-primary-500/20 text-center">
+                                    <p className="text-primary-300 font-bold text-sm uppercase tracking-widest mb-2 italic">Prueba Gratis Activa</p>
+                                    <p className="text-white text-lg font-medium">Contando desde hoy: Sistema validado.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
