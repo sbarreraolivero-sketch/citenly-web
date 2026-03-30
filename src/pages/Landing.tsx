@@ -205,11 +205,11 @@ export default function Landing() {
                     </div>
 
                     <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-charcoal tracking-tight mb-8 leading-[1.1]">
-                        <span>¿Cuánto dinero está <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-amber-500">perdiendo</span> tu clínica cada mes sin saberlo?</span>
+                        <span>Convierte tu recepción en una <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400">máquina de facturación 24/7</span> sin contratar más personal.</span>
                     </h1>
 
-                    <p className="text-xl sm:text-2xl text-charcoal/80 mb-10 max-w-3xl mx-auto leading-relaxed font-medium">
-                        A diferencia de otros, nosotros no solo te damos la IA. **La implementamos por ti.** Dejamos tu sistema de atención funcionando al 100%, tal como lo haría tu mejor recepcionista.
+                    <p className="text-xl sm:text-2xl text-charcoal/80 mb-10 max-w-4xl mx-auto leading-relaxed font-medium">
+                        No es solo un software; es tu nueva **Infraestructura de Éxito**. Implementamos una máquina operativa que captura cada lead, llena tu agenda y mantiene a tus pacientes regresando, sin intervención humana.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
