@@ -52,9 +52,8 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
     const [sidebarTags, setSidebarTags] = useState<CrmTag[]>([])
     const [allTags, setAllTags] = useState<(CrmTag & { source: 'crm' | 'patient' | 'both', crm_id?: string, patient_id?: string })[]>([])
     const [saving, setSaving] = useState(false)
-    const [savingTags, setSavingTags] = useState(false)
+    const [tagBusy, setTagBusy] = useState<string | null>(null)
     const [showTagAdd, setShowTagAdd] = useState(false)
-    const [hasTagChanges, setHasTagChanges] = useState(false)
     const [newNote, setNewNote] = useState('')
 
     useEffect(() => {
@@ -161,7 +160,6 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
             })
             
             setAllTags(Array.from(tagMap.values()) as any)
-            setHasTagChanges(false)
 
         } catch (err) {
             console.error('Error fetching prospect info:', err)
@@ -190,29 +188,12 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
         }
     }
 
-    const addTag = (tagId: string) => {
+    const addTag = async (tagId: string) => {
         const tagToAdd = allTags.find(t => t.id === tagId)
-        if (!tagToAdd) return
-        
-        if (!sidebarTags.some(t => t.id === tagId)) {
-            setSidebarTags(prev => [...prev, tagToAdd])
-            setHasTagChanges(true)
-        }
-        setShowTagAdd(false)
-    }
-
-    const removeTag = (tagId: string) => {
-        setSidebarTags(prev => prev.filter(t => t.id !== tagId))
-        setHasTagChanges(true)
-    }
-
-    const saveTags = async () => {
-        if (!prospect || !clinicId || savingTags) return
-        setSavingTags(true)
+        if (!tagToAdd || !prospect) return
+        setTagBusy(tagId)
         try {
             const normalizedPhone = phoneNumber.replace(/\D/g, '')
-            
-            // Get patient if any
             const { data: patient } = await (supabase as any)
                 .from('patients')
                 .select('id')
@@ -220,39 +201,53 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone},phone_number.eq.56${normalizedPhone}`)
                 .maybeSingle()
 
-            // 1. Delete existing joins
-            await Promise.all([
-                (supabase as any).from('crm_prospect_tags').delete().eq('prospect_id', prospect.id),
-                patient ? (supabase as any).from('patient_tags').delete().eq('patient_id', patient.id) : Promise.resolve()
-            ])
+            const crmId = tagToAdd.crm_id || tagToAdd.id
+            const patId = tagToAdd.patient_id
 
-            // 2. Insert new joins based on source
-            const inserts: Promise<any>[] = []
-            
-            sidebarTags.forEach(tag => {
-                const tagInfo = allTags.find(at => at.name.toLowerCase().trim() === tag.name.toLowerCase().trim())
-                if (!tagInfo) return
-                
-                const crmId = (tagInfo as any).crm_id
-                const patId = (tagInfo as any).patient_id
+            if (crmId && (tagToAdd.source === 'crm' || tagToAdd.source === 'both')) {
+                await (supabase as any).from('crm_prospect_tags').insert({ prospect_id: prospect.id, tag_id: crmId })
+            }
+            if (patient && patId && (tagToAdd.source === 'patient' || tagToAdd.source === 'both')) {
+                await (supabase as any).from('patient_tags').insert({ patient_id: patient.id, tag_id: patId })
+            }
 
-                if (crmId) {
-                    inserts.push((supabase as any).from('crm_prospect_tags').insert({ prospect_id: prospect.id, tag_id: crmId }))
-                }
-                
-                if (patient && patId) {
-                    inserts.push((supabase as any).from('patient_tags').insert({ patient_id: patient.id, tag_id: patId }))
-                }
-            })
-
-            await Promise.all(inserts)
-            setHasTagChanges(false)
-            alert('Etiquetas guardadas con éxito.')
+            setSidebarTags(prev => [...prev, tagToAdd])
+            setShowTagAdd(false)
         } catch (err) {
-            console.error('Error saving tags:', err)
-            alert('Error al guardar etiquetas.')
+            console.error('Error adding tag:', err)
+            alert('Error al agregar etiqueta.')
         } finally {
-            setSavingTags(false)
+            setTagBusy(null)
+        }
+    }
+
+    const removeTag = async (tagId: string) => {
+        if (!prospect) return
+        setTagBusy(tagId)
+        try {
+            const tagToRemove = allTags.find(t => t.id === tagId)
+            const normalizedPhone = phoneNumber.replace(/\D/g, '')
+            const { data: patient } = await (supabase as any)
+                .from('patients')
+                .select('id')
+                .eq('clinic_id', clinicId)
+                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone},phone_number.eq.56${normalizedPhone}`)
+                .maybeSingle()
+
+            const crmId = tagToRemove?.crm_id || tagId
+            const patId = tagToRemove?.patient_id
+
+            await (supabase as any).from('crm_prospect_tags').delete().eq('prospect_id', prospect.id).eq('tag_id', crmId)
+            if (patient && patId) {
+                await (supabase as any).from('patient_tags').delete().eq('patient_id', patient.id).eq('tag_id', patId)
+            }
+
+            setSidebarTags(prev => prev.filter(t => t.id !== tagId))
+        } catch (err) {
+            console.error('Error removing tag:', err)
+            alert('Error al eliminar etiqueta.')
+        } finally {
+            setTagBusy(null)
         }
     }
 
@@ -432,9 +427,11 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                         <button
                                             key={tag.id}
                                             onClick={() => addTag(tag.id)}
-                                            className="text-xs px-2.5 py-1 rounded-full text-white font-black hover:scale-105 transition-transform shadow-sm"
+                                            disabled={tagBusy === tag.id}
+                                            className="text-xs px-2.5 py-1 rounded-full text-white font-black hover:scale-105 transition-transform shadow-sm disabled:opacity-50 flex items-center gap-1"
                                             style={{ backgroundColor: tag.color }}
                                         >
+                                            {tagBusy === tag.id && <Loader2 className="w-3 h-3 animate-spin" />}
                                             {tag.name}
                                         </button>
                                     ))}
@@ -452,9 +449,10 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                     className="group relative flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full text-white font-black transition-all hover:pr-8 overflow-hidden shadow-md"
                                     style={{ backgroundColor: tag.color }}
                                 >
-                                    {tag.name}
+                                    {tagBusy === tag.id ? <Loader2 className="w-3 h-3 animate-spin" /> : tag.name}
                                     <button 
                                         onClick={() => removeTag(tag.id)}
+                                        disabled={tagBusy === tag.id}
                                         className="absolute right-1 opacity-0 group-hover:opacity-100 hover:bg-black/10 rounded-full p-0.5 transition-opacity"
                                     >
                                         <X className="w-3 h-3" />
@@ -465,17 +463,6 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                 <p className="text-xs text-charcoal/30 italic">Sin etiquetas asignadas</p>
                             )}
                         </div>
-
-                        {hasTagChanges && (
-                            <button
-                                onClick={saveTags}
-                                disabled={savingTags}
-                                className="w-full mt-2 py-2 flex items-center justify-center gap-2 text-[11px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-soft transition-all shadow-sm disabled:opacity-50"
-                            >
-                                {savingTags ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                                Guardar Etiquetas
-                            </button>
-                        )}
                     </section>
 
                     {/* Notes */}
@@ -524,28 +511,6 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 </div>
             </div>
 
-            {/* Sticky Actions Footer */}
-            {(hasTagChanges || savingTags) && (
-                <div className="p-4 border-t border-silk-beige bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-300">
-                    <button
-                        onClick={saveTags}
-                        disabled={savingTags}
-                        className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-soft transition-all shadow-md active:scale-[0.98] disabled:opacity-50"
-                    >
-                        {savingTags ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4" />
-                                Guardar Cambios en Etiquetas
-                            </>
-                        )}
-                    </button>
-                    <p className="text-[10px] text-emerald-600 font-bold text-center mt-2 animate-pulse">
-                        Tienes cambios sin guardar
-                    </p>
-                </div>
-            )}
         </div>
     )
 }
