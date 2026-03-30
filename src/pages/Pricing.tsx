@@ -33,7 +33,7 @@ const plans = [
         tagline: 'Para clínicas en pleno crecimiento (Físicas o a domicilio).',
         price: 159,
         period: '/mes',
-        description: 'La solución completa para captar, retener por tratamiento y automatizar tu clínica.',
+        description: 'Infraestructura Operativa para captar, retener por tratamiento y automatizar tu clínica.',
         highlight: true,
         icon: Zap,
         features: [
@@ -48,6 +48,7 @@ const plans = [
             'Módulo de Gestión Financiera',
             'Citas Ilimitadas',
             'Encuestas de satisfacción personalizadas',
+            'Modelo "Done-for-you" (Implementación)',
         ],
         limitations: [],
         cta: 'Elegir Radiance',
@@ -70,6 +71,7 @@ const plans = [
             'IA personalizada (especialidades médicas)',
             'Recordatorios confirmación ilimitados',
             'Benchmark entre sedes. Super Administrador',
+            'Infraestructura de Éxito Total',
         ],
         limitations: [],
         cta: 'Contactar Ventas',
@@ -145,7 +147,7 @@ export default function Pricing() {
                         <span className="text-gradient-hero"> clínicas estéticas y médicas</span>
                     </h1>
                     <p className="text-xl text-charcoal/60 mb-8 max-w-2xl mx-auto leading-relaxed">
-                        No te damos solo la IA, **nosotros la implementamos por ti**. 
+                        No te damos solo la IA, **implementamos tu Infraestructura Operativa de Éxito**. 
                         Dejamos tu sistema operando al 100% como una recepcionista experta antes de que empiece tu prueba.
                     </p>
                     <div className="flex items-center justify-center gap-4">

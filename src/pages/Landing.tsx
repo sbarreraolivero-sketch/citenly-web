@@ -201,7 +201,7 @@ export default function Landing() {
                 <div className="max-w-5xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 bg-charcoal text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-8 shadow-2xl animate-float-y">
                         <Sparkles className="w-3.5 h-3.5 text-primary-300" />
-                        Software 2.0 para Clínicas Estéticas
+                        Modelo "Done-for-you" • Implementación Garantizada
                     </div>
 
                     <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-charcoal tracking-tight mb-8 leading-[1.1]">
@@ -410,7 +410,7 @@ export default function Landing() {
                                     Citenly AI
                                 </h2>
                                 <h2 className="text-5xl sm:text-6xl font-extrabold leading-tight m-0 block text-transparent bg-clip-text bg-gradient-to-r from-primary-300 via-primary-400 to-accent-300 pb-2 drop-shadow-lg scale-105 origin-left tracking-tight">
-                                    Revenue Retention Engine™
+                                    Infraestructura Operativa de Éxito™
                                 </h2>
                             </div>
 
@@ -418,7 +418,7 @@ export default function Landing() {
                                 "No necesitas más pacientes. Necesitas no perder los que ya tienes."
                             </p>
                             <p className="text-lg text-white/70 mb-10 leading-relaxed font-medium">
-                                No es un reporte de recordatorios. Es un motor predictivo que analiza historiales clínicos, detecta pacientes en riesgo profundo de abandono (ej. Toxinas caducadas), calcula el dinero en riesgo y <strong>ejecuta campañas inteligentes de recuperación por WhatsApp completamente solo</strong>.
+                                No es solo un reporte o recordatorios. Es una **Infraestructura Operativa de Éxito** que analiza historiales clínicos, detecta pacientes en riesgo profundo de abandono (ej. Toxinas caducadas), calcula el dinero en riesgo y <strong>ejecuta campañas inteligentes de recuperación por WhatsApp completamente solo</strong>.
                             </p>
 
                             <ul className="space-y-5 mb-12">
@@ -660,8 +660,8 @@ export default function Landing() {
                                 ¿Por qué elegirnos?
                             </span>
                             <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight leading-tight text-white">
-                                No te damos solo un software. <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-accent-300">Te entregamos una solución operando.</span>
+                                No es solo software. Es tu <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-accent-300">Infraestructura Operativa de Éxito.</span>
                             </h2>
                             <p className="text-xl text-white/80 mb-8 leading-relaxed font-medium">
                                 La mayoría de los sistemas de IA te entregan un panel de control vacío para que tú "aprendas" a configurarlo. 
