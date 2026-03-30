@@ -523,6 +523,29 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                     </section>
                 </div>
             </div>
+
+            {/* Sticky Actions Footer */}
+            {(hasTagChanges || savingTags) && (
+                <div className="p-4 border-t border-silk-beige bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-300">
+                    <button
+                        onClick={saveTags}
+                        disabled={savingTags}
+                        className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-soft transition-all shadow-md active:scale-[0.98] disabled:opacity-50"
+                    >
+                        {savingTags ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <>
+                                <Save className="w-4 h-4" />
+                                Guardar Cambios en Etiquetas
+                            </>
+                        )}
+                    </button>
+                    <p className="text-[10px] text-emerald-600 font-bold text-center mt-2 animate-pulse">
+                        Tienes cambios sin guardar
+                    </p>
+                </div>
+            )}
         </div>
     )
 }
