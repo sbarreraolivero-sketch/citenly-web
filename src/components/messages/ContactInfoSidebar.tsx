@@ -49,10 +49,12 @@ interface ContactInfoSidebarProps {
 export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactInfoSidebarProps) {
     const [loading, setLoading] = useState(true)
     const [prospect, setProspect] = useState<Prospect | null>(null)
-    const [tags, setTags] = useState<CrmTag[]>([])
-    const [allTags, setAllTags] = useState<CrmTag[]>([])
+    const [sidebarTags, setSidebarTags] = useState<CrmTag[]>([])
+    const [allTags, setAllTags] = useState<(CrmTag & { source: 'crm' | 'patient' | 'both' })[]>([])
     const [saving, setSaving] = useState(false)
+    const [savingTags, setSavingTags] = useState(false)
     const [showTagAdd, setShowTagAdd] = useState(false)
+    const [hasTagChanges, setHasTagChanges] = useState(false)
     const [newNote, setNewNote] = useState('')
 
     useEffect(() => {
@@ -120,25 +122,33 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 }
             }
 
-            setTags(allAssignedTags)
+            setSidebarTags(allAssignedTags)
 
             // Fetch all available tags for the clinic from BOTH systems
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const [crmTagsRes, patientTagsRes] = await Promise.all([
                 (supabase as any).from('crm_tags').select('*').eq('clinic_id', clinicId),
                 (supabase as any).from('tags').select('*').eq('clinic_id', clinicId)
             ])
+
+            const crmIds = new Set(crmTagsRes.data?.map((t: any) => t.id) || [])
+            const patientIds = new Set(patientTagsRes.data?.map((t: any) => t.id) || [])
+
+            const unifiedAvailableTags: (CrmTag & { source: 'crm' | 'patient' | 'both' })[] = []
             
-            const unifiedAvailableTags: CrmTag[] = [...(crmTagsRes.data || [])]
-            if (patientTagsRes.data) {
-                patientTagsRes.data.forEach((t: any) => {
-                    if (!unifiedAvailableTags.some(at => at.name.toLowerCase() === t.name.toLowerCase())) {
-                        unifiedAvailableTags.push(t)
-                    }
-                })
-            }
+            // From CRM
+            crmTagsRes.data?.forEach((t: any) => {
+                unifiedAvailableTags.push({ ...t, source: patientIds.has(t.id) ? 'both' : 'crm' })
+            })
+            
+            // From Patients (only if not already added from CRM)
+            patientTagsRes.data?.forEach((t: any) => {
+                if (!unifiedAvailableTags.some(at => at.id === t.id)) {
+                    unifiedAvailableTags.push({ ...t, source: 'patient' })
+                }
+            })
             
             setAllTags(unifiedAvailableTags.sort((a, b) => a.name.localeCompare(b.name)))
+            setHasTagChanges(false)
 
         } catch (err) {
             console.error('Error fetching prospect info:', err)
@@ -167,80 +177,66 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
         }
     }
 
-    const addTag = async (tagId: string) => {
-        try {
-            const tagToAdd = allTags.find(t => t.id === tagId)
-            if (!tagToAdd) return
-
-            // Intenta insertar en CRM prospect tags siempre
-            if (prospect) {
-                const { error: crmErr } = await (supabase as any)
-                    .from('crm_prospect_tags')
-                    .insert({ prospect_id: prospect.id, tag_id: tagId })
-                if (crmErr && crmErr.code !== '23505' && crmErr.code !== '23503') {
-                    console.warn('Could not insert as crm tag', crmErr)
-                }
-            }
-
-            // Intenta insertar en patient tags siempre (si hay paciente)
-            const normalizedPhone = phoneNumber.replace(/\D/g, '')
-            const { data: patient } = await (supabase as any)
-                .from('patients')
-                .select('id')
-                .eq('clinic_id', clinicId)
-                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
-                .maybeSingle()
-            
-            if (patient) {
-                const { error: patErr } = await (supabase as any)
-                    .from('patient_tags')
-                    .insert({ patient_id: patient.id, tag_id: tagId })
-                if (patErr && patErr.code !== '23505' && patErr.code !== '23503') {
-                    console.warn('Could not insert as patient tag', patErr)
-                }
-            }
-            
-            if (!tags.some(t => t.id === tagId)) {
-                setTags(prev => [...prev, tagToAdd])
-            }
-            setShowTagAdd(false)
-        } catch (err) {
-            console.error('Error adding tag:', err)
-            alert('Error al agregar etiqueta.')
+    const addTag = (tagId: string) => {
+        const tagToAdd = allTags.find(t => t.id === tagId)
+        if (!tagToAdd) return
+        
+        if (!sidebarTags.some(t => t.id === tagId)) {
+            setSidebarTags(prev => [...prev, tagToAdd])
+            setHasTagChanges(true)
         }
+        setShowTagAdd(false)
     }
 
-    const removeTag = async (tagId: string) => {
-        try {
-            // Remove from both systems (silent if not exists)
-            if (prospect) {
-                await (supabase as any)
-                    .from('crm_prospect_tags')
-                    .delete()
-                    .eq('prospect_id', prospect.id)
-                    .eq('tag_id', tagId)
-            }
+    const removeTag = (tagId: string) => {
+        setSidebarTags(prev => prev.filter(t => t.id !== tagId))
+        setHasTagChanges(true)
+    }
 
+    const saveTags = async () => {
+        if (!prospect || !clinicId || savingTags) return
+        setSavingTags(true)
+        try {
             const normalizedPhone = phoneNumber.replace(/\D/g, '')
+            
+            // Get patient if any
             const { data: patient } = await (supabase as any)
                 .from('patients')
                 .select('id')
                 .eq('clinic_id', clinicId)
-                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone}`)
+                .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone},phone_number.eq.56${normalizedPhone}`)
                 .maybeSingle()
-            
-            if (patient) {
-                await (supabase as any)
-                    .from('patient_tags')
-                    .delete()
-                    .eq('patient_id', patient.id)
-                    .eq('tag_id', tagId)
-            }
 
-            setTags(prev => prev.filter(t => t.id !== tagId))
+            // 1. Delete existing joins
+            await Promise.all([
+                (supabase as any).from('crm_prospect_tags').delete().eq('prospect_id', prospect.id),
+                patient ? (supabase as any).from('patient_tags').delete().eq('patient_id', patient.id) : Promise.resolve()
+            ])
+
+            // 2. Insert new joins based on source
+            const inserts: Promise<any>[] = []
+            
+            sidebarTags.forEach(tag => {
+                const tagInfo = allTags.find(at => at.id === tag.id)
+                if (!tagInfo) return
+
+                if (tagInfo.source === 'crm' || tagInfo.source === 'both') {
+                    inserts.push((supabase as any).from('crm_prospect_tags').insert({ prospect_id: prospect.id, tag_id: tag.id }))
+                }
+                
+                if (patient && (tagInfo.source === 'patient' || tagInfo.source === 'both')) {
+                    inserts.push((supabase as any).from('patient_tags').insert({ patient_id: patient.id, tag_id: tag.id }))
+                }
+            })
+
+            await Promise.all(inserts)
+            setHasTagChanges(false)
+            alert('Etiquetas guardadas con éxito.')
         } catch (err) {
-            console.error('Error removing tag:', err)
-            alert('Error al eliminar etiqueta.')
+            console.error('Error saving tags:', err)
+            alert('Error al guardar etiquetas.')
+        } finally {
+            setSavingTags(false)
         }
     }
 
@@ -416,7 +412,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                             <div className="bg-ivory/50 rounded-soft border border-silk-beige p-2 animate-in fade-in zoom-in-95 duration-200">
                                 <p className="text-xs font-black text-charcoal/70 mb-2 px-1 uppercase tracking-tight">Selecciona para agregar:</p>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {allTags.filter(at => !tags.some(t => t.id === at.id)).map(tag => (
+                                    {allTags.filter((at: any) => !sidebarTags.some((t: any) => t.id === at.id)).map((tag: any) => (
                                         <button
                                             key={tag.id}
                                             onClick={() => addTag(tag.id)}
@@ -426,7 +422,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                             {tag.name}
                                         </button>
                                     ))}
-                                    {allTags.filter(at => !tags.some(t => t.id === at.id)).length === 0 && (
+                                    {allTags.filter((at: any) => !sidebarTags.some((t: any) => t.id === at.id)).length === 0 && (
                                         <p className="text-[10px] text-charcoal/40 italic p-1">No hay más etiquetas</p>
                                     )}
                                 </div>
@@ -434,7 +430,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                         )}
 
                         <div className="flex flex-wrap gap-2">
-                            {tags.map(tag => (
+                            {sidebarTags.map(tag => (
                                 <div 
                                     key={tag.id}
                                     className="group relative flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full text-white font-black transition-all hover:pr-8 overflow-hidden shadow-md"
@@ -449,10 +445,21 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                                     </button>
                                 </div>
                             ))}
-                            {tags.length === 0 && (
+                            {sidebarTags.length === 0 && (
                                 <p className="text-xs text-charcoal/30 italic">Sin etiquetas asignadas</p>
                             )}
                         </div>
+
+                        {hasTagChanges && (
+                            <button
+                                onClick={saveTags}
+                                disabled={savingTags}
+                                className="w-full mt-2 py-2 flex items-center justify-center gap-2 text-[11px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-soft transition-all shadow-sm disabled:opacity-50"
+                            >
+                                {savingTags ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                Guardar Etiquetas
+                            </button>
+                        )}
                     </section>
 
                     {/* Notes */}

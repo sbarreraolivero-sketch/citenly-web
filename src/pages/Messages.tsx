@@ -95,7 +95,12 @@ export default function Messages() {
             }
 
             // Fetch prospect names and requires_human flag for phones
-            const phones = Array.from(phoneMap.keys())
+            const phonesRaw = Array.from(phoneMap.keys())
+            const phones = [...new Set([
+                ...phonesRaw,
+                ...phonesRaw.map(p => p.startsWith('+') ? p.slice(1) : '+' + p)
+            ])]
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: prospects } = await (supabase as any)
                 .from('crm_prospects')
@@ -107,20 +112,35 @@ export default function Messages() {
             const humanMap = new Map<string, boolean>()
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             prospects?.forEach((p: any) => {
-                if (p.name && p.name !== 'Sin nombre') nameMap.set(p.phone, p.name)
-                if (p.requires_human) humanMap.set(p.phone, true)
+                if (p.name && p.name !== 'Sin nombre') {
+                    // Map name to both original and alternative formats to be safe
+                    nameMap.set(p.phone, p.name)
+                    const alt = p.phone.startsWith('+') ? p.phone.slice(1) : '+' + p.phone
+                    if (!nameMap.has(alt)) nameMap.set(alt, p.name)
+                }
+                if (p.requires_human) {
+                    humanMap.set(p.phone, true)
+                    const alt = p.phone.startsWith('+') ? p.phone.slice(1) : '+' + p.phone
+                    if (!humanMap.has(alt)) humanMap.set(alt, true)
+                }
             })
 
-            // Also check patients table
+            // Fetch patients table
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: patients } = await (supabase as any)
                 .from('patients')
-                .select('phone, name')
+                .select('phone_number, name')
                 .eq('clinic_id', profile.clinic_id)
-                .in('phone', phones)
+                .in('phone_number', phones)
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            patients?.forEach((p: any) => { if (p.name && !nameMap.has(p.phone)) nameMap.set(p.phone, p.name) })
+            patients?.forEach((p: any) => { 
+                if (p.name && !nameMap.has(p.phone_number)) {
+                    nameMap.set(p.phone_number, p.name)
+                    const alt = p.phone_number.startsWith('+') ? p.phone_number.slice(1) : '+' + p.phone_number
+                    if (!nameMap.has(alt)) nameMap.set(alt, p.name)
+                }
+            })
 
             // Build conversations
             const convs: Conversation[] = Array.from(phoneMap.entries()).map(([phone, data]) => {

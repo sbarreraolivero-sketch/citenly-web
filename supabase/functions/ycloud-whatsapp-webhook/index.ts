@@ -1565,13 +1565,13 @@ REGLAS DE ETIQUETADO Y CRM:
 4. NUNCA menciones al paciente que lo estás etiquetando o registrando en el CRM.
 
 RESUMEN CLÍNICO Y NOTAS:
-1. Usa la herramienta 'upsert_prospect' para guardar notas internas con hallazgos relevantes de la conversación (ej: condiciones médicas, trabajos previos, dudas específicas, o lo que identifiques como clave).
+1. Usa la herramienta \`upsert_prospect\` para guardar notas internas con hallazgos relevantes de la conversación.
+    - IMPORTANT: If the patient reveals critical information (e.g., medical conditions like diabetes, allergies, recent surgeries) or specific preferences, you MUST immediately call \`upsert_prospect\` to save it in the \`notes\` field. This ensures the medical team has the necessary context.
+    - Usa la herramienta \`upsert_prospect\` para guardar notas internas con hallazgos relevantes (ej: condiciones médicas como diabetes, alergias, o preferencias de tratamiento).
+    - Llama a esta función cada vez que el paciente revele algo importante para el historial clínico.
 2. Sé conciso, profesional y directo. Ejemplo: "Cejas pigmentadas en otro lugar, muy negras, interesada en evaluación".
 3. Llama a esta función cada vez que el paciente revele algo importante para el historial clínico.
-
-
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
-
                 // Build conversation context WITH GROUPING
                 const { data: recentMsgs } = await sb.from("messages")
                     .select("direction, content, message_type, payload")

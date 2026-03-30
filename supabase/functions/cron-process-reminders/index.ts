@@ -106,10 +106,9 @@ serve(async (req) => {
 
             // Robust check: run if current hour is >= prefHour AND before end of day (e.g. 18:00)
             // This ensures that if the cron was missed at exactly 09:00, it still runs later.
-            if (currentHour < prefHour || currentHour >= 18) {
+            if (currentHour !== prefHour && (currentHour < prefHour || currentHour >= 18)) {
                 continue
             }
-
             log.push(`Processing clinic ${clinic.clinic_name} (${clinic.id}) at clinic hour ${currentHour}`)
 
             // 4. Calculate "Tomorrow" in clinic's timezone safely
