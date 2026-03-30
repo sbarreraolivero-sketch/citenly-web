@@ -209,7 +209,7 @@ export default function Landing() {
                     </h1>
 
                     <p className="text-xl sm:text-2xl text-charcoal/80 mb-10 max-w-4xl mx-auto leading-relaxed font-medium">
-                        No es solo un software; es tu nueva **Infraestructura de Éxito**. Implementamos una máquina operativa que captura cada lead, llena tu agenda y mantiene a tus pacientes regresando, sin intervención humana.
+                        No es solo un software; es tu nueva <span className="text-primary-600 font-bold">Infraestructura de Éxito</span>. Implementamos una máquina operativa que captura cada lead, llena tu agenda y mantiene a tus pacientes regresando, sin intervención humana.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
