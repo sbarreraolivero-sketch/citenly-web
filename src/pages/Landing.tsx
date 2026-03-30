@@ -659,7 +659,7 @@ export default function Landing() {
                             <span className="inline-block px-4 py-1.5 bg-primary-500/20 text-primary-300 font-bold text-sm uppercase tracking-widest rounded-full mb-6 border border-primary-500/30">
                                 ¿Por qué elegirnos?
                             </span>
-                            <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight leading-tight">
+                            <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight leading-tight text-white">
                                 No te damos solo un software. <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-accent-300">Te entregamos una solución operando.</span>
                             </h2>
@@ -676,7 +676,7 @@ export default function Landing() {
                                 <div className="flex gap-4 items-start bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
                                     <div className="bg-emerald-500/20 p-2 rounded-xl"><Sparkles className="text-emerald-400 w-6 h-6" /></div>
                                     <div>
-                                        <p className="text-lg font-bold text-emerald-300">La Regla de Éxito Citnely</p>
+                                        <p className="text-lg font-bold text-emerald-300">La Regla de Éxito Citenly</p>
                                         <p className="text-white/70">Tus 7 días de prueba solo comienzan cuando el asistente ya entiende y atiende perfectamente a tu clínica.</p>
                                     </div>
                                 </div>
