@@ -130,7 +130,6 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 (supabase as any).from('tags').select('*').eq('clinic_id', clinicId)
             ])
 
-            const crmIds = new Set(crmTagsRes.data?.map((t: any) => t.id) || [])
             const patientIds = new Set(patientTagsRes.data?.map((t: any) => t.id) || [])
 
             const unifiedAvailableTags: (CrmTag & { source: 'crm' | 'patient' | 'both' })[] = []
