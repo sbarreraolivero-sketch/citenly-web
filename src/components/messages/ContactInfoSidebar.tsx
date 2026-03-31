@@ -190,10 +190,12 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
 
     const addTag = async (tagId: string) => {
         const tagToAdd = allTags.find(t => t.id === tagId)
-        if (!tagToAdd || !prospect) return
+        if (!tagToAdd) return
         setTagBusy(tagId)
         try {
             const normalizedPhone = phoneNumber.replace(/\D/g, '')
+
+            // Resolve patient record
             const { data: patient } = await (supabase as any)
                 .from('patients')
                 .select('id')
@@ -201,32 +203,55 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone},phone_number.eq.56${normalizedPhone}`)
                 .maybeSingle()
 
-            const crmId = tagToAdd.crm_id || tagToAdd.id
-            const patId = tagToAdd.patient_id
-
-            if (crmId && (tagToAdd.source === 'crm' || tagToAdd.source === 'both')) {
-                await (supabase as any).from('crm_prospect_tags').insert({ prospect_id: prospect.id, tag_id: crmId })
+            // Resolve prospect record (create one on-the-fly if missing so tags persist)
+            let prospectId = prospect?.id
+            if (!prospectId) {
+                const { data: newProspect, error: createError } = await (supabase as any)
+                    .from('crm_prospects')
+                    .insert({ clinic_id: clinicId, phone: normalizedPhone, name: patient ? null : phoneNumber })
+                    .select('id')
+                    .single()
+                if (createError) throw new Error(`No se pudo crear el prospecto: ${createError.message}`)
+                prospectId = newProspect.id
+                setProspect((prev: any) => prev ?? { id: prospectId, clinic_id: clinicId, phone: normalizedPhone, requires_human: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
             }
-            if (patient && patId && (tagToAdd.source === 'patient' || tagToAdd.source === 'both')) {
-                await (supabase as any).from('patient_tags').insert({ patient_id: patient.id, tag_id: patId })
+
+            const crmTagId = tagToAdd.crm_id || (tagToAdd.source !== 'patient' ? tagToAdd.id : null)
+            const patientTagId = tagToAdd.patient_id || (tagToAdd.source !== 'crm' ? tagToAdd.id : null)
+
+            // Insert into CRM prospect tags (upsert to avoid duplicate key errors)
+            if (crmTagId && prospectId) {
+                const { error: crmErr } = await (supabase as any)
+                    .from('crm_prospect_tags')
+                    .upsert({ prospect_id: prospectId, tag_id: crmTagId }, { onConflict: 'prospect_id,tag_id', ignoreDuplicates: true })
+                if (crmErr) throw new Error(`Error en CRM tag: ${crmErr.message}`)
             }
 
+            // Insert into patient tags (upsert to avoid duplicate key errors)
+            if (patient?.id && patientTagId) {
+                const { error: patErr } = await (supabase as any)
+                    .from('patient_tags')
+                    .upsert({ patient_id: patient.id, tag_id: patientTagId }, { onConflict: 'patient_id,tag_id', ignoreDuplicates: true })
+                if (patErr) throw new Error(`Error en patient tag: ${patErr.message}`)
+            }
+
+            // Only update UI after confirmed DB write
             setSidebarTags(prev => [...prev, tagToAdd])
             setShowTagAdd(false)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error adding tag:', err)
-            alert('Error al agregar etiqueta.')
+            alert(`Error al agregar etiqueta: ${err?.message || 'Error desconocido'}`)
         } finally {
             setTagBusy(null)
         }
     }
 
     const removeTag = async (tagId: string) => {
-        if (!prospect) return
         setTagBusy(tagId)
         try {
-            const tagToRemove = allTags.find(t => t.id === tagId)
+            const tagToRemove = sidebarTags.find(t => t.id === tagId) || allTags.find(t => t.id === tagId)
             const normalizedPhone = phoneNumber.replace(/\D/g, '')
+
             const { data: patient } = await (supabase as any)
                 .from('patients')
                 .select('id')
@@ -234,18 +259,31 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone},phone_number.eq.56${normalizedPhone}`)
                 .maybeSingle()
 
-            const crmId = tagToRemove?.crm_id || tagId
-            const patId = tagToRemove?.patient_id
+            const crmTagId = (tagToRemove as any)?.crm_id || tagId
+            const patientTagId = (tagToRemove as any)?.patient_id
 
-            await (supabase as any).from('crm_prospect_tags').delete().eq('prospect_id', prospect.id).eq('tag_id', crmId)
-            if (patient && patId) {
-                await (supabase as any).from('patient_tags').delete().eq('patient_id', patient.id).eq('tag_id', patId)
+            if (prospect?.id) {
+                const { error: crmErr } = await (supabase as any)
+                    .from('crm_prospect_tags')
+                    .delete()
+                    .eq('prospect_id', prospect.id)
+                    .eq('tag_id', crmTagId)
+                if (crmErr) console.warn('CRM tag delete error (non-fatal):', crmErr.message)
+            }
+
+            if (patient?.id && patientTagId) {
+                const { error: patErr } = await (supabase as any)
+                    .from('patient_tags')
+                    .delete()
+                    .eq('patient_id', patient.id)
+                    .eq('tag_id', patientTagId)
+                if (patErr) console.warn('Patient tag delete error (non-fatal):', patErr.message)
             }
 
             setSidebarTags(prev => prev.filter(t => t.id !== tagId))
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error removing tag:', err)
-            alert('Error al eliminar etiqueta.')
+            alert(`Error al eliminar etiqueta: ${err?.message || 'Error desconocido'}`)
         } finally {
             setTagBusy(null)
         }
