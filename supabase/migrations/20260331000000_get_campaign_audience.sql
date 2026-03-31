@@ -1,8 +1,3 @@
--- =============================================
--- Get Campaign Audience Contacts
--- Returns the actual contacts (id, name, phone) for a campaign
--- Based on the same logic as get_estimated_audience
--- =============================================
 
 CREATE OR REPLACE FUNCTION get_campaign_audience_contacts(
     p_clinic_id UUID,
@@ -14,60 +9,40 @@ RETURNS TABLE (
     full_name TEXT,
     phone_number TEXT
 ) AS $$
+DECLARE
+    v_inc_tags_lower TEXT[];
+    v_exc_tags_lower TEXT[];
 BEGIN
+    -- Normalizar tags (si son NULL, convertirlos en arrays vacíos)
+    v_inc_tags_lower := COALESCE((SELECT array_agg(TRIM(LOWER(t))) FROM unnest(p_inclusion_tags) t), '{}'::text[]);
+    v_exc_tags_lower := COALESCE((SELECT array_agg(TRIM(LOWER(t))) FROM unnest(p_exclusion_tags) t), '{}'::text[]);
+
     RETURN QUERY
-    WITH unified_tagged_contacts AS (
-        -- Patients
+    WITH contact_base AS (
+        -- Prospectos
         SELECT 
-            p.id as contact_id,
-            p.full_name,
-            regexp_replace(p.phone_number, '\D', '', 'g') as norm_phone,
-            COALESCE(
-                (SELECT array_agg(t.name) 
-                 FROM patient_tags pt 
-                 JOIN tags t ON pt.tag_id = t.id 
-                 WHERE pt.patient_id = p.id), 
-                '{}'::text[]
-            ) as tag_names
-        FROM patients p
-        WHERE p.clinic_id = p_clinic_id
+            pr.id, pr.full_name, 
+            regexp_replace(COALESCE(pr.phone, ''), '\D', '', 'g') as phone,
+            COALESCE((SELECT array_agg(TRIM(LOWER(t.name))) FROM crm_prospect_tags cpt JOIN crm_tags t ON cpt.tag_id = t.id WHERE cpt.prospect_id = pr.id), '{}'::text[]) as tags
+        FROM crm_prospects pr WHERE pr.clinic_id = p_clinic_id
         
         UNION ALL
         
-        -- Prospects (only if not a patient)
-        -- We return their prospect ID, but they are treated as contacts.
-        -- We'll use their phone number as the key.
+        -- Pacientes
         SELECT 
-            pr.id as contact_id,
-            COALESCE(pr.name, pr.phone) as full_name,
-            regexp_replace(pr.phone, '\D', '', 'g') as norm_phone,
-            COALESCE(
-                (SELECT array_agg(t.name) 
-                 FROM crm_prospect_tags cpt 
-                 JOIN crm_tags t ON cpt.tag_id = t.id 
-                 WHERE cpt.prospect_id = pr.id), 
-                '{}'::text[]
-            ) as tag_names
-        FROM crm_prospects pr
-        WHERE pr.clinic_id = p_clinic_id
-        AND NOT EXISTS (
-            SELECT 1 FROM patients p2 
-            WHERE p2.clinic_id = p_clinic_id 
-            AND regexp_replace(p2.phone_number, '\D', '', 'g') = regexp_replace(pr.phone, '\D', '', 'g')
-        )
+            p.id, p.full_name, 
+            regexp_replace(COALESCE(p.phone_number, ''), '\D', '', 'g') as phone,
+            COALESCE((SELECT array_agg(TRIM(LOWER(t.name))) FROM patient_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.patient_id = p.id), '{}'::text[]) as tags
+        FROM patients p WHERE p.clinic_id = p_clinic_id
     )
-    SELECT contact_id as id, utc.full_name, norm_phone as phone_number
-    FROM unified_tagged_contacts utc
-    WHERE (
-        p_inclusion_tags IS NULL OR 
-        ARRAY_LENGTH(p_inclusion_tags, 1) IS NULL OR
-        tag_names && p_inclusion_tags
-    )
-    AND (
-        p_exclusion_tags IS NULL OR 
-        ARRAY_LENGTH(p_exclusion_tags, 1) IS NULL OR
-        NOT (tag_names && p_exclusion_tags)
-    )
-    AND norm_phone IS NOT NULL AND norm_phone != '';
+    SELECT DISTINCT ON (phone) id, cb.full_name::text, cb.phone::text
+    FROM contact_base cb
+    WHERE 
+        -- Filtro Inclusión
+        (ARRAY_LENGTH(v_inc_tags_lower, 1) IS NULL OR cb.tags && v_inc_tags_lower)
+        AND
+        -- Filtro Exclusión
+        (ARRAY_LENGTH(v_exc_tags_lower, 1) IS NULL OR NOT (cb.tags && v_exc_tags_lower))
+        AND cb.phone != '';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
