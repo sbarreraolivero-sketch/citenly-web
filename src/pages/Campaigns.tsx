@@ -252,6 +252,12 @@ export default function Campaigns() {
     const handleDeleteCampaign = async (campaignId: string) => {
         if (!confirm('¿Estás seguro de que deseas eliminar esta campaña?')) return
 
+        // Guardar estado actual para rollback en caso de error
+        const previousCampaigns = [...campaigns];
+        
+        // Actualización optimista: Eliminar de la UI de inmediato
+        setCampaigns(prev => prev.filter(c => c.id !== campaignId));
+
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await (supabase as any)
@@ -260,11 +266,11 @@ export default function Campaigns() {
                 .eq('id', campaignId)
 
             if (error) throw error
-
-            setCampaigns(campaigns.filter(c => c.id !== campaignId))
         } catch (error) {
             console.error('Error deleting campaign:', error)
-            alert('Error al eliminar la campaña')
+            alert('Error al eliminar la campaña. Por favor intenta de nuevo.')
+            // Rollback: Restaurar el estado anterior
+            setCampaigns(previousCampaigns);
         }
     }
 
