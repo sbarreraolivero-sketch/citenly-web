@@ -221,24 +221,48 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
 
             // Ensure exists in CRM
             if (!finalCrmTagId) {
-                const { data: mirrored, error: mErr } = await (supabase as any)
+                // First try to find by name to avoid conflict
+                const { data: existingCrm } = await (supabase as any)
                     .from('crm_tags')
-                    .upsert({ clinic_id: clinicId, name: tagToAdd.name, color: tagToAdd.color }, { onConflict: 'clinic_id,name' })
                     .select('id')
-                    .single()
-                if (mErr) throw new Error(`Error espejo CRM: ${mErr.message}`)
-                finalCrmTagId = mirrored.id
+                    .eq('clinic_id', clinicId)
+                    .eq('name', tagToAdd.name)
+                    .maybeSingle()
+                
+                if (existingCrm) {
+                    finalCrmTagId = existingCrm.id
+                } else {
+                    const { data: mirrored, error: mErr } = await (supabase as any)
+                        .from('crm_tags')
+                        .insert({ clinic_id: clinicId, name: tagToAdd.name, color: tagToAdd.color })
+                        .select('id')
+                        .single()
+                    if (mErr) throw new Error(`Error espejo CRM: ${mErr.message}`)
+                    finalCrmTagId = mirrored.id
+                }
             }
 
             // Ensure exists in Patient Tags
             if (!finalPatientTagId) {
-                const { data: mirrored, error: mErr } = await (supabase as any)
+                // First try to find by name to avoid conflict
+                const { data: existingPat } = await (supabase as any)
                     .from('tags')
-                    .upsert({ clinic_id: clinicId, name: tagToAdd.name, color: tagToAdd.color }, { onConflict: 'clinic_id,name' })
                     .select('id')
-                    .single()
-                if (mErr) throw new Error(`Error espejo Patient: ${mErr.message}`)
-                finalPatientTagId = mirrored.id
+                    .eq('clinic_id', clinicId)
+                    .eq('name', tagToAdd.name)
+                    .maybeSingle()
+                
+                if (existingPat) {
+                    finalPatientTagId = existingPat.id
+                } else {
+                    const { data: mirrored, error: mErr } = await (supabase as any)
+                        .from('tags')
+                        .insert({ clinic_id: clinicId, name: tagToAdd.name, color: tagToAdd.color })
+                        .select('id')
+                        .single()
+                    if (mErr) throw new Error(`Error espejo Patient: ${mErr.message}`)
+                    finalPatientTagId = mirrored.id
+                }
             }
 
             // 3. Perform Assignments
