@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, Save, Zap, MessageSquare, AlertTriangle, Clock, RefreshCw, ArrowRight } from 'lucide-react'
-import { retentionService, type RetentionSettings, type YCloudTemplate } from '@/services/retentionService'
+import { X, Save, Zap, MessageSquare, AlertTriangle, Clock, RefreshCw, ArrowRight, CalendarClock, Plus, Loader2 } from 'lucide-react'
+import { retentionService, type RetentionSettings, type ServiceReturnWindow, type YCloudTemplate } from '@/services/retentionService'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import { Link } from 'react-router-dom'
@@ -26,6 +26,9 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [usingRemote, setUsingRemote] = useState(false)
+    const [returnWindows, setReturnWindows] = useState<ServiceReturnWindow[]>([])
+    const [windowEdits, setWindowEdits] = useState<Record<string, string>>({})
+    const [initializingDefaults, setInitializingDefaults] = useState(false)
     const [mediumDelayRaw, setMediumDelayRaw] = useState('15')
     const [highDelayRaw, setHighDelayRaw] = useState('45')
 
@@ -38,11 +41,15 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
     const loadData = async () => {
         setLoading(true)
         try {
-            // Parallel fetch: Settings + Remote Templates
-            const [settingsData, remoteTemplates] = await Promise.all([
+            // Parallel fetch: Settings + Remote Templates + Return Windows
+            const [settingsData, remoteTemplates, windowsData] = await Promise.all([
                 retentionService.getSettings(clinicId),
                 retentionService.getRemoteTemplates(clinicId).catch(err => {
                     console.warn('Failed to fetch remote templates:', err)
+                    return []
+                }),
+                retentionService.getReturnWindows(clinicId).catch(err => {
+                    console.warn('Failed to fetch return windows:', err)
                     return []
                 })
             ])
@@ -50,17 +57,22 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
             setSettings(settingsData)
             setMediumDelayRaw(settingsData.medium_risk_delay.toString())
             setHighDelayRaw(settingsData.high_risk_delay.toString())
+            setReturnWindows(windowsData)
+            // Pre-populate edit fields
+            const edits: Record<string, string> = {}
+            windowsData.forEach(w => { edits[w.id] = w.return_window_days.toString() })
+            setWindowEdits(edits)
 
             if (remoteTemplates && remoteTemplates.length > 0) {
                 setTemplates(remoteTemplates.map((t: YCloudTemplate) => ({
                     id: t.name,
-                    name: t.name, // YCloud template name is the ID
+                    name: t.name,
                     desc: t.body || '(Sin vista previa)'
                 })))
                 setUsingRemote(true)
             } else {
                 setUsingRemote(false)
-                setTemplates([]) // No templates available
+                setTemplates([])
             }
 
         } catch (err) {
@@ -79,7 +91,20 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                 medium_risk_delay: parseInt(mediumDelayRaw) || 0,
                 high_risk_delay: parseInt(highDelayRaw) || 0
             }
-            await retentionService.updateSettings(clinicId, finalSettings)
+
+            // Save settings + return windows in parallel
+            const windowUpdates = returnWindows
+                .filter(w => {
+                    const newVal = parseInt(windowEdits[w.id] || '0')
+                    return newVal > 0 && newVal !== w.return_window_days
+                })
+                .map(w => retentionService.updateReturnWindow(w.id, parseInt(windowEdits[w.id])))
+
+            await Promise.all([
+                retentionService.updateSettings(clinicId, finalSettings),
+                ...windowUpdates
+            ])
+
             toast.success('Configuración guardada')
             onSaved()
             onClose()
@@ -88,6 +113,24 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
             toast.error('Error al guardar cambios')
         } finally {
             setSaving(false)
+        }
+    }
+
+    const handleInitializeDefaults = async () => {
+        setInitializingDefaults(true)
+        try {
+            await retentionService.initializeDefaults(clinicId)
+            const windowsData = await retentionService.getReturnWindows(clinicId)
+            setReturnWindows(windowsData)
+            const edits: Record<string, string> = {}
+            windowsData.forEach(w => { edits[w.id] = w.return_window_days.toString() })
+            setWindowEdits(edits)
+            toast.success('Ciclos de retorno inicializados')
+        } catch (err) {
+            console.error(err)
+            toast.error('Error al inicializar ciclos')
+        } finally {
+            setInitializingDefaults(false)
         }
     }
 
@@ -200,6 +243,63 @@ export function RetentionSettingsModal({ isOpen, onClose, clinicId, onSaved }: R
                                 <p className="text-[12px] text-charcoal font-black leading-snug">
                                     Define cuántos días deben pasar después de la fecha ideal de regreso para que el paciente cambie de nivel de riesgo.
                                 </p>
+                            </div>
+
+                            <hr className="border-silk-beige" />
+
+                            {/* Service Return Windows Section */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-charcoal flex items-center gap-2">
+                                        <CalendarClock className="w-4 h-4 text-primary-500" />
+                                        Ciclos de Retorno por Servicio
+                                    </h3>
+                                    {returnWindows.length === 0 && (
+                                        <button
+                                            onClick={handleInitializeDefaults}
+                                            disabled={initializingDefaults}
+                                            className="text-xs bg-primary-50 text-primary-700 hover:bg-primary-100 px-2.5 py-1 rounded-full font-black flex items-center gap-1.5 transition-all shadow-sm border border-primary-100 disabled:opacity-50"
+                                        >
+                                            {initializingDefaults ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                            Generar Automáticamente
+                                        </button>
+                                    )}
+                                </div>
+                                <p className="text-[12px] text-charcoal font-bold leading-snug">
+                                    Define cada cuántos días esperas que el paciente regrese por cada servicio. El motor usa estos valores para calcular el riesgo.
+                                </p>
+
+                                {returnWindows.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {returnWindows.map(w => (
+                                            <div key={w.id} className="flex items-center gap-3 p-3 bg-ivory rounded-xl border border-silk-beige">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-charcoal truncate">{w.service_name}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        value={windowEdits[w.id] || ''}
+                                                        onChange={e => {
+                                                            const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '')
+                                                            setWindowEdits(prev => ({ ...prev, [w.id]: val }))
+                                                        }}
+                                                        className="w-20 h-9 px-3 bg-white border-2 border-silk-beige rounded-lg text-sm font-bold text-charcoal text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                                    />
+                                                    <span className="text-xs font-black text-charcoal/50 w-8">días</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 bg-ivory rounded-xl border border-dashed border-silk-beige">
+                                        <CalendarClock className="w-8 h-8 text-charcoal/15 mx-auto mb-2" />
+                                        <p className="text-xs font-bold text-charcoal/40">No hay ciclos configurados.</p>
+                                        <p className="text-xs text-charcoal/30">Presiona "Generar Automáticamente" para crearlos desde tus servicios.</p>
+                                    </div>
+                                )}
                             </div>
 
                             <hr className="border-silk-beige" />
