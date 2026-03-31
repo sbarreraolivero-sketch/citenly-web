@@ -12,19 +12,19 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
+    let campaign_id: string | null = null
+    const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     try {
-        const supabaseClient = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        )
+        const body = await req.json()
+        campaign_id = body.campaign_id
 
-        const { campaign_id } = await req.json()
+        if (!campaign_id) throw new Error('campaign_id is required')
 
-        if (!campaign_id) {
-            throw new Error('campaign_id is required')
-        }
-
-        console.log(`Processing campaign: ${campaign_id}`)
+        console.log(`[Campaign ${campaign_id}] Iniciando procesamiento...`)
 
         // 1. Fetch Campaign Details
         const { data: campaign, error: campaignError } = await supabaseClient
@@ -32,6 +32,7 @@ serve(async (req) => {
             .select(`
                 *,
                 clinic_settings(
+                    clinic_name,
                     ycloud_api_key,
                     ycloud_phone_number
                 )
@@ -40,114 +41,85 @@ serve(async (req) => {
             .single()
 
         if (campaignError) throw campaignError
-        if (!campaign) throw new Error('Campaign not found')
+        if (!campaign) throw new Error('Campaña no encontrada en la base de datos')
 
-        // 2. Resolve Audience (Directly in JS for reliability across schema versions)
-        // Fetch All Patients + Tags
-        const [patientsRes, patientTagsRes, prospectsRes, prospectTagsRes, tagsRes, crmTagsRes] = await Promise.all([
-            supabaseClient.from('patients').select('id, full_name, phone_number').eq('clinic_id', campaign.clinic_id),
-            supabaseClient.from('patient_tags').select('patient_id, tag_id').eq('clinic_id', campaign.clinic_id),
-            supabaseClient.from('crm_prospects').select('id, name, phone').eq('clinic_id', campaign.clinic_id),
-            supabaseClient.from('crm_prospect_tags').select('prospect_id, tag_id'),
-            supabaseClient.from('tags').select('id, name').eq('clinic_id', campaign.clinic_id),
-            supabaseClient.from('crm_tags').select('id, name').eq('clinic_id', campaign.clinic_id)
-        ])
+        console.log(`[Campaign ${campaign_id}] Datos cargados: ${campaign.name}`)
 
-        const tagMap = new Map<string, string>() // ID -> Name
-        tagsRes.data?.forEach(t => tagMap.set(t.id, t.name.toLowerCase().trim()))
-        crmTagsRes.data?.forEach(t => tagMap.set(t.id, t.name.toLowerCase().trim()))
+        // 2. Resolve Audience using optimized RPC
+        // Aseguramos que los tags sean arrays de texto para el RPC
+        const incTags = Array.isArray(campaign.inclusion_tags) ? campaign.inclusion_tags : []
+        const excTags = Array.isArray(campaign.exclusion_tags) ? campaign.exclusion_tags : []
 
-        const pTagsMap = new Map<string, string[]>() // PatientID -> TagNames[]
-        patientTagsRes.data?.forEach(pt => {
-            const name = tagMap.get(pt.tag_id)
-            if (name) {
-                const list = pTagsMap.get(pt.patient_id) || []
-                list.push(name)
-                pTagsMap.set(pt.patient_id, list)
-            }
-        })
-        prospectTagsRes.data?.forEach(pt => {
-            const name = tagMap.get(pt.tag_id)
-            if (name) {
-                const list = pTagsMap.get(pt.prospect_id) || []
-                list.push(name)
-                pTagsMap.set(pt.prospect_id, list)
-            }
+        console.log(`[Campaign ${campaign_id}] Resolviendo audiencia con tags:`, { incTags, excTags })
+        
+        const { data: targetContacts, error: audienceError } = await supabaseClient.rpc('get_campaign_audience_contacts', {
+            p_clinic_id: campaign.clinic_id,
+            p_inclusion_tags: incTags.length > 0 ? incTags : null,
+            p_exclusion_tags: excTags.length > 0 ? excTags : null
         })
 
-        const incTags = (campaign.inclusion_tags || []).map((t: string) => t.toLowerCase().trim())
-        const excTags = (campaign.exclusion_tags || []).map((t: string) => t.toLowerCase().trim())
+        if (audienceError) {
+            console.error(`[Campaign ${campaign_id}] Error en RPC de audiencia:`, audienceError)
+            throw new Error(`Error resolviendo audiencia: ${audienceError.message}`)
+        }
 
-        const targetContacts: {id: string, name: string, phone: string}[] = []
-        const seenPhones = new Set<string>()
+        console.log(`[Campaign ${campaign_id}] Audiencia encontrada: ${targetContacts?.length || 0} contactos.`)
 
-        // Process Patients
-        patientsRes.data?.forEach(p => {
-            const phone = p.phone_number?.replace(/\D/g, '')
-            if (!phone) return
-            const tags = pTagsMap.get(p.id) || []
-            
-            const matchesInc = incTags.length === 0 || tags.some(t => incTags.includes(t))
-            const matchesExc = excTags.length > 0 && tags.some(t => excTags.includes(t))
-
-            if (matchesInc && !matchesExc) {
-                targetContacts.push({ id: p.id, name: p.full_name, phone })
-                seenPhones.add(phone)
-            }
-        })
-
-        // Process Prospects (those not already in patients)
-        prospectsRes.data?.forEach(pr => {
-            const phone = pr.phone?.replace(/\D/g, '')
-            if (!phone || seenPhones.has(phone)) return
-            const tags = pTagsMap.get(pr.id) || []
-
-            const matchesInc = incTags.length === 0 || tags.some(t => incTags.includes(t))
-            const matchesExc = excTags.length > 0 && tags.some(t => excTags.includes(t))
-
-            if (matchesInc && !matchesExc) {
-                targetContacts.push({ id: pr.id, name: pr.name || pr.phone, phone })
-                seenPhones.add(phone)
-            }
-        })
-
-        console.log(`Filtered audience: ${targetContacts.length} contacts found.`)
-
-        if (targetContacts.length === 0) {
-            await supabaseClient.from('campaigns').update({ status: 'completed', sent_count: 0, total_target: 0 }).eq('id', campaign_id)
+        if (!targetContacts || targetContacts.length === 0) {
+            await supabaseClient.from('campaigns').update({ 
+                status: 'completed', 
+                sent_count: 0, 
+                total_target: 0,
+                error_log: 'No se encontraron contactos que coincidan con la segmentación'
+            }).eq('id', campaign_id)
             return new Response(JSON.stringify({ success: true, processed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         }
 
+        const clinicName = (campaign as any).clinic_settings?.clinic_name || 'Nuestra Clínica'
         const ycloudKey = (campaign as any).clinic_settings?.ycloud_api_key
-        if (!ycloudKey) throw new Error('No YCloud API Key found for this clinic')
+        if (!ycloudKey) throw new Error('No se encontró el API Key de YCloud para esta clínica')
 
-        // Fetch Template info
+        // 3. Fetch Template info from YCloud
+        console.log(`[Campaign ${campaign_id}] Obteniendo plantilla ${campaign.template_name} de YCloud...`)
         const templatesRes = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', { headers: { 'X-API-Key': ycloudKey } })
+        if (!templatesRes.ok) {
+            const errBody = await templatesRes.text()
+            throw new Error(`Error obteniendo plantillas de YCloud: ${errBody}`)
+        }
+        
         const templatesData = await templatesRes.json()
         const targetTemplate = (templatesData.items || []).find((t: any) => t.name === campaign.template_name)
-        if (!targetTemplate) throw new Error(`Template ${campaign.template_name} not found in YCloud.`)
+        if (!targetTemplate) throw new Error(`La plantilla ${campaign.template_name} no existe en YCloud.`)
 
         const bodyComponent = targetTemplate.components?.find((c: any) => c.type === 'BODY')
         const numVariables = (bodyComponent?.text?.match(/\{\{\d+\}\}/g) || []).length
 
         let sentCount = 0
-        const results = []
+        let firstErrorMessage = ''
 
-        // 3. Send Loop
+        // 4. Send Loop
+        console.log(`[Campaign ${campaign_id}] Iniciando bucle de envío...`)
         for (const contact of targetContacts) {
             try {
                 const parameters = []
                 if (numVariables > 0) {
                     for (let i = 1; i <= numVariables; i++) {
                         let text = 'Información'
-                        if (i === 1) text = contact.name || 'Paciente'
-                        else if (i === 2) text = 'Prueba'
+                        if (i === 1) {
+                            const rawName = contact.full_name || ''
+                            const isPhone = /^\+?\d+$/.test(rawName.replace(/[\s\-]/g, ''))
+                            text = (!rawName || isPhone) ? 'Paciente' : rawName.split(' ')[0]
+                        }
+                        else if (i === 2) text = 'especialista'
+                        else if (i === 3) text = 'próximamente'
+                        else if (i === 4) text = 'tu próximo tratamiento'
+                        else if (i === 5) text = clinicName
                         parameters.push({ type: 'text', text })
                     }
                 }
 
                 const payload = {
-                    to: contact.phone,
+                    to: contact.phone_number,
                     type: 'template',
                     template: {
                         name: campaign.template_name,
@@ -164,12 +136,14 @@ serve(async (req) => {
 
                 if (!res.ok) {
                     const errData = await res.json()
-                    results.push({ id: contact.id, status: 'error', error: errData.message })
+                    const msg = errData.message || res.statusText
+                    console.error(`[Campaign ${campaign_id}] Error YCloud para ${contact.phone_number}:`, msg)
+                    if (!firstErrorMessage) firstErrorMessage = msg
                 } else {
                     const successData = await res.json()
                     await supabaseClient.from('messages').insert({
                         clinic_id: campaign.clinic_id,
-                        phone_number: contact.phone,
+                        phone_number: contact.phone_number,
                         direction: 'outbound',
                         content: `Campaña ${campaign.name}: ${campaign.template_name}`,
                         ycloud_message_id: successData.id,
@@ -177,29 +151,43 @@ serve(async (req) => {
                         campaign_id: campaign.id
                     })
                     sentCount++
-                    results.push({ id: contact.id, status: 'sent' })
                 }
             } catch (err: any) {
-                results.push({ id: contact.id, status: 'error', error: err.message })
+                console.error(`[Campaign ${campaign_id}] Excepción en contacto ${contact.id}:`, err)
+                if (!firstErrorMessage) firstErrorMessage = err.message
             }
         }
 
-        // 4. Final Updates
-        await supabaseClient.from('campaigns').update({
+        // 5. Final Updates
+        console.log(`[Campaign ${campaign_id}] Finalizado. Enviados: ${sentCount}/${targetContacts.length}`)
+        const updatePayload: any = {
             status: 'completed',
             sent_count: sentCount,
             total_target: targetContacts.length
-        }).eq('id', campaign_id)
+        }
+        
+        if (firstErrorMessage) {
+            updatePayload.error_log = `Error parcial: ${firstErrorMessage}`
+        }
 
-        return new Response(JSON.stringify({ success: true, sent: sentCount, total: targetContacts.length }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        const { error: finalUpdateError } = await supabaseClient.from('campaigns').update(updatePayload).eq('id', campaign_id)
+        if (finalUpdateError) console.error(`[Campaign ${campaign_id}] Error actualizando estado final:`, finalUpdateError)
+
+        return new Response(JSON.stringify({ 
+            success: true, 
+            sent: sentCount, 
+            total: targetContacts.length, 
+            error: firstErrorMessage || undefined 
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     } catch (error: any) {
-        console.error("Campaign failed fatal:", error)
-        // Try to update status if we have the ID
-        const body = await req.clone().json().catch(() => ({}))
-        if (body.campaign_id) {
-            const supabaseClient = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
-            await supabaseClient.from('campaigns').update({ status: 'failed' }).eq('id', body.campaign_id)
+        console.error(`[Campaign ${campaign_id}] Error fatal:`, error)
+        if (campaign_id) {
+            try {
+                await supabaseClient.from('campaigns').update({ status: 'failed', error_log: error.message }).eq('id', campaign_id)
+            } catch (updateErr) {
+                console.error(`[Campaign ${campaign_id}] No se pudo marcar como fallida:`, updateErr)
+            }
         }
         return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
     }

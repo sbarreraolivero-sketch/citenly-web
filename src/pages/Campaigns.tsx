@@ -220,57 +220,75 @@ export default function Campaigns() {
         if (!confirm('¿Estás seguro de enviar esta campaña a todos los pacientes del segmento?')) return
 
         try {
-            // Update status to 'sending' (or 'scheduled' if we had a date)
-            // Ideally trigger Edge Function here.
-
-            // 1. Update status
+            console.log(' Lanzando campaña ID:', campaignId)
+            
+            // 1. Marcar como 'sending' en la DB
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error: updateError } = await (supabase as any)
                 .from('campaigns')
-                .update({ status: 'sending' })
+                .update({ status: 'sending', error_log: null })
                 .eq('id', campaignId)
 
-            if (updateError) throw updateError
+            if (updateError) {
+                console.error('Error al actualizar estado a enviando:', updateError)
+                throw updateError
+            }
 
-            // 2. Refresh list
-            fetchCampaigns()
+            // 2. Actualizar lista para mostrar estado "Enviando"
+            await fetchCampaigns()
 
-            // 3. Trigger Edge Function (fire and forget)
-            // We need to implement this function next.
-            await supabase.functions.invoke('send-whatsapp-campaign', {
+            // 3. Llamar Edge Function y esperar respuesta
+            console.log(' Invocando Edge Function...')
+            const { data, error: fnError } = await supabase.functions.invoke('send-whatsapp-campaign', {
                 body: { campaign_id: campaignId }
             })
 
-            alert('Campaña iniciada. Los mensajes se enviarán en breve.')
+            if (fnError) {
+                console.error('Error de Invocación (Edge Function):', fnError)
+                alert(`Error en el servidor: ${fnError.message || 'La función no respondió a tiempo. Revisa el estado de la campaña en unos minutos.'}`)
+            } else if (data?.error) {
+                console.error('Error reportado por la función:', data.error)
+                alert(`Campaña con problemas: ${data.error}`)
+            } else {
+                console.log(' Campaña completada exitosamente:', data)
+                alert(`✅ Campaña enviada a ${data?.sent || 0} de ${data?.total || 0} contactos.`)
+            }
 
-        } catch (error) {
-            console.error('Error launching campaign:', error)
-            alert('Error al iniciar la campaña')
+        } catch (error: any) {
+            console.error('Fallo total de lanzamiento:', error)
+            alert(`Error al iniciar: ${error.message || 'Error técnico desconocido'}`)
+        } finally {
+            // Siempre refrescar al final para mostrar el estado final (completed/failed)
+            fetchCampaigns()
         }
     }
 
     const handleDeleteCampaign = async (campaignId: string) => {
         if (!confirm('¿Estás seguro de que deseas eliminar esta campaña?')) return
 
-        // Guardar estado actual para rollback en caso de error
-        const previousCampaigns = [...campaigns];
-        
-        // Actualización optimista: Eliminar de la UI de inmediato
-        setCampaigns(prev => prev.filter(c => c.id !== campaignId));
-
         try {
+            console.log(' Intentando borrar campaña:', campaignId)
+            
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await (supabase as any)
                 .from('campaigns')
                 .delete()
                 .eq('id', campaignId)
 
-            if (error) throw error
-        } catch (error) {
-            console.error('Error deleting campaign:', error)
-            alert('Error al eliminar la campaña. Por favor intenta de nuevo.')
-            // Rollback: Restaurar el estado anterior
-            setCampaigns(previousCampaigns);
+            if (error) {
+                console.error('Error de base de datos al borrar:', error)
+                throw error
+            }
+            
+            // Refrescar solo si el borrado fue exitoso
+            setCampaigns(prev => prev.filter(c => c.id !== campaignId));
+            console.log(' Borrada correctamente de la base de datos.')
+
+        } catch (error: any) {
+            console.error('Fallo al borrar campaña:', error)
+            alert(`No se pudo borrar la campaña: ${error.message || 'Revisa tus permisos'}`)
+            // Forzar refresco para asegurar que la UI sea fiel a la realidad
+            fetchCampaigns()
         }
     }
 
