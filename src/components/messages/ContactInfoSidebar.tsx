@@ -195,7 +195,7 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
         try {
             const normalizedPhone = phoneNumber.replace(/\D/g, '')
 
-            // Resolve patient record
+            // 1. Resolve Patient + Prospect records
             const { data: patient } = await (supabase as any)
                 .from('patients')
                 .select('id')
@@ -203,41 +203,78 @@ export function ContactInfoSidebar({ phoneNumber, clinicId, onClose }: ContactIn
                 .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+${normalizedPhone},phone_number.eq.56${normalizedPhone}`)
                 .maybeSingle()
 
-            // Resolve prospect record (create one on-the-fly if missing so tags persist)
             let prospectId = prospect?.id
             if (!prospectId) {
-                const { data: newProspect, error: createError } = await (supabase as any)
+                const { data: newProspect, error: prErr } = await (supabase as any)
                     .from('crm_prospects')
-                    .insert({ clinic_id: clinicId, phone: normalizedPhone, name: patient ? null : phoneNumber })
+                    .upsert({ clinic_id: clinicId, phone: normalizedPhone, name: patient ? null : phoneNumber }, { onConflict: 'clinic_id,phone' })
                     .select('id')
                     .single()
-                if (createError) throw new Error(`No se pudo crear el prospecto: ${createError.message}`)
+                if (prErr) throw new Error(`Error prospect: ${prErr.message}`)
                 prospectId = newProspect.id
-                setProspect((prev: any) => prev ?? { id: prospectId, clinic_id: clinicId, phone: normalizedPhone, requires_human: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
             }
 
-            const crmTagId = tagToAdd.crm_id || (tagToAdd.source !== 'patient' ? tagToAdd.id : null)
-            const patientTagId = tagToAdd.patient_id || (tagToAdd.source !== 'crm' ? tagToAdd.id : null)
+            // 2. Mirror Tag across systems if necessary
+            // We want the same tag name to exist in both tables to allow assignment
+            let finalCrmTagId = tagToAdd.crm_id
+            let finalPatientTagId = tagToAdd.patient_id
 
-            // Insert into CRM prospect tags (upsert to avoid duplicate key errors)
-            if (crmTagId && prospectId) {
-                const { error: crmErr } = await (supabase as any)
+            // Ensure exists in CRM
+            if (!finalCrmTagId) {
+                const { data: mirrored, error: mErr } = await (supabase as any)
+                    .from('crm_tags')
+                    .upsert({ clinic_id: clinicId, name: tagToAdd.name, color: tagToAdd.color }, { onConflict: 'clinic_id,name' })
+                    .select('id')
+                    .single()
+                if (mErr) throw new Error(`Error espejo CRM: ${mErr.message}`)
+                finalCrmTagId = mirrored.id
+            }
+
+            // Ensure exists in Patient Tags
+            if (!finalPatientTagId) {
+                const { data: mirrored, error: mErr } = await (supabase as any)
+                    .from('tags')
+                    .upsert({ clinic_id: clinicId, name: tagToAdd.name, color: tagToAdd.color }, { onConflict: 'clinic_id,name' })
+                    .select('id')
+                    .single()
+                if (mErr) throw new Error(`Error espejo Patient: ${mErr.message}`)
+                finalPatientTagId = mirrored.id
+            }
+
+            // 3. Perform Assignments
+            const assignments = []
+            
+            // CRM Assignment
+            assignments.push(
+                (supabase as any)
                     .from('crm_prospect_tags')
-                    .upsert({ prospect_id: prospectId, tag_id: crmTagId }, { onConflict: 'prospect_id,tag_id', ignoreDuplicates: true })
-                if (crmErr) throw new Error(`Error en CRM tag: ${crmErr.message}`)
+                    .upsert({ prospect_id: prospectId, tag_id: finalCrmTagId }, { onConflict: 'prospect_id,tag_id' })
+            )
+
+            // Patient Assignment (only if patient exists)
+            if (patient?.id) {
+                assignments.push(
+                    (supabase as any)
+                        .from('patient_tags')
+                        .upsert({ patient_id: patient.id, tag_id: finalPatientTagId }, { onConflict: 'patient_id,tag_id' })
+                )
             }
 
-            // Insert into patient tags (upsert to avoid duplicate key errors)
-            if (patient?.id && patientTagId) {
-                const { error: patErr } = await (supabase as any)
-                    .from('patient_tags')
-                    .upsert({ patient_id: patient.id, tag_id: patientTagId }, { onConflict: 'patient_id,tag_id', ignoreDuplicates: true })
-                if (patErr) throw new Error(`Error en patient tag: ${patErr.message}`)
-            }
+            const results = await Promise.all(assignments)
+            const failed = results.find(r => r.error)
+            if (failed) throw new Error(failed.error?.message)
 
-            // Only update UI after confirmed DB write
-            setSidebarTags(prev => [...prev, tagToAdd])
+            // 4. Update UI Local State
+            setSidebarTags(prev => {
+                if (prev.some(t => t.name.toLowerCase() === tagToAdd.name.toLowerCase())) return prev
+                return [...prev, { ...tagToAdd, crm_id: finalCrmTagId, patient_id: finalPatientTagId }]
+            })
             setShowTagAdd(false)
+            
+            // Refresh main prospect state if it was null
+            if (!prospect) {
+                fetchProspectData()
+            }
         } catch (err: any) {
             console.error('Error adding tag:', err)
             alert(`Error al agregar etiqueta: ${err?.message || 'Error desconocido'}`)
