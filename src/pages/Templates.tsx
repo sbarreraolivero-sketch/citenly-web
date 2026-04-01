@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info, Upload, ImageIcon, Loader2 } from 'lucide-react'
+import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info, Upload, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { retentionService, YCloudTemplate } from '@/services/retentionService'
 import { useAuth } from '@/contexts/AuthContext'
