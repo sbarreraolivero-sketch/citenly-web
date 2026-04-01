@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info } from 'lucide-react'
+import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info, Upload, ImageIcon, Loader2 } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { retentionService, YCloudTemplate } from '@/services/retentionService'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
@@ -18,6 +19,8 @@ export default function Templates() {
     const [newTemplate, setNewTemplate] = useState<{ name: string, body: string, category: string, buttons: string[], imageUrl?: string }>({ name: '', body: '', category: 'MARKETING', buttons: [], imageUrl: '' })
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uploadingImage, setUploadingImage] = useState(false)
 
     const insertVariable = (num: number, example: string) => {
         const textarea = textareaRef.current
@@ -94,6 +97,49 @@ export default function Templates() {
             toast.error(err.message || 'Error al eliminar la plantilla')
         } finally {
             setDeletingTemplate(null)
+        }
+    }
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !clinicId) return
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Por favor sube solo archivos de imagen (jpg, png, etc.)')
+            return
+        }
+
+        // Validate size (max 5MB for WhatsApp)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('La imagen es muy pesada. El máximo es 5MB.')
+            return
+        }
+
+        setUploadingImage(true)
+        try {
+            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+            const filePath = `${clinicId}/${fileName}`
+
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('marketing-assets')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            // Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('marketing-assets')
+                .getPublicUrl(filePath)
+
+            setNewTemplate(prev => ({ ...prev, imageUrl: publicUrl }))
+            toast.success('Imagen subida exitosamente')
+        } catch (err: any) {
+            console.error('Error uploading image:', err)
+            toast.error('Error al subir la imagen a tu servidor')
+        } finally {
+            setUploadingImage(false)
         }
     }
 
@@ -306,17 +352,64 @@ export default function Templates() {
                         {/* Formularios e Inputs */}
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-semibold text-charcoal mb-1">
-                                    Imagen de Cabecera (Opcional - URL pública)
+                                <label className="block text-sm font-semibold text-charcoal mb-2 flex items-center justify-between">
+                                    <span>Imagen de Cabecera (Opcional)</span>
+                                    {newTemplate.imageUrl && (
+                                        <button 
+                                            onClick={() => setNewTemplate({ ...newTemplate, imageUrl: '' })}
+                                            className="text-[10px] text-red-500 hover:underline font-bold"
+                                        >
+                                            Quitar imagen
+                                        </button>
+                                    )}
                                 </label>
-                                <input
-                                    type="text"
-                                    value={newTemplate.imageUrl || ''}
-                                    onChange={e => setNewTemplate({ ...newTemplate, imageUrl: e.target.value })}
-                                    placeholder="https://tusitio.com/imagen.jpg"
-                                    className="w-full p-3 bg-white border border-silk-beige rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
-                                />
-                                <p className="text-xs font-semibold text-charcoal/60 mt-1">Usa una URL de imagen directa (jpg/png) para que aparezca arriba del mensaje.</p>
+                                
+                                <div className="flex items-center gap-3">
+                                    <div 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className={`flex-1 border-2 border-dashed rounded-xl p-4 transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                                            newTemplate.imageUrl 
+                                                ? 'border-emerald-200 bg-emerald-50/30' 
+                                                : 'border-silk-beige hover:border-primary-300 hover:bg-primary-50/10'
+                                        }`}
+                                    >
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef}
+                                            onChange={handleImageUpload}
+                                            accept="image/*"
+                                            className="hidden" 
+                                        />
+                                        
+                                        {uploadingImage ? (
+                                            <>
+                                                <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+                                                <span className="text-xs font-bold text-primary-600">Subiendo a tu servidor...</span>
+                                            </>
+                                        ) : newTemplate.imageUrl ? (
+                                            <>
+                                                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                                                <span className="text-xs font-bold text-emerald-700">Imagen lista en tu servidor</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="w-10 h-10 bg-ivory rounded-full flex items-center justify-center">
+                                                    <Upload className="w-5 h-5 text-charcoal/40" />
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-xs font-bold text-charcoal">Haz clic para subir una foto</p>
+                                                    <p className="text-[10px] text-charcoal/40 mt-1">Sube el Antes/Después o el arte de la promo.</p>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {newTemplate.imageUrl && (
+                                        <div className="w-20 h-20 rounded-xl overflow-hidden border border-silk-beige shrink-0 shadow-sm">
+                                            <img src={newTemplate.imageUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
