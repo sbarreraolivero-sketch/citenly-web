@@ -444,7 +444,7 @@ export default function Templates() {
                             {/* Marco de Teléfono */}
                             <div className="w-[320px] bg-[#EFEAE2] rounded-[2.5rem] p-4 shadow-2xl border-[12px] border-charcoal relative mt-8 h-[550px] flex flex-col justify-start overflow-hidden">
                                 {/* WhatsApp Header */}
-                                <div className="absolute top-0 left-0 right-0 bg-[#00A884] px-4 py-3 flex items-center gap-3 z-10 shadow-sm">
+                                <div className="absolute top-0 left-0 right-0 bg-[#00A884] px-4 py-3 flex items-center gap-3 z-20 shadow-sm">
                                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
                                         <div className="w-6 h-6 bg-white/40 rounded-full" />
                                     </div>
@@ -459,7 +459,7 @@ export default function Templates() {
                                     backgroundSize: "20px 20px"
                                 }} />
                                 {/* Contenedor de Mensajes */}
-                                <div className="flex flex-col flex-1 pt-14 pb-14 relative z-10 overflow-y-auto scrollbar-hide px-2" style={{ scrollbarWidth: 'none' }}>
+                                <div className="flex flex-col flex-1 pt-14 pb-14 relative z-0 overflow-y-auto scrollbar-hide px-2" style={{ scrollbarWidth: 'none' }}>
                                     <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                                     {/* Chat bubble */}
                                     <div className="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[14px] text-[#111B21] mb-2 max-w-[92%] whitespace-pre-wrap leading-relaxed">
