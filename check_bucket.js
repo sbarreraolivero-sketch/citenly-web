@@ -36,12 +36,21 @@ async function checkStorage() {
         return
     }
 
-    const bucket = data.find(b => b.name === 'clinical-photos')
+    const bucket = data.find(b => b.name === 'marketing-assets')
     if (bucket) {
-        console.log('✅ Bucket "clinical-photos" exists.')
+        console.log('✅ Bucket "marketing-assets" exists.')
         console.log('Is Public:', bucket.public)
     } else {
-        console.error('❌ Bucket "clinical-photos" DOES NOT exist.')
+        console.error('❌ Bucket "marketing-assets" DOES NOT exist.')
+
+        console.log('Creating bucket...')
+        const { error: createError } = await supabase.storage.createBucket('marketing-assets', {
+            public: true,
+            allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
+            fileSizeLimit: 5242880 // 5MB limit
+        })
+        if (createError) console.error('Error creating bucket:', createError)
+        else console.log('✅ Bucket created successfully (public: true).')
     }
 }
 

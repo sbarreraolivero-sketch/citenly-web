@@ -14,7 +14,7 @@ serve(async (req: Request) => {
 
     try {
         const bodyPayload = await req.json().catch(() => ({}))
-        const { clinic_id, name, body_text, category = 'MARKETING', buttons = [] } = bodyPayload
+        const { clinic_id, name, body_text, category = 'MARKETING', buttons = [], image_url } = bodyPayload
 
         if (!clinic_id || !name || !body_text) {
             throw new Error('Clinic ID, Name, and Body Text are required')
@@ -75,6 +75,17 @@ serve(async (req: Request) => {
                     text: body_text
                 }
             ]
+        }
+
+        // Add Image Header if provided
+        if (image_url) {
+            payload.components.unshift({
+                type: 'HEADER',
+                format: 'IMAGE',
+                example: {
+                    header_url: [image_url]
+                }
+            })
         }
 
         if (buttons && Array.isArray(buttons) && buttons.length > 0) {

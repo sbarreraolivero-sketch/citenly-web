@@ -154,7 +154,14 @@ export default function Templates() {
             // Prepare examples array for Meta
             const examples = genericExamples.map((gen, i) => variableExamples[i + 1] || gen)
 
-            const result = await retentionService.createRemoteTemplate(clinicId, newTemplate.name, newTemplate.body, newTemplate.buttons, examples)
+            const result = await retentionService.createRemoteTemplate(
+                clinicId, 
+                newTemplate.name, 
+                newTemplate.body, 
+                newTemplate.buttons, 
+                examples,
+                newTemplate.imageUrl
+            )
             toast.success('Plantilla enviada a WhatsApp para revisión')
 
             // Add to list optimistically

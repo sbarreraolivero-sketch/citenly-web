@@ -1,0 +1,47 @@
+Initialising login role...
+Connecting to remote database...
+Found local migration files to be inserted before the last migration on remote database.
+
+Rerun the command with --include-all flag to apply these migrations:
+supabase/migrations/20260311153000_fix_patients_unique_constraint.sql      
+supabase/migrations/20260311180000_fix_availability_intervals_and_logic.sql
+supabase/migrations/20260312224100_fix_patient_creation_regression.sql     
+supabase/migrations/20260313130000_fix_ai_and_notifications.sql            
+supabase/migrations/20260316135000_add_address_references.sql              
+supabase/migrations/20260316180000_add_campaign_segment_logic.sql          
+supabase/migrations/20260316185500_crm_auth_policies.sql                   
+supabase/migrations/20260316191000_unify_tagging_system.sql                
+supabase/migrations/20260316201500_sync_cliente_tags.sql                   
+supabase/migrations/20260316212000_unify_contacts_system.sql               
+supabase/migrations/20260317100000_multi_interest_support.sql              
+supabase/migrations/20260317110000_unify_campaign_audience.sql             
+supabase/migrations/20260317115000_add_social_media_links.sql              
+supabase/migrations/20260317120000_name_based_audience.sql                 
+supabase/migrations/20260317130000_fix_reminders_and_logs.sql              
+supabase/migrations/20260318140000_tutors_and_patients.sql                 
+supabase/migrations/20260318144800_restore_crm_tables.sql                  
+supabase/migrations/20260318145200_fix_tutors_address.sql                  
+supabase/migrations/20260318223000_fix_retention_patient_linking.sql       
+supabase/migrations/20260318235000_dynamic_retention_thresholds.sql        
+supabase/migrations/20260319003000_finance_manual_income.sql               
+supabase/migrations/20260319163000_ai_credit_system.sql                    
+supabase/migrations/20260320150000_separate_ai_credits.sql                 
+supabase/migrations/20260320160000_optimize_ai_queries.sql                 
+supabase/migrations/20260320180000_fix_reminders_cron.sql                  
+supabase/migrations/20260320190000_dashboard_stats_optimization.sql        
+supabase/migrations/20260321150000_add_transfer_details.sql                
+supabase/migrations/20260323140000_loyalty_system.sql                      
+supabase/migrations/20260325181000_business_model_and_geo.sql              
+supabase/migrations/20260326000000_hq_and_mercadopago_sync.sql             
+supabase/migrations/20260326160000_multi_currency_support.sql              
+supabase/migrations/20260326170000_add_payment_provider.sql                
+supabase/migrations/20260327120000_plan_limits.sql                         
+supabase/migrations/20260328153000_ai_monthly_limits.sql                   
+supabase/migrations/20260328154000_setup_integrations.sql                  
+supabase/migrations/20260330200000_fix_retention_compute_and_cron.sql      
+supabase/migrations/20260331000000_get_campaign_audience.sql               
+supabase/migrations/20260331000001_fix_audience_logic.sql                  
+supabase/migrations/20260331000100_add_campaign_error_log.sql              
+supabase/migrations/20260401010000_setup_marketing_storage.sql             
+supabase/migrations/20260401020000_track_campaign_deliveries.sql           
+
