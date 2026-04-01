@@ -11,7 +11,8 @@ import {
     BarChart3,
     Trash2,
     Lightbulb,
-    CheckCircle2
+    CheckCircle2,
+    ShieldAlert
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -30,6 +31,7 @@ interface Campaign {
     scheduled_at: string | null
     sent_count: number
     total_target: number
+    error_log: string | null
     created_at: string
 }
 
@@ -56,6 +58,8 @@ export default function Campaigns() {
     const [templates, setTemplates] = useState<YCloudTemplate[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false)
+    const [showReportModal, setShowReportModal] = useState(false)
+    const [selectedCampaignForReport, setSelectedCampaignForReport] = useState<Campaign | null>(null)
 
     // New Campaign State
     const [step, setStep] = useState(1)
@@ -454,11 +458,12 @@ export default function Campaigns() {
                                 {campaign.status !== 'draft' && (
                                     <button 
                                         onClick={() => {
-                                            toast.success(`Campaña: ${campaign.name}\nDestinatarios: ${campaign.total_target}\nEnviados: ${campaign.sent_count}`, { duration: 5000 })
+                                            setSelectedCampaignForReport(campaign)
+                                            setShowReportModal(true)
                                         }}
                                         className="w-full btn-ghost py-2 text-sm border border-silk-beige hover:bg-gray-50 flex items-center justify-center gap-2"
                                     >
-                                        <BarChart3 className="w-4 h-4" />
+                                        <BarChart3 className="w-4 h-4 text-primary-500" />
                                         Ver Reporte
                                     </button>
                                 )}
@@ -640,6 +645,118 @@ export default function Campaigns() {
                                     Crear Campaña
                                 </button>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Report Modal */}
+            {showReportModal && selectedCampaignForReport && (
+                <div className="fixed inset-0 bg-charcoal/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-silk-beige flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 flex justify-between items-start text-white">
+                            <div>
+                                <p className="text-primary-100 text-xs font-black uppercase tracking-widest mb-1 italic">Reporte Detallado de Campaña</p>
+                                <h3 className="text-2xl font-bold tracking-tight">{selectedCampaignForReport.name}</h3>
+                                <div className="flex items-center gap-3 mt-2">
+                                    <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
+                                        {getStatusLabel(selectedCampaignForReport.status)}
+                                    </span>
+                                    <span className="text-white/60 text-[10px] font-bold uppercase">
+                                        {new Date(selectedCampaignForReport.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                    </span>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowReportModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh]">
+                            {/* KPI Metrics */}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="bg-gray-50 p-4 rounded-xl border border-silk-beige text-center">
+                                    <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                        <Users className="w-4 h-4 text-primary-600" />
+                                    </div>
+                                    <p className="text-[10px] uppercase font-bold text-charcoal/40 tracking-wider">Objetivo</p>
+                                    <p className="text-xl font-black text-charcoal">{selectedCampaignForReport.total_target}</p>
+                                </div>
+                                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
+                                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                        <Send className="w-4 h-4 text-emerald-600" />
+                                    </div>
+                                    <p className="text-[10px] uppercase font-bold text-emerald-800/40 tracking-wider">Enviados</p>
+                                    <p className="text-xl font-black text-emerald-700">{selectedCampaignForReport.sent_count}</p>
+                                </div>
+                                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 text-center">
+                                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                        <BarChart3 className="w-4 h-4 text-amber-600" />
+                                    </div>
+                                    <p className="text-[10px] uppercase font-bold text-amber-800/40 tracking-wider">Éxito</p>
+                                    <p className="text-xl font-black text-amber-700">
+                                        {selectedCampaignForReport.total_target > 0 
+                                            ? Math.round((selectedCampaignForReport.sent_count / selectedCampaignForReport.total_target) * 100)
+                                            : 0}%
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Campaign Context */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 text-sm font-bold text-charcoal border-b border-silk-beige pb-2">
+                                    <FileText className="w-4 h-4 text-primary-500" />
+                                    Detalle del Envío
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase font-bold text-charcoal/40 tracking-wider">Plantilla Utilizada</p>
+                                        <p className="text-sm font-medium text-charcoal truncate">
+                                            {templates.find(t => t.id === selectedCampaignForReport.template_name)?.name || selectedCampaignForReport.template_name}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase font-bold text-charcoal/40 tracking-wider">Filtros Activos</p>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {(selectedCampaignForReport.inclusion_tags || []).map(t => (
+                                                <span key={t} className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[9px] font-black uppercase">+{t}</span>
+                                            ))}
+                                            {(selectedCampaignForReport.exclusion_tags || []).map(t => (
+                                                <span key={t} className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[9px] font-black uppercase">-{t}</span>
+                                            ))}
+                                            {(!selectedCampaignForReport.inclusion_tags?.length && !selectedCampaignForReport.exclusion_tags?.length) && (
+                                                <span className="text-[10px] font-medium text-charcoal/40 italic">Sin etiquetas activas</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Error Log if exists */}
+                            {selectedCampaignForReport.error_log && (
+                                <div className="bg-red-50 p-4 rounded-xl border border-red-100 space-y-2">
+                                    <div className="flex items-center gap-2 text-red-700 font-bold text-xs">
+                                        <ShieldAlert className="w-4 h-4" />
+                                        Alertas de Envío (Logs Técnicos)
+                                    </div>
+                                    <div className="bg-white/50 p-3 rounded-lg border border-red-200">
+                                        <code className="text-[10px] text-red-600 block break-all font-mono leading-relaxed">
+                                            {selectedCampaignForReport.error_log}
+                                        </code>
+                                    </div>
+                                    <p className="text-[9px] text-red-600 italic leading-tight">
+                                        * Meta o YCloud pueden rechazar mensajes si el número es inválido o no tiene WhatsApp activo.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-6 bg-gray-50 border-t border-silk-beige flex justify-end">
+                            <button 
+                                onClick={() => setShowReportModal(false)}
+                                className="px-6 py-2.5 bg-charcoal text-white rounded-xl font-bold text-sm hover:bg-black transition-colors"
+                            >
+                                Entendido
+                            </button>
                         </div>
                     </div>
                 </div>
