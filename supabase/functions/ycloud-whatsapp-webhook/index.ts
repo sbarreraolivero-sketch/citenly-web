@@ -543,8 +543,14 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // Update CRM stage to "Cita Agendada" AND update name if needed
     await updateProspectStage(sb, clinicId, normalizedPhone, "Cita Agendada", args.patient_name);
 
-    // Automatically tag prospect
+    // --- Automatic Tagging Logic ---
+    // 1. Interest Tag (Blue)
     await tagPatient(sb, clinicId, normalizedPhone, { tag_name: `Interés ${args.service_name}` });
+    
+    // 2. Client Status Tag (Green)
+    // We explicitly tag as "Cliente [Service]" now because they have an active appt
+    const clientTagName = `Cliente ${args.service_name}`;
+    await tagPatient(sb, clinicId, normalizedPhone, { tag_name: clientTagName, tag_color: "#10B981" });
 
     const d = new Date(`${args.date}T${args.time}:00`);
     const h = parseInt(args.time.split(":")[0]);
@@ -770,17 +776,25 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
         // Normalization Layer: Consolidate common interest variants
         const lowerName = tagName.toLowerCase();
-        if (lowerName.includes("microblading") && (lowerName.includes("ceja") || lowerName.includes("interés"))) {
+        
+        // --- Normalization Layer: Unified Treatment Tags ---
+        if (lowerName.includes("microblading")) {
             tagName = "Interés Microblading";
-        } else if (lowerName.includes("perfilado") && (lowerName.includes("ceja") || lowerName.includes("interés"))) {
-            tagName = "Interés Perfilado";
-        } else if (lowerName.includes("labio") && (lowerName.includes("interés") || lowerName.includes("micropigmentación"))) {
-            tagName = "Interés Labios";
+        } else if (lowerName.includes("perfilado") || lowerName.includes("ceja")) {
+            tagName = "Interés Perfilado Cejas";
+        } else if (lowerName.includes("labio") || lowerName.includes("micropigmentación labial") || lowerName.includes("acid") || lowerName.includes("hialuronic")) {
+            // Labios can be filler or micropigmentation
+            if (lowerName.includes("micropigmentación") || lowerName.includes("color")) tagName = "Interés Micropigmentación Labial";
+            else tagName = "Interés Labios";
         } else if (lowerName.includes("pestaña") || lowerName.includes("lifting") || lowerName.includes("lash")) {
             tagName = "Interés Pestañas";
+        } else if (lowerName.includes("botox") || lowerName.includes("toxina") || lowerName.includes("arruga")) {
+            tagName = "Interés Botox";
+        } else if (lowerName.includes("limpieza") || lowerName.includes("facial") || lowerName.includes("piel")) {
+            tagName = "Interés Facial/Limpieza";
         }
 
-        const defaultColor = "#3B82F6"; // Blue
+        const defaultColor = "#3B82F6"; // Blue for Interest
         const tagColor = args.tag_color || defaultColor;
 
         // 1. Find or create the tag
@@ -1523,7 +1537,6 @@ ${lagRule}
 5. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
 6. El Horario General es tu guía; la herramienta es tu confirmación final.
 7. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
-8. ERRORES DE HERRAMIENTA: No inventes ni asumas que una herramienta falló. Llama a la herramienta y lee su respuesta real. Si 'create_appointment' devuelve un error (ej. DB-AG-01 o DB-CONFLICT), díselo explícitamente al usuario.
 8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
 9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
    a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
@@ -1532,13 +1545,18 @@ ${lagRule}
    d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta.
       LOS DATOS OFICIALES PARA EL ABONO ($10.000) SON:
       ${clinic.transfer_details || "- Solicitar datos de transferencia al equipo humano."}
-    - Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
-    - Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
-    - Usa 'Interés [Nombre del Servicio]' como formato preferido para etiquetas de servicio.
+
+### REGLA DE ORO DE ETIQUETADO PROACTIVO (CRM):
+- NO ESPERES A QUE AGENDEN: Si el usuario menciona un tratamiento (ej: 'microblading', 'cejas', 'labios', 'pestañas', 'botox', 'ácido'), DEBES llamar INMEDIATAMENTE a la función 'tag_patient' con el nombre del servicio.
+- Si ves que el sistema se saltó el etiquetado anteriormente, hazlo tú en el momento en que se retome la charla.
+- Cada vez que el usuario mencione interés en un servicio (ej: '¿precio microblading?', 'me gustaron las cejas'), DEBES llamar a 'tag_patient' con el nombre del servicio (ej: 'Microblading').
+- Si el usuario menciona su nombre, correo o algún detalle importante (ej: alergias, contraindicaciones), DEBES llamar a 'upsert_prospect' para guardar estos datos en el CRM inmediatamente. NO esperes a que agende una cita.
+- Usa 'Interés [Nombre del Servicio]' como formato preferido para etiquetas de servicio.
+- El CRM debe estar siempre actualizado con el 'service_interest' mediante 'upsert_prospect'.
+
 11. SÓLO si 'create_appointment' devuelve 'Error DB-CONFLICT', sugiere amablemente agregar un segundo apellido para diferenciarlo en la base de datos.
 12. UBICACIÓN Y MAPA: Para responder sobre la ubicación, usa EXCLUSIVAMENTE los campos 'Dirección', 'Referencias de Dirección' y 'Mapa Google Maps' proporcionados arriba. Ignora cualquier dirección distinta o incompleta de la base de conocimiento.
-13. REDES SOCIALES Y WEB: Si el paciente solicita nuestras redes sociales (Instagram, Facebook o TikTok) o nuestro sitio web, proporciónale los enlaces oficiales listados arriba. Si no están configurados en la parte superior, búscalos en la base de conocimiento (\`get_knowledge\`) antes de informar que no están disponibles.
-
+13. REDES SOCIALES Y WEB: Si el paciente solicita nuestras redes sociales (Instagram, Facebook o TikTok) o nuestro sitio web, proporciónale los enlaces oficiales listados arriba. Si no están configurados en la parte superior, búscaros en la base de conocimiento (\`get_knowledge\`) antes de informar que no están disponibles.
 
 REGLAS SOBRE SERVICIOS Y FLUJO DE MICROBLADING:
 1. Solo ofrece los servicios listados en "Servicios OFICIALES".
@@ -1578,6 +1596,7 @@ RESUMEN CLÍNICO Y NOTAS:
 2. Sé conciso, profesional y directo. Ejemplo: "Cejas pigmentadas en otro lugar, muy negras, interesada en evaluación".
 3. Llama a esta función cada vez que el paciente revele algo importante para el historial clínico.
 ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
+
                 // Build conversation context WITH GROUPING
                 const { data: recentMsgs } = await sb.from("messages")
                     .select("direction, content, message_type, payload")
