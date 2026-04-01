@@ -399,7 +399,7 @@ export default function Campaigns() {
 
                     <div className="pt-6">
                         <div className="inline-flex items-center px-6 py-3 rounded-xl bg-gray-900 text-white font-medium shadow-lg">
-                            Lanzamiento exclusivo para 3 Clínicas Fundadoras 🚀
+                            Lanzamiento exclusivo para Clínicas Fundadoras 🚀
                         </div>
                     </div>
                 </div>
