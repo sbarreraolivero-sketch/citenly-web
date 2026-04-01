@@ -110,31 +110,50 @@ serve(async (req) => {
         const clinicName = (campaign as any).clinic_settings?.clinic_name || 'Citenly'
         const fromNumber = (campaign as any).clinic_settings?.ycloud_phone_number
 
-        // Detectar variables reales de la plantilla
+        // Detectar componentes reales de la plantilla (Body y Header)
         const templatesRes = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', { headers: { 'X-API-Key': ycloudKey } })
         const templatesData = await templatesRes.json()
         const targetTemplate = (templatesData.items || []).find((t: any) => t.name === campaign.template_name)
         
         const bodyComponent = targetTemplate?.components?.find((c: any) => c.type === 'BODY')
+        const headerComponent = targetTemplate?.components?.find((c: any) => c.type === 'HEADER')
+        
         const numVars = (bodyComponent?.text?.match(/\{\{\d+\}\}/g) || []).length
+        const hasImageHeader = headerComponent?.format === 'IMAGE'
 
         let sentCount = 0
         let fullError = ''
 
-        // Optimización: Procesar en lotes para evitar timeouts y mejorar velocidad
-        // Pero no demasiado grandes para no saturar la API o rate limits
+        // Optimización: Procesar en lotes
         const BATCH_SIZE = 5;
         for (let i = 0; i < targetContacts.length; i += BATCH_SIZE) {
             const batch = targetContacts.slice(i, i + BATCH_SIZE);
             
             await Promise.all(batch.map(async (contact) => {
-                // LLENAR TODAS LAS VARIABLES (Crucial para evitar Error 400)
-                const parameters = []
+                // LLENAR VARIABLES DEL CUERPO
+                const bodyParameters = []
                 for (let v = 1; v <= numVars; v++) {
                     let val = '-'
                     if (v === 1) val = contact.full_name || 'Paciente'
                     if (v === 5) val = clinicName
-                    parameters.push({ type: 'text', text: val })
+                    bodyParameters.push({ type: 'text', text: val })
+                }
+
+                // CONFIGURAR COMPONENTES PARA EL ENVÍO
+                const components = []
+                if (bodyParameters.length > 0) {
+                    components.push({ type: 'body', parameters: bodyParameters })
+                }
+
+                // SI TIENE IMAGEN EN EL HEADER, USAR LA DE EJEMPLO DE LA PLANTILLA
+                if (hasImageHeader) {
+                    const imageUrl = headerComponent.example?.header_handle?.[0] || headerComponent.example?.header_url?.[0]
+                    if (imageUrl) {
+                        components.push({
+                            type: 'header',
+                            parameters: [{ type: 'image', image: { link: imageUrl } }]
+                        })
+                    }
                 }
 
                 let phone = contact.phone
@@ -151,7 +170,7 @@ serve(async (req) => {
                             template: {
                                 name: campaign.template_name,
                                 language: { code: targetTemplate?.language || 'es' },
-                                components: parameters.length > 0 ? [{ type: 'body', parameters }] : undefined
+                                components: components.length > 0 ? components : undefined
                             }
                         })
                     })
@@ -159,7 +178,7 @@ serve(async (req) => {
                     if (res.ok) {
                         sentCount++
                         
-                        // 1. Insertar en entregas (para reporte)
+                        // 1. Insertar en entregas (reporte)
                         await supabaseClient.from('campaign_deliveries').insert({
                             clinic_id: campaign.clinic_id,
                             campaign_id: campaign_id,
@@ -168,10 +187,9 @@ serve(async (req) => {
                             status: 'sent'
                         })
 
-                        // 2. Insertar en mensajes (para chat/CRM)
-                        // Reconstruir el texto para previsualización en el chat
+                        // 2. Insertar en mensajes (CRM)
                         let renderedText = bodyComponent?.text || ''
-                        parameters.forEach((p: any, idx: number) => {
+                        bodyParameters.forEach((p: any, idx: number) => {
                             renderedText = renderedText.replace(`{{${idx + 1}}}`, p.text)
                         })
 
@@ -183,9 +201,8 @@ serve(async (req) => {
                             message_type: 'template',
                             campaign_id: campaign_id,
                             ycloud_status: 'sent',
-                            ai_generated: true // Las campañas son automáticas
+                            ai_generated: true
                         })
-
                     } else {
                         const errJson = await res.json()
                         const errStr = JSON.stringify(errJson)
