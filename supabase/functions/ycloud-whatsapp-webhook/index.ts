@@ -20,6 +20,10 @@ interface YCloudPayload {
             button_reply?: { id: string; title: string };
             list_reply?: { id: string; title: string; description?: string };
         };
+        button?: {
+            text: string;
+            payload: string;
+        };
         referral?: {
             id: string;
             source_id: string;
@@ -1236,7 +1240,7 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
         }
 
-        const validTypes = ["text", "audio", "image", "interactive"];
+        const validTypes = ["text", "audio", "image", "interactive", "button"];
         if (!validTypes.includes(msgObj.type)) {
             await debugLog(sb, `Ignored: Unsupported message type`, { msgType: msgObj?.type });
             return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
@@ -1325,6 +1329,8 @@ Deno.serve(async (req) => {
             } else if (interactive.type === "list_reply") {
                 body = interactive.list_reply?.title || "";
             }
+        } else if (msgObj.type === "button" && msgObj.button) {
+            body = msgObj.button.text || "";
         }
 
         // Add context from Facebook Ad referral if present

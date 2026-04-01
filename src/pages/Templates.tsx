@@ -539,14 +539,14 @@ export default function Templates() {
                         </div>
 
                         {/* WhatsApp-style bubble preview */}
-                        <div className="flex-1 bg-[#EFEAE2]/50 rounded-2xl p-4 border border-[#cfc8bc]/30 relative z-10 shadow-inner flex flex-col">
+                        <div className="flex-1 bg-[#EFEAE2]/50 rounded-2xl p-4 border border-[#cfc8bc]/30 relative z-10 shadow-inner flex flex-col min-h-[250px]">
                             {/* Decorative whatsapp pattern */}
                             <div className="absolute inset-0 opacity-[0.04] pointer-events-none rounded-2xl" style={{
                                 backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
                                 backgroundSize: "12px 12px"
                             }} />
 
-                            <div className="relative z-10 bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[13.5px] text-charcoal/90 whitespace-pre-wrap leading-relaxed line-clamp-4 min-h-[80px]">
+                            <div className="relative z-10 bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[13.5px] text-charcoal/90 whitespace-pre-wrap leading-relaxed min-h-[80px]">
                                 {template.desc || template.body || <span className="text-gray-400 italic">El contenido no está disponible para previsualizar...</span>}
                             </div>
                         </div>

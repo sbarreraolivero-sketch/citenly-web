@@ -21,25 +21,75 @@ serve(async (req) => {
         
         const { data: campaign, error: campaignError } = await supabaseClient
             .from('campaigns')
-            .select('*, clinic_settings(clinic_name, ycloud_api_key)')
+            .select('*, clinic_settings(clinic_name, ycloud_api_key, ycloud_phone_number)')
             .eq('id', campaign_id)
             .single()
 
         if (campaignError || !campaign) throw new Error('Campaña no encontrada')
 
-        const { data: targetContacts, error: audienceError } = await supabaseClient.rpc('get_campaign_audience_contacts', {
-            p_clinic_id: campaign.clinic_id,
-            p_inclusion_tags: campaign.inclusion_tags || [],
-            p_exclusion_tags: campaign.exclusion_tags || []
-        })
+        // MANUAL AUDIENCE FILTERING TO FIX EXCLUSION BUG
+        // MANUAL AUDIENCE FILTERING TO FIX EXCLUSION BUG
+        
+        // 2A. PACIENTES
+        const { data: rawPatients, error: pErr } = await supabaseClient
+            .from('patients')
+            .select('id, name, phone_number')
+            .eq('clinic_id', campaign.clinic_id)
+            .neq('phone_number', '');
+            
+        const { data: pTags, error: pTErr } = await supabaseClient
+            .from('patient_tags')
+            .select('patient_id, tags!inner(name)');
 
-        if (audienceError || !targetContacts || targetContacts.length === 0) {
+        // 2B. PROSPECTOS
+        const { data: rawProspects, error: prErr } = await supabaseClient
+            .from('crm_prospects')
+            .select('id, name, phone')
+            .eq('clinic_id', campaign.clinic_id)
+            .neq('phone', '');
+
+        const { data: prTags, error: prTErr } = await supabaseClient
+            .from('crm_prospect_tags')
+            .select('prospect_id, crm_tags!inner(name)');
+
+        if (pErr) throw new Error("Pacientes - " + pErr.message);
+        if (pTErr) throw new Error("TagsPacientes - " + pTErr.message);
+        if (prErr) throw new Error("Prospectos - " + prErr.message);
+        if (prTErr) throw new Error("TagsProspectos - " + prTErr.message);
+
+        const incTags = (campaign.inclusion_tags || []).map((t: string) => t.trim().toLowerCase());
+        const excTags = (campaign.exclusion_tags || []).map((t: string) => t.trim().toLowerCase());
+
+        const unifiedMap = new Map();
+
+        (rawPatients || []).forEach((p: any) => {
+            const phone = (p.phone_number || '').replace(/\D/g, '');
+            if (!phone) return;
+            const tgs = (pTags || []).filter((pt: any) => pt.patient_id === p.id).map((pt: any) => pt.tags?.name?.trim().toLowerCase()).filter(Boolean);
+            unifiedMap.set(phone, { id: p.id, full_name: p.name, phone, tags: tgs });
+        });
+
+        (rawProspects || []).forEach((pr: any) => {
+            const phone = (pr.phone || '').replace(/\D/g, '');
+            if (!phone || unifiedMap.has(phone)) return;
+            const tgs = (prTags || []).filter((ct: any) => ct.prospect_id === pr.id).map((ct: any) => ct.crm_tags?.name?.trim().toLowerCase()).filter(Boolean);
+            unifiedMap.set(phone, { id: pr.id, full_name: pr.name, phone, tags: tgs });
+        });
+
+        const targetContacts = Array.from(unifiedMap.values()).filter(c => {
+            let pInc = incTags.length === 0 || incTags.some((i: string) => c.tags.includes(i));
+            let pExc = excTags.length === 0 || !excTags.some((e: string) => c.tags.includes(e));
+            return pInc && pExc;
+        });
+
+        if (!targetContacts || targetContacts.length === 0) {
             await supabaseClient.from('campaigns').update({ status: 'completed', sent_count: 0, total_target: 0 }).eq('id', campaign_id)
             return new Response(JSON.stringify({ success: true, sent: 0, total: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         }
 
         const ycloudKey = (campaign as any).clinic_settings?.ycloud_api_key
         const clinicName = (campaign as any).clinic_settings?.clinic_name || 'Citenly'
+        const fromNumber = (campaign as any).clinic_settings?.ycloud_phone_number
 
         // Detectar variables reales de la plantilla
         const templatesRes = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', { headers: { 'X-API-Key': ycloudKey } })
@@ -62,13 +112,14 @@ serve(async (req) => {
                 parameters.push({ type: 'text', text: val })
             }
 
-            let phone = contact.phone_number
+            let phone = contact.phone
             if (!phone.startsWith('+')) phone = `+${phone}`
 
             const res = await fetch('https://api.ycloud.com/v2/whatsapp/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-API-Key': ycloudKey },
                 body: JSON.stringify({
+                    from: fromNumber,
                     to: phone,
                     type: 'template',
                     template: {
