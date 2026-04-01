@@ -18,10 +18,10 @@ CREATE POLICY "Clinics can manage their own deliveries"
     ON public.campaign_deliveries
     FOR ALL
     USING (clinic_id IN (
-        SELECT clinic_id FROM profile WHERE id = auth.uid()
+        SELECT clinic_id FROM public.user_profiles WHERE id = auth.uid()
     ))
     WITH CHECK (clinic_id IN (
-        SELECT clinic_id FROM profile WHERE id = auth.uid()
+        SELECT clinic_id FROM public.user_profiles WHERE id = auth.uid()
     ));
 
 -- Create indexes for performance
