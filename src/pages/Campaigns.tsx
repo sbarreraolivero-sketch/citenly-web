@@ -287,12 +287,9 @@ export default function Campaigns() {
             if (fnError) {
                 console.error('Error de Invocación (Edge Function):', fnError)
                 alert(`Error en el servidor: ${fnError.message || 'La función no respondió a tiempo. Revisa el estado de la campaña en unos minutos.'}`)
-            } else if (data?.error) {
-                console.error('Error reportado por la función:', data.error)
-                alert(`Campaña con problemas: ${data.error}`)
             } else {
-                console.log(' Campaña completada exitosamente:', data)
-                alert(`✅ Campaña enviada a ${data?.sent || 0} de ${data?.total || 0} contactos.`)
+                console.log(' Campaña iniciada exitosamente en segundo plano:', data)
+                alert(`✅ Campaña iniciada con éxito. El progreso se actualizará automáticamente en unos momentos.`)
             }
 
         } catch (error: any) {
