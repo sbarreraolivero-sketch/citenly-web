@@ -691,8 +691,8 @@ export default function Campaigns() {
                     <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-silk-beige flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 flex justify-between items-start text-white">
                             <div>
-                                <p className="text-primary-100 text-xs font-black uppercase tracking-widest mb-1 italic">Reporte Detallado de Campaña</p>
-                                <h3 className="text-2xl font-bold tracking-tight">{selectedCampaignForReport.name}</h3>
+                                <p className="text-white/80 text-xs font-black uppercase tracking-widest mb-1 italic">Reporte Detallado de Campaña</p>
+                                <h3 className="text-2xl font-bold tracking-tight text-white">{selectedCampaignForReport.name}</h3>
                                 <div className="flex items-center gap-3 mt-2">
                                     <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
                                         {getStatusLabel(selectedCampaignForReport.status)}
