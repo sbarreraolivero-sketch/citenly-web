@@ -18,7 +18,6 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { retentionService } from '@/services/retentionService'
 import { GuideBox } from '@/components/ui/GuideBox'
-import toast from 'react-hot-toast'
 
 interface Campaign {
     id: string
