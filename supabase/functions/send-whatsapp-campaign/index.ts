@@ -62,17 +62,36 @@ serve(async (req) => {
 
         const unifiedMap = new Map();
 
+        // Indexar tags por patient_id/prospect_id una sola vez
+        const patientTagMap = new Map();
+        (pTags || []).forEach((pt: any) => {
+            const pid = pt.patient_id;
+            const tagName = pt.tags?.name?.trim().toLowerCase();
+            if (!tagName) return;
+            if (!patientTagMap.has(pid)) patientTagMap.set(pid, []);
+            patientTagMap.get(pid).push(tagName);
+        });
+
+        const prospectTagMap = new Map();
+        (prTags || []).forEach((ct: any) => {
+            const prid = ct.prospect_id;
+            const tagName = ct.crm_tags?.name?.trim().toLowerCase();
+            if (!tagName) return;
+            if (!prospectTagMap.has(prid)) prospectTagMap.set(prid, []);
+            prospectTagMap.get(prid).push(tagName);
+        });
+
         (rawPatients || []).forEach((p: any) => {
             const phone = (p.phone_number || '').replace(/\D/g, '');
             if (!phone) return;
-            const tgs = (pTags || []).filter((pt: any) => pt.patient_id === p.id).map((pt: any) => pt.tags?.name?.trim().toLowerCase()).filter(Boolean);
+            const tgs = patientTagMap.get(p.id) || [];
             unifiedMap.set(phone, { id: p.id, full_name: p.name, phone, tags: tgs });
         });
 
         (rawProspects || []).forEach((pr: any) => {
             const phone = (pr.phone || '').replace(/\D/g, '');
             if (!phone || unifiedMap.has(phone)) return;
-            const tgs = (prTags || []).filter((ct: any) => ct.prospect_id === pr.id).map((ct: any) => ct.crm_tags?.name?.trim().toLowerCase()).filter(Boolean);
+            const tgs = prospectTagMap.get(pr.id) || [];
             unifiedMap.set(phone, { id: pr.id, full_name: pr.name, phone, tags: tgs });
         });
 
@@ -102,56 +121,95 @@ serve(async (req) => {
         let sentCount = 0
         let fullError = ''
 
-        for (const contact of targetContacts) {
-            // LLENAR TODAS LAS VARIABLES (Crucial para evitar Error 400)
-            const parameters = []
-            for (let i = 1; i <= numVars; i++) {
-                let val = '-'
-                if (i === 1) val = contact.full_name || 'Paciente'
-                if (i === 5) val = clinicName
-                parameters.push({ type: 'text', text: val })
-            }
+        // Optimización: Procesar en lotes para evitar timeouts y mejorar velocidad
+        // Pero no demasiado grandes para no saturar la API o rate limits
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < targetContacts.length; i += BATCH_SIZE) {
+            const batch = targetContacts.slice(i, i + BATCH_SIZE);
+            
+            await Promise.all(batch.map(async (contact) => {
+                // LLENAR TODAS LAS VARIABLES (Crucial para evitar Error 400)
+                const parameters = []
+                for (let v = 1; v <= numVars; v++) {
+                    let val = '-'
+                    if (v === 1) val = contact.full_name || 'Paciente'
+                    if (v === 5) val = clinicName
+                    parameters.push({ type: 'text', text: val })
+                }
 
-            let phone = contact.phone
-            if (!phone.startsWith('+')) phone = `+${phone}`
+                let phone = contact.phone
+                if (!phone.startsWith('+')) phone = `+${phone}`
 
-            const res = await fetch('https://api.ycloud.com/v2/whatsapp/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-API-Key': ycloudKey },
-                body: JSON.stringify({
-                    from: fromNumber,
-                    to: phone,
-                    type: 'template',
-                    template: {
-                        name: campaign.template_name,
-                        language: { code: targetTemplate?.language || 'es' },
-                        components: parameters.length > 0 ? [{ type: 'body', parameters }] : undefined
+                try {
+                    const res = await fetch('https://api.ycloud.com/v2/whatsapp/messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-API-Key': ycloudKey },
+                        body: JSON.stringify({
+                            from: fromNumber,
+                            to: phone,
+                            type: 'template',
+                            template: {
+                                name: campaign.template_name,
+                                language: { code: targetTemplate?.language || 'es' },
+                                components: parameters.length > 0 ? [{ type: 'body', parameters }] : undefined
+                            }
+                        })
+                    })
+
+                    if (res.ok) {
+                        sentCount++
+                        
+                        // 1. Insertar en entregas (para reporte)
+                        await supabaseClient.from('campaign_deliveries').insert({
+                            clinic_id: campaign.clinic_id,
+                            campaign_id: campaign_id,
+                            contact_name: contact.full_name,
+                            contact_phone: phone,
+                            status: 'sent'
+                        })
+
+                        // 2. Insertar en mensajes (para chat/CRM)
+                        // Reconstruir el texto para previsualización en el chat
+                        let renderedText = bodyComponent?.text || ''
+                        parameters.forEach((p: any, idx: number) => {
+                            renderedText = renderedText.replace(`{{${idx + 1}}}`, p.text)
+                        })
+
+                        await supabaseClient.from('messages').insert({
+                            clinic_id: campaign.clinic_id,
+                            phone_number: phone,
+                            direction: 'outbound',
+                            content: renderedText || `Template: ${campaign.template_name}`,
+                            message_type: 'template',
+                            campaign_id: campaign_id,
+                            ycloud_status: 'sent',
+                            ai_generated: true // Las campañas son automáticas
+                        })
+
+                    } else {
+                        const errJson = await res.json()
+                        const errStr = JSON.stringify(errJson)
+                        fullError = errStr
+                        console.error(`DEBUG: Error YCloud para ${phone}: ${errStr}`)
+                        await supabaseClient.from('campaign_deliveries').insert({
+                            clinic_id: campaign.clinic_id,
+                            campaign_id: campaign_id,
+                            contact_name: contact.full_name,
+                            contact_phone: phone,
+                            status: 'failed',
+                            error_message: errStr
+                        })
                     }
-                })
-            })
+                } catch (e: any) {
+                    console.error(`ERROR fatal en envío a ${phone}:`, e.message)
+                }
+            }));
 
-            if (res.ok) {
-                sentCount++
-                await supabaseClient.from('campaign_deliveries').insert({
-                    clinic_id: campaign.clinic_id,
-                    campaign_id: campaign_id,
-                    contact_name: contact.full_name,
-                    contact_phone: phone,
-                    status: 'sent'
-                })
-            } else {
-                const errJson = await res.json()
-                fullError = JSON.stringify(errJson)
-                console.error(`DEBUG: Error YCloud para ${phone}: ${fullError}`)
-                await supabaseClient.from('campaign_deliveries').insert({
-                    clinic_id: campaign.clinic_id,
-                    campaign_id: campaign_id,
-                    contact_name: contact.full_name,
-                    contact_phone: phone,
-                    status: 'failed',
-                    error_message: fullError
-                })
-            }
+            // Actualizar progreso parcialmente cada lote para que el usuario vea avance
+            await supabaseClient.from('campaigns').update({
+                sent_count: sentCount,
+                total_target: targetContacts.length
+            }).eq('id', campaign_id)
         }
 
         await supabaseClient.from('campaigns').update({
@@ -166,6 +224,13 @@ serve(async (req) => {
         })
 
     } catch (error: any) {
+        console.error("CRITICAL ERROR:", error.message);
+        if (campaign_id) {
+            await supabaseClient.from('campaigns').update({ 
+                status: 'failed', 
+                error_log: error.message 
+            }).eq('id', campaign_id)
+        }
         return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
     }
 })
