@@ -15,7 +15,7 @@ export default function Templates() {
     const [isCreating, setIsCreating] = useState(false)
     const [creatingTemplate, setCreatingTemplate] = useState(false)
     const [deletingTemplate, setDeletingTemplate] = useState<string | null>(null)
-    const [newTemplate, setNewTemplate] = useState<{ name: string, body: string, category: string, buttons: string[] }>({ name: '', body: '', category: 'MARKETING', buttons: [] })
+    const [newTemplate, setNewTemplate] = useState<{ name: string, body: string, category: string, buttons: string[], imageUrl?: string }>({ name: '', body: '', category: 'MARKETING', buttons: [], imageUrl: '' })
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -108,7 +108,7 @@ export default function Templates() {
             // Prepare examples array for Meta
             const examples = genericExamples.map((gen, i) => variableExamples[i + 1] || gen)
 
-            const result = await retentionService.createRemoteTemplate(clinicId, newTemplate.name, newTemplate.body, newTemplate.buttons, examples)
+            const result = await retentionService.createRemoteTemplate(clinicId, newTemplate.name, newTemplate.body, newTemplate.buttons, examples, newTemplate.imageUrl)
             toast.success('Plantilla enviada a WhatsApp para revisión')
 
             // Add to list optimistically
@@ -122,7 +122,7 @@ export default function Templates() {
                 body: newTemplate.body
             }
             setTemplates([created, ...templates])
-            setNewTemplate({ name: '', body: '', category: 'MARKETING', buttons: [] })
+            setNewTemplate({ name: '', body: '', category: 'MARKETING', buttons: [], imageUrl: '' })
             setIsCreating(false)
 
         } catch (err: any) {
@@ -305,6 +305,19 @@ export default function Templates() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Formularios e Inputs */}
                         <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-charcoal mb-1">
+                                    Imagen de Cabecera (Opcional - URL pública)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newTemplate.imageUrl || ''}
+                                    onChange={e => setNewTemplate({ ...newTemplate, imageUrl: e.target.value })}
+                                    placeholder="https://tusitio.com/imagen.jpg"
+                                    className="w-full p-3 bg-white border border-silk-beige rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                />
+                                <p className="text-xs font-semibold text-charcoal/60 mt-1">Usa una URL de imagen directa (jpg/png) para que aparezca arriba del mensaje.</p>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-charcoal mb-1">
@@ -453,13 +466,19 @@ export default function Templates() {
                                         <p className="text-white/95 text-xs font-black tracking-tight">Cuenta de empresa</p>
                                     </div>
                                 </div>
+                                {/* Header Image Preview */}
+                                {newTemplate.imageUrl && (
+                                    <div className="mt-14 mx-4 rounded-xl overflow-hidden shadow-sm border border-white/20 animate-in fade-in zoom-in-95">
+                                        <img src={newTemplate.imageUrl} alt="Header Preview" className="w-full h-32 object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                    </div>
+                                )}
                                 {/* Fondo con Patrón WhatsApp (CSS) */}
                                 <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
                                     backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
                                     backgroundSize: "20px 20px"
                                 }} />
                                 {/* Contenedor de Mensajes */}
-                                <div className="flex flex-col flex-1 pt-14 pb-14 relative z-0 overflow-y-auto scrollbar-hide px-2" style={{ scrollbarWidth: 'none' }}>
+                                <div className={`flex flex-col flex-1 ${newTemplate.imageUrl ? 'pt-2' : 'pt-14'} pb-14 relative z-0 overflow-y-auto scrollbar-hide px-2`} style={{ scrollbarWidth: 'none' }}>
                                     <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                                     {/* Chat bubble */}
                                     <div className="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[14px] text-[#111B21] mb-2 max-w-[92%] whitespace-pre-wrap leading-relaxed">
