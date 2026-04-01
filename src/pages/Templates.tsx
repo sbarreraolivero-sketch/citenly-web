@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info, Upload, Loader2 } from 'lucide-react'
+import { FileText, Plus, X, MessageSquare, Clock, ShieldAlert, CheckCircle2, Sparkles, Smartphone, Trash2, Code, Lightbulb, Check, Info, Upload, ImageIcon, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { retentionService, YCloudTemplate } from '@/services/retentionService'
 import { useAuth } from '@/contexts/AuthContext'
@@ -405,10 +405,39 @@ export default function Templates() {
                                     </div>
 
                                     {newTemplate.imageUrl && (
-                                        <div className="w-20 h-20 rounded-xl overflow-hidden border border-silk-beige shrink-0 shadow-sm">
+                                        <div className="w-20 h-20 rounded-xl overflow-hidden border border-silk-beige shrink-0 shadow-sm relative group">
                                             <img src={newTemplate.imageUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-charcoal/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <ImageIcon className="w-5 h-5 text-white" />
+                                            </div>
                                         </div>
                                     )}
+                                </div>
+                                <div className="mt-3 p-3 bg-primary-50/20 border border-primary-100/50 rounded-xl flex items-start gap-3">
+                                    <div className="w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                        <Info className="w-3 h-3 text-white" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[11px] font-bold text-primary-900 leading-tight">Guía de imagen para WhatsApp</p>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1 h-1 rounded-full bg-primary-400" />
+                                                <p className="text-[10px] font-medium text-primary-800/80">Peso máx: 5MB</p>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1 h-1 rounded-full bg-primary-400" />
+                                                <p className="text-[10px] font-medium text-primary-800/80">Formato: JPG / PNG</p>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-nowrap">
+                                                <div className="w-1 h-1 rounded-full bg-primary-400" />
+                                                <p className="text-[10px] font-medium text-primary-800/80">Medida ideal: 1.91:1 (Horiz.)</p>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1 h-1 rounded-full bg-primary-400" />
+                                                <p className="text-[10px] font-medium text-primary-800/80">También sirve: 1:1 (Cuadrada)</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
