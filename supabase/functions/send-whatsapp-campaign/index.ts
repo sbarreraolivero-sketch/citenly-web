@@ -154,23 +154,39 @@ serve(async (req) => {
     };
 
     try {
-        const body = await req.json();
+        const body = await req.json().catch(() => ({}));
         const campaign_id = body.campaign_id;
-        if (!campaign_id) throw new Error("ID de campaña requerido");
+        
+        if (!campaign_id) {
+            return new Response(JSON.stringify({ error: "ID de campaña no recibido" }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 400
+            });
+        }
 
-        // DISPARAR PROCESO EN BACKGROUND Y RESPONDER DE INMEDIATO
-        // En Deno Deploy / Edge Functions, esto permite que la función siga corriendo
-        (async () => {
-            await processCampaign(campaign_id);
-        })();
+        // USAR EdgeRuntime.waitUntil PARA SEGUIR TRABAJANDO DESPUÉS DE RESPONDER
+        const mission = processCampaign(campaign_id);
+        
+        // @ts-ignore
+        if (typeof EdgeRuntime !== 'undefined') {
+            // @ts-ignore
+            EdgeRuntime.waitUntil(mission);
+            console.log(`[QUEUE] Campaña ${campaign_id} encolada con waitUntil`);
+        } else {
+            // En local o sin EdgeRuntime, disparamos asíncrono normal
+            mission.catch(e => console.error("Background error:", e));
+        }
 
-        return new Response(JSON.stringify({ success: true, message: "Proceso de campaña iniciado en segundo plano" }), {
+        return new Response(JSON.stringify({ 
+            success: true, 
+            message: "Campaña iniciada con éxito. El progreso se actualizará en unos momentos." 
+        }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200
         });
 
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: "No se pudo leer el cuerpo de la petición" }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400
         });
