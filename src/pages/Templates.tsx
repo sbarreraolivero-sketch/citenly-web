@@ -459,7 +459,8 @@ export default function Templates() {
                                     backgroundSize: "20px 20px"
                                 }} />
                                 {/* Contenedor de Mensajes */}
-                                <div className="flex flex-col justify-end flex-1 pt-16 pb-4 relative z-10">
+                                <div className="flex flex-col flex-1 pt-14 pb-14 relative z-10 overflow-y-auto scrollbar-hide px-2" style={{ scrollbarWidth: 'none' }}>
+                                    <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                                     {/* Chat bubble */}
                                     <div className="bg-white p-3.5 rounded-xl rounded-tl-sm shadow-sm text-[14px] text-[#111B21] mb-2 max-w-[92%] whitespace-pre-wrap leading-relaxed">
                                         {(() => {
