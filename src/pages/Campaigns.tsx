@@ -12,7 +12,8 @@ import {
     Trash2,
     Lightbulb,
     CheckCircle2,
-    ShieldAlert
+    ShieldAlert,
+    Check
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -50,6 +51,14 @@ interface YCloudTemplate {
     body: string
 }
 
+interface Delivery {
+    id: string
+    contact_name: string
+    contact_phone: string
+    status: string
+    error_message?: string
+}
+
 export default function Campaigns() {
     const { profile } = useAuth()
     const [campaigns, setCampaigns] = useState<Campaign[]>([])
@@ -59,6 +68,8 @@ export default function Campaigns() {
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false)
     const [showReportModal, setShowReportModal] = useState(false)
     const [selectedCampaignForReport, setSelectedCampaignForReport] = useState<Campaign | null>(null)
+    const [deliveries, setDeliveries] = useState<Delivery[]>([])
+    const [loadingDeliveries, setLoadingDeliveries] = useState(false)
 
     // New Campaign State
     const [step, setStep] = useState(1)
@@ -85,6 +96,32 @@ export default function Campaigns() {
             }
         } catch (error) {
             console.error('Error fetching templates:', error)
+        }
+    }
+
+    useEffect(() => {
+        if (showReportModal && selectedCampaignForReport) {
+            fetchDeliveries(selectedCampaignForReport.id)
+        } else {
+            setDeliveries([])
+        }
+    }, [showReportModal, selectedCampaignForReport])
+
+    const fetchDeliveries = async (campaignId: string) => {
+        setLoadingDeliveries(true)
+        try {
+            const { data, error } = await supabase
+                .from('campaign_deliveries')
+                .select('*')
+                .eq('campaign_id', campaignId)
+                .order('created_at', { ascending: true })
+
+            if (error) throw error
+            setDeliveries(data || [])
+        } catch (error) {
+            console.error('Error fetching deliveries:', error)
+        } finally {
+            setLoadingDeliveries(false)
         }
     }
 
@@ -747,9 +784,58 @@ export default function Campaigns() {
                                     </p>
                                 </div>
                             )}
+
+                            {/* Recipients List */}
+                            <div className="space-y-4 pt-4 border-t border-silk-beige">
+                                <div className="flex items-center justify-between text-sm font-bold text-charcoal">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-emerald-500" />
+                                        Lista de Destinatarios
+                                    </div>
+                                    <span className="text-[10px] text-charcoal/40 font-black uppercase">{deliveries.length} registros</span>
+                                </div>
+                                
+                                <div className="bg-gray-50/50 rounded-xl border border-silk-beige overflow-hidden">
+                                    {loadingDeliveries ? (
+                                        <div className="p-8 flex flex-col items-center justify-center gap-2">
+                                            <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+                                            <p className="text-[10px] font-bold text-charcoal/30 uppercase tracking-widest">Cargando lista...</p>
+                                        </div>
+                                    ) : deliveries.length === 0 ? (
+                                        <div className="p-8 text-center text-charcoal/30 italic text-xs">
+                                            No hay registros de envíos para esta campaña.
+                                            <p className="text-[10px] mt-1 italic font-normal">(Esto ocurre en campañas enviadas antes de esta actualización)</p>
+                                        </div>
+                                    ) : (
+                                        <div className="max-h-[300px] overflow-y-auto divide-y divide-silk-beige">
+                                            {deliveries.map(d => (
+                                                <div key={d.id} className="p-3 flex items-center justify-between hover:bg-white transition-colors group">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-charcoal">{d.contact_name || 'Sin Nombre'}</span>
+                                                        <span className="text-[10px] text-charcoal/40 font-mono">{d.contact_phone}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {d.status === 'sent' ? (
+                                                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[9px] font-black uppercase">
+                                                                <Check className="w-3 h-3" />
+                                                                Enviado
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[9px] font-black uppercase group-hover:cursor-help" title={d.error_message}>
+                                                                <X className="w-3 h-3" />
+                                                                Error
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="p-6 bg-gray-50 border-t border-silk-beige flex justify-end">
+                        <div className="p-6 bg-gray-50 border-t border-silk-beige flex justify-end gap-3">
                             <button 
                                 onClick={() => setShowReportModal(false)}
                                 className="px-6 py-2.5 bg-charcoal text-white rounded-xl font-bold text-sm hover:bg-black transition-colors"

@@ -132,10 +132,25 @@ serve(async (req) => {
 
             if (res.ok) {
                 sentCount++
+                await supabaseClient.from('campaign_deliveries').insert({
+                    clinic_id: campaign.clinic_id,
+                    campaign_id: campaign_id,
+                    contact_name: contact.full_name,
+                    contact_phone: phone,
+                    status: 'sent'
+                })
             } else {
                 const errJson = await res.json()
                 fullError = JSON.stringify(errJson)
                 console.error(`DEBUG: Error YCloud para ${phone}: ${fullError}`)
+                await supabaseClient.from('campaign_deliveries').insert({
+                    clinic_id: campaign.clinic_id,
+                    campaign_id: campaign_id,
+                    contact_name: contact.full_name,
+                    contact_phone: phone,
+                    status: 'failed',
+                    error_message: fullError
+                })
             }
         }
 
