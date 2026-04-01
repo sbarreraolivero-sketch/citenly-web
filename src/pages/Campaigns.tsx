@@ -385,15 +385,12 @@ export default function Campaigns() {
                     
                     <p className="text-lg text-gray-600 leading-relaxed">
                         Estamos migrando a una nueva infraestructura inteligente de <span className="font-bold text-indigo-600 italic">Créditos de Envío</span>. 
-                        Pronto podrás recargar saldo directamente en Citenly, olvidarte de YCloud y disfrutar de envíos masivos verificados por Meta.
+                        Pronto podrás recargar saldo directamente en Citenly y disfrutar de envíos masivos verificados por Meta.
                     </p>
                     
                     <div className="flex justify-center gap-4 text-sm font-semibold text-indigo-700">
                         <span className="flex items-center gap-1 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
                             ✓ Sin límites de 250 mgs
-                        </span>
-                        <span className="flex items-center gap-1 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-                            ✓ Pago local en CLP
                         </span>
                         <span className="flex items-center gap-1 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
                             ✓ 100% Desatendido
