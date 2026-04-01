@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
 serve(async (req) => {
@@ -16,7 +17,7 @@ serve(async (req) => {
 
     const processCampaign = async (campaign_id: string) => {
         try {
-            console.log(`[START] Procesando campaña: ${campaign_id}`);
+            console.log(`[START] Procesando: ${campaign_id}`);
             const { data: campaign, error: campaignError } = await supabaseClient
                 .from('campaigns')
                 .select('*, clinic_settings(clinic_name, ycloud_api_key, ycloud_phone_number)')
@@ -70,8 +71,6 @@ serve(async (req) => {
                 let pExc = excTags.length === 0 || !excTags.some((e: string) => c.tags.includes(e));
                 return pInc && pExc;
             });
-
-            console.log(`[AUDIENCE] Total destinatarios filtrados: ${targetContacts.length}`);
 
             if (targetContacts.length === 0) {
                 await supabaseClient.from('campaigns').update({ status: 'completed', sent_count: 0, total_target: 0 }).eq('id', campaign_id);
@@ -137,7 +136,7 @@ serve(async (req) => {
                             await supabaseClient.from('messages').insert({ clinic_id: campaign.clinic_id, phone_number: phone, direction: 'outbound', content: txt, message_type: 'template', campaign_id, ycloud_status: 'sent', ai_generated: true });
                         }
                     } catch (e: any) {
-                        console.error(`Error enviando a ${phone}: ${e.message}`);
+                        console.error(`Error enviando: ${e.message}`);
                     }
                 }));
 
@@ -145,7 +144,6 @@ serve(async (req) => {
             }
 
             await supabaseClient.from('campaigns').update({ status: 'completed', error_log: null }).eq('id', campaign_id);
-            console.log(`[SUCCESS] Campaña terminada: ${sentCount} enviados`);
 
         } catch (err: any) {
             console.error(`[FATAL] ${err.message}`);
@@ -154,41 +152,41 @@ serve(async (req) => {
     };
 
     try {
-        const body = await req.json().catch(() => ({}));
-        const campaign_id = body.campaign_id;
-        
+        // Robustez en el parseo del Body
+        let campaign_id = null;
+        try {
+            const body = await req.json();
+            campaign_id = body?.campaign_id;
+        } catch {
+            // Si falla el req.json() (ej: sin body), intentamos buscar en la URL
+            const url = new URL(req.url);
+            campaign_id = url.searchParams.get('campaign_id');
+        }
+
         if (!campaign_id) {
-            return new Response(JSON.stringify({ error: "ID de campaña no recibido" }), {
+            return new Response(JSON.stringify({ error: "Falta campaign_id" }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 400
+                status: 200 // Respondemos 200 aunque falte para evitar alertas de navegador feos
             });
         }
 
-        // USAR EdgeRuntime.waitUntil PARA SEGUIR TRABAJANDO DESPUÉS DE RESPONDER
         const mission = processCampaign(campaign_id);
         
         // @ts-ignore
         if (typeof EdgeRuntime !== 'undefined') {
             // @ts-ignore
             EdgeRuntime.waitUntil(mission);
-            console.log(`[QUEUE] Campaña ${campaign_id} encolada con waitUntil`);
-        } else {
-            // En local o sin EdgeRuntime, disparamos asíncrono normal
-            mission.catch(e => console.error("Background error:", e));
         }
 
-        return new Response(JSON.stringify({ 
-            success: true, 
-            message: "Campaña iniciada con éxito. El progreso se actualizará en unos momentos." 
-        }), {
+        return new Response(JSON.stringify({ success: true, message: "Lanzado" }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200
         });
 
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: "No se pudo leer el cuerpo de la petición" }), {
+        return new Response(JSON.stringify({ error: "Internal Error" }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400
+            status: 200
         });
     }
-})
+});
