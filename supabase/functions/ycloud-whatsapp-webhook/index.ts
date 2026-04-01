@@ -85,11 +85,11 @@ const functions = [
     },
     {
         name: "create_appointment",
-        description: "Crea nueva cita cuando paciente confirma fecha, hora y servicio. REQUERIDO Y ESTRICTO: Pasa la fecha en formato YYYY-MM-DD y la hora EXACTA en formato de 24 horas (SOLO HH:MM, por ejemplo '14:00' o '09:00', SIN AM/PM ni texto extra).",
+        description: "Crea nueva cita cuando paciente confirma fecha, hora y servicio. REQUERIDO Y ESTRICTO: (1) El 'patient_name' DEBE ser el nombre real proporcionado por el usuario. NUNCA uses marcadores de posición como '[Nombre]' o similares. Si no tienes el nombre real, NO llames a esta función y pídelo primero. (2) Fecha en formato YYYY-MM-DD. (3) Hora EXACTA en formato de 24 horas (HH:MM).",
         parameters: {
             type: "object",
             properties: {
-                patient_name: { type: "string" },
+                patient_name: { type: "string", description: "Nombre completo real del paciente (obligatorio, no usar placeholders)" },
                 date: { type: "string", description: "Fecha en formato YYYY-MM-DD" },
                 time: { type: "string", description: "Hora en formato HH:MM (24h)" },
                 service_name: { type: "string" },
@@ -482,6 +482,13 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         console.error(`[createAppt] Invalid date/time format: ${args.date} ${args.time} (clean: ${cleanTime})`);
         await debugLog(sb, "Invalid date/time format", { args, clinicId });
         return { success: false, message: "Error: No tengo el horario completo. Por favor pídeme 'Agendar cita el [FECHA] a las [HORA]'." };
+    }
+
+    // NEW: Placeholder Name Validation
+    const nameLower = (args.patient_name || "").toLowerCase();
+    if (nameLower.includes("[nombre") || nameLower.includes("paciente") || nameLower.length < 2) {
+        console.warn(`[createAppt] Placeholder name rejected: ${args.patient_name}`);
+        return { success: false, message: "Error: Necesito tu NOMBRE REAL para agendar. Por favor, dime tu nombre completo." };
     }
 
     args.time = cleanTime; // Ensure args has the clean time
@@ -1540,8 +1547,10 @@ ${lagRule}
 8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
 9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
    a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
-   b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO.
-   c) Registro: CUANDO TENGAS EL NOMBRE Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
+   b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO REAL. 
+       - REGLA DE ORO: SIEMPRE obtén el nombre real del humano. 
+       - NUNCA uses marcadores de posición como "[Nombre del Paciente]" o "Sin Nombre". Si no sabes el nombre, NO agendes y vuelve a preguntar.
+   c) Registro: CUANDO TENGAS EL NOMBRE REAL Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
    d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta.
       LOS DATOS OFICIALES PARA EL ABONO ($10.000) SON:
       ${clinic.transfer_details || "- Solicitar datos de transferencia al equipo humano."}
