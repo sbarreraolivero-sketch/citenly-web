@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { retentionService } from '@/services/retentionService'
 import { GuideBox } from '@/components/ui/GuideBox'
+import toast from 'react-hot-toast'
 
 interface Campaign {
     id: string
@@ -451,8 +452,13 @@ export default function Campaigns() {
                                     </button>
                                 )}
                                 {campaign.status !== 'draft' && (
-                                    <button className="w-full btn-ghost py-2 text-sm border border-silk-beige" disabled>
-                                        <BarChart3 className="w-4 h-4 mr-2" />
+                                    <button 
+                                        onClick={() => {
+                                            toast.success(`Campaña: ${campaign.name}\nDestinatarios: ${campaign.total_target}\nEnviados: ${campaign.sent_count}`, { duration: 5000 })
+                                        }}
+                                        className="w-full btn-ghost py-2 text-sm border border-silk-beige hover:bg-gray-50 flex items-center justify-center gap-2"
+                                    >
+                                        <BarChart3 className="w-4 h-4" />
                                         Ver Reporte
                                     </button>
                                 )}
