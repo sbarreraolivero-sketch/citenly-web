@@ -30,6 +30,8 @@ const Privacy = lazy(() => import('./pages/Privacy'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'))
 const PendingActivation = lazy(() => import('./pages/PendingActivation').then(m => ({ default: m.PendingActivation })))
+const FreeConsultation = lazy(() => import('./pages/FreeConsultation'))
+
 
 // HQ Pages
 const AdminDashboard = lazy(() => import('./pages/hq/AdminDashboard'))
@@ -89,6 +91,8 @@ function MainRoutes() {
                     <Route path="/privacidad" element={<Privacy />} />
                     <Route path="/privacy" element={<Navigate to="/privacidad" replace />} />
                     <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/asesoria-gratis" element={<FreeConsultation />} />
+
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/update-password" element={<UpdatePassword />} />
                     <Route

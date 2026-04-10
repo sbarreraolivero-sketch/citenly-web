@@ -80,7 +80,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 const functions = [
     {
         name: "check_availability",
-        description: "Verifica disponibilidad. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). Además, si el usuario menciona a un profesional o cargo específico (ej. 'con la doctora Ana', 'con la kinesióloga'), extrae su nombre en professional_name.",
+        description: "Verifica disponibilidad para NUEVAS citas. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). NO la uses para confirmar citas ya existentes.",
         parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado por el paciente (opcional)" } }, required: ["date"] }
     },
     {
@@ -105,7 +105,7 @@ const functions = [
     },
     {
         name: "confirm_appointment",
-        description: "Confirma o cancela cita pendiente",
+        description: "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy.",
         parameters: { type: "object", properties: { response: { type: "string", enum: ["yes", "no"] } }, required: ["response"] }
     },
     {
@@ -140,7 +140,7 @@ const functions = [
     },
     {
         name: "reschedule_appointment",
-        description: "Reagenda una cita existente del paciente a una nueva fecha y hora. Úsala cuando el paciente quiera cambiar la fecha/hora de su cita. Primero verifica disponibilidad con check_availability, luego usa esta función para mover la cita.",
+        description: "Reagenda una cita existente del paciente a una nueva fecha y hora. Úsala cuando el paciente quiera cambiar la fecha/hora de su cita que ya estaba agendada.",
         parameters: {
             type: "object",
             properties: {
@@ -258,7 +258,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (requestedDateStr === todayStr || requestedDateStr === tomorrowStr) {
             return { 
                 available: false, 
-                message: "Lo sentimos, para la sucursal de Elizabeth requerimos al menos 1 día completo de holgura. No es posible agendar para hoy ni para mañana. La disponibilidad más próxima es a partir de PASADO MAÑANA. Por favor, consulta una fecha posterior." 
+                message: "Lo sentimos, para la sucursal de Elizabeth requerimos al menos 1 día de anticipación para NUEVAS RESERVAS. No es posible agendar citas nuevas para hoy ni para mañana. Esta regla SÓLO aplica a nuevas reservas; las confirmaciones y cancelaciones de citas existentes se pueden hacer para cualquier día." 
             };
         }
     }
@@ -589,8 +589,20 @@ const getServices = async (sb: ReturnType<typeof createClient>, clinicId: string
 
 const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, response: string) => {
     const normalizedPhone = normalizePhone(phone);
-    const { data: appt } = await sb.from("appointments").select("*").eq("clinic_id", clinicId).eq("phone_number", normalizedPhone).eq("status", "pending").gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1).single();
-    if (!appt) return { message: "No hay citas pendientes." };
+    // Be more lenient: search for pending appointments from the last 24 hours to handle same-day confirmations
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    const { data: appt } = await sb.from("appointments")
+        .select("*")
+        .eq("clinic_id", clinicId)
+        .eq("phone_number", normalizedPhone)
+        .eq("status", "pending")
+        .gte("appointment_date", twentyFourHoursAgo)
+        .order("appointment_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+    if (!appt) return { message: "No encontré una cita pendiente para confirmar en este momento (podría ser porque ya está confirmada o no existe)." };
     const status = response === "yes" ? "confirmed" : "cancelled";
     await sb.from("appointments").update({ status, confirmation_received: true, confirmation_response: response }).eq("id", appt.id);
     return status === "confirmed" ? { message: "¡Cita confirmada! 😊" } : { message: "Cita cancelada. ¿Reagendar?" };
@@ -1493,12 +1505,13 @@ Deno.serve(async (req) => {
 
                 const isElizabeth = (clinic.clinic_name || "").toLowerCase().includes("elizabeth");
                 const lagRule = isElizabeth 
-                    ? `1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Para esta sucursal requerimos al menos 1 día completo de holgura por política de agenda.
-                       - HOY (${todayDay} ${localDateISO}) y MAÑANA (${tomorrowDay} ${tomorrowISO}) están BLOQUEADOS para agendar.
-                       - Si el usuario pide para hoy o mañana, explícale que por política de la clínica requerimos 24h de anticipación.
-                       - Ofrece exclusivamente horarios para PASADO MAÑANA (${dayAfterDay} ${dayAfterISO}) o fechas posteriores.
+                    ? `1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Esta política de "1 día de holgura" SÓLO aplica para AGENDAR CITAS NUEVAS.
+                       - HOY (${todayDay} ${localDateISO}) y MAÑANA (${tomorrowDay} ${tomorrowISO}) están BLOQUEADOS UNICAMENTE para AGENDAR NUEVAS CITAS.
+                       - NUNCA apliques esta restricción si el usuario está CONFIRMANDO, CANCELANDO o GESTIONANDO una cita que ya tiene en la agenda (ej. si dice "Sí, confirmo" a un recordatorio para hoy, DEBES proceder con confirm_appointment).
+                       - Si el usuario pide AGENDAR UNA NUEVA CITA para hoy o mañana, explícale que por política de la clínica requerimos 24h de anticipación para nuevas reservas.
+                       - Ofrece exclusivamente horarios para PASADO MAÑANA (${dayAfterDay} ${dayAfterISO}) o fechas posteriores para NUEVAS reservas.
                        - NUNCA digas que la clínica está cerrada si el horario general indica que está abierta.`
-                    : "1. ANTICIPACIÓN: Puedes agendar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
+                    : "1. ANTICIPACIÓN: Puedes agendar o confirmar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
 
                 const sysPrompt = `### REGLA DE SINCRONIZACIÓN TEMPORAL (CRÍTICO):
 IGNORA cualquier fecha o día de la semana mencionado anteriormente en este chat. Es posible que los mensajes previos hayan tenido errores de fecha. La ÚNICA fuente de verdad es el bloque "FUENTE DE VERDAD ABSOLUTA" que aparece abajo. Si detectas una discrepancia, AJUSTA tu conocimiento inmediatamente a los datos de abajo.
