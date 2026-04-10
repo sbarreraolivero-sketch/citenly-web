@@ -84,6 +84,7 @@ function MainRoutes() {
             <Suspense fallback={<PageLoader />}>
                 <Routes>
                     {/* Public Routes */}
+                    <Route path="/asesoria-gratis" element={<FreeConsultation />} />
                     <Route path="/r/:code" element={<ReferralRedirect />} />
                     <Route path="/" element={<Landing />} />
                     <Route path="/terminos" element={<Terms />} />
@@ -91,7 +92,6 @@ function MainRoutes() {
                     <Route path="/privacidad" element={<Privacy />} />
                     <Route path="/privacy" element={<Navigate to="/privacidad" replace />} />
                     <Route path="/pricing" element={<Pricing />} />
-                    <Route path="/asesoria-gratis" element={<FreeConsultation />} />
 
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/update-password" element={<UpdatePassword />} />

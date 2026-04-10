@@ -8,13 +8,8 @@ import {
     Bot, 
     CheckCircle2, 
     XCircle,
-    Users,
     Activity,
-    Zap,
-    Target,
-    BarChart,
-    ChevronRight,
-    Play
+    Target
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
