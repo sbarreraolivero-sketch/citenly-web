@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Phone, Send, Sparkles, MoreVertical, MessageSquare, RefreshCw, Bot, User, BellOff, ArrowLeft, Shield } from 'lucide-react'
+import { Search, Phone, Send, Sparkles, MessageSquare, RefreshCw, Bot, User, BellOff, ArrowLeft, Shield } from 'lucide-react'
 import { cn, formatPhoneNumber, getInitials } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
@@ -28,7 +28,7 @@ interface Conversation {
 }
 
 export default function AdminMessages() {
-    const { adminUser } = useAdminAuth()
+    useAdminAuth() // Keep the hook for auth check, but removed unused destructuring
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [selectedPhone, setSelectedPhone] = useState<string | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
@@ -55,7 +55,7 @@ export default function AdminMessages() {
     const fetchConversations = useCallback(async () => {
         try {
             // Fetch messages for HQ Clinic
-            const { data: msgs, error } = await supabase
+            const { data: msgs, error } = await (supabase as any)
                 .from('messages')
                 .select('phone_number, content, direction, created_at, is_read')
                 .eq('clinic_id', HQ_CLINIC_ID)
@@ -73,7 +73,7 @@ export default function AdminMessages() {
 
             // Group by phone number
             const phoneMap = new Map<string, { messages: any[], count: number }>()
-            msgs.forEach(m => {
+            msgs.forEach((m: any) => {
                 if (!phoneMap.has(m.phone_number)) {
                     phoneMap.set(m.phone_number, { messages: [], count: 0 })
                 }
@@ -84,7 +84,7 @@ export default function AdminMessages() {
 
             // Fetch prospect names for HQ
             const phones = Array.from(phoneMap.keys())
-            const { data: prospects } = await supabase
+            const { data: prospects } = await (supabase as any)
                 .from('crm_prospects')
                 .select('phone, name, requires_human')
                 .eq('clinic_id', HQ_CLINIC_ID)
@@ -92,9 +92,9 @@ export default function AdminMessages() {
 
             const nameMap = new Map<string, string>()
             const humanMap = new Map<string, boolean>()
-            prospects?.forEach(p => {
+            prospects?.forEach((p: any) => {
                 if (p.name) nameMap.set(p.phone, p.name)
-                humanMap.set(p.phone, p.requires_human || false)
+                humanMap.set(p.phone, !!p.requires_human)
             })
 
             // Build conversations
@@ -137,7 +137,7 @@ export default function AdminMessages() {
         setLoadingMessages(true)
         try {
             // Mark as read
-            await supabase
+            await (supabase as any)
                 .from('messages')
                 .update({ is_read: true })
                 .eq('clinic_id', HQ_CLINIC_ID)
@@ -145,7 +145,7 @@ export default function AdminMessages() {
                 .eq('direction', 'inbound')
                 .eq('is_read', false)
 
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('messages')
                 .select('*')
                 .eq('clinic_id', HQ_CLINIC_ID)
@@ -184,7 +184,7 @@ export default function AdminMessages() {
                 const newMsg = payload.new as (Message & { is_read: boolean })
                 
                 if (newMsg.direction === 'inbound' && newMsg.phone_number === selectedPhoneRef.current) {
-                    await supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id)
+                    await (supabase as any).from('messages').update({ is_read: true }).eq('id', newMsg.id)
                     newMsg.is_read = true
                     setMessages(prev => [...prev, newMsg])
                     scrollToBottom()
@@ -201,7 +201,7 @@ export default function AdminMessages() {
         setTogglingAI(true)
         try {
             const newStatus = !conv.requires_human
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('crm_prospects')
                 .update({ requires_human: newStatus })
                 .eq('clinic_id', HQ_CLINIC_ID)
@@ -222,7 +222,7 @@ export default function AdminMessages() {
         if (!newMessage.trim() || !selectedPhone || sending) return
         setSending(true)
         try {
-            const { data: clinic } = await supabase
+            const { data: clinic } = await (supabase as any)
                 .from('clinic_settings')
                 .select('ycloud_api_key, ycloud_phone_number')
                 .eq('id', HQ_CLINIC_ID)
@@ -246,7 +246,7 @@ export default function AdminMessages() {
 
             if (!res.ok) throw new Error('YCloud error')
 
-            await supabase.from('messages').insert({
+            await (supabase as any).from('messages').insert({
                 clinic_id: HQ_CLINIC_ID,
                 phone_number: selectedPhone,
                 direction: 'outbound',
