@@ -31,6 +31,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'))
 const PendingActivation = lazy(() => import('./pages/PendingActivation').then(m => ({ default: m.PendingActivation })))
 const FreeConsultation = lazy(() => import('./pages/FreeConsultation'))
+const DiagnosticLanding = lazy(() => import('./pages/DiagnosticLanding'))
 
 
 // HQ Pages
@@ -87,6 +88,7 @@ function MainRoutes() {
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/asesoria-gratis" element={<FreeConsultation />} />
+                    <Route path="/diagnostico" element={<DiagnosticLanding />} />
                     <Route path="/r/:code" element={<ReferralRedirect />} />
                     <Route path="/" element={<Landing />} />
                     <Route path="/terminos" element={<Terms />} />
