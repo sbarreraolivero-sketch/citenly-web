@@ -39,6 +39,7 @@ const AdminClinics = lazy(() => import('./pages/hq/AdminClinics'))
 const AdminSettings = lazy(() => import('./pages/hq/AdminSettings'))
 const AdminLogin = lazy(() => import('./pages/hq/AdminLogin'))
 const AdminCalendar = lazy(() => import('./pages/hq/AdminCalendar'))
+const AdminMessages = lazy(() => import('./pages/hq/AdminMessages'))
 
 // Contexts & Guards
 import { AuthProvider } from './contexts/AuthContext'
@@ -67,6 +68,7 @@ function HQRoutes() {
                             <Route index element={<Navigate to="dashboard" replace />} />
                             <Route path="dashboard" element={<AdminDashboard />} />
                             <Route path="calendar" element={<AdminCalendar />} />
+                            <Route path="messages" element={<AdminMessages />} />
                             <Route path="clinics" element={<AdminClinics />} />
                             <Route path="settings" element={<AdminSettings />} />
                         </Route>
