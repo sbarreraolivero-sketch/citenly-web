@@ -120,93 +120,92 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
         const isSelected = selectedTooth === id
         const statusColor = data?.status ? TOOTH_STATES[data.status].color : 'bg-white'
         
-        // Determine tooth type for anatomical shape
+        // Determine tooth type
         const isMolar = typeof id === 'number' && ([1, 2, 3, 14, 15, 16, 17, 18, 19, 30, 31, 32].includes(id)) || ['A', 'B', 'I', 'J', 'K', 'L', 'S', 'T'].includes(id.toString())
 
         return (
             <div 
                 key={id} 
                 className={cn(
-                    "relative flex flex-col items-center p-0.5 transition-all rounded-soft border border-transparent cursor-pointer",
-                    isSelected ? "bg-primary-50 border-primary-200 shadow-sm" : "hover:bg-ivory",
-                    isMolar ? "min-w-[45px]" : "min-w-[35px]"
+                    "relative flex flex-col items-center p-1 transition-all rounded-soft border border-transparent cursor-pointer",
+                    isSelected ? "bg-primary-50 border-primary-300 shadow-md ring-1 ring-primary-500/20" : "hover:bg-ivory",
+                    isMolar ? "min-w-[55px]" : "min-w-[45px]"
                 )}
                 onClick={() => setSelectedTooth(id)}
             >
-                <span className="text-[9px] font-black text-charcoal/60 mb-0.5">{id}</span>
+                <span className="text-[11px] font-black text-charcoal/80 mb-1">{id}</span>
                 <div className={cn(
-                    "relative flex flex-col items-center",
-                    isMolar ? "w-10 h-20" : "w-8 h-20"
+                    "relative flex flex-col items-center transition-transform",
+                    isSelected ? "scale-110" : "hover:scale-105",
+                    isMolar ? "w-12 h-24" : "w-9 h-24"
                 )}>
-                    {/* Anatomical Tooth SVG */}
-                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-sm">
-                        {/* Root Structure */}
+                    {/* Anatomical Tooth SVG - High Contrast */}
+                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-sm overflow-visible">
+                        {/* Root Structure - Darker & Better defined */}
                         <path 
-                            d={isMolar ? "M20,80 Q20,180 50,195 Q80,180 80,80" : "M35,80 Q35,180 50,195 Q65,180 65,80"} 
-                            className="fill-charcoal/10 stroke-charcoal/40 stroke-1"
+                            d={isMolar ? "M15,80 Q15,185 50,195 Q85,185 85,80" : "M30,80 Q30,185 50,195 Q70,185 70,80"} 
+                            className="fill-charcoal/10 stroke-charcoal/60 stroke-[1.5]"
                         />
                         
-                        {/* Interactive Crown */}
+                        {/* Interactive Crown - Professional Clinical Look */}
                         <g transform="translate(10, 10)">
                             {/* Vestibular (Top) */}
                             <path 
-                                d="M0,10 Q40,-5 80,10 L65,25 Q40,15 15,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.vestibular ? "fill-red-500" : "fill-white hover:fill-primary-50")}
+                                d="M0,8 Q40,-5 80,8 L60,25 Q40,15 20,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.vestibular ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'vestibular') }}
                             />
                             {/* Distal (Left) */}
                             <path 
-                                d="M0,10 Q-5,35 0,60 L20,45 Q15,35 20,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.distal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                d="M0,8 Q-5,35 0,62 L20,45 Q15,35 20,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.distal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'distal') }}
                             />
                             {/* Mesial (Right) */}
                             <path 
-                                d="M80,10 Q85,35 80,60 L60,45 Q65,35 60,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.mesial ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                d="M80,8 Q85,35 80,62 L60,45 Q65,35 60,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.mesial ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'mesial') }}
                             />
                             {/* Palatino/Lingual (Bottom) */}
                             <path 
-                                d="M0,60 Q40,75 80,60 L65,45 Q40,55 15,45 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.lingual ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                d="M0,62 Q40,75 80,62 L60,45 Q40,55 20,45 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.lingual ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'lingual') }}
                             />
                             {/* Oclusal (Center) */}
                             <path 
-                                d="M15,25 Q40,15 65,25 L65,45 Q40,55 15,45 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.oclusal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                d="M20,25 Q40,15 60,25 L60,45 Q40,55 20,45 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.oclusal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
-                            {/* Discreet Labels */}
-                            <text x="40" y="8" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">V</text>
-                            <text x="8" y="38" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">D</text>
-                            <text x="72" y="38" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">M</text>
-                            <text x="40" y="38" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">O</text>
-                            <text x="40" y="68" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">P</text>
+                            {/* High-Readability Labels */}
+                            <text x="40" y="8" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">V</text>
+                            <text x="10" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">D</text>
+                            <text x="70" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">M</text>
+                            <text x="40" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">O</text>
+                            <text x="40" y="68" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">P</text>
                         </g>
                     </svg>
                     
-                    {/* Status Marker Overlay (Enhanced) */}
+                    {/* Status Symbols Overlay - Stronger contrast */}
                     {data?.status && data.status !== 'healthy' && (
                         <g className="absolute inset-0 pointer-events-none">
                             <svg viewBox="0 0 100 200" className="w-full h-full overflow-visible">
-                                {/* Background Highlight */}
-                                <circle cx="50" cy="45" r="35" className={cn("opacity-30", statusColor)} />
+                                <circle cx="50" cy="45" r="38" className={cn("opacity-40", statusColor)} />
                                 
-                                {/* Status Symbols */}
                                 {data.status === 'extraction' && (
-                                    <path d="M30,25 L70,65 M70,25 L30,65" className="stroke-red-600 stroke-[8] opacity-100" />
+                                    <path d="M25,20 L75,70 M75,20 L25,70" className="stroke-red-700 stroke-[10] shadow-sm" />
                                 )}
                                 {data.status === 'missing' && (
-                                    <circle cx="50" cy="45" r="25" fill="none" className="stroke-charcoal/60 stroke-4" strokeDasharray="6 3" />
+                                    <circle cx="50" cy="45" r="30" fill="none" className="stroke-charcoal/80 stroke-6" strokeDasharray="8 4" />
                                 )}
                                 {data.status === 'endo' && (
-                                    <path d="M50,45 L50,140" className="stroke-orange-500 stroke-[5]" />
+                                    <path d="M50,45 L50,150" className="stroke-orange-500 stroke-[7]" />
                                 )}
                                 {data.status === 'crown' && (
-                                    <rect x="15" y="10" width="70" height="30" rx="5" fill="none" className="stroke-purple-600 stroke-4" />
+                                    <rect x="10" y="5" width="80" height="40" rx="6" fill="none" className="stroke-purple-600 stroke-6" />
                                 )}
                             </svg>
                         </g>
