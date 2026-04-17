@@ -130,55 +130,69 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 onClick={() => setSelectedTooth(id)}
             >
                 <span className="text-[10px] font-black text-charcoal/40 mb-1">{id}</span>
-                <div className="relative w-12 h-24 flex flex-col items-center">
-                    {/* Tooth Anatomy Illustration (Enhanced) */}
-                    <svg viewBox="0 0 100 160" className="w-full h-full drop-shadow-sm">
-                        {/* Roots */}
+                <div className="relative w-14 h-28 flex flex-col items-center">
+                    {/* Anatomical Tooth SVG */}
+                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-md">
+                        <defs>
+                            <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style={{ stopColor: '#fff', stopOpacity: 1 }} />
+                                <stop offset="100%" style={{ stopColor: '#f1f1f1', stopOpacity: 1 }} />
+                            </linearGradient>
+                        </defs>
+
+                        {/* Root Structure (Anatomical shape) */}
                         <path 
-                            d="M30,80 Q30,150 45,155 Q50,155 70,150 Q70,80 70,80" 
+                            d="M35,80 Q35,180 50,195 Q65,180 65,80" 
                             className="fill-charcoal/5 stroke-charcoal/10 stroke-1"
                         />
                         
-                        {/* Tooth Crown (Interactive Part) */}
-                        <g transform="translate(10, 5)">
-                            {/* Vestibular (Top) - V */}
+                        {/* Interactive Crown (Anatomical silhouette) */}
+                        <g transform="translate(15, 10)">
+                            {/* Vestibular (Top) */}
                             <path 
-                                d="M0,0 L80,0 L60,20 L20,20 Z" 
-                                className={cn("transition-colors cursor-pointer", data?.surfaces?.vestibular ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
+                                d="M0,10 Q35,-5 70,10 L55,25 Q35,15 15,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.vestibular ? "fill-red-400" : "fill-white hover:fill-primary-50")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'vestibular') }}
                             />
-                            {/* Distal (Left) - D */}
+                            {/* Distal (Left) */}
                             <path 
-                                d="M0,0 L0,80 L20,60 L20,20 Z" 
-                                className={cn("transition-colors cursor-pointer", data?.surfaces?.distal ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
+                                d="M0,10 Q-5,35 0,60 L20,45 Q15,35 20,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.distal ? "fill-red-400" : "fill-white hover:fill-primary-50")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'distal') }}
                             />
-                            {/* Mesial (Right) - M */}
+                            {/* Mesial (Right) */}
                             <path 
-                                d="M80,0 L80,80 L60,60 L60,20 Z" 
-                                className={cn("transition-colors cursor-pointer", data?.surfaces?.mesial ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
+                                d="M70,10 Q75,35 70,60 L50,45 Q55,35 50,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.mesial ? "fill-red-400" : "fill-white hover:fill-primary-50")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'mesial') }}
                             />
-                            {/* Palatino/Lingual (Bottom) - P */}
+                            {/* Palatino/Lingual (Bottom) */}
                             <path 
-                                d="M0,80 L80,80 L60,60 L20,60 Z" 
-                                className={cn("transition-colors cursor-pointer", data?.surfaces?.lingual ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
+                                d="M0,60 Q35,75 70,60 L55,45 Q35,55 15,45 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.lingual ? "fill-red-400" : "fill-white hover:fill-primary-50")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'lingual') }}
                             />
-                            {/* Oclusal (Center) - O */}
-                            <rect 
-                                x="20" y="20" width="40" height="40" 
-                                className={cn("transition-colors cursor-pointer", data?.surfaces?.oclusal ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
+                            {/* Oclusal (Center) */}
+                            <path 
+                                d="M15,25 Q35,15 55,25 L55,45 Q35,55 15,45 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.oclusal ? "fill-red-400" : "fill-white hover:fill-primary-50")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
-                            {/* User requested labels: V (top), D (left), M (right), O (center), P (bottom) */}
-                            <text x="40" y="14" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">V</text>
-                            <text x="10" y="44" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">D</text>
-                            <text x="70" y="44" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">M</text>
-                            <text x="40" y="44" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">O</text>
-                            <text x="40" y="74" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">P</text>
+                            {/* Discreet Labels */}
+                            <text x="35" y="8" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">V</text>
+                            <text x="8" y="38" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">D</text>
+                            <text x="62" y="38" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">M</text>
+                            <text x="35" y="38" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">O</text>
+                            <text x="35" y="66" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">P</text>
                         </g>
+
+                        {/* Enamel Gloss Overlay */}
+                        <path 
+                            d="M20,15 Q35,10 50,15" 
+                            fill="none" 
+                            className="stroke-white/50 stroke-[2] pointer-events-none" 
+                        />
                     </svg>
                     
                     {/* Status Marker Overlay (Enhanced with Symbols) */}
