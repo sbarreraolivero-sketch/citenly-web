@@ -32,6 +32,7 @@ const TOOTH_STATES = {
     crown: { label: 'Corona', color: 'bg-purple-500', hex: '#a855f7' },
     endo: { label: 'Endodoncia', color: 'bg-orange-500', hex: '#f97316' }
 }
+
 export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<string | number, ToothData>>({})
     const [selectedTooth, setSelectedTooth] = useState<string | number | null>(null)
@@ -146,17 +147,17 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 <div className={cn(
                     "relative flex flex-col items-center transition-transform",
                     isSelected ? "scale-110" : "hover:scale-105",
-                    isMolar ? "w-12 h-24" : "w-9 h-24"
+                    isMolar ? "w-12 h-24" : "w-10 h-24"
                 )}>
                     {/* Anatomical Tooth SVG - High Contrast */}
                     <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-sm overflow-visible">
-                        {/* Root Structure - Darker & Better defined */}
+                        {/* Root Structure */}
                         <path 
                             d={isMolar ? "M15,80 Q15,185 50,195 Q85,185 85,80" : "M30,80 Q30,185 50,195 Q70,185 70,80"} 
                             className="fill-charcoal/10 stroke-charcoal/60 stroke-[1.5]"
                         />
                         
-                        {/* Interactive Crown - Professional Clinical Look */}
+                        {/* Interactive Crown */}
                         <g transform="translate(10, 10)">
                             {/* Vestibular (Top) */}
                             <path 
@@ -194,7 +195,6 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
-                            {/* High-Readability Labels */}
                             <text x="40" y="8" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">V</text>
                             <text x="10" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">D</text>
                             <text x="70" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">M</text>
@@ -203,7 +203,6 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         </g>
                     </svg>
                     
-                    {/* Status Symbols Overlay - High Visibility */}
                     {data?.status && data.status !== 'healthy' && (
                         <g className="absolute inset-0 pointer-events-none">
                             <svg viewBox="0 0 100 200" className="w-full h-full overflow-visible">
@@ -212,38 +211,10 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                     style={{ fill: TOOTH_STATES[data.status].hex }}
                                     className="opacity-40" 
                                 />
-                                
-                                {data.status === 'extraction' && (
-                                    <path 
-                                        d="M25,20 L75,70 M75,20 L25,70" 
-                                        style={{ stroke: TOOTH_STATES.extraction.hex }}
-                                        className="stroke-[10] drop-shadow-sm" 
-                                    />
-                                )}
-                                {data.status === 'missing' && (
-                                    <circle 
-                                        cx="50" cy="45" r="30" 
-                                        fill="none" 
-                                        style={{ stroke: TOOTH_STATES.missing.hex }}
-                                        className="stroke-6" 
-                                        strokeDasharray="8 4" 
-                                    />
-                                )}
-                                {data.status === 'endo' && (
-                                    <path 
-                                        d="M50,45 L50,155" 
-                                        style={{ stroke: TOOTH_STATES.endo.hex }}
-                                        className="stroke-[8]" 
-                                    />
-                                )}
-                                {data.status === 'crown' && (
-                                    <rect 
-                                        x="10" y="5" width="80" height="40" rx="6" 
-                                        fill="none" 
-                                        style={{ stroke: TOOTH_STATES.crown.hex }}
-                                        className="stroke-8" 
-                                    />
-                                )}
+                                {data.status === 'extraction' && <path d="M25,20 L75,70 M75,20 L25,70" style={{ stroke: TOOTH_STATES.extraction.hex }} className="stroke-[10]" />}
+                                {data.status === 'missing' && <circle cx="50" cy="45" r="30" fill="none" style={{ stroke: TOOTH_STATES.missing.hex }} className="stroke-6" strokeDasharray="8 4" />}
+                                {data.status === 'endo' && <path d="M50,45 L50,155" style={{ stroke: TOOTH_STATES.endo.hex }} className="stroke-[8]" />}
+                                {data.status === 'crown' && <rect x="10" y="5" width="80" height="40" rx="6" fill="none" style={{ stroke: TOOTH_STATES.crown.hex }} className="stroke-8" />}
                             </svg>
                         </g>
                     )}
@@ -254,7 +225,6 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
 
     const adultTeethUpper = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     const adultTeethLower = [32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17]
-
     const childTeethUpper = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
     const childTeethLower = ['T', 'S', 'R', 'Q', 'P', 'O', 'N', 'M', 'L', 'K']
 
@@ -265,207 +235,202 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
         </div>
     )
 
+    const findings = Object.entries(teeth).filter(([_, t]) => t.status && t.status !== 'healthy')
+
     return (
-        <div className="space-y-6 mt-4 animate-fade-in">
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* Odontogram Visualizer */}
-                <div className="flex-1 bg-white p-6 rounded-soft border border-silk-beige shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 className="font-bold text-charcoal">Ficha Odontológica</h3>
-                            <p className="text-xs text-charcoal/40">Visualización interactiva de piezas dentales</p>
-                        </div>
-                        <div className="flex p-1 bg-silk-beige rounded-soft">
-                            <button 
-                                onClick={() => { setDentition('adult'); setSelectedTooth(null) }}
-                                className={cn("px-4 py-1.5 text-xs font-bold rounded-soft transition-all", dentition === 'adult' ? "bg-white text-primary-600 shadow-sm" : "text-charcoal/40")}
-                            >
-                                Adulto
-                            </button>
-                            <button 
-                                onClick={() => { setDentition('child'); setSelectedTooth(null) }}
-                                className={cn("px-4 py-1.5 text-xs font-bold rounded-soft transition-all", dentition === 'child' ? "bg-white text-primary-600 shadow-sm" : "text-charcoal/40")}
-                            >
-                                Infantil
-                            </button>
-                        </div>
+        <div className="space-y-8 mt-4 animate-fade-in pb-20">
+            {/* 1. Odontogram Visualizer - Full Width */}
+            <div className="bg-white p-6 md:p-10 rounded-softer border border-silk-beige shadow-sm">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
+                    <div>
+                        <h3 className="text-2xl font-black text-charcoal tracking-tight">Ficha Odontológica</h3>
+                        <p className="text-sm text-charcoal/40 font-medium italic">Alta resolución clínica e interacción precisa</p>
                     </div>
-
-                    <div className="space-y-8 overflow-x-auto pb-4 scrollbar-hide">
-                        {/* Upper Arch */}
-                        <div className="flex justify-center gap-0.5 min-w-max px-4">
-                            {(dentition === 'adult' ? adultTeethUpper : childTeethUpper).map(id => renderTooth(id))}
-                        </div>
-                        
-                        {/* Lower Arch */}
-                        <div className="flex justify-center gap-0.5 min-w-max px-4">
-                            {(dentition === 'adult' ? adultTeethLower : childTeethLower).map(id => renderTooth(id))}
-                        </div>
-                    </div>
-
-                    <div className="mt-12 flex flex-wrap gap-x-6 gap-y-3 pt-6 border-t border-silk-beige">
-                        {Object.entries(TOOTH_STATES).map(([id, data]) => (
-                            <div key={id} className="flex items-center gap-2">
-                                <div className={cn("w-3 h-3 rounded-full", data.color)} />
-                                <span className="text-[10px] uppercase tracking-wider font-bold text-charcoal/60">{data.label}</span>
-                            </div>
-                        ))}
+                    <div className="flex p-1 bg-silk-beige/30 rounded-full border border-silk-beige/50 shadow-inner">
+                        <button 
+                            onClick={() => { setDentition('adult'); setSelectedTooth(null) }}
+                            className={cn("px-10 py-3 text-xs font-black rounded-full transition-all", dentition === 'adult' ? "bg-white text-primary-600 shadow-premium scale-105" : "text-charcoal/40 hover:text-charcoal")}
+                        >
+                            ADULTO
+                        </button>
+                        <button 
+                            onClick={() => { setDentition('child'); setSelectedTooth(null) }}
+                            className={cn("px-10 py-3 text-xs font-black rounded-full transition-all", dentition === 'child' ? "bg-white text-primary-600 shadow-premium scale-105" : "text-charcoal/40")}
+                        >
+                            INFANTIL
+                        </button>
                     </div>
                 </div>
 
-                {/* Tooth Editor Side Panel */}
-                <div className="w-full md:w-80 space-y-4">
-                    <div className="card-soft border border-primary-100 bg-white p-6 sticky top-24">
-                        {selectedTooth ? (
-                            <div className="animate-fade-in">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-12 h-12 bg-primary-500 text-white rounded-softer flex items-center justify-center text-xl font-bold shadow-soft">
+                <div className="space-y-16 overflow-x-auto pb-10 scrollbar-hide py-10">
+                    <div className="flex justify-center gap-3 min-w-max px-4">
+                        {(dentition === 'adult' ? adultTeethUpper : childTeethUpper).map(id => renderTooth(id))}
+                    </div>
+                    <div className="flex justify-center gap-3 min-w-max px-4">
+                        {(dentition === 'adult' ? adultTeethLower : childTeethLower).map(id => renderTooth(id))}
+                    </div>
+                </div>
+
+                <div className="mt-12 pt-10 border-t border-silk-beige/50 flex flex-wrap justify-center gap-x-10 gap-y-4">
+                    {Object.entries(TOOTH_STATES).map(([id, data]) => (
+                        <div key={id} className="flex items-center gap-3 group cursor-help transition-all">
+                            <div className={cn("w-3.5 h-3.5 rounded-full shadow-inner ring-2 ring-white", data.color)} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/40 group-hover:text-charcoal">{data.label}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* 2. Control Layout - Side by Side below */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+                {/* Left: Tooth Editor */}
+                <div className="bg-white p-8 rounded-softer border border-silk-beige shadow-sm min-h-[500px]">
+                    {selectedTooth ? (
+                        <div className="animate-fade-in space-y-8 h-full">
+                            <div className="flex items-center justify-between border-b border-silk-beige pb-6">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 bg-primary-600 text-white rounded-softer flex items-center justify-center text-3xl font-black shadow-2xl shadow-primary-500/30 ring-4 ring-primary-50">
                                         {selectedTooth}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-charcoal">Pieza Dental</h4>
-                                        <p className="text-xs text-primary-600 font-medium">Editar Estado</p>
+                                        <h4 className="font-black text-charcoal text-xl tracking-tight leading-none">Pieza Dental</h4>
+                                        <p className="text-xs text-charcoal/40 mt-1 uppercase font-black tracking-widest">Edición Activa</p>
                                     </div>
                                 </div>
+                                <button onClick={() => setSelectedTooth(null)} className="p-4 hover:bg-silk-beige/50 rounded-full transition-all text-charcoal/20 hover:text-charcoal"><RotateCcw className="w-6 h-6" /></button>
+                            </div>
 
-                                <div className="space-y-3">
-                                    <p className="text-[10px] uppercase tracking-widest font-bold text-charcoal/40 mb-2">Estado General</p>
-                                    {Object.entries(TOOTH_STATES).map(([id, data]) => (
-                                        <button
-                                            key={id}
-                                            onClick={() => updateToothStatus(selectedTooth, id as any)}
-                                            className={cn(
-                                                "w-full flex items-center justify-between p-3 rounded-soft border transition-all text-sm group",
-                                                teeth[selectedTooth]?.status === id 
-                                                    ? "bg-primary-50 border-primary-200 text-primary-700 font-bold" 
-                                                    : "bg-ivory border-transparent text-charcoal/70 hover:bg-silk-beige/30"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className={cn("w-2.5 h-2.5 rounded-full shadow-sm", data.color)} />
-                                                {data.label}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {Object.entries(TOOTH_STATES).map(([id, data]) => (
+                                    <button
+                                        key={id}
+                                        onClick={() => updateToothStatus(selectedTooth, id as any)}
+                                        className={cn(
+                                            "flex items-center gap-3 p-4 rounded-soft border transition-all text-xs font-black uppercase tracking-wider text-left",
+                                            teeth[selectedTooth]?.status === id 
+                                                ? "bg-primary-50 border-primary-300 text-primary-700 shadow-md ring-2 ring-primary-50" 
+                                                : "bg-ivory/40 border-transparent text-charcoal/60 hover:bg-silk-beige/30"
+                                        )}
+                                    >
+                                        <div className={cn("w-2.5 h-2.5 rounded-full shadow-inner", data.color)} />
+                                        {data.label}
+                                    </button>
+                                ))}
+                            </div>
 
-                                <div className="mt-8 pt-6 border-t border-silk-beige">
-                                    <p className="text-[10px] uppercase tracking-widest font-bold text-charcoal/40 mb-3">Notas de la pieza</p>
-                                    <textarea 
-                                        className="w-full p-3 rounded-soft border border-silk-beige bg-ivory text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all min-h-[100px]"
-                                        placeholder="Ej: Caries profunda, requiere endodoncia..."
-                                        value={teeth[selectedTooth]?.notes || ''}
-                                        onChange={(e) => setTeeth(prev => ({
-                                            ...prev,
-                                            [selectedTooth]: {
-                                                ...(prev[selectedTooth] || { id: selectedTooth, status: 'healthy', surfaces: { vestibular: false, lingual: false, mesial: false, distal: false, oclusal: false } as any }),
-                                                notes: e.target.value
-                                            }
-                                        }))}
-                                    />
-                                </div>
-                                
-                                <button
-                                    onClick={() => setSelectedTooth(null)}
-                                    className="w-full mt-4 flex items-center justify-center gap-2 text-xs font-bold text-charcoal/40 hover:text-charcoal transition-colors py-2"
-                                >
-                                    <RotateCcw className="w-3.5 h-3.5" />
-                                    Cerrar Editor
-                                </button>
-                                
-                                {selectedTooth && (
-                                    <div className="mt-4 pt-4 border-t border-silk-beige">
-                                        <button
-                                            onClick={() => {
-                                                const tooth = teeth[selectedTooth]
-                                                const statusLabel = tooth?.status ? TOOTH_STATES[tooth.status].label : 'Consulta'
-                                                
-                                                // Get active surfaces
-                                                const surfaces = tooth?.surfaces || {}
-                                                const activeSurfaces = Object.entries(surfaces)
-                                                    .filter(([_, active]) => active)
-                                                    .map(([name]) => name.charAt(0).toUpperCase()) // V, D, M, O, P/L
-                                                    .join(', ')
+                            <div className="pt-4">
+                                <label className="block text-[10px] font-black uppercase text-charcoal/40 tracking-widest mb-3 border-l-4 border-primary-500 pl-3">Notas Clínicas</label>
+                                <textarea 
+                                    className="w-full p-5 rounded-soft border border-silk-beige bg-ivory/20 text-sm font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 transition-all min-h-[160px] resize-none outline-none shadow-inner"
+                                    placeholder="Observaciones de la pieza..."
+                                    value={teeth[selectedTooth]?.notes || ''}
+                                    onChange={(e) => setTeeth(prev => ({
+                                        ...prev,
+                                        [selectedTooth]: {
+                                            ...(prev[selectedTooth] || { id: selectedTooth, status: 'healthy', surfaces: { vestibular: false, lingual: false, mesial: false, distal: false, oclusal: false } as any }),
+                                            notes: e.target.value
+                                        }
+                                    }))}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="h-full py-20 text-center space-y-6 animate-fade-in flex flex-col items-center justify-center">
+                            <div className="w-24 h-24 bg-ivory rounded-full flex items-center justify-center border-2 border-dashed border-silk-beige text-charcoal/5">
+                                <Info className="w-12 h-12" />
+                            </div>
+                            <h4 className="font-black text-charcoal text-xl tracking-tight uppercase">Panel de Selección</h4>
+                            <p className="text-sm text-charcoal/40 max-w-[280px] mx-auto font-medium">Pulsa una pieza dental para editarla</p>
+                        </div>
+                    )}
+                </div>
 
-                                                const fullDescription = `${statusLabel} en Pieza ${selectedTooth}${activeSurfaces ? ` - Caras: ${activeSurfaces}` : ''}${tooth?.notes ? `: ${tooth.notes}` : ''}`
+                {/* Right: Smart Summary Card */}
+                <div className="bg-charcoal text-white p-10 rounded-softer shadow-2xl flex flex-col h-full relative">
+                    <div className="flex items-center justify-between mb-10">
+                        <div>
+                            <h4 className="text-xl font-black tracking-tight uppercase">Resumen de Diagnósticos</h4>
+                            <p className="text-xs text-white/30 font-bold tracking-widest uppercase">Tratamientos detectados</p>
+                        </div>
+                        <div className="bg-primary-500 text-[11px] font-black px-4 py-2 rounded-sm shadow-2xl shadow-primary-500/40 border border-primary-400">
+                            {findings.length} HALLAZGOS
+                        </div>
+                    </div>
 
-                                                onAddTreatment?.({
-                                                    description: fullDescription,
-                                                    tooth_number: selectedTooth as any,
-                                                    unit_price: 0
-                                                })
-                                                toast.success('Tratamiento añadido a la cola de presupuesto')
-                                            }}
-                                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-2 py-3 hover:bg-primary-50 transition-all font-bold shadow-sm"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            Presupuestar Tratamiento
-                                        </button>
-                                    </div>
-                                )}
+                    <div className="flex-1 space-y-4 overflow-y-auto max-h-[400px] mb-10 custom-scrollbar">
+                        {findings.length === 0 ? (
+                            <div className="h-full min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-softer">
+                                <p className="text-white/20 text-xs font-black uppercase tracking-widest text-center px-12 leading-relaxed">No hay diagnósticos pendientes</p>
                             </div>
                         ) : (
-                            <div className="py-12 text-center space-y-4 animate-fade-in">
-                                <div className="w-16 h-16 bg-ivory rounded-full flex items-center justify-center mx-auto border border-silk-beige">
-                                    <Info className="w-8 h-8 text-charcoal/20" />
+                            findings.map(([id, tooth]) => (
+                                <div key={id} className="flex items-center justify-between p-5 bg-white/5 rounded-soft border border-white/5 group hover:border-white/20 transition-all">
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-12 h-12 bg-white/10 rounded-softer flex items-center justify-center text-xl font-black text-primary-400">{id}</div>
+                                        <div>
+                                            <p className="font-black text-lg leading-none mb-2 uppercase">{TOOTH_STATES[tooth.status!].label}</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {Object.entries(tooth.surfaces).filter(([_, active]) => active).map(([name]) => (
+                                                    <span key={name} className="text-[10px] font-black bg-primary-500/20 border border-primary-500/30 px-2.5 py-1 rounded-sm text-primary-300">
+                                                        {name.charAt(0).toUpperCase()}
+                                                    </span>
+                                                ))}
+                                                {Object.values(tooth.surfaces).every(v => !v) && (
+                                                    <span className="text-[10px] font-black bg-white/5 border border-white/10 px-2.5 py-1 rounded-sm text-white/40 italic">PIEZA COMPLETA</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => setTeeth(prev => ({ ...prev, [id]: { ...prev[id], status: 'healthy', surfaces: { vestibular: false, lingual: false, mesial: false, distal: false, oclusal: false } as any } }))}
+                                        className="opacity-0 group-hover:opacity-100 p-3 hover:bg-white/10 rounded-full transition-all text-white/20 hover:text-red-400"
+                                    >
+                                        <RotateCcw className="w-5 h-5" />
+                                    </button>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-bold text-charcoal leading-tight">Selecciona un diente</p>
-                                    <p className="text-xs text-charcoal/40 mt-1">Toca una pieza dental o una de sus caras para editar su estado detallado.</p>
-                                </div>
-                            </div>
+                            ))
                         )}
                     </div>
 
-                    <button
-                        onClick={handleSaveOdontogram}
-                        disabled={saving}
-                        className="w-full btn-primary flex items-center justify-center gap-2 py-3 mt-6 mb-4"
-                    >
-                        {saving ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                        ) : (
-                            <><Save className="w-5 h-5" /> Guardar Todo el Odontograma</>
-                        )}
-                    </button>
+                    <div className="space-y-4">
+                        <button
+                            onClick={handleSaveOdontogram}
+                            disabled={saving}
+                            className="w-full flex items-center justify-center gap-3 py-4 bg-white/5 hover:bg-white/10 rounded-soft text-sm font-black border border-white/10 transition-all uppercase tracking-widest active:scale-95"
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            GUARDAR FICHA
+                        </button>
 
-                    {/* Global Budget Button - Always accessible at bottom of sidebar */}
-                    <div className="mt-4 pt-6 border-t-2 border-dashed border-silk-beige">
                         <button
                             onClick={() => {
-                                const findings = Object.entries(teeth).filter(([_, t]) => t.status && t.status !== 'healthy')
                                 if (findings.length === 0) {
-                                    toast.error('No hay tratamientos marcados para presupuestar')
+                                    toast.error('No hay tratamientos marcados')
                                     return
                                 }
                                 
                                 const allItems = findings.map(([id, tooth]) => {
-                                    const statusLabel = tooth.status ? TOOTH_STATES[tooth.status].label : 'Consulta'
-                                    const surfaces = tooth.surfaces || {}
-                                    const activeSurfaces = Object.entries(surfaces)
+                                    const statusLabel = TOOTH_STATES[tooth.status!].label
+                                    const activeSurfaces = Object.entries(tooth.surfaces)
                                         .filter(([_, active]) => active)
                                         .map(([name]) => name.charAt(0).toUpperCase())
                                         .join(', ')
 
-                                    const fullDescription = `${statusLabel} en Pieza ${id}${activeSurfaces ? ` - Caras: ${activeSurfaces}` : ''}${tooth.notes ? `: ${tooth.notes}` : ''}`
-                                    
                                     return {
-                                        description: fullDescription,
-                                        tooth_number: id as any,
+                                        description: `${statusLabel} en Pieza ${id}${activeSurfaces ? ` (${activeSurfaces})` : ''}${tooth.notes ? ` - ${tooth.notes}` : ''}`,
+                                        tooth_number: parseInt(id.toString()) || 0,
+                                        quantity: 1,
                                         unit_price: 0
                                     }
                                 })
                                 
                                 onAddTreatment?.(allItems)
                             }}
-                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-3 py-4 shadow-md hover:scale-[1.02] transition-all font-black text-lg"
+                            className="w-full py-7 bg-primary-500 hover:bg-primary-600 rounded-soft font-black text-3xl transition-all shadow-2xl flex items-center justify-center gap-5 active:scale-95 group border-2 border-primary-400"
                         >
-                            <Plus className="w-6 h-6" />
-                            Presupuestar TODO
+                            <Plus className="w-10 h-10 group-hover:rotate-90 transition-transform duration-500" />
+                            PRESUPUESTAR TODO
                         </button>
-                        <p className="text-[10px] text-center text-charcoal/40 mt-3 uppercase tracking-widest font-bold">
-                            Envía todos los hallazgos a presupuestos
-                        </p>
                     </div>
                 </div>
             </div>
