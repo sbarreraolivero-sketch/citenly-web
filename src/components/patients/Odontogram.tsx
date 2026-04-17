@@ -139,7 +139,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 className={cn(
                     "relative flex flex-col items-center p-1 transition-all rounded-soft border border-transparent cursor-pointer",
                     isSelected ? "bg-primary-50 border-primary-300 shadow-md ring-1 ring-primary-500/20" : "hover:bg-ivory",
-                    isMolar ? "min-w-[55px]" : "min-w-[45px]"
+                    isMolar ? "min-w-[90px]" : "min-w-[75px]"
                 )}
                 onClick={() => setSelectedTooth(id)}
             >
@@ -147,14 +147,14 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 <div className={cn(
                     "relative flex flex-col items-center transition-transform",
                     isSelected ? "scale-110" : "hover:scale-105",
-                    isMolar ? "w-12 h-24" : "w-10 h-24"
+                    isMolar ? "w-20 h-40" : "w-16 h-40"
                 )}>
                     {/* Anatomical Tooth SVG - High Contrast */}
-                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-sm overflow-visible">
+                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-md overflow-visible">
                         {/* Root Structure */}
                         <path 
                             d={isMolar ? "M15,80 Q15,185 50,195 Q85,185 85,80" : "M30,80 Q30,185 50,195 Q70,185 70,80"} 
-                            className="fill-charcoal/10 stroke-charcoal/60 stroke-[1.5]"
+                            className="fill-charcoal/10 stroke-charcoal/40 stroke-[2]"
                         />
                         
                         {/* Interactive Crown */}
@@ -163,43 +163,43 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                             <path 
                                 d="M0,8 Q40,-5 80,8 L60,25 Q40,15 20,25 Z" 
                                 style={{ fill: data?.surfaces?.vestibular ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
-                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal stroke-[2.5] hover:fill-primary-50"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'vestibular') }}
                             />
                             {/* Distal (Left) */}
                             <path 
                                 d="M0,8 Q-5,35 0,62 L20,45 Q15,35 20,25 Z" 
                                 style={{ fill: data?.surfaces?.distal ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
-                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal stroke-[2.5] hover:fill-primary-50"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'distal') }}
                             />
                             {/* Mesial (Right) */}
                             <path 
                                 d="M80,8 Q85,35 80,62 L60,45 Q65,35 60,25 Z" 
                                 style={{ fill: data?.surfaces?.mesial ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
-                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal stroke-[2.5] hover:fill-primary-50"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'mesial') }}
                             />
                             {/* Palatino/Lingual (Bottom) */}
                             <path 
                                 d="M0,62 Q40,75 80,62 L60,45 Q40,55 20,45 Z" 
                                 style={{ fill: data?.surfaces?.lingual ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
-                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal stroke-[2.5] hover:fill-primary-50"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'lingual') }}
                             />
                             {/* Oclusal (Center) */}
                             <path 
                                 d="M20,25 Q40,15 60,25 L60,45 Q40,55 20,45 Z" 
                                 style={{ fill: data?.surfaces?.oclusal ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
-                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal stroke-[2.5] hover:fill-primary-50"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
-                            <text x="40" y="8" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">V</text>
-                            <text x="10" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">D</text>
-                            <text x="70" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">M</text>
-                            <text x="40" y="38" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">O</text>
-                            <text x="40" y="68" fontSize="12" textAnchor="middle" className="fill-charcoal/60 pointer-events-none font-black">P</text>
+                            <text x="40" y="8" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">V</text>
+                            <text x="10" y="38" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">D</text>
+                            <text x="70" y="38" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">M</text>
+                            <text x="40" y="38" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">O</text>
+                            <text x="40" y="68" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">P</text>
                         </g>
                     </svg>
                     
