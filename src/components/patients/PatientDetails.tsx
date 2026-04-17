@@ -851,10 +851,14 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <Odontogram 
                         patientId={patient.id} 
                         clinicId={profile.clinic_id} 
-                        onAddTreatment={(item) => {
-                            setPendingTreatments(prev => [...prev, item])
+                        onAddTreatment={(items) => {
+                            const newItems = Array.isArray(items) ? items : [items]
+                            setPendingTreatments(prev => [...prev, ...newItems])
                             setActiveTab('budgets')
-                            toast.success('Tratamiento añadido al presupuesto')
+                            toast.success(newItems.length > 1 
+                                ? `${newItems.length} tratamientos añadidos` 
+                                : 'Tratamiento añadido'
+                            )
                         }}
                     />
                 )}

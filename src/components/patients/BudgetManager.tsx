@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { toast } from 'react-hot-toast'
 
 // Defining for local scope - Moving to top to avoid block-scoped variable error
 const Activity = (props: any) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-activity"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -168,8 +169,26 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
             
             if (error) throw error
             fetchBudgets()
+            toast.success('Estado actualizado')
         } catch (error) {
             console.error('Error updating status:', error)
+        }
+    }
+
+    const handleDeleteBudget = async (id: string) => {
+        if (!confirm('¿Estás seguro de eliminar este presupuesto por completo?')) return
+        try {
+            const { error } = await supabase
+                .from('dental_budgets')
+                .delete()
+                .eq('id', id)
+
+            if (error) throw error
+            setBudgets(budgets.filter(b => b.id !== id))
+            toast.success('Presupuesto eliminado')
+        } catch (error) {
+            console.error('Error deleting budget:', error)
+            toast.error('Error al eliminar')
         }
     }
 
@@ -268,13 +287,28 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                     </h3>
                     <p className="text-sm text-charcoal/40">Gestiona los presupuestos asignados a este paciente</p>
                 </div>
-                <button 
-                    onClick={() => setShowNewModal(true)}
-                    className="btn-primary flex items-center gap-2 px-6 shadow-lg shadow-primary-500/20"
-                >
-                    <Plus className="w-5 h-5" />
-                    Nuevo Presupuesto
-                </button>
+                <div className="flex items-center gap-3">
+                    {initialItems && initialItems.length > 0 && (
+                        <button 
+                            onClick={onClearedItems}
+                            className="btn-soft text-red-600 border-red-100 hover:bg-red-50 px-4 py-2 text-xs font-bold flex items-center gap-2"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Limpiar Pendientes
+                        </button>
+                    )}
+                    <button 
+                        onClick={() => {
+                            setNewItems([{ description: '', quantity: 1, unit_price: 0, total_price: 0 }])
+                            setNewTitle('')
+                            setShowNewModal(true)
+                        }}
+                        className="btn-primary flex items-center gap-2 px-6 shadow-lg shadow-primary-500/20"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Nuevo Presupuesto
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
@@ -298,7 +332,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <div className={cn(
                                         "px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shadow-sm",
                                         STATUS_CONFIG[budget.status]?.color
@@ -319,6 +353,13 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                                         <option value="completed">Completado</option>
                                         <option value="cancelled">Anular</option>
                                     </select>
+                                    <button 
+                                        onClick={() => handleDeleteBudget(budget.id)}
+                                        className="p-1.5 text-charcoal/20 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                        title="Eliminar Presupuesto"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
 

@@ -439,7 +439,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                     return
                                 }
                                 
-                                findings.forEach(([id, tooth]) => {
+                                const allItems = findings.map(([id, tooth]) => {
                                     const statusLabel = tooth.status ? TOOTH_STATES[tooth.status].label : 'Consulta'
                                     const surfaces = tooth.surfaces || {}
                                     const activeSurfaces = Object.entries(surfaces)
@@ -449,14 +449,14 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
 
                                     const fullDescription = `${statusLabel} en Pieza ${id}${activeSurfaces ? ` - Caras: ${activeSurfaces}` : ''}${tooth.notes ? `: ${tooth.notes}` : ''}`
                                     
-                                    onAddTreatment?.({
+                                    return {
                                         description: fullDescription,
                                         tooth_number: id as any,
                                         unit_price: 0
-                                    })
+                                    }
                                 })
                                 
-                                toast.success(`Se han añadido ${findings.length} tratamientos al presupuesto`)
+                                onAddTreatment?.(allItems)
                             }}
                             className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-3 py-4 shadow-md hover:scale-[1.02] transition-all font-black text-lg"
                         >
