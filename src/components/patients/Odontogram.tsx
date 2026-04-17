@@ -24,13 +24,13 @@ interface ToothData {
 }
 
 const TOOTH_STATES = {
-    healthy: { label: 'Sano', color: 'bg-emerald-500' },
-    caries: { label: 'Caries', color: 'bg-red-500' },
-    filling: { label: 'Obturación', color: 'bg-blue-500' },
-    extraction: { label: 'Extracción Indicada', color: 'bg-yellow-600' },
-    missing: { label: 'Ausente', color: 'bg-charcoal/20' },
-    crown: { label: 'Corona', color: 'bg-purple-500' },
-    endo: { label: 'Endodoncia', color: 'bg-orange-500' }
+    healthy: { label: 'Sano', color: 'bg-emerald-500', hex: '#10b981' },
+    caries: { label: 'Caries', color: 'bg-red-500', hex: '#ef4444' },
+    filling: { label: 'Obturación', color: 'bg-blue-500', hex: '#3b82f6' },
+    extraction: { label: 'Extracción Indicada', color: 'bg-yellow-600', hex: '#ca8a04' },
+    missing: { label: 'Ausente', color: 'bg-charcoal/20', hex: '#94a3b8' },
+    crown: { label: 'Corona', color: 'bg-purple-500', hex: '#a855f7' },
+    endo: { label: 'Endodoncia', color: 'bg-orange-500', hex: '#f97316' }
 }
 export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<string | number, ToothData>>({})
@@ -199,23 +199,46 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         </g>
                     </svg>
                     
-                    {/* Status Symbols Overlay - Stronger contrast */}
+                    {/* Status Symbols Overlay - High Visibility */}
                     {data?.status && data.status !== 'healthy' && (
                         <g className="absolute inset-0 pointer-events-none">
                             <svg viewBox="0 0 100 200" className="w-full h-full overflow-visible">
-                                <circle cx="50" cy="45" r="38" className={cn("opacity-60", statusColor.replace('bg-', 'fill-'))} />
+                                <circle 
+                                    cx="50" cy="45" r="38" 
+                                    style={{ fill: TOOTH_STATES[data.status].hex }}
+                                    className="opacity-40" 
+                                />
                                 
                                 {data.status === 'extraction' && (
-                                    <path d="M25,20 L75,70 M75,20 L25,70" className="stroke-yellow-600 stroke-[10] shadow-sm" />
+                                    <path 
+                                        d="M25,20 L75,70 M75,20 L25,70" 
+                                        style={{ stroke: TOOTH_STATES.extraction.hex }}
+                                        className="stroke-[10] drop-shadow-sm" 
+                                    />
                                 )}
                                 {data.status === 'missing' && (
-                                    <circle cx="50" cy="45" r="30" fill="none" className="stroke-charcoal/80 stroke-6" strokeDasharray="8 4" />
+                                    <circle 
+                                        cx="50" cy="45" r="30" 
+                                        fill="none" 
+                                        style={{ stroke: TOOTH_STATES.missing.hex }}
+                                        className="stroke-6" 
+                                        strokeDasharray="8 4" 
+                                    />
                                 )}
                                 {data.status === 'endo' && (
-                                    <path d="M50,45 L50,150" className="stroke-orange-500 stroke-[7]" />
+                                    <path 
+                                        d="M50,45 L50,155" 
+                                        style={{ stroke: TOOTH_STATES.endo.hex }}
+                                        className="stroke-[8]" 
+                                    />
                                 )}
                                 {data.status === 'crown' && (
-                                    <rect x="10" y="5" width="80" height="40" rx="6" fill="none" className="stroke-purple-600 stroke-6" />
+                                    <rect 
+                                        x="10" y="5" width="80" height="40" rx="6" 
+                                        fill="none" 
+                                        style={{ stroke: TOOTH_STATES.crown.hex }}
+                                        className="stroke-8" 
+                                    />
                                 )}
                             </svg>
                         </g>
