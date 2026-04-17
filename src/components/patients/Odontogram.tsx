@@ -121,73 +121,74 @@ export function Odontogram({ patientId, clinicId }: OdontogramProps) {
             <div 
                 key={id} 
                 className={cn(
-                    "relative flex flex-col items-center p-1 transition-all rounded-soft border border-transparent cursor-pointer",
-                    isSelected ? "bg-primary-50 border-primary-200" : "hover:bg-ivory"
+                    "relative flex flex-col items-center p-1 transition-all rounded-soft border border-transparent cursor-pointer min-w-[50px]",
+                    isSelected ? "bg-primary-50 border-primary-200 shadow-sm" : "hover:bg-ivory"
                 )}
                 onClick={() => setSelectedTooth(id)}
             >
-                <span className="text-[10px] font-bold text-charcoal/40 mb-1">{id}</span>
-                <div className="relative w-12 h-20 flex flex-col items-center">
-                    {/* Tooth Anatomy Illustration (Simplified SVG) */}
+                <span className="text-[10px] font-black text-charcoal/40 mb-1">{id}</span>
+                <div className="relative w-12 h-24 flex flex-col items-center">
+                    {/* Tooth Anatomy Illustration (Enhanced) */}
                     <svg viewBox="0 0 100 160" className="w-full h-full drop-shadow-sm">
-                        {/* Roots (Only for background aesthetics) */}
+                        {/* Roots */}
                         <path 
                             d="M30,80 Q30,150 45,155 Q50,155 70,150 Q70,80 70,80" 
                             className="fill-charcoal/5 stroke-charcoal/10 stroke-1"
                         />
                         
                         {/* Tooth Crown (Interactive Part) */}
-                        <g transform="translate(10, 10)">
-                            {/* Vestibular (Top) */}
+                        <g transform="translate(10, 5)">
+                            {/* Vestibular (Top) - V */}
                             <path 
                                 d="M0,0 L80,0 L60,20 L20,20 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.vestibular ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
                                 onClick={() => toggleSurface(id, 'vestibular')}
                             />
-                            {/* Distal (Right) */}
+                            {/* Distal (Left) - D */}
                             <path 
-                                d="M80,0 L80,80 L60,60 L60,20 Z" 
+                                d="M0,0 L0,80 L20,60 L20,20 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.distal ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
                                 onClick={() => toggleSurface(id, 'distal')}
                             />
-                            {/* Lingual (Bottom) */}
+                            {/* Mesial (Right) - M */}
+                            <path 
+                                d="M80,0 L80,80 L60,60 L60,20 Z" 
+                                className={cn("transition-colors cursor-pointer", data?.surfaces?.mesial ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
+                                onClick={() => toggleSurface(id, 'mesial')}
+                            />
+                            {/* Palatino/Lingual (Bottom) - P */}
                             <path 
                                 d="M0,80 L80,80 L60,60 L20,60 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.lingual ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
                                 onClick={() => toggleSurface(id, 'lingual')}
                             />
-                            {/* Mesial (Left) */}
-                            <path 
-                                d="M0,0 L0,80 L20,60 L20,20 Z" 
-                                className={cn("transition-colors cursor-pointer", data?.surfaces?.mesial ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
-                                onClick={() => toggleSurface(id, 'mesial')}
-                            />
-                            {/* Oclusal (Center) */}
+                            {/* Oclusal (Center) - O */}
                             <rect 
                                 x="20" y="20" width="40" height="40" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.oclusal ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
                                 onClick={() => toggleSurface(id, 'oclusal')}
                             />
                             
-                            {/* Labels (V, M, D, L, O) - Only visible when tooth is large enough or on hover */}
-                            <text x="40" y="12" fontSize="8" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">V</text>
-                            <text x="40" y="75" fontSize="8" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">L</text>
-                            <text x="10" y="43" fontSize="8" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">M</text>
-                            <text x="70" y="43" fontSize="8" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">D</text>
+                            {/* User requested labels: V (top), D (left), M (right), O (center), P (bottom) */}
+                            <text x="40" y="14" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">V</text>
+                            <text x="10" y="44" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">D</text>
+                            <text x="70" y="44" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">M</text>
+                            <text x="40" y="44" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">O</text>
+                            <text x="40" y="74" fontSize="9" textAnchor="middle" className="fill-charcoal/30 pointer-events-none font-black">P</text>
                         </g>
                     </svg>
                     
-                    {/* Status Marker */}
+                    {/* Status Marker Overlay */}
                     {data?.status && data.status !== 'healthy' && (
-                        <div className={cn("absolute top-[20px] left-[20px] right-[20px] bottom-[20px] bg-opacity-20 rounded-full pointer-events-none", statusColor)} />
+                        <div className={cn("absolute top-[15px] left-[15px] right-[15px] bottom-[55px] bg-opacity-20 rounded-full pointer-events-none", statusColor)} />
                     )}
                 </div>
             </div>
         )
     }
 
-    const adultTeethUpper = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
-    const adultTeethLower = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
+    const adultTeethUpper = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    const adultTeethLower = [32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17]
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-20 bg-ivory rounded-soft border border-silk-beige mt-4">
