@@ -143,7 +143,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 )}
                 onClick={() => setSelectedTooth(id)}
             >
-                <span className="text-[11px] font-black text-charcoal/80 mb-1">{id}</span>
+                <span className="text-[11px] font-black text-charcoal/80 mb-3">{id}</span>
                 <div className={cn(
                     "relative flex flex-col items-center transition-transform",
                     isSelected ? "scale-110" : "hover:scale-105",
