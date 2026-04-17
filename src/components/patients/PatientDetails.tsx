@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import {
     Phone, Mail, MapPin, Calendar,
     FileText, Plus, Edit2, Trash2, ArrowLeft,
-    StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy
+    StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy,
+    Activity, DollarSign
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -12,6 +13,8 @@ import { formatPhoneNumber } from '@/lib/utils'
 import { ClinicalRecordForm, ClinicalRecord } from './ClinicalRecordForm'
 import { ComparisonView } from './ComparisonView'
 import { suggestTags } from '@/lib/autoTagService'
+import { Odontogram } from './Odontogram'
+import { BudgetManager } from './BudgetManager'
 
 type Patient = Database['public']['Tables']['patients']['Row']
 
@@ -29,7 +32,8 @@ interface PatientDetailsProps {
 
 export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProps) {
     const { profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery'>('history')
+    const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery' | 'odontogram' | 'budgets'>('history')
+    const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general' | 'veterinary'>('aesthetic')
     const [records, setRecords] = useState<ClinicalRecord[]>([])
     const [loadingRecords, setLoadingRecords] = useState(false)
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
@@ -67,8 +71,26 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     useEffect(() => {
         if (profile?.clinic_id) {
             fetchTags()
+            fetchClinicSettings()
         }
     }, [profile?.clinic_id, patient.id])
+
+    const fetchClinicSettings = async () => {
+        if (!profile?.clinic_id) return
+        try {
+            const { data } = await supabase
+                .from('clinic_settings')
+                .select('specialty')
+                .eq('id', profile.clinic_id)
+                .single()
+            
+            if (data?.specialty) {
+                setSpecialty(data.specialty as any)
+            }
+        } catch (error) {
+            console.error('Error fetching clinic specialty:', error)
+        }
+    }
 
     const fetchTags = async () => {
         if (!profile?.clinic_id) return
@@ -480,6 +502,41 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
                         )}
                     </button>
+
+                    {specialty === 'dental' && (
+                        <>
+                            <button
+                                onClick={() => setActiveTab('odontogram')}
+                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'odontogram'
+                                    ? 'text-primary-600'
+                                    : 'text-charcoal/60 hover:text-charcoal'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-1.5">
+                                    <Activity className="w-4 h-4" />
+                                    Odontograma
+                                </div>
+                                {activeTab === 'odontogram' && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('budgets')}
+                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'budgets'
+                                    ? 'text-primary-600'
+                                    : 'text-charcoal/60 hover:text-charcoal'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-1.5">
+                                    <DollarSign className="w-4 h-4" />
+                                    Presupuestos
+                                </div>
+                                {activeTab === 'budgets' && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                                )}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -782,6 +839,20 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                             </div>
                         )}
                     </div>
+                )}
+
+                {activeTab === 'odontogram' && profile?.clinic_id && (
+                    <Odontogram 
+                        patientId={patient.id} 
+                        clinicId={profile.clinic_id} 
+                    />
+                )}
+
+                {activeTab === 'budgets' && profile?.clinic_id && (
+                    <BudgetManager 
+                        patientId={patient.id} 
+                        clinicId={profile.clinic_id} 
+                    />
                 )}
             </div>
 

@@ -13,6 +13,7 @@ export interface Database {
                 Row: {
                     id: string
                     clinic_name: string
+                    specialty: 'aesthetic' | 'dental' | 'general' | 'veterinary'
                     services: Json
                     working_hours: Json
                     timezone: string
@@ -44,6 +45,7 @@ export interface Database {
                 Insert: {
                     id?: string
                     clinic_name: string
+                    specialty?: 'aesthetic' | 'dental' | 'general' | 'veterinary'
                     services?: Json
                     working_hours?: Json
                     timezone?: string
@@ -75,6 +77,7 @@ export interface Database {
                 Update: {
                     id?: string
                     clinic_name?: string
+                    specialty?: 'aesthetic' | 'dental' | 'general' | 'veterinary'
                     services?: Json
                     working_hours?: Json
                     timezone?: string
@@ -104,6 +107,109 @@ export interface Database {
                     transfer_details?: string | null
                 }
             }
+            dental_odontograms: {
+                Row: {
+                    id: string
+                    clinic_id: string | null
+                    patient_id: string | null
+                    data: Json
+                    notes: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    clinic_id?: string | null
+                    patient_id?: string | null
+                    data?: Json
+                    notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    clinic_id?: string | null
+                    patient_id?: string | null
+                    data?: Json
+                    notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            dental_budgets: {
+                Row: {
+                    id: string
+                    clinic_id: string | null
+                    patient_id: string | null
+                    title: string
+                    total_amount: number
+                    paid_amount: number
+                    status: 'draft' | 'active' | 'completed' | 'cancelled'
+                    notes: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    clinic_id?: string | null
+                    patient_id?: string | null
+                    title: string
+                    total_amount?: number
+                    paid_amount?: number
+                    status?: 'draft' | 'active' | 'completed' | 'cancelled'
+                    notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    clinic_id?: string | null
+                    patient_id?: string | null
+                    title?: string
+                    total_amount?: number
+                    paid_amount?: number
+                    status?: 'draft' | 'active' | 'completed' | 'cancelled'
+                    notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            dental_budget_items: {
+                Row: {
+                    id: string
+                    budget_id: string | null
+                    description: string
+                    tooth_number: number | null
+                    surface: string | null
+                    quantity: number
+                    unit_price: number
+                    total_price: number
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    budget_id?: string | null
+                    description: string
+                    tooth_number?: number | null
+                    surface?: string | null
+                    quantity?: number
+                    unit_price?: number
+                    total_price?: number
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    budget_id?: string | null
+                    description?: string
+                    tooth_number?: number | null
+                    surface?: string | null
+                    quantity?: number
+                    unit_price?: number
+                    total_price?: number
+                    created_at?: string
+                }
+            }
+
             appointments: {
                 Row: {
                     id: string

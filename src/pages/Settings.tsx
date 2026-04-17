@@ -114,6 +114,7 @@ export default function Settings() {
     const [services, setServices] = useState<any[]>([])
     const [workingHours, setWorkingHours] = useState<any>(mockWorkingHours)
     const [businessModel, setBusinessModel] = useState<'physical' | 'mobile' | 'hybrid'>('physical')
+    const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general' | 'veterinary'>('aesthetic')
     const [showMobileList, setShowMobileList] = useState(true)
 
     // Service modal state
@@ -404,6 +405,7 @@ export default function Settings() {
 
                     setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
                     setBusinessModel(data.business_model || 'physical')
+                    setSpecialty(data.specialty || 'aesthetic')
                     setPaymentRegion(data.payment_provider === 'lemonsqueezy' ? 'international' : 'chile')
                     if (data.working_hours) setWorkingHours(data.working_hours)
                 }
@@ -870,6 +872,7 @@ export default function Settings() {
                     currency: currency,
                     timezone: timezone,
                     business_model: businessModel,
+                    specialty: specialty,
                     template_survey: templateSurvey,
                     template_reactivation: templateReactivation,
                     updated_at: new Date().toISOString()
@@ -1337,6 +1340,25 @@ export default function Settings() {
                                 </div>
 
                                 <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                            Especialidad de la Clínica
+                                        </label>
+                                        <select
+                                            value={specialty}
+                                            onChange={(e) => setSpecialty(e.target.value as any)}
+                                            className="input-soft"
+                                        >
+                                            <option value="aesthetic">🎀 Estética y Bienestar</option>
+                                            <option value="dental">🦷 Odontología / Dental</option>
+                                            <option value="veterinary">🐾 Veterinaria</option>
+                                            <option value="general">🏥 Medicina General / Otros</option>
+                                        </select>
+                                        <p className="text-xs text-charcoal/40 mt-1">
+                                            Ajusta la interfaz y las herramientas según tu rubro
+                                        </p>
+                                    </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-charcoal mb-2">
                                             Nombre de la Clínica
