@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast'
 interface OdontogramProps {
     patientId: string
     clinicId: string
-    onAddTreatment?: (item: { description: string, tooth_number: number, unit_price: number }) => void
+    onAddTreatment?: (item: any) => void
 }
 
 interface ToothData {
