@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Save, Loader2, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { toast } from 'react-hot-toast'
 
 interface OdontogramProps {
     patientId: string
