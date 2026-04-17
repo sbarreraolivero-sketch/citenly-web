@@ -195,11 +195,12 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
-                            <text x="40" y="8" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">V</text>
-                            <text x="10" y="38" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">D</text>
-                            <text x="70" y="38" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">M</text>
-                            <text x="40" y="38" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">O</text>
-                            <text x="40" y="68" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">P</text>
+                            {/* High-Readability Labels - Centered for better aesthetics */}
+                            <text x="40" y="14" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">V</text>
+                            <text x="18" y="42" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">D</text>
+                            <text x="62" y="42" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">M</text>
+                            <text x="40" y="42" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">O</text>
+                            <text x="40" y="65" fontSize="16" textAnchor="middle" className="fill-charcoal pointer-events-none font-black drop-shadow-sm">P</text>
                         </g>
                     </svg>
                     
