@@ -122,7 +122,6 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
         
         // Determine tooth type for anatomical shape
         const isMolar = typeof id === 'number' && ([1, 2, 3, 14, 15, 16, 17, 18, 19, 30, 31, 32].includes(id)) || ['A', 'B', 'I', 'J', 'K', 'L', 'S', 'T'].includes(id.toString())
-        const isIncisor = typeof id === 'number' && ([7, 8, 9, 10, 23, 24, 25, 26].includes(id)) || ['D', 'E', 'F', 'G', 'N', 'O', 'P', 'Q'].includes(id.toString())
 
         return (
             <div 
