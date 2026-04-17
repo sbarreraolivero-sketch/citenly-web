@@ -65,14 +65,20 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
     // Load initial items from Odyssey/Odontogram if they exist
     useEffect(() => {
         if (initialItems && initialItems.length > 0) {
-            const formattedItems = initialItems.map(item => ({
-                ...item,
-                quantity: item.quantity || 1,
-                total_price: (item.unit_price || 0) * (item.quantity || 1)
-            }))
-            setNewItems(formattedItems)
-            setNewTitle('Presupuesto Sugerido')
-            setShowNewModal(true)
+            const formattedItems = initialItems
+                .filter(item => item && typeof item === 'object')
+                .map(item => ({
+                    ...item,
+                    id: (item as any).id || crypto.randomUUID(),
+                    quantity: (item as any).quantity || 1,
+                    total_price: ((item as any).unit_price || 0) * ((item as any).quantity || 1)
+                }))
+            
+            if (formattedItems.length > 0) {
+                setNewItems(formattedItems)
+                setNewTitle('Presupuesto Sugerido')
+                setShowNewModal(true)
+            }
         }
     }, [initialItems])
 
