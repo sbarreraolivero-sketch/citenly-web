@@ -196,7 +196,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                 <circle cx="50" cy="45" r="38" className={cn("opacity-40", statusColor)} />
                                 
                                 {data.status === 'extraction' && (
-                                    <path d="M25,20 L75,70 M75,20 L25,70" className="stroke-red-700 stroke-[10] shadow-sm" />
+                                    <path d="M25,20 L75,70 M75,20 L25,70" className="stroke-yellow-600 stroke-[10] shadow-sm" />
                                 )}
                                 {data.status === 'missing' && (
                                     <circle cx="50" cy="45" r="30" fill="none" className="stroke-charcoal/80 stroke-6" strokeDasharray="8 4" />
@@ -266,23 +266,13 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         </div>
                     </div>
 
-                    <div className="mt-12 flex flex-wrap gap-4 pt-6 border-t border-silk-beige">
-                        <div className="flex items-center gap-2 group cursor-help transition-all">
-                            <div className="w-3 h-3 rounded-full bg-red-400 group-hover:scale-125 transition-transform" />
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-charcoal/60">Caries / Afectado</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-blue-500" />
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-charcoal/60">Curado / Obturado</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-purple-500" />
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-charcoal/60">Corona</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-charcoal/20" />
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-charcoal/60">Pieza Ausente</span>
-                        </div>
+                    <div className="mt-12 flex flex-wrap gap-x-6 gap-y-3 pt-6 border-t border-silk-beige">
+                        {Object.entries(TOOTH_STATES).map(([id, data]) => (
+                            <div key={id} className="flex items-center gap-2">
+                                <div className={cn("w-3 h-3 rounded-full", data.color)} />
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-charcoal/60">{data.label}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
