@@ -78,14 +78,14 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const fetchClinicSettings = async () => {
         if (!profile?.clinic_id) return
         try {
-            const { data } = await supabase
+            const { data } = await (supabase as any)
                 .from('clinic_settings')
                 .select('specialty')
                 .eq('id', profile.clinic_id)
                 .single()
             
-            if (data?.specialty) {
-                setSpecialty(data.specialty as any)
+            if (data && (data as any).specialty) {
+                setSpecialty((data as any).specialty as any)
             }
         } catch (error) {
             console.error('Error fetching clinic specialty:', error)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Activity, Plus, Save, Loader2, Info, ChevronRight, ChevronLeft, RotateCcw } from 'lucide-react'
+import { Save, Loader2, Info, ChevronRight, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -44,7 +44,7 @@ export function Odontogram({ patientId, clinicId }: OdontogramProps) {
 
     const fetchOdontogram = async () => {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('dental_odontograms')
                 .select('*')
                 .eq('patient_id', patientId)
@@ -65,7 +65,7 @@ export function Odontogram({ patientId, clinicId }: OdontogramProps) {
     const handleSave = async () => {
         setSaving(true)
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('dental_odontograms')
                 .upsert({
                     patient_id: patientId,

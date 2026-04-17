@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react'
 import { 
     Plus, Trash2, Save, Loader2, DollarSign, 
     FileText, CheckCircle2, AlertCircle, Clock,
-    ChevronDown, ChevronUp, Download, Printer
+    Download, Printer
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+
+// Defining for local scope - Moving to top to avoid block-scoped variable error
+const Activity = (props: any) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-activity"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
 
 interface BudgetManagerProps {
     patientId: string
@@ -58,7 +61,7 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
 
     const fetchBudgets = async () => {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('dental_budgets')
                 .select('*, items:dental_budget_items(*)')
                 .eq('patient_id', patientId)
@@ -97,7 +100,7 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
         setSaving(true)
         try {
             const total = calculateTotal()
-            const { data: budget, error: budgetError } = await supabase
+            const { data: budget, error: budgetError } = await (supabase as any)
                 .from('dental_budgets')
                 .insert({
                     clinic_id: clinicId,
@@ -121,7 +124,7 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
                 total_price: item.total_price
             }))
 
-            const { error: itemsError } = await supabase
+            const { error: itemsError } = await (supabase as any)
                 .from('dental_budget_items')
                 .insert(itemsToInsert)
 
@@ -141,7 +144,7 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
 
     const updateStatus = async (budgetId: string, status: string) => {
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('dental_budgets')
                 .update({ status })
                 .eq('id', budgetId)
@@ -416,6 +419,3 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
         </div>
     )
 }
-
-// Re-defining for local scope since I can't import easily while writing
-const Activity = (props: any) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-activity"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
