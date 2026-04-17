@@ -119,101 +119,97 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
         const data = teeth[id]
         const isSelected = selectedTooth === id
         const statusColor = data?.status ? TOOTH_STATES[data.status].color : 'bg-white'
+        
+        // Determine tooth type for anatomical shape
+        const isMolar = typeof id === 'number' && ([1, 2, 3, 14, 15, 16, 17, 18, 19, 30, 31, 32].includes(id)) || ['A', 'B', 'I', 'J', 'K', 'L', 'S', 'T'].includes(id.toString())
+        const isIncisor = typeof id === 'number' && ([7, 8, 9, 10, 23, 24, 25, 26].includes(id)) || ['D', 'E', 'F', 'G', 'N', 'O', 'P', 'Q'].includes(id.toString())
 
         return (
             <div 
                 key={id} 
                 className={cn(
-                    "relative flex flex-col items-center p-1 transition-all rounded-soft border border-transparent cursor-pointer min-w-[50px]",
-                    isSelected ? "bg-primary-50 border-primary-200 shadow-sm" : "hover:bg-ivory"
+                    "relative flex flex-col items-center p-0.5 transition-all rounded-soft border border-transparent cursor-pointer",
+                    isSelected ? "bg-primary-50 border-primary-200 shadow-sm" : "hover:bg-ivory",
+                    isMolar ? "min-w-[45px]" : "min-w-[35px]"
                 )}
                 onClick={() => setSelectedTooth(id)}
             >
-                <span className="text-[10px] font-black text-charcoal/40 mb-1">{id}</span>
-                <div className="relative w-14 h-28 flex flex-col items-center">
+                <span className="text-[9px] font-black text-charcoal/60 mb-0.5">{id}</span>
+                <div className={cn(
+                    "relative flex flex-col items-center",
+                    isMolar ? "w-10 h-20" : "w-8 h-20"
+                )}>
                     {/* Anatomical Tooth SVG */}
-                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-md">
-                        <defs>
-                            <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" style={{ stopColor: '#fff', stopOpacity: 1 }} />
-                                <stop offset="100%" style={{ stopColor: '#f1f1f1', stopOpacity: 1 }} />
-                            </linearGradient>
-                        </defs>
-
-                        {/* Root Structure (Anatomical shape) */}
+                    <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-sm">
+                        {/* Root Structure */}
                         <path 
-                            d="M35,80 Q35,180 50,195 Q65,180 65,80" 
-                            className="fill-charcoal/5 stroke-charcoal/10 stroke-1"
+                            d={isMolar ? "M20,80 Q20,180 50,195 Q80,180 80,80" : "M35,80 Q35,180 50,195 Q65,180 65,80"} 
+                            className="fill-charcoal/10 stroke-charcoal/40 stroke-1"
                         />
                         
-                        {/* Interactive Crown (Anatomical silhouette) */}
-                        <g transform="translate(15, 10)">
+                        {/* Interactive Crown */}
+                        <g transform="translate(10, 10)">
                             {/* Vestibular (Top) */}
                             <path 
-                                d="M0,10 Q35,-5 70,10 L55,25 Q35,15 15,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.vestibular ? "fill-red-400" : "fill-white hover:fill-primary-50")}
+                                d="M0,10 Q40,-5 80,10 L65,25 Q40,15 15,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.vestibular ? "fill-red-500" : "fill-white hover:fill-primary-50")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'vestibular') }}
                             />
                             {/* Distal (Left) */}
                             <path 
                                 d="M0,10 Q-5,35 0,60 L20,45 Q15,35 20,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.distal ? "fill-red-400" : "fill-white hover:fill-primary-50")}
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.distal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'distal') }}
                             />
                             {/* Mesial (Right) */}
                             <path 
-                                d="M70,10 Q75,35 70,60 L50,45 Q55,35 50,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.mesial ? "fill-red-400" : "fill-white hover:fill-primary-50")}
+                                d="M80,10 Q85,35 80,60 L60,45 Q65,35 60,25 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.mesial ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'mesial') }}
                             />
                             {/* Palatino/Lingual (Bottom) */}
                             <path 
-                                d="M0,60 Q35,75 70,60 L55,45 Q35,55 15,45 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.lingual ? "fill-red-400" : "fill-white hover:fill-primary-50")}
+                                d="M0,60 Q40,75 80,60 L65,45 Q40,55 15,45 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.lingual ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'lingual') }}
                             />
                             {/* Oclusal (Center) */}
                             <path 
-                                d="M15,25 Q35,15 55,25 L55,45 Q35,55 15,45 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/10 stroke-[0.5]", data?.surfaces?.oclusal ? "fill-red-400" : "fill-white hover:fill-primary-50")}
+                                d="M15,25 Q40,15 65,25 L65,45 Q40,55 15,45 Z" 
+                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/40 stroke-[1]", data?.surfaces?.oclusal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
                             {/* Discreet Labels */}
-                            <text x="35" y="8" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">V</text>
-                            <text x="8" y="38" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">D</text>
-                            <text x="62" y="38" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">M</text>
-                            <text x="35" y="38" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">O</text>
-                            <text x="35" y="66" fontSize="7" textAnchor="middle" className="fill-charcoal/20 pointer-events-none font-bold">P</text>
+                            <text x="40" y="8" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">V</text>
+                            <text x="8" y="38" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">D</text>
+                            <text x="72" y="38" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">M</text>
+                            <text x="40" y="38" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">O</text>
+                            <text x="40" y="68" fontSize="10" textAnchor="middle" className="fill-charcoal/40 pointer-events-none font-black">P</text>
                         </g>
-
-                        {/* Enamel Gloss Overlay */}
-                        <path 
-                            d="M20,15 Q35,10 50,15" 
-                            fill="none" 
-                            className="stroke-white/50 stroke-[2] pointer-events-none" 
-                        />
                     </svg>
                     
-                    {/* Status Marker Overlay (Enhanced with Symbols) */}
+                    {/* Status Marker Overlay (Enhanced) */}
                     {data?.status && data.status !== 'healthy' && (
-                        <g className="pointer-events-none">
-                            {/* Background Highlight */}
-                            <circle cx="50" cy="45" r="35" className={cn("opacity-20", statusColor)} />
-                            
-                            {/* Status Symbols */}
-                            {data.status === 'extraction' && (
-                                <path d="M30,25 L70,65 M70,25 L30,65" className="stroke-red-600 stroke-[5] opacity-80" />
-                            )}
-                            {data.status === 'missing' && (
-                                <circle cx="50" cy="45" r="25" fill="none" className="stroke-charcoal/30 stroke-2" strokeDasharray="4 2" />
-                            )}
-                            {data.status === 'endo' && (
-                                <path d="M50,45 L50,140" className="stroke-orange-500 stroke-[3] opacity-60" />
-                            )}
-                            {data.status === 'crown' && (
-                                <rect x="15" y="10" width="70" height="30" rx="5" fill="none" className="stroke-purple-600 stroke-2" />
-                            )}
+                        <g className="absolute inset-0 pointer-events-none">
+                            <svg viewBox="0 0 100 200" className="w-full h-full overflow-visible">
+                                {/* Background Highlight */}
+                                <circle cx="50" cy="45" r="35" className={cn("opacity-30", statusColor)} />
+                                
+                                {/* Status Symbols */}
+                                {data.status === 'extraction' && (
+                                    <path d="M30,25 L70,65 M70,25 L30,65" className="stroke-red-600 stroke-[8] opacity-100" />
+                                )}
+                                {data.status === 'missing' && (
+                                    <circle cx="50" cy="45" r="25" fill="none" className="stroke-charcoal/60 stroke-4" strokeDasharray="6 3" />
+                                )}
+                                {data.status === 'endo' && (
+                                    <path d="M50,45 L50,140" className="stroke-orange-500 stroke-[5]" />
+                                )}
+                                {data.status === 'crown' && (
+                                    <rect x="15" y="10" width="70" height="30" rx="5" fill="none" className="stroke-purple-600 stroke-4" />
+                                )}
+                            </svg>
                         </g>
                     )}
                 </div>
@@ -260,14 +256,14 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         </div>
                     </div>
 
-                    <div className="space-y-12 overflow-x-auto pb-4">
+                    <div className="space-y-8 overflow-x-auto pb-4 scrollbar-hide">
                         {/* Upper Arch */}
-                        <div className="flex justify-center gap-1 min-w-[700px]">
+                        <div className="flex justify-center gap-0.5 min-w-max px-4">
                             {(dentition === 'adult' ? adultTeethUpper : childTeethUpper).map(id => renderTooth(id))}
                         </div>
                         
                         {/* Lower Arch */}
-                        <div className="flex justify-center gap-1 min-w-[700px]">
+                        <div className="flex justify-center gap-0.5 min-w-max px-4">
                             {(dentition === 'adult' ? adultTeethLower : childTeethLower).map(id => renderTooth(id))}
                         </div>
                     </div>
@@ -353,18 +349,18 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                     Cerrar Editor
                                 </button>
                                 
-                                {onAddTreatment && teeth[selectedTooth]?.status && teeth[selectedTooth]?.status !== 'healthy' && (
+                                {selectedTooth && (
                                     <div className="mt-4 pt-4 border-t border-silk-beige">
                                         <button
                                             onClick={() => {
-                                                const status = TOOTH_STATES[teeth[selectedTooth]!.status!].label
-                                                onAddTreatment({
+                                                const status = teeth[selectedTooth]?.status ? TOOTH_STATES[teeth[selectedTooth]!.status!].label : 'Consulta'
+                                                onAddTreatment?.({
                                                     description: `${status}${teeth[selectedTooth]?.notes ? `: ${teeth[selectedTooth]?.notes}` : ''}`,
                                                     tooth_number: selectedTooth as any,
-                                                    unit_price: 0 // Will be defined in budget
+                                                    unit_price: 0
                                                 })
                                             }}
-                                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-2 py-3"
+                                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-2 py-3 hover:bg-primary-50 transition-all font-bold"
                                         >
                                             <Plus className="w-4 h-4" />
                                             Presupuestar Tratamiento
