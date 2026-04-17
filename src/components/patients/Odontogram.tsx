@@ -369,7 +369,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                         <div className="w-12 h-12 bg-white/10 rounded-softer flex items-center justify-center text-xl font-black text-primary-400">{id}</div>
                                         <div>
                                             <p className="font-black text-lg leading-none mb-2 uppercase">{TOOTH_STATES[tooth.status!].label}</p>
-                                            <div className="flex flex-wrap gap-1.5">
+                                            <div className="flex flex-wrap gap-1.5 mb-2">
                                                 {Object.entries(tooth.surfaces).filter(([_, active]) => active).map(([name]) => (
                                                     <span key={name} className="text-[10px] font-black bg-primary-500/20 border border-primary-500/30 px-2.5 py-1 rounded-sm text-primary-300">
                                                         {name.charAt(0).toUpperCase()}
@@ -379,6 +379,11 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                                     <span className="text-[10px] font-black bg-white/5 border border-white/10 px-2.5 py-1 rounded-sm text-white/40 italic">PIEZA COMPLETA</span>
                                                 )}
                                             </div>
+                                            {tooth.notes && (
+                                                <p className="text-[10px] text-white/40 italic bg-white/5 p-2 rounded border-l border-primary-500 max-w-[200px] truncate group-hover:max-w-none group-hover:whitespace-normal transition-all">
+                                                    "{tooth.notes}"
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                     <button 
