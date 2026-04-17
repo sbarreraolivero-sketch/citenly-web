@@ -102,14 +102,22 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 status: 'healthy', 
                 surfaces: { vestibular: false, lingual: false, mesial: false, distal: false, oclusal: false } 
             }
+            
+            const newSurfaces = {
+                ...current.surfaces,
+                [surface]: !current.surfaces[surface]
+            }
+            
+            // Auto-sync: if any surface is active, status is 'caries'
+            const hasActiveSurface = Object.values(newSurfaces).some(v => v === true)
+            const newStatus = hasActiveSurface ? 'caries' : 'healthy'
+            
             return {
                 ...prev,
                 [toothId]: {
                     ...current,
-                    surfaces: {
-                        ...current.surfaces,
-                        [surface]: !current.surfaces[surface]
-                    }
+                    status: current.status === 'missing' || current.status === 'extraction' ? current.status : newStatus,
+                    surfaces: newSurfaces
                 }
             }
         })
@@ -341,14 +349,26 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                     <div className="mt-4 pt-4 border-t border-silk-beige">
                                         <button
                                             onClick={() => {
-                                                const status = teeth[selectedTooth]?.status ? TOOTH_STATES[teeth[selectedTooth]!.status!].label : 'Consulta'
+                                                const tooth = teeth[selectedTooth]
+                                                const statusLabel = tooth?.status ? TOOTH_STATES[tooth.status].label : 'Consulta'
+                                                
+                                                // Get active surfaces
+                                                const surfaces = tooth?.surfaces || {}
+                                                const activeSurfaces = Object.entries(surfaces)
+                                                    .filter(([_, active]) => active)
+                                                    .map(([name]) => name.charAt(0).toUpperCase()) // V, D, M, O, P/L
+                                                    .join(', ')
+
+                                                const fullDescription = `${statusLabel} en Pieza ${selectedTooth}${activeSurfaces ? ` - Caras: ${activeSurfaces}` : ''}${tooth?.notes ? `: ${tooth.notes}` : ''}`
+
                                                 onAddTreatment?.({
-                                                    description: `${status}${teeth[selectedTooth]?.notes ? `: ${teeth[selectedTooth]?.notes}` : ''}`,
+                                                    description: fullDescription,
                                                     tooth_number: selectedTooth as any,
                                                     unit_price: 0
                                                 })
+                                                toast.success('Tratamiento añadido a la cola de presupuesto')
                                             }}
-                                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-2 py-3 hover:bg-primary-50 transition-all font-bold"
+                                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-2 py-3 hover:bg-primary-50 transition-all font-bold shadow-sm"
                                         >
                                             <Plus className="w-4 h-4" />
                                             Presupuestar Tratamiento
