@@ -110,13 +110,13 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
             
             // Auto-sync: if any surface is active, status is 'caries'
             const hasActiveSurface = Object.values(newSurfaces).some(v => v === true)
-            const newStatus = hasActiveSurface ? 'caries' : 'healthy'
+            const newStatus: ToothData['status'] = hasActiveSurface ? 'caries' : 'healthy'
             
             return {
                 ...prev,
                 [toothId]: {
                     ...current,
-                    status: current.status === 'missing' || current.status === 'extraction' ? current.status : newStatus,
+                    status: (current.status === 'missing' || current.status === 'extraction') ? current.status : newStatus,
                     surfaces: newSurfaces
                 }
             }
