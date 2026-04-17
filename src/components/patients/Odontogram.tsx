@@ -351,7 +351,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                     <div className="flex items-center justify-between mb-10">
                         <div>
                             <h4 className="text-xl font-black tracking-tight uppercase">Resumen de Diagnósticos</h4>
-                            <p className="text-xs text-white/30 font-bold tracking-widest uppercase">Tratamientos detectados</p>
+                            <p className="text-xs text-white font-bold tracking-widest uppercase">Tratamientos detectados</p>
                         </div>
                         <div className="bg-primary-500 text-[11px] font-black px-4 py-2 rounded-sm shadow-2xl shadow-primary-500/40 border border-primary-400">
                             {findings.length} HALLAZGOS
