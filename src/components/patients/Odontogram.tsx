@@ -341,23 +341,6 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                                 <div className={cn("w-2.5 h-2.5 rounded-full shadow-sm", data.color)} />
                                                 {data.label}
                                             </div>
-                                            <div 
-                                                className={cn(
-                                                    "p-1 rounded-full transition-all",
-                                                    teeth[selectedTooth]?.status === id ? "bg-primary-500 text-white" : "text-charcoal/20 group-hover:text-primary-500"
-                                                )}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    updateToothStatus(selectedTooth, id as any)
-                                                    // Trigger Quick Budget
-                                                    const desc = `${data.label} en Pieza ${selectedTooth}`
-                                                    onAddTreatment?.({ description: desc, tooth_number: selectedTooth as any, unit_price: 0 })
-                                                    toast.success(`${data.label} añadido`)
-                                                }}
-                                                title="Añadir a presupuesto rápido"
-                                            >
-                                                <ChevronRight className="w-4 h-4" />
-                                            </div>
                                         </button>
                                     ))}
                                 </div>
@@ -431,16 +414,55 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                     </div>
 
                     <button
-                        onClick={handleSave}
+                        onClick={handleSaveOdontogram}
                         disabled={saving}
-                        className="w-full btn-primary flex items-center justify-center gap-2 py-4 shadow-xl shadow-primary-500/20"
+                        className="w-full btn-primary flex items-center justify-center gap-2 py-3 mt-6 mb-4"
                     >
                         {saving ? (
-                            <><Loader2 className="w-5 h-5 animate-spin" /> Guardando...</>
+                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
                         ) : (
                             <><Save className="w-5 h-5" /> Guardar Todo el Odontograma</>
                         )}
                     </button>
+
+                    {/* Global Budget Button - Always accessible at bottom of sidebar */}
+                    <div className="mt-4 pt-6 border-t-2 border-dashed border-silk-beige">
+                        <button
+                            onClick={() => {
+                                const findings = Object.entries(teeth).filter(([_, t]) => t.status && t.status !== 'healthy')
+                                if (findings.length === 0) {
+                                    toast.error('No hay tratamientos marcados para presupuestar')
+                                    return
+                                }
+                                
+                                findings.forEach(([id, tooth]) => {
+                                    const statusLabel = tooth.status ? TOOTH_STATES[tooth.status].label : 'Consulta'
+                                    const surfaces = tooth.surfaces || {}
+                                    const activeSurfaces = Object.entries(surfaces)
+                                        .filter(([_, active]) => active)
+                                        .map(([name]) => name.charAt(0).toUpperCase())
+                                        .join(', ')
+
+                                    const fullDescription = `${statusLabel} en Pieza ${id}${activeSurfaces ? ` - Caras: ${activeSurfaces}` : ''}${tooth.notes ? `: ${tooth.notes}` : ''}`
+                                    
+                                    onAddTreatment?.({
+                                        description: fullDescription,
+                                        tooth_number: id as any,
+                                        unit_price: 0
+                                    })
+                                })
+                                
+                                toast.success(`Se han añadido ${findings.length} tratamientos al presupuesto`)
+                            }}
+                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-3 py-4 shadow-md hover:scale-[1.02] transition-all font-black text-lg"
+                        >
+                            <Plus className="w-6 h-6" />
+                            Presupuestar TODO
+                        </button>
+                        <p className="text-[10px] text-center text-charcoal/40 mt-3 uppercase tracking-widest font-bold">
+                            Envía todos los hallazgos a presupuestos
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
