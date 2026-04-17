@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Loader2, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react'
+import { Save, Loader2, Info, RotateCcw, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
@@ -63,7 +63,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
         }
     }
 
-    const handleSave = async () => {
+    const handleSaveOdontogram = async () => {
         setSaving(true)
         try {
             const { error } = await (supabase as any)
@@ -128,7 +128,6 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
     const renderTooth = (id: string | number) => {
         const data = teeth[id]
         const isSelected = selectedTooth === id
-        const statusColor = data?.status ? TOOTH_STATES[data.status].color : 'bg-white'
         
         // Determine tooth type
         const isMolar = typeof id === 'number' && ([1, 2, 3, 14, 15, 16, 17, 18, 19, 30, 31, 32].includes(id)) || ['A', 'B', 'I', 'J', 'K', 'L', 'S', 'T'].includes(id.toString())
