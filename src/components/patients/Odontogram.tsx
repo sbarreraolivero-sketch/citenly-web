@@ -52,13 +52,14 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 .eq('patient_id', patientId)
                 .single()
 
-            if (data) {
+            if (data && data.data) {
                 setTeeth(data.data as any)
-            } else if (error && error.code !== 'PGRST116') {
-                throw error
+            } else {
+                setTeeth({})
             }
         } catch (error) {
             console.error('Error fetching odontogram:', error)
+            setTeeth({})
         } finally {
             setLoading(false)
         }
