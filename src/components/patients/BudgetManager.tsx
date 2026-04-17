@@ -173,6 +173,85 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
         }
     }
 
+    const handlePrint = (budget: Budget) => {
+        const printWindow = window.open('', '_blank')
+        if (!printWindow) return
+
+        const itemsHtml = budget.items?.map(item => `
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                    <strong>${item.description}</strong>
+                    ${item.tooth_number ? `<br/><small style="color: #666;">Pieza ${item.tooth_number} ${item.surface ? `· Cara ${item.surface}` : ''}</small>` : ''}
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">$${item.unit_price.toLocaleString()}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">$${item.total_price.toLocaleString()}</td>
+            </tr>
+        `).join('')
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Presupuesto Dental - ${budget.title}</title>
+                    <style>
+                        body { font-family: sans-serif; color: #333; padding: 40px; }
+                        .header { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+                        .logo { font-size: 24px; font-weight: bold; color: #7c3aed; }
+                        .clinic-info { text-align: right; font-size: 12px; color: #666; }
+                        .budget-title { font-size: 20px; margin-bottom: 20px; color: #000; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th { background: #f9fafb; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #eee; }
+                        .total-row { margin-top: 30px; text-align: right; }
+                        .total-label { font-size: 12px; color: #666; text-transform: uppercase; }
+                        .total-amount { font-size: 28px; font-weight: 900; }
+                        .footer { margin-top: 60px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; pt: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="logo">CITENLY DENTAL</div>
+                        <div class="clinic-info">
+                            <strong>Presupuesto de Tratamiento</strong><br/>
+                            Fecha: ${new Date(budget.created_at).toLocaleDateString()}<br/>
+                            ID: ${budget.id.slice(0, 8)}
+                        </div>
+                    </div>
+                    
+                    <h1 class="budget-title">${budget.title}</h1>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Procedimiento</th>
+                                <th style="text-align: center;">Cant</th>
+                                <th style="text-align: right;">Precio Unit.</th>
+                                <th style="text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div class="total-row">
+                        <div class="total-label">Total Presupuesto</div>
+                        <div class="total-amount">$${budget.total_amount.toLocaleString()}</div>
+                    </div>
+                    
+                    <div class="footer">
+                        Este presupuesto tiene una validez de 30 días.<br/>
+                        Gracias por confiar en nuestra clínica.
+                    </div>
+                    
+                    <script>
+                        window.onload = function() { window.print(); window.close(); }
+                    </script>
+                </body>
+            </html>
+        `)
+        printWindow.document.close()
+    }
+
     if (loading) return (
         <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
@@ -277,10 +356,16 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
 
                             <div className="mt-6 flex items-center justify-between pt-6 border-t border-silk-beige">
                                 <div className="flex items-center gap-4">
-                                    <button className="flex items-center gap-2 text-xs font-bold text-charcoal/40 hover:text-primary-600 transition-colors">
+                                    <button 
+                                        onClick={() => handlePrint(budget)}
+                                        className="flex items-center gap-2 text-xs font-bold text-charcoal/40 hover:text-primary-600 transition-colors"
+                                    >
                                         <Download className="w-4 h-4" /> Exportar PDF
                                     </button>
-                                    <button className="flex items-center gap-2 text-xs font-bold text-charcoal/40 hover:text-primary-600 transition-colors">
+                                    <button 
+                                        onClick={() => handlePrint(budget)}
+                                        className="flex items-center gap-2 text-xs font-bold text-charcoal/40 hover:text-primary-600 transition-colors"
+                                    >
                                         <Printer className="w-4 h-4" /> Imprimir
                                     </button>
                                 </div>

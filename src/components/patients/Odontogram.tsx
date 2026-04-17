@@ -30,14 +30,12 @@ const TOOTH_STATES = {
     missing: { label: 'Ausente', color: 'bg-charcoal/20' },
     crown: { label: 'Corona', color: 'bg-purple-500' },
     endo: { label: 'Endodoncia', color: 'bg-orange-500' }
-}
-
-export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
-    const [teeth, setTeeth] = useState<Record<number, ToothData>>({})
-    const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
+}export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
+    const [teeth, setTeeth] = useState<Record<string | number, ToothData>>({})
+    const [selectedTooth, setSelectedTooth] = useState<string | number | null>(null)
+    const [dentition, setDentition] = useState<'adult' | 'child'>('adult')
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [view, setView] = useState<'adult' | 'child'>('adult')
 
     useEffect(() => {
         fetchOdontogram()
@@ -76,24 +74,26 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 }, { onConflict: 'clinic_id,patient_id' })
 
             if (error) throw error
+            toast.success('Odontograma guardado correctamente')
         } catch (error) {
             console.error('Error saving odontogram:', error)
+            toast.error('Error al guardar el odontograma')
         } finally {
             setSaving(false)
         }
     }
 
-    const updateToothStatus = (toothId: number, status: ToothData['status']) => {
+    const updateToothStatus = (toothId: string | number, status: ToothData['status']) => {
         setTeeth(prev => ({
             ...prev,
             [toothId]: {
-                ...(prev[toothId] || { id: toothId, surfaces: {} as any }),
+                ...(prev[toothId] || { id: toothId, surfaces: { vestibular: false, lingual: false, mesial: false, distal: false, oclusal: false } as any }),
                 status
             }
         }))
     }
 
-    const toggleSurface = (toothId: number, surface: keyof ToothData['surfaces']) => {
+    const toggleSurface = (toothId: string | number, surface: keyof ToothData['surfaces']) => {
         setTeeth(prev => {
             const current = prev[toothId] || { 
                 id: toothId, 
@@ -113,7 +113,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
         })
     }
 
-    const renderTooth = (id: number) => {
+    const renderTooth = (id: string | number) => {
         const data = teeth[id]
         const isSelected = selectedTooth === id
         const statusColor = data?.status ? TOOTH_STATES[data.status].color : 'bg-white'
@@ -143,31 +143,31 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                             <path 
                                 d="M0,0 L80,0 L60,20 L20,20 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.vestibular ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
-                                onClick={() => toggleSurface(id, 'vestibular')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'vestibular') }}
                             />
                             {/* Distal (Left) - D */}
                             <path 
                                 d="M0,0 L0,80 L20,60 L20,20 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.distal ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
-                                onClick={() => toggleSurface(id, 'distal')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'distal') }}
                             />
                             {/* Mesial (Right) - M */}
                             <path 
                                 d="M80,0 L80,80 L60,60 L60,20 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.mesial ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
-                                onClick={() => toggleSurface(id, 'mesial')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'mesial') }}
                             />
                             {/* Palatino/Lingual (Bottom) - P */}
                             <path 
                                 d="M0,80 L80,80 L60,60 L20,60 Z" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.lingual ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
-                                onClick={() => toggleSurface(id, 'lingual')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'lingual') }}
                             />
                             {/* Oclusal (Center) - O */}
                             <rect 
                                 x="20" y="20" width="40" height="40" 
                                 className={cn("transition-colors cursor-pointer", data?.surfaces?.oclusal ? "fill-red-400" : "fill-white stroke-charcoal/20 stroke-1 hover:fill-primary-100")}
-                                onClick={() => toggleSurface(id, 'oclusal')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
                             {/* User requested labels: V (top), D (left), M (right), O (center), P (bottom) */}
@@ -179,9 +179,26 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         </g>
                     </svg>
                     
-                    {/* Status Marker Overlay */}
+                    {/* Status Marker Overlay (Enhanced with Symbols) */}
                     {data?.status && data.status !== 'healthy' && (
-                        <div className={cn("absolute top-[15px] left-[15px] right-[15px] bottom-[55px] bg-opacity-20 rounded-full pointer-events-none", statusColor)} />
+                        <g className="pointer-events-none">
+                            {/* Background Highlight */}
+                            <circle cx="50" cy="45" r="35" className={cn("opacity-20", statusColor)} />
+                            
+                            {/* Status Symbols */}
+                            {data.status === 'extraction' && (
+                                <path d="M30,25 L70,65 M70,25 L30,65" className="stroke-red-600 stroke-[5] opacity-80" />
+                            )}
+                            {data.status === 'missing' && (
+                                <circle cx="50" cy="45" r="25" fill="none" className="stroke-charcoal/30 stroke-2" strokeDasharray="4 2" />
+                            )}
+                            {data.status === 'endo' && (
+                                <path d="M50,45 L50,140" className="stroke-orange-500 stroke-[3] opacity-60" />
+                            )}
+                            {data.status === 'crown' && (
+                                <rect x="15" y="10" width="70" height="30" rx="5" fill="none" className="stroke-purple-600 stroke-2" />
+                            )}
+                        </g>
                     )}
                 </div>
             </div>
@@ -190,6 +207,9 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
 
     const adultTeethUpper = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     const adultTeethLower = [32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17]
+
+    const childTeethUpper = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+    const childTeethLower = ['T', 'S', 'R', 'Q', 'P', 'O', 'N', 'M', 'L', 'K']
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-20 bg-ivory rounded-soft border border-silk-beige mt-4">
@@ -210,14 +230,14 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         </div>
                         <div className="flex p-1 bg-silk-beige rounded-soft">
                             <button 
-                                onClick={() => setView('adult')}
-                                className={cn("px-4 py-1.5 text-xs font-bold rounded-soft transition-all", view === 'adult' ? "bg-white text-primary-600 shadow-sm" : "text-charcoal/40")}
+                                onClick={() => { setDentition('adult'); setSelectedTooth(null) }}
+                                className={cn("px-4 py-1.5 text-xs font-bold rounded-soft transition-all", dentition === 'adult' ? "bg-white text-primary-600 shadow-sm" : "text-charcoal/40")}
                             >
                                 Adulto
                             </button>
                             <button 
-                                onClick={() => setView('child')}
-                                className={cn("px-4 py-1.5 text-xs font-bold rounded-soft transition-all", view === 'child' ? "bg-white text-primary-600 shadow-sm" : "text-charcoal/40")}
+                                onClick={() => { setDentition('child'); setSelectedTooth(null) }}
+                                className={cn("px-4 py-1.5 text-xs font-bold rounded-soft transition-all", dentition === 'child' ? "bg-white text-primary-600 shadow-sm" : "text-charcoal/40")}
                             >
                                 Infantil
                             </button>
@@ -227,12 +247,12 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                     <div className="space-y-12 overflow-x-auto pb-4">
                         {/* Upper Arch */}
                         <div className="flex justify-center gap-1 min-w-[700px]">
-                            {adultTeethUpper.map(id => renderTooth(id))}
+                            {(dentition === 'adult' ? adultTeethUpper : childTeethUpper).map(id => renderTooth(id))}
                         </div>
                         
                         {/* Lower Arch */}
                         <div className="flex justify-center gap-1 min-w-[700px]">
-                            {adultTeethLower.map(id => renderTooth(id))}
+                            {(dentition === 'adult' ? adultTeethLower : childTeethLower).map(id => renderTooth(id))}
                         </div>
                     </div>
 
@@ -302,7 +322,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                         onChange={(e) => setTeeth(prev => ({
                                             ...prev,
                                             [selectedTooth]: {
-                                                ...(prev[selectedTooth] || { id: selectedTooth, status: 'healthy', surfaces: {} as any }),
+                                                ...(prev[selectedTooth] || { id: selectedTooth, status: 'healthy', surfaces: { vestibular: false, lingual: false, mesial: false, distal: false, oclusal: false } as any }),
                                                 notes: e.target.value
                                             }
                                         }))}
@@ -324,7 +344,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                                 const status = TOOTH_STATES[teeth[selectedTooth]!.status!].label
                                                 onAddTreatment({
                                                     description: `${status}${teeth[selectedTooth]?.notes ? `: ${teeth[selectedTooth]?.notes}` : ''}`,
-                                                    tooth_number: selectedTooth,
+                                                    tooth_number: selectedTooth as any,
                                                     unit_price: 0 // Will be defined in budget
                                                 })
                                             }}
