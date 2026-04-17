@@ -108,15 +108,17 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                 [surface]: !current.surfaces[surface]
             }
             
-            // Auto-sync: if any surface is active, status is 'caries'
+            // Auto-sync: only overwrite if current status is healthy or caries
             const hasActiveSurface = Object.values(newSurfaces).some(v => v === true)
             const newStatus: ToothData['status'] = hasActiveSurface ? 'caries' : 'healthy'
             
+            const isManualStatus = ['filling', 'crown', 'endo', 'missing', 'extraction'].includes(current.status)
+
             return {
                 ...prev,
                 [toothId]: {
                     ...current,
-                    status: (current.status === 'missing' || current.status === 'extraction') ? current.status : newStatus,
+                    status: isManualStatus ? current.status : newStatus,
                     surfaces: newSurfaces
                 }
             }
@@ -201,7 +203,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                     {data?.status && data.status !== 'healthy' && (
                         <g className="absolute inset-0 pointer-events-none">
                             <svg viewBox="0 0 100 200" className="w-full h-full overflow-visible">
-                                <circle cx="50" cy="45" r="38" className={cn("opacity-40", statusColor)} />
+                                <circle cx="50" cy="45" r="38" className={cn("opacity-60", statusColor.replace('bg-', 'fill-'))} />
                                 
                                 {data.status === 'extraction' && (
                                     <path d="M25,20 L75,70 M75,20 L25,70" className="stroke-yellow-600 stroke-[10] shadow-sm" />
@@ -306,7 +308,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                             key={id}
                                             onClick={() => updateToothStatus(selectedTooth, id as any)}
                                             className={cn(
-                                                "w-full flex items-center justify-between p-3 rounded-soft border transition-all text-sm",
+                                                "w-full flex items-center justify-between p-3 rounded-soft border transition-all text-sm group",
                                                 teeth[selectedTooth]?.status === id 
                                                     ? "bg-primary-50 border-primary-200 text-primary-700 font-bold" 
                                                     : "bg-ivory border-transparent text-charcoal/70 hover:bg-silk-beige/30"
@@ -316,7 +318,23 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                                                 <div className={cn("w-2.5 h-2.5 rounded-full shadow-sm", data.color)} />
                                                 {data.label}
                                             </div>
-                                            {teeth[selectedTooth]?.status === id && <ChevronRight className="w-4 h-4" />}
+                                            <div 
+                                                className={cn(
+                                                    "p-1 rounded-full transition-all",
+                                                    teeth[selectedTooth]?.status === id ? "bg-primary-500 text-white" : "text-charcoal/20 group-hover:text-primary-500"
+                                                )}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    updateToothStatus(selectedTooth, id as any)
+                                                    // Trigger Quick Budget
+                                                    const desc = `${data.label} en Pieza ${selectedTooth}`
+                                                    onAddTreatment?.({ description: desc, tooth_number: selectedTooth as any, unit_price: 0 })
+                                                    toast.success(`${data.label} añadido`)
+                                                }}
+                                                title="Añadir a presupuesto rápido"
+                                            >
+                                                <ChevronRight className="w-4 h-4" />
+                                            </div>
                                         </button>
                                     ))}
                                 </div>
