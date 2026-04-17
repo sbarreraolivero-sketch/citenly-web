@@ -30,7 +30,8 @@ const TOOTH_STATES = {
     missing: { label: 'Ausente', color: 'bg-charcoal/20' },
     crown: { label: 'Corona', color: 'bg-purple-500' },
     endo: { label: 'Endodoncia', color: 'bg-orange-500' }
-}export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
+}
+export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<string | number, ToothData>>({})
     const [selectedTooth, setSelectedTooth] = useState<string | number | null>(null)
     const [dentition, setDentition] = useState<'adult' | 'child'>('adult')
