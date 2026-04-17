@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Loader2, Info, ChevronRight, RotateCcw } from 'lucide-react'
+import { Save, Loader2, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
