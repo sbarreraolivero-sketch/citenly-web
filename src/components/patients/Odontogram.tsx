@@ -161,31 +161,36 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                             {/* Vestibular (Top) */}
                             <path 
                                 d="M0,8 Q40,-5 80,8 L60,25 Q40,15 20,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.vestibular ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                style={{ fill: data?.surfaces?.vestibular ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'vestibular') }}
                             />
                             {/* Distal (Left) */}
                             <path 
                                 d="M0,8 Q-5,35 0,62 L20,45 Q15,35 20,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.distal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                style={{ fill: data?.surfaces?.distal ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'distal') }}
                             />
                             {/* Mesial (Right) */}
                             <path 
                                 d="M80,8 Q85,35 80,62 L60,45 Q65,35 60,25 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.mesial ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                style={{ fill: data?.surfaces?.mesial ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'mesial') }}
                             />
                             {/* Palatino/Lingual (Bottom) */}
                             <path 
                                 d="M0,62 Q40,75 80,62 L60,45 Q40,55 20,45 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.lingual ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                style={{ fill: data?.surfaces?.lingual ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'lingual') }}
                             />
                             {/* Oclusal (Center) */}
                             <path 
                                 d="M20,25 Q40,15 60,25 L60,45 Q40,55 20,45 Z" 
-                                className={cn("transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2]", data?.surfaces?.oclusal ? "fill-red-500" : "fill-white hover:fill-primary-100")}
+                                style={{ fill: data?.surfaces?.oclusal ? TOOTH_STATES[data.status || 'caries'].hex : '#ffffff' }}
+                                className="transition-all duration-300 cursor-pointer stroke-charcoal/80 stroke-[2] hover:fill-primary-100"
                                 onClick={(e) => { e.stopPropagation(); setSelectedTooth(id); toggleSurface(id, 'oclusal') }}
                             />
                             
