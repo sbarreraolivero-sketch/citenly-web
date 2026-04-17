@@ -1,5 +1,5 @@
 -- Add specialty to clinic_settings
-ALTER TABLE clinic_settings ADD COLUMN IF NOT EXISTS specialty TEXT DEFAULT 'aesthetic' CHECK (specialty IN ('aesthetic', 'dental', 'general', 'veterinary'));
+ALTER TABLE clinic_settings ADD COLUMN IF NOT EXISTS specialty TEXT DEFAULT 'aesthetic' CHECK (specialty IN ('aesthetic', 'dental', 'general'));
 
 -- Create dental_odontograms
 CREATE TABLE IF NOT EXISTS dental_odontograms (

@@ -114,7 +114,7 @@ export default function Settings() {
     const [services, setServices] = useState<any[]>([])
     const [workingHours, setWorkingHours] = useState<any>(mockWorkingHours)
     const [businessModel, setBusinessModel] = useState<'physical' | 'mobile' | 'hybrid'>('physical')
-    const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general' | 'veterinary'>('aesthetic')
+    const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general'>('aesthetic')
     const [showMobileList, setShowMobileList] = useState(true)
 
     // Service modal state
@@ -1351,7 +1351,6 @@ export default function Settings() {
                                         >
                                             <option value="aesthetic">🎀 Estética y Bienestar</option>
                                             <option value="dental">🦷 Odontología / Dental</option>
-                                            <option value="veterinary">🐾 Veterinaria</option>
                                             <option value="general">🏥 Medicina General / Otros</option>
                                         </select>
                                         <p className="text-xs text-charcoal/40 mt-1">

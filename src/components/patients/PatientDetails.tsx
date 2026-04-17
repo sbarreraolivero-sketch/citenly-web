@@ -33,7 +33,7 @@ interface PatientDetailsProps {
 export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProps) {
     const { profile } = useAuth()
     const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery' | 'odontogram' | 'budgets'>('history')
-    const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general' | 'veterinary'>('aesthetic')
+    const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general'>('aesthetic')
     const [records, setRecords] = useState<ClinicalRecord[]>([])
     const [loadingRecords, setLoadingRecords] = useState(false)
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})

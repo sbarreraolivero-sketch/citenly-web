@@ -13,7 +13,7 @@ export interface Database {
                 Row: {
                     id: string
                     clinic_name: string
-                    specialty: 'aesthetic' | 'dental' | 'general' | 'veterinary'
+                    specialty: 'aesthetic' | 'dental' | 'general'
                     services: Json
                     working_hours: Json
                     timezone: string
