@@ -13,6 +13,8 @@ const Activity = (props: any) => <svg {...props} xmlns="http://www.w3.org/2000/s
 interface BudgetManagerProps {
     patientId: string
     clinicId: string
+    initialItems?: any[]
+    onClearedItems?: () => void
 }
 
 interface BudgetItem {
@@ -43,7 +45,7 @@ const STATUS_CONFIG = {
     cancelled: { label: 'Anulado', color: 'bg-red-50 text-red-600 border-red-100', icon: AlertCircle }
 } as any
 
-export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
+export function BudgetManager({ patientId, clinicId, initialItems, onClearedItems }: BudgetManagerProps) {
     const [budgets, setBudgets] = useState<Budget[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewModal, setShowNewModal] = useState(false)
@@ -58,6 +60,20 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
     useEffect(() => {
         fetchBudgets()
     }, [patientId])
+
+    // Load initial items from Odyssey/Odontogram if they exist
+    useEffect(() => {
+        if (initialItems && initialItems.length > 0) {
+            const formattedItems = initialItems.map(item => ({
+                ...item,
+                quantity: item.quantity || 1,
+                total_price: (item.unit_price || 0) * (item.quantity || 1)
+            }))
+            setNewItems(formattedItems)
+            setNewTitle('Presupuesto Sugerido')
+            setShowNewModal(true)
+        }
+    }, [initialItems])
 
     const fetchBudgets = async () => {
         try {
@@ -133,6 +149,7 @@ export function BudgetManager({ patientId, clinicId }: BudgetManagerProps) {
             setShowNewModal(false)
             setNewTitle('')
             setNewItems([{ description: '', quantity: 1, unit_price: 0, total_price: 0 }])
+            if (onClearedItems) onClearedItems()
             fetchBudgets()
         } catch (error) {
             console.error('Error creating budget:', error)

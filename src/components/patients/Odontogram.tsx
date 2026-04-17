@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 interface OdontogramProps {
     patientId: string
     clinicId: string
+    onAddTreatment?: (item: { description: string, tooth_number: number, unit_price: number }) => void
 }
 
 interface ToothData {
@@ -31,7 +32,7 @@ const TOOTH_STATES = {
     endo: { label: 'Endodoncia', color: 'bg-orange-500' }
 }
 
-export function Odontogram({ patientId, clinicId }: OdontogramProps) {
+export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<number, ToothData>>({})
     const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
@@ -315,6 +316,25 @@ export function Odontogram({ patientId, clinicId }: OdontogramProps) {
                                     <RotateCcw className="w-3.5 h-3.5" />
                                     Cerrar Editor
                                 </button>
+                                
+                                {onAddTreatment && teeth[selectedTooth]?.status && teeth[selectedTooth]?.status !== 'healthy' && (
+                                    <div className="mt-4 pt-4 border-t border-silk-beige">
+                                        <button
+                                            onClick={() => {
+                                                const status = TOOTH_STATES[teeth[selectedTooth]!.status!].label
+                                                onAddTreatment({
+                                                    description: `${status}${teeth[selectedTooth]?.notes ? `: ${teeth[selectedTooth]?.notes}` : ''}`,
+                                                    tooth_number: selectedTooth,
+                                                    unit_price: 0 // Will be defined in budget
+                                                })
+                                            }}
+                                            className="w-full btn-soft text-primary-600 border-primary-200 flex items-center justify-center gap-2 py-3"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            Presupuestar Tratamiento
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="py-12 text-center space-y-4 animate-fade-in">

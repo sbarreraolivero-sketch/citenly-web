@@ -37,6 +37,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const [records, setRecords] = useState<ClinicalRecord[]>([])
     const [loadingRecords, setLoadingRecords] = useState(false)
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+    const [pendingTreatments, setPendingTreatments] = useState<any[]>([])
 
     // Tag state
     const [patientTags, setPatientTags] = useState<Tag[]>([])
@@ -527,9 +528,14 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                     : 'text-charcoal/60 hover:text-charcoal'
                                     }`}
                             >
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 justify-center relative">
                                     <DollarSign className="w-4 h-4" />
                                     Presupuestos
+                                    {pendingTreatments.length > 0 && (
+                                        <span className="absolute -top-1 -right-4 w-4 h-4 bg-primary-600 text-white text-[10px] flex items-center justify-center rounded-full animate-pulse">
+                                            {pendingTreatments.length}
+                                        </span>
+                                    )}
                                 </div>
                                 {activeTab === 'budgets' && (
                                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
@@ -845,6 +851,11 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <Odontogram 
                         patientId={patient.id} 
                         clinicId={profile.clinic_id} 
+                        onAddTreatment={(item) => {
+                            setPendingTreatments(prev => [...prev, item])
+                            setActiveTab('budgets')
+                            toast.success('Tratamiento añadido al presupuesto')
+                        }}
                     />
                 )}
 
@@ -852,6 +863,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <BudgetManager 
                         patientId={patient.id} 
                         clinicId={profile.clinic_id} 
+                        initialItems={pendingTreatments}
+                        onClearedItems={() => setPendingTreatments([])}
                     />
                 )}
             </div>
