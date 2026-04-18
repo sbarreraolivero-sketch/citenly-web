@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save, FileText, Calendar, Activity, TrendingUp, Layers, ShieldCheck, Info } from 'lucide-react'
+import { X, Loader2, FileText, Calendar, TrendingUp, Layers, ShieldCheck, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -111,7 +111,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                     .single()
                 
                 if (data) {
-                    setMetadata(prev => ({ ...prev, ortho: data }))
+                    setMetadata((prev: any) => ({ ...prev, ortho: data }))
                     setRecordType('ortho')
                 } else if (record.metadata) {
                     // Fallback for old records or other metadata

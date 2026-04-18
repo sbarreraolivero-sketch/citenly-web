@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Loader2, Info, RotateCcw, Plus } from 'lucide-react'
+import { Save, Loader2, Info, RotateCcw, Plus, Activity } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
@@ -34,7 +34,7 @@ const TOOTH_STATES = {
     endo: { label: 'Endodoncia', color: 'bg-orange-500', hex: '#f97316' }
 }
 
-export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
+export function Odontogram({ patientId, clinicId, onAddTreatment, onAddClinicalRecord }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<string | number, ToothData>>({})
     const [selectedTooth, setSelectedTooth] = useState<string | number | null>(null)
     const [dentition, setDentition] = useState<'adult' | 'child'>('adult')
@@ -47,7 +47,7 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
 
     const fetchOdontogram = async () => {
         try {
-            const { data, error } = await (supabase as any)
+            const { data } = await (supabase as any)
                 .from('dental_odontograms')
                 .select('*')
                 .eq('patient_id', patientId)
