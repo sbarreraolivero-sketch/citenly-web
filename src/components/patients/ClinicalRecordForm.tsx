@@ -47,7 +47,6 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
     const { profile } = useAuth()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [services, setServices] = useState<any[]>([])
     const [recordType, setRecordType] = useState<'general' | 'ortho'>(specialty === 'dental' ? 'general' : 'general')
 
     // Photo state
@@ -85,20 +84,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
     })
 
     useEffect(() => {
-        const fetchServices = async () => {
-            if (!profile?.clinic_id) return
-            try {
-                const { data } = await supabase
-                    .from('services')
-                    .select('name')
-                    .eq('clinic_id', profile.clinic_id)
-                    .order('name', { ascending: true })
-                if (data) setServices(data)
-            } catch (err) {
-                console.error('Error fetching services:', err)
-            }
-        }
-        fetchServices()
+        // Services fetched if needed in future
     }, [profile?.clinic_id])
 
     useEffect(() => {
@@ -232,7 +218,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                             clinic_id: profile.clinic_id,
                             patient_id: patientId,
                             clinical_record_id: recordId,
-                            tooth_numbers: metadata.tooth_numbers.split(',').map((s: string) => s.trim()).filter(Boolean),
+                            tooth_numbers: (metadata as any).tooth_numbers?.split(',').map((s: string) => s.trim()).filter(Boolean),
                             ...metadata.dental_gen
                         }, { onConflict: 'clinical_record_id' })
                     if (dentalError) console.error('Error saving dental gen:', dentalError)
