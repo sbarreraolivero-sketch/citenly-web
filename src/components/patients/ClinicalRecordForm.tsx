@@ -101,10 +101,25 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                 description: record.description || '',
                 notes: record.notes || ''
             })
-            if (record.metadata) {
-                setMetadata(record.metadata)
-                if (record.metadata.ortho?.phase) setRecordType('ortho')
+            
+            // Link metadata or fetch from independent table
+            const fetchOrthoData = async () => {
+                const { data } = await supabase
+                    .from('orthodontic_evolutions')
+                    .select('*')
+                    .eq('clinical_record_id', record.id)
+                    .single()
+                
+                if (data) {
+                    setMetadata(prev => ({ ...prev, ortho: data }))
+                    setRecordType('ortho')
+                } else if (record.metadata) {
+                    // Fallback for old records or other metadata
+                    setMetadata(record.metadata)
+                    if (record.metadata.ortho?.phase) setRecordType('ortho')
+                }
             }
+            fetchOrthoData()
         }
     }, [record])
 
@@ -152,6 +167,8 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                 created_by: profile.id
             }
 
+            let recordId = record?.id
+
             if (record?.id) {
                 const { error: updateError } = await (supabase
                     .from('clinical_records') as any)
@@ -161,11 +178,31 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
 
                 if (updateError) throw updateError
             } else {
-                const { error: createError } = await (supabase
+                const { data: newRecord, error: createError } = await (supabase
                     .from('clinical_records') as any)
                     .insert([recordData])
+                    .select()
+                    .single()
 
                 if (createError) throw createError
+                recordId = newRecord.id
+            }
+
+            // 3. Save Specialized Ortho Data if applicable
+            if (recordType === 'ortho' && recordId) {
+                const orthoData = {
+                    clinic_id: profile.clinic_id,
+                    patient_id: patientId,
+                    clinical_record_id: recordId,
+                    date: formData.date,
+                    ...metadata.ortho
+                }
+
+                const { error: orthoError } = await (supabase
+                    .from('orthodontic_evolutions') as any)
+                    .upsert(orthoData, { onConflict: 'clinical_record_id' })
+
+                if (orthoError) console.error('Error saving ortho details:', orthoError)
             }
 
             onSave()
