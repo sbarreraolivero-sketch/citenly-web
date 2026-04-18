@@ -8,6 +8,7 @@ interface OdontogramProps {
     patientId: string
     clinicId: string
     onAddTreatment?: (item: any) => void
+    onAddClinicalRecord?: (data: any) => void
 }
 
 interface ToothData {
@@ -403,10 +404,38 @@ export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramPr
                         <button
                             onClick={handleSaveOdontogram}
                             disabled={saving}
-                            className="w-full flex items-center justify-center gap-3 py-4 bg-white/5 hover:bg-white/10 rounded-soft text-sm font-black border border-white/10 transition-all uppercase tracking-widest active:scale-95"
+                            className="w-full h-14 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 rounded-soft text-sm font-black border border-white/10 transition-all uppercase tracking-widest active:scale-95"
                         >
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             GUARDAR FICHA
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                if (findings.length === 0) {
+                                    toast.error('No hay hallazgos para registrar')
+                                    return
+                                }
+                                
+                                const summary = findings.map(([id, tooth]) => {
+                                    const statusLabel = TOOTH_STATES[tooth.status!].label
+                                    const activeSurfaces = Object.entries(tooth.surfaces)
+                                        .filter(([_, active]) => active)
+                                        .map(([name]) => name.charAt(0).toUpperCase())
+                                        .join(', ')
+                                    return `Pieza ${id}: ${statusLabel}${activeSurfaces ? ` (${activeSurfaces})` : ''}`
+                                }).join('\n')
+
+                                onAddClinicalRecord?.({
+                                    treatment_name: 'Control Odontológico',
+                                    description: summary,
+                                    notes: 'Generado desde Odontograma'
+                                })
+                            }}
+                            className="w-full h-14 flex items-center justify-center gap-3 bg-primary-500/10 hover:bg-primary-500/20 rounded-soft text-sm font-black border border-primary-500/30 text-primary-400 transition-all uppercase tracking-widest active:scale-95"
+                        >
+                            <Activity className="w-5 h-5" />
+                            REGISTRAR EVOLUCIÓN
                         </button>
 
                         <button

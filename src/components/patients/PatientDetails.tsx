@@ -48,6 +48,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     // Modal state for records
     const [showRecordForm, setShowRecordForm] = useState(false)
     const [editingRecord, setEditingRecord] = useState<ClinicalRecord | null>(null)
+    const [prefilledRecordData, setPrefilledRecordData] = useState<any>(null)
 
     // Notes editing state
     const [isEditingNotes, setIsEditingNotes] = useState(false)
@@ -860,6 +861,11 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                 : 'Tratamiento añadido'
                             )
                         }}
+                        onAddClinicalRecord={(data) => {
+                            setPrefilledRecordData(data)
+                            setEditingRecord(null)
+                            setShowRecordForm(true)
+                        }}
                     />
                 )}
 
@@ -885,12 +891,16 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                 <ClinicalRecordForm
                     patientId={patient.id}
                     record={editingRecord}
+                    specialty={specialty}
+                    initialData={prefilledRecordData}
                     onClose={() => {
                         setShowRecordForm(false)
                         setEditingRecord(null)
+                        setPrefilledRecordData(null)
                     }}
                     onSave={() => {
                         fetchRecords()
+                        setPrefilledRecordData(null)
                     }}
                 />
             )}
