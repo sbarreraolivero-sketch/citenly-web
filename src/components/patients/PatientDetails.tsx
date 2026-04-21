@@ -3,7 +3,7 @@ import {
     Phone, Mail, MapPin, Calendar,
     FileText, Plus, Edit2, Trash2, ArrowLeft,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy,
-    Activity, DollarSign, ShieldAlert
+    Activity, DollarSign, ShieldAlert, Pill, Info
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -48,6 +48,28 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
     const [suggestedTags, setSuggestedTags] = useState<Tag[]>([])
     const [showTagSelector, setShowTagSelector] = useState(false)
 
+    // Inline Editing states
+    const [isEditingInfo, setIsEditingInfo] = useState(false)
+    const [infoForm, setInfoForm] = useState({
+        name: patient.name || '',
+        rut: patient.rut || '',
+        email: patient.email || '',
+        address: patient.address || '',
+        gender: patient.gender || '',
+        insurance_provider: patient.insurance_provider || '',
+        internal_id: patient.internal_id || '',
+        birth_date: patient.birth_date || ''
+    })
+    const [savingInfo, setSavingInfo] = useState(false)
+
+    const [isEditingSecurity, setIsEditingSecurity] = useState(false)
+    const [securityForm, setSecurityForm] = useState({
+        is_high_risk: patient.is_high_risk || false,
+        allergies: patient.allergies || '',
+        medical_history: patient.medical_history || ''
+    })
+    const [savingSecurity, setSavingSecurity] = useState(false)
+
     // Modal state for records
     const [showRecordForm, setShowRecordForm] = useState(false)
     const [editingRecord, setEditingRecord] = useState<ClinicalRecord | null>(null)
@@ -68,10 +90,65 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
         window.scrollTo(0, 0)
     }, [])
 
-    // Sync notes buffer when patient prop updates (important for post-save update)
+    // Sync buffers when patient prop updates
     useEffect(() => {
         setNotesBuffer(patient.notes || '')
-    }, [patient.notes])
+        setInfoForm({
+            name: patient.name || '',
+            rut: patient.rut || '',
+            email: patient.email || '',
+            address: patient.address || '',
+            gender: patient.gender || '',
+            insurance_provider: patient.insurance_provider || '',
+            internal_id: patient.internal_id || '',
+            birth_date: patient.birth_date || ''
+        })
+        setSecurityForm({
+            is_high_risk: patient.is_high_risk || false,
+            allergies: patient.allergies || '',
+            medical_history: patient.medical_history || ''
+        })
+    }, [patient])
+
+    const handleSaveInfo = async () => {
+        setSavingInfo(true)
+        try {
+            const { error } = await supabase
+                .from('patients')
+                .update(infoForm)
+                .eq('id', patient.id)
+            
+            if (error) throw error
+            toast.success('Información personal actualizada')
+            if (onUpdate) await onUpdate()
+            setIsEditingInfo(false)
+        } catch (error) {
+            console.error('Error updating info:', error)
+            toast.error('Error al actualizar información')
+        } finally {
+            setSavingInfo(false)
+        }
+    }
+
+    const handleSaveSecurity = async () => {
+        setSavingSecurity(true)
+        try {
+            const { error } = await supabase
+                .from('patients')
+                .update(securityForm)
+                .eq('id', patient.id)
+            
+            if (error) throw error
+            toast.success('Seguridad clínica actualizada')
+            if (onUpdate) await onUpdate()
+            setIsEditingSecurity(false)
+        } catch (error) {
+            console.error('Error updating security:', error)
+            toast.error('Error al actualizar seguridad')
+        } finally {
+            setSavingSecurity(false)
+        }
+    }
 
     useEffect(() => {
         if (profile?.clinic_id) {
@@ -100,7 +177,6 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
     const fetchTags = async () => {
         if (!profile?.clinic_id) return
         try {
-            // Fetch all available tags for the clinic
             const { data: allTags } = await supabase
                 .from('tags')
                 .select('*')
@@ -109,14 +185,12 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
 
             if (allTags) setAvailableTags(allTags)
 
-            // Fetch tags assigned to this patient
             const { data: pTags } = await supabase
                 .from('patient_tags')
                 .select('tag_id, tags(*)')
                 .eq('patient_id', patient.id)
 
             if (pTags) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setPatientTags(pTags.map((pt: any) => pt.tags))
             }
         } catch (error) {
@@ -131,7 +205,6 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
 
         try {
             if (isAssigned) {
-                // Remove tag
                 const { error } = await supabase
                     .from('patient_tags')
                     .delete()
@@ -141,7 +214,6 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                 if (error) throw error
                 setPatientTags(patientTags.filter(t => t.id !== tag.id))
             } else {
-                // Add tag
                 const { error } = await supabase
                     .from('patient_tags')
                     .insert({
@@ -152,7 +224,6 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                 if (error) throw error
                 setPatientTags([...patientTags, tag])
             }
-            // Notify parent to update list view if needed
             if (onUpdate) await onUpdate()
         } catch (error) {
             console.error('Error toggling tag:', error)
@@ -175,11 +246,9 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
 
             if (error) throw error
 
-            // Cast data to expected type since inference might fail locally
             const typedData = (data || []) as unknown as ClinicalRecord[]
             setRecords(typedData)
 
-            // Generate signed URLs for all images
             const urls: Record<string, string> = {}
             if (typedData) {
                 for (const record of typedData) {
@@ -188,7 +257,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                             if (att.path && att.type === 'image') {
                                 const { data: signedData } = await supabase.storage
                                     .from('clinical-photos')
-                                    .createSignedUrl(att.path, 3600) // 1 hour expiry
+                                    .createSignedUrl(att.path, 3600)
 
                                 if (signedData?.signedUrl) {
                                     urls[att.path] = signedData.signedUrl
@@ -240,12 +309,8 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
     // Compute suggested tags whenever dependencies change
     useEffect(() => {
         if (availableTags.length > 0) {
-            console.log('Computing suggestions...', { patient, records: records.length, available: availableTags.map(t => t.name) })
             const suggestions = suggestTags(patient, records as any, patientTags, availableTags)
-            console.log('Suggestions computed:', suggestions)
             setSuggestedTags(suggestions)
-        } else {
-            console.log('No available tags to compute suggestions')
         }
     }, [patient, records, patientTags, availableTags])
 
@@ -269,14 +334,13 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
     const handleSaveNotes = async () => {
         setSavingNotes(true)
         try {
-            const { error } = await (supabase
-                .from('patients') as any)
+            const { error } = await supabase
+                .from('patients')
                 .update({ notes: notesBuffer })
                 .eq('id', patient.id)
 
             if (error) throw error
 
-            // Notify parent to update data and WAIT for it
             if (onUpdate) await onUpdate()
             setIsEditingNotes(false)
         } catch (error) {
@@ -292,8 +356,6 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
             setSelectedImages(selectedImages.filter(p => p !== path))
         } else {
             if (selectedImages.length >= 2) {
-                // Remove the first one and add new one (FIFO) or just block? 
-                // FIFO feels better for quick switching
                 setSelectedImages([...selectedImages.slice(1), path])
             } else {
                 setSelectedImages([...selectedImages, path])
@@ -301,7 +363,6 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
         }
     }
 
-    // Prepare gallery images
     const allImages = records.flatMap(r =>
         (r.attachments || [])
             .filter((a: any) => a.type === 'image')
@@ -326,174 +387,18 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
 
     return (
         <div className="space-y-6 animate-fade-in relative pb-20">
-            {/* Clinical Security Header (Sticky) */}
-            <PatientSecurityHeader patient={patient} financialSummary={financialSummary} />
-
-            {/* Header / Navigation */}
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={onBack}
-                        className="p-2 hover:bg-silk-beige rounded-full text-charcoal/60 hover:text-charcoal transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-charcoal">{patient.name}</h1>
-                        <p className="text-charcoal/60 text-sm">Ficha Clínica Digital</p>
-                    </div>
-                </div>
-
-                {/* Tags Section */}
-                <div className="flex flex-wrap items-center gap-2 pl-12">
-                    {patientTags.map(tag => (
-                        <span
-                            key={tag.id}
-                            className="px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1"
-                            style={{
-                                backgroundColor: `${tag.color}20`,
-                                color: tag.color,
-                                borderColor: `${tag.color}40`
-                            }}
-                        >
-                            {tag.name}
-                        </span>
-                    ))}
-
-                    <div className="relative">
-                        <button
-                            onClick={() => setShowTagSelector(!showTagSelector)}
-                            className="px-2 py-0.5 rounded-full text-xs font-medium border border-dashed border-charcoal/30 text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal flex items-center gap-1 transition-colors"
-                        >
-                            <Plus className="w-3 h-3" />
-                            Etiquetar
-                        </button>
-
-                        {showTagSelector && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setShowTagSelector(false)}
-                                />
-                                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-soft shadow-premium border border-silk-beige z-20 overflow-hidden animate-fade-in">
-                                    <div className="p-2 border-b border-silk-beige bg-ivory/50">
-                                        <p className="text-xs font-medium text-charcoal/60 uppercase">Asignar Etiqueta</p>
-                                    </div>
-                                    <div className="max-h-48 overflow-y-auto p-1">
-                                        {availableTags.length === 0 ? (
-                                            <p className="text-xs text-charcoal/40 p-2 text-center">No hay etiquetas creadas. Ve a Configuración para crear una.</p>
-                                        ) : (
-                                            availableTags.map(tag => {
-                                                const isSelected = patientTags.some(t => t.id === tag.id)
-                                                return (
-                                                    <button
-                                                        key={tag.id}
-                                                        onClick={() => handleToggleTag(tag)}
-                                                        className="w-full text-left px-2 py-1.5 rounded hover:bg-gray-50 flex items-center justify-between group"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <span
-                                                                className="w-3 h-3 rounded-full"
-                                                                style={{ backgroundColor: tag.color }}
-                                                            />
-                                                            <span className={`text-sm ${isSelected ? 'font-medium text-charcoal' : 'text-charcoal/80'}`}>
-                                                                {tag.name}
-                                                            </span>
-                                                        </div>
-                                                        {isSelected && <Check className="w-3.5 h-3.5 text-primary-600" />}
-                                                    </button>
-                                                )
-                                            })
-                                        )}
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Suggested Tags */}
-                    {suggestedTags.length > 0 && (
-                        <div className="flex items-center gap-2 ml-4 border-l border-silk-beige pl-4 animate-fade-in">
-                            <span className="text-xs text-charcoal/40 italic">Sugerencias:</span>
-                            {suggestedTags.map(tag => (
-                                <button
-                                    key={tag.id}
-                                    onClick={() => handleToggleTag(tag)}
-                                    className="px-2 py-0.5 rounded-full text-xs font-medium border border-dashed hover:border-solid hover:bg-opacity-20 transition-all flex items-center gap-1 opacity-70 hover:opacity-100"
-                                    style={{
-                                        borderColor: tag.color,
-                                        color: tag.color,
-                                        backgroundColor: `${tag.color}10`
-                                    }}
-                                    title="Clic para asignar"
-                                >
-                                    + {tag.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Quick Stats / Info Card */}
-            <div className="card-soft p-6 bg-white shadow-sm border border-silk-beige">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-                            <Phone className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-charcoal/50 uppercase font-medium">Teléfono</p>
-                            <p className="text-charcoal">{formatPhoneNumber(patient.phone_number)}</p>
-                        </div>
-                    </div>
-                    {patient.email && (
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-silk-beige flex items-center justify-center text-charcoal/60">
-                                <Mail className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-charcoal/50 uppercase font-medium">Email</p>
-                                <p className="text-charcoal">{patient.email}</p>
-                            </div>
-                        </div>
-                    )}
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-silk-beige flex items-center justify-center text-charcoal/60">
-                            <Calendar className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-charcoal/50 uppercase font-medium">Última Visita</p>
-                            <p className="text-charcoal">
-                                {patient.last_appointment_at
-                                    ? new Date(patient.last_appointment_at).toLocaleDateString()
-                                    : 'Sin visitas registradas'}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 group/ref">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
-                                <FileText className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-charcoal/50 uppercase font-medium">Código Referido</p>
-                                <p className="text-primary-700 font-bold font-mono">{(patient as any).referral_code || '---'}</p>
-                            </div>
-                        </div>
-                        {(patient as any).referral_code && (
-                            <button 
-                                onClick={copyReferralLink}
-                                className="p-2 hover:bg-primary-50 text-primary-600 rounded-full transition-all border border-transparent hover:border-primary-100 flex items-center gap-1.5"
-                                title="Copiar Enlace Mágico"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                <span className="text-[10px] font-bold uppercase">Link</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
+            {/* Clinical Security Header (Sticky & Consolidated) */}
+            <PatientSecurityHeader 
+                patient={patient} 
+                financialSummary={financialSummary} 
+                onBack={onBack}
+                patientTags={patientTags}
+                availableTags={availableTags}
+                onToggleTag={handleToggleTag}
+                showTagSelector={showTagSelector}
+                setShowTagSelector={setShowTagSelector}
+                suggestedTags={suggestedTags}
+            />
 
             {/* Tabs */}
             <div className="border-b border-silk-beige">
@@ -507,7 +412,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                     >
                         Información Personal
                         {activeTab === 'info' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
                         )}
                     </button>
                     <button
@@ -519,7 +424,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                     >
                         Historial Clínico
                         {activeTab === 'history' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
                         )}
                     </button>
                     <button
@@ -531,7 +436,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                     >
                         Galería
                         {activeTab === 'gallery' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
                         )}
                     </button>
 
@@ -549,7 +454,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                                     Odontograma
                                 </div>
                                 {activeTab === 'odontogram' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
                                 )}
                             </button>
                             <button
@@ -569,7 +474,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                                     )}
                                 </div>
                                 {activeTab === 'budgets' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
                                 )}
                             </button>
                         </>
@@ -577,156 +482,300 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Content Tab: Personal Info (Refactored Layout) */}
             <div className="min-h-[400px]">
                 {activeTab === 'info' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                        {/* Contact Information */}
-                        <div className="card-soft p-6 shadow-md border-silk-beige-dark">
-                            <h3 className="font-bold text-charcoal uppercase tracking-tight text-sm mb-6 border-b border-silk-beige pb-2">Datos de Contacto</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest block mb-1">Dirección</label>
-                                    <div className="flex items-start gap-2">
-                                        <MapPin className="w-4 h-4 text-charcoal/40 mt-1" />
-                                        <p className="text-charcoal font-medium">{patient.address || 'No especificada'}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest block mb-1">Servicio de Interés</label>
-                                    <p className="text-charcoal font-bold">{patient.service || 'No especificado'}</p>
-                                </div>
-                                {patient.referred_by_code && (
-                                    <div>
-                                        <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest block mb-1">Referido por Código</label>
-                                        <p className="text-charcoal font-bold">{patient.referred_by_code}</p>
-                                    </div>
-                                )}
-                                <div className="pt-4 border-t border-silk-beige mt-4">
-                                    <label className="text-[11px] text-primary-700 uppercase font-black tracking-widest block mb-2">Código de Referido (Embajador)</label>
-                                    <div className="flex items-center justify-between bg-primary-50 p-3 rounded-soft border border-primary-100">
-                                        <span className="text-lg font-black text-primary-900">{(patient as any).referral_code || '---'}</span>
+                    <div className="animate-fade-in space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* 1. Datos de Contacto Card (Editable) */}
+                            <div className="card-soft p-6 shadow-md border-silk-beige-dark relative">
+                                <div className="flex justify-between items-center mb-6 border-b border-silk-beige pb-2">
+                                    <h3 className="font-black text-charcoal uppercase tracking-tight text-sm">Datos de Contacto</h3>
+                                    {!isEditingInfo ? (
                                         <button 
-                                            onClick={copyReferralLink}
-                                            className="btn-soft bg-white text-primary-600 hover:bg-white shadow-sm flex items-center gap-2 px-3 py-1.5"
+                                            onClick={() => setIsEditingInfo(true)}
+                                            className="p-1.5 hover:bg-silk-beige rounded-full text-charcoal/40 hover:text-primary-600 transition-colors"
                                         >
-                                            <Copy className="w-3 h-3" />
-                                            Copiar Link Mágico
+                                            <Edit2 className="w-4 h-4" />
                                         </button>
-                                        className="p-1.5 hover:bg-silk-beige rounded text-charcoal/60 transition-colors"
-                                        title="Editar notas"
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => setIsEditingInfo(false)}
+                                                className="text-xs font-bold text-charcoal/40 hover:text-charcoal px-2 py-1"
+                                                disabled={savingInfo}
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button 
+                                                onClick={handleSaveInfo}
+                                                className="text-xs font-black text-primary-600 hover:text-primary-700 px-2 py-1 bg-primary-50 rounded"
+                                                disabled={savingInfo}
+                                            >
+                                                {savingInfo ? '...' : 'Guardar'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Nombre Completo</label>
+                                            {isEditingInfo ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={infoForm.name}
+                                                    onChange={e => setInfoForm({...infoForm, name: e.target.value})}
+                                                    className="input-soft w-full text-sm py-1 px-2"
+                                                />
+                                            ) : (
+                                                <p className="text-charcoal font-bold">{patient.name || '---'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">RUT</label>
+                                            {isEditingInfo ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={infoForm.rut}
+                                                    onChange={e => setInfoForm({...infoForm, rut: e.target.value})}
+                                                    className="input-soft w-full text-sm py-1 px-2"
+                                                />
+                                            ) : (
+                                                <p className="text-charcoal font-bold">{patient.rut || '---'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Email</label>
+                                            {isEditingInfo ? (
+                                                <input 
+                                                    type="email" 
+                                                    value={infoForm.email}
+                                                    onChange={e => setInfoForm({...infoForm, email: e.target.value})}
+                                                    className="input-soft w-full text-sm py-1 px-2"
+                                                />
+                                            ) : (
+                                                <p className="text-charcoal font-bold truncate">{patient.email || '---'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Teléfono (No editable)</label>
+                                            <div className="flex items-center gap-2 text-charcoal/40 font-bold">
+                                                <Phone className="w-3.5 h-3.5" />
+                                                <span>{formatPhoneNumber(patient.phone_number)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Dirección</label>
+                                        {isEditingInfo ? (
+                                            <input 
+                                                type="text" 
+                                                value={infoForm.address}
+                                                onChange={e => setInfoForm({...infoForm, address: e.target.value})}
+                                                className="input-soft w-full text-sm py-1 px-2"
+                                            />
+                                        ) : (
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="w-4 h-4 text-charcoal/30 mt-0.5" />
+                                                <p className="text-charcoal font-bold">{patient.address || 'No especificada'}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Género</label>
+                                            {isEditingInfo ? (
+                                                <select 
+                                                    value={infoForm.gender}
+                                                    onChange={e => setInfoForm({...infoForm, gender: e.target.value})}
+                                                    className="input-soft w-full text-xs py-1 px-2"
+                                                >
+                                                    <option value="">Seleccionar</option>
+                                                    <option value="Femenino">Femenino</option>
+                                                    <option value="Masculino">Masculino</option>
+                                                    <option value="Otro">Otro</option>
+                                                </select>
+                                            ) : (
+                                                <p className="text-charcoal font-bold">{patient.gender || '---'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">ID Clínico / Convenio</label>
+                                            {isEditingInfo ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={infoForm.insurance_provider}
+                                                    onChange={(e) => setInfoForm({...infoForm, insurance_provider: e.target.value})}
+                                                    className="input-soft w-full text-sm py-1 px-2"
+                                                    placeholder="Ej: Particular / Isapre"
+                                                />
+                                            ) : (
+                                                <p className="text-charcoal font-bold">{patient.insurance_provider || '---'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 2. Seguridad Clínica Card (Editable, Replaces old Notes) */}
+                            <div className={cn(
+                                "card-soft p-6 shadow-md transition-all relative border-2",
+                                patient.is_high_risk ? "bg-red-50 border-red-200" : "bg-white border-silk-beige"
+                            )}>
+                                <div className="flex justify-between items-center mb-6 border-b border-black/5 pb-2">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-black text-charcoal uppercase tracking-tight text-sm">Seguridad Clínica</h3>
+                                        {patient.is_high_risk && <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">ALTO RIESGO</span>}
+                                    </div>
+                                    {!isEditingSecurity ? (
+                                        <button 
+                                            onClick={() => setIsEditingSecurity(true)}
+                                            className="p-1.5 hover:bg-black/5 rounded-full text-charcoal/40 hover:text-primary-600 transition-colors"
+                                        >
+                                            <Edit2 className="w-4 h-4" />
+                                        </button>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => setIsEditingSecurity(false)}
+                                                className="text-xs font-bold text-charcoal/40 hover:text-charcoal px-2 py-1"
+                                                disabled={savingSecurity}
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button 
+                                                onClick={handleSaveSecurity}
+                                                className="text-xs font-black text-primary-600 hover:text-primary-700 px-2 py-1 bg-primary-50 rounded"
+                                                disabled={savingSecurity}
+                                            >
+                                                {savingSecurity ? '...' : 'Guardar'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between bg-black/5 p-3 rounded-soft">
+                                        <div className="flex items-center gap-2">
+                                            <ShieldAlert className={cn("w-5 h-5", securityForm.is_high_risk ? "text-red-600" : "text-charcoal/30")} />
+                                            <div>
+                                                <p className="text-[11px] font-black uppercase text-charcoal/60 leading-none">Alerta Médica de Riesgo</p>
+                                                <p className="text-[10px] font-bold text-charcoal/40 mt-1">Activar esta alerta marcará al paciente como Crítico.</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            disabled={!isEditingSecurity}
+                                            onClick={() => setSecurityForm({...securityForm, is_high_risk: !securityForm.is_high_risk})}
+                                            className={cn(
+                                                "w-12 h-6 rounded-full p-1 transition-all",
+                                                !isEditingSecurity ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                                                securityForm.is_high_risk ? "bg-red-600 border border-red-700" : "bg-charcoal/20"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "w-4 h-4 bg-white rounded-full shadow-sm transition-all transform",
+                                                securityForm.is_high_risk ? "translate-x-6" : "translate-x-0"
+                                            )}></div>
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <Activity className="w-4 h-4 text-amber-600" />
+                                            <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest">Alergias</label>
+                                        </div>
+                                        {isEditingSecurity ? (
+                                            <textarea 
+                                                value={securityForm.allergies}
+                                                onChange={e => setSecurityForm({...securityForm, allergies: e.target.value})}
+                                                className="input-soft w-full text-xs p-2 min-h-[60px] resize-none"
+                                                placeholder="Ej: Penicilina, Látex..."
+                                            />
+                                        ) : (
+                                            <p className={cn("text-sm font-bold min-h-[40px] p-2 bg-black/5 rounded", patient.allergies ? "text-amber-800" : "text-charcoal/40 italic")}>
+                                                {patient.allergies || 'Sin alergias registradas'}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <Pill className="w-4 h-4 text-blue-600" />
+                                            <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest">Medicamentos / Enf.</label>
+                                        </div>
+                                        {isEditingSecurity ? (
+                                            <textarea 
+                                                value={securityForm.medical_history}
+                                                onChange={e => setSecurityForm({...securityForm, medical_history: e.target.value})}
+                                                className="input-soft w-full text-xs p-2 min-h-[60px] resize-none"
+                                                placeholder="Ej: Hipertensión, Metformina 500mg..."
+                                            />
+                                        ) : (
+                                            <p className={cn("text-sm font-bold min-h-[40px] p-2 bg-black/5 rounded", patient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
+                                                {patient.medical_history || 'Sin antecedentes registrados'}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. Notas Generales (Moved below) */}
+                        <div className="card-soft p-6 shadow-md border-silk-beige-dark">
+                            <div className="flex justify-between items-center mb-6 border-b border-silk-beige pb-2">
+                                <h3 className="font-black text-charcoal uppercase tracking-tight text-sm">Notas Generales de Gestión</h3>
+                                {!isEditingNotes ? (
+                                    <button
+                                        onClick={() => setIsEditingNotes(true)}
+                                        className="p-1.5 hover:bg-silk-beige rounded-full text-charcoal/40 hover:text-primary-600 transition-colors"
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </button>
-                                )}
-                            </div>
-
-                            {isEditingNotes ? (
-                                <div className="space-y-3">
-                                    <textarea
-                                        value={notesBuffer}
-                                        onChange={(e) => setNotesBuffer(e.target.value)}
-                                        className="w-full min-h-[120px] p-3 rounded-soft border border-silk-beige bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-none text-sm text-charcoal"
-                                        placeholder="Escribe notas importantes sobre el paciente..."
-                                        autoFocus
-                                    />
-                                    <div className="flex justify-end gap-2">
-                                        <button
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <button 
                                             onClick={() => setIsEditingNotes(false)}
-                                            className="px-3 py-1.5 text-xs font-medium text-charcoal/60 hover:text-charcoal hover:bg-silk-beige/50 rounded transition-colors"
+                                            className="text-xs font-bold text-charcoal/40 hover:text-charcoal px-2 py-1"
                                             disabled={savingNotes}
                                         >
                                             Cancelar
                                         </button>
-                                        <button
+                                        <button 
                                             onClick={handleSaveNotes}
+                                            className="text-xs font-black text-primary-600 hover:text-primary-700 px-2 py-1 bg-primary-50 rounded"
                                             disabled={savingNotes}
-                                            className="px-3 py-1.5 text-xs font-medium bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors flex items-center gap-1"
                                         >
-                                            {savingNotes ? 'Guardando...' : 'Guardar'}
+                                            {savingNotes ? '...' : 'Guardar'}
                                         </button>
                                     </div>
-                                </div>
+                                )}
+                            </div>
+
+                            {isEditingNotes ? (
+                                <textarea
+                                    value={notesBuffer}
+                                    onChange={(e) => setNotesBuffer(e.target.value)}
+                                    className="w-full min-h-[120px] p-3 rounded-soft border border-silk-beige bg-white focus:outline-none focus:ring-2 focus:ring-primary-100 resize-none text-sm text-charcoal"
+                                    placeholder="Escribe notas de seguimiento para recepción o administración..."
+                                    autoFocus
+                                />
                             ) : (
-                                <div className="bg-ivory/50 p-4 rounded-soft border border-silk-beige/50 min-h-[100px]">
-                                    {patient.notes ? (
-                                        <p className="text-charcoal whitespace-pre-wrap">{patient.notes}</p>
-                                    ) : (
-                                        <p className="text-charcoal/40 italic">Sin notas generales</p>
-                                    )}
+                                <div className="bg-silk-beige/30 p-4 rounded-soft border border-silk-beige/50 min-h-[100px]">
+                                    <p className={cn(
+                                        "text-sm leading-relaxed whitespace-pre-wrap",
+                                        patient.notes ? "text-charcoal" : "text-charcoal/40 italic"
+                                    )}>
+                                        {patient.notes || 'No hay notas generales registradas.'}
+                                    </p>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Clinical Security Section */}
-                        <div className={cn(
-                            "md:col-span-2 p-8 rounded-softer border-2 transition-all relative overflow-hidden",
-                            patient.is_high_risk 
-                                ? "bg-red-50 border-red-200 shadow-lg shadow-red-100" 
-                                : "bg-white border-primary-100 shadow-sm"
-                        )}>
-                            <div className="flex items-center justify-between mb-8 border-b border-black/5 pb-4">
-                                <div className="flex items-center gap-4">
-                                    <div className={cn(
-                                        "w-12 h-12 rounded-full flex items-center justify-center",
-                                        patient.is_high_risk ? "bg-red-600 text-white animate-pulse" : "bg-primary-100 text-primary-700"
-                                    )}>
-                                        <ShieldAlert className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-black text-charcoal uppercase tracking-tight text-lg">Seguridad Clínica</h3>
-                                        <p className="text-[11px] text-charcoal/60 font-bold uppercase tracking-widest">Protocolo de Riesgo y Alertas</p>
-                                    </div>
-                                    {patient.is_high_risk && (
-                                        <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ml-4">
-                                            Alto Riesgo Confirmado
-                                        </span>
-                                    )}
-                                </div>
-                                <button 
-                                    onClick={() => onEdit && onEdit(patient)}
-                                    className="btn-soft bg-white border-silk-beige hover:border-primary-500 shadow-sm flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest text-primary-700"
-                                >
-                                    <Edit2 className="w-4 h-4" />
-                                    Editar Seguridad
-                                </button>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <div className={cn(
-                                    "p-4 rounded-soft border-l-4 transition-all",
-                                    patient.allergies ? "bg-red-50/50 border-red-500" : "bg-silk-beige/20 border-silk-beige"
-                                )}>
-                                    <label className="text-[11px] text-charcoal/80 uppercase font-black tracking-widest block mb-2">Alergias</label>
-                                    <p className={cn("text-base font-bold", patient.allergies ? "text-red-700" : "text-charcoal/40 italic")}>
-                                        {patient.allergies || 'Sin alergias registradas'}
-                                    </p>
-                                </div>
-                                
-                                <div className={cn(
-                                    "p-4 rounded-soft border-l-4 transition-all",
-                                    patient.medical_history ? "bg-blue-50/50 border-blue-500" : "bg-silk-beige/20 border-silk-beige"
-                                )}>
-                                    <label className="text-[11px] text-charcoal/80 uppercase font-black tracking-widest block mb-2">Condiciones Médicas</label>
-                                    <p className={cn("text-base font-bold", patient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
-                                        {patient.medical_history || 'Sin antecedentes registrados'}
-                                    </p>
-                                </div>
-
-                                <div className={cn(
-                                    "p-4 rounded-soft border-l-4 transition-all bg-silk-beige/20 border-silk-beige"
-                                )}>
-                                    <label className="text-[11px] text-charcoal/80 uppercase font-black tracking-widest block mb-2">Convenio / Seguro</label>
-                                    <p className={cn("text-base font-bold", patient.insurance_provider ? "text-primary-800" : "text-charcoal/40 italic")}>
-                                        {patient.insurance_provider || 'Particular / Sin convenio'}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="mt-8 flex items-center gap-3 text-[10px] text-charcoal/50 font-medium bg-black/5 p-3 rounded border border-black/5">
-                                <Info className="w-4 h-4 shrink-0" />
-                                <p>* Esta información es crítica para la seguridad del paciente. Siempre verifique antes de iniciar cualquier procedimiento invasivo.</p>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -892,8 +941,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                                     return (
                                         <div
                                             key={idx}
-                                            className={`aspect-square rounded-soft overflow-hidden border relative group cursor-pointer shadow-sm hover:shadow-md transition-all ${isSelected ? 'border-primary-500 ring-2 ring-primary-500 ring-offset-2' : 'border-silk-beige'
-                                                }`}
+                                            className={`aspect-square rounded-soft overflow-hidden border relative group cursor-pointer shadow-sm hover:shadow-md transition-all ${isSelected ? 'border-primary-500 ring-2 ring-primary-500 ring-offset-2' : 'border-silk-beige'}`}
                                             onClick={() => {
                                                 if (comparisonMode) toggleImageSelection(img.path)
                                             }}
@@ -908,8 +956,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                                             {/* Selection Overlay */}
                                             {comparisonMode && (
                                                 <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${isSelected ? 'bg-primary-500 border-primary-500 text-white' : 'border-white bg-black/30'
-                                                        }`}>
+                                                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${isSelected ? 'bg-primary-500 border-primary-500 text-white' : 'border-white bg-black/30'}`}>
                                                         {isSelected && <Check className="w-5 h-5" />}
                                                     </div>
                                                 </div>
@@ -950,8 +997,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                             setActiveTab('budgets')
                             toast.success(newItems.length > 1 
                                 ? `${newItems.length} tratamientos añadidos` 
-                                : 'Tratamiento añadido'
-                            )
+                                : 'Tratamiento añadido')
                         }}
                         onAddClinicalRecord={(data) => {
                             setPrefilledRecordData(data)
