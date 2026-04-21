@@ -284,9 +284,7 @@ export default function Patients() {
                                 >
                                     Prospectos
                                 </button>
-                            </div>
                         </>
-                    )}
 
                     <div className="flex gap-6 relative">
                         {/* Main Content */}
@@ -586,10 +584,10 @@ export default function Patients() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </>
                     )}
-                </div>
-            )}
+                    </div>
+                )}
 
             {isFormOpen && (
                 <PatientForm
