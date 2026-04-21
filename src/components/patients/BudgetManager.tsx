@@ -54,6 +54,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
     
     // New Budget Form
     const [newTitle, setNewTitle] = useState('')
+    const [discountPercentage, setDiscountPercentage] = useState(0)
     const [newItems, setNewItems] = useState<BudgetItem[]>([
         { description: '', quantity: 1, unit_price: 0, total_price: 0 }
     ])
@@ -114,8 +115,13 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
         setNewItems(updated)
     }
 
-    const calculateTotal = () => {
+    const calculateSubtotal = () => {
         return newItems.reduce((acc, item) => acc + item.total_price, 0)
+    }
+
+    const calculateTotal = () => {
+        const subtotal = calculateSubtotal()
+        return subtotal - (subtotal * (discountPercentage / 100))
     }
 
     const handleCreateBudget = async () => {
@@ -130,7 +136,8 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                     patient_id: patientId,
                     title: newTitle,
                     total_amount: total,
-                    status: 'draft'
+                    status: 'draft',
+                    notes: discountPercentage > 0 ? `[DESCUENTO:${discountPercentage}%]` : ''
                 })
                 .select()
                 .single()
@@ -546,19 +553,46 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-silk-beige bg-white flex items-center justify-between shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
-                            <div>
-                                <p className="text-xs uppercase font-bold text-charcoal/70 mb-1 tracking-widest">Total del Presupuesto</p>
-                                <p className="text-3xl font-black text-charcoal">${calculateTotal().toLocaleString()}</p>
+                        <div className="p-8 border-t border-silk-beige bg-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
+                            <div className="flex flex-col md:flex-row items-center gap-8 w-full md:w-auto">
+                                <div className="text-center md:text-left">
+                                    <p className="text-[10px] uppercase font-black text-charcoal/40 mb-1 tracking-widest leading-none">Subtotal</p>
+                                    <p className="text-xl font-bold text-charcoal/60 decoration-charcoal/20 line-through decoration-2">${calculateSubtotal().toLocaleString()}</p>
+                                </div>
+                                <div className="flex items-center gap-3 bg-emerald-50 px-4 py-2 rounded-soft border border-emerald-100">
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase font-black text-emerald-800 mb-1 tracking-widest leading-none">Descuento (%)</p>
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            max="100"
+                                            value={discountPercentage}
+                                            onChange={(e) => setDiscountPercentage(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                                            className="w-16 h-8 text-center bg-white border border-emerald-200 rounded-soft text-sm font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="h-8 w-px bg-emerald-200" />
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black text-emerald-800 mb-1 tracking-widest leading-none">Ahorro</p>
+                                        <p className="text-sm font-black text-emerald-700">-${(calculateSubtotal() * (discountPercentage / 100)).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <div className="text-center md:text-left">
+                                    <p className="text-[10px] uppercase font-black text-primary-800 mb-1 tracking-widest leading-none">Total Neto</p>
+                                    <p className="text-4xl font-black text-charcoal tracking-tighter animate-fade-in" key={calculateTotal()}>
+                                        <span className="text-xl mr-1 opacity-40">$</span>
+                                        {calculateTotal().toLocaleString()}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex gap-4">
-                                <button onClick={() => setShowNewModal(false)} className="btn-ghost">Cancelar</button>
+                            <div className="flex gap-4 w-full md:w-auto">
+                                <button onClick={() => setShowNewModal(false)} className="btn-ghost flex-1 md:flex-none py-4 px-8 text-xs font-black uppercase tracking-widest">Cancelar</button>
                                 <button 
                                     onClick={handleCreateBudget}
-                                    disabled={saving || !newTitle}
-                                    className="btn-primary px-8 flex items-center gap-2"
+                                    disabled={saving || !newTitle || newItems.length === 0}
+                                    className="btn-primary flex-1 md:flex-none px-12 py-4 shadow-xl shadow-primary-500/20 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3"
                                 >
-                                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Crear Presupuesto</>}
+                                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-4 h-4" /> Finalizar y Emitir</>}
                                 </button>
                             </div>
                         </div>

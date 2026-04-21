@@ -1,6 +1,8 @@
-import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, Check, User, FileText, Building2, ChevronDown } from 'lucide-react'
 import { Database } from '@/types/database'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 type Patient = Database['public']['Tables']['patients']['Row']
 
@@ -24,6 +26,7 @@ interface PatientSecurityHeaderProps {
     showTagSelector?: boolean
     setShowTagSelector?: (show: boolean) => void
     suggestedTags?: Tag[]
+    clinicName?: string
 }
 
 export function PatientSecurityHeader({ 
@@ -35,202 +38,275 @@ export function PatientSecurityHeader({
     onToggleTag,
     showTagSelector,
     setShowTagSelector,
-    suggestedTags = []
+    suggestedTags = [],
+    clinicName = "Clínica Dental"
 }: PatientSecurityHeaderProps) {
-    // Calculate age
+    const [professionals, setProfessionals] = useState<any[]>([])
+    const [loadingProfessionals, setLoadingProfessionals] = useState(false)
+    const [assignedProf, setAssignedProf] = useState<string | null>(null)
 
+    useEffect(() => {
+        if (patient.clinic_id) {
+            fetchProfessionals()
+        }
+    }, [patient.clinic_id])
 
+    const fetchProfessionals = async () => {
+        setLoadingProfessionals(true)
+        try {
+            const { data } = await supabase
+                .from('user_profiles')
+                .select('id, full_name')
+                .eq('clinic_id', patient.clinic_id)
+            
+            if (data) setProfessionals(data)
+        } catch (error) {
+            console.error('Error fetching professionals:', error)
+        } finally {
+            setLoadingProfessionals(false)
+        }
+    }
 
+    // Age Calculation Logic
+    const getAge = (birthDate: string | null) => {
+        if (!birthDate) return '---'
+        const birth = new Date(birthDate)
+        const now = new Date()
+        let years = now.getFullYear() - birth.getFullYear()
+        let months = now.getMonth() - birth.getMonth()
+        
+        if (months < 0 || (months === 0 && now.getDate() < birth.getDate())) {
+            years--
+            months += 12
+        }
+        
+        if (years === 0) return `${months} Meses`
+        return `${years} años, ${months}M`
+    }
+
+    const initials = patient.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'PP'
 
     return (
         <div className="mb-6 space-y-4 animate-fade-in relative z-10">
-            {/* Top Bar: Identity & Quick Stats */}
-            <div className="bg-primary-700 text-white rounded-soft p-4 shadow-lg flex flex-wrap items-center justify-between gap-4 border-b border-white/10 relative overflow-hidden">
-                {/* Decorative background element */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-                
-                <div className="flex items-center gap-4 relative z-10">
-                    {onBack && (
-                        <button
-                            onClick={onBack}
-                            className="p-2 hover:bg-white/10 rounded-full text-white/80 hover:text-white transition-all mr-2 border border-white/10"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                    )}
+            {/* Main Primary Banner: Dentalink Style */}
+            <div className="bg-primary-700 text-white rounded-softer shadow-2xl p-0 overflow-hidden border border-primary-800/50">
+                <div className="px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-8 relative">
+                    {/* Decorative Background Element */}
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl" />
                     
-                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-black border-2 border-white/30 shadow-inner shrink-0">
-                        {patient.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </div>
-                    
-                    <div>
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-2xl font-black tracking-tight leading-tight text-white">{patient.name}</h2>
-                                <span className="text-[10px] bg-white/30 px-2 py-0.5 rounded uppercase font-black tracking-widest text-white">
-                                    ID {patient.id.slice(0, 4)}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-white/60 text-xs font-bold uppercase tracking-wider">Ficha Clínica Digital</span>
-                                {patient.rut && <span className="text-white/40 text-[10px] uppercase font-black tracking-widest bg-black/10 px-1.5 py-0.5 rounded">RUT: {patient.rut}</span>}
-                            </div>
+                    <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
+                        {onBack && (
+                            <button
+                                onClick={onBack}
+                                className="p-2.5 hover:bg-white/10 rounded-full text-white/80 hover:text-white transition-all mr-2 border border-white/10"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </button>
+                        )}
+                        
+                        <div className="w-20 h-20 rounded-full bg-white text-primary-700 flex items-center justify-center text-3xl font-black shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-primary-600/20 shrink-0 transform hover:scale-105 transition-transform">
+                            {initials}
                         </div>
-
-                        {/* Integrated Tags Section */}
-                        <div className="flex flex-wrap items-center gap-2 mt-3">
-                            {patientTags.map(tag => (
-                                <span
-                                    key={tag.id}
-                                    className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 bg-white/10"
-                                    style={{ color: 'white' }}
-                                >
-                                    {tag.name}
-                                </span>
-                            ))}
-
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowTagSelector?.(!showTagSelector)}
-                                    className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed border-white/30 text-white/60 hover:bg-white/10 hover:text-white flex items-center gap-1 transition-colors bg-white/5"
-                                >
-                                    <Plus className="w-3 h-3" />
-                                    Etiquetar
-                                </button>
-
-                                {showTagSelector && (
-                                    <>
-                                        <div
-                                            className="fixed inset-0 z-10"
-                                            onClick={() => setShowTagSelector?.(false)}
-                                        />
-                                        <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-soft shadow-premium border border-silk-beige z-20 overflow-hidden animate-fade-in">
-                                            <div className="p-2 border-b border-silk-beige bg-ivory/50">
-                                                <p className="text-[10px] font-black text-charcoal/60 uppercase tracking-widest">Asignar Etiqueta</p>
-                                            </div>
-                                            <div className="max-h-48 overflow-y-auto p-1">
-                                                {availableTags.length === 0 ? (
-                                                    <p className="text-[10px] text-charcoal/40 p-2 text-center">No hay etiquetas.</p>
-                                                ) : (
-                                                    availableTags.map(tag => {
-                                                        const isSelected = patientTags.some(t => t.id === tag.id)
-                                                        return (
-                                                            <button
-                                                                key={tag.id}
-                                                                onClick={() => onToggleTag?.(tag)}
-                                                                className="w-full text-left px-2 py-1.5 rounded hover:bg-gray-50 flex items-center justify-between group"
-                                                            >
-                                                                <div className="flex items-center gap-2">
-                                                                    <span
-                                                                        className="w-3 h-3 rounded-full"
-                                                                        style={{ backgroundColor: tag.color }}
-                                                                    />
-                                                                    <span className={`text-xs ${isSelected ? 'font-bold text-charcoal' : 'text-charcoal/80'}`}>
-                                                                        {tag.name}
-                                                                    </span>
-                                                                </div>
-                                                                {isSelected && <Check className="w-3.5 h-3.5 text-primary-600" />}
-                                                            </button>
-                                                        )
-                                                    })
-                                                )}
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
+                        
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-3xl font-black tracking-tight leading-none text-white drop-shadow-sm">
+                                    {patient.name}
+                                </h2>
+                                <div className="px-2 py-0.5 bg-blue-400/20 rounded-soft border border-white/10 flex items-center gap-1.5">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/80">ID</span>
+                                    <span className="text-[11px] font-black text-white">{patient.id.slice(0, 4)}</span>
+                                </div>
                             </div>
                             
-                            {/* Suggested Tags Inline */}
-                            {suggestedTags.length > 0 && (
-                                <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
-                                    <span className="text-[9px] text-white/40 italic">Sugerencias:</span>
-                                    {suggestedTags.map(tag => (
-                                        <button
-                                            key={tag.id}
-                                            onClick={() => onToggleTag?.(tag)}
-                                            className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-dashed border-white/20 text-white/60 hover:border-white/40 hover:text-white transition-all bg-white/5"
-                                        >
-                                            + {tag.name}
-                                        </button>
-                                    ))}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-white/80 font-medium text-sm">
+                                <div className="flex items-center gap-1.5 border-r border-white/10 pr-4 last:border-0">
+                                    <span className="uppercase text-[10px] font-black tracking-widest opacity-60">RUT</span>
+                                    <span className="text-white drop-shadow-sm">{patient.rut || 'No definido'}</span>
                                 </div>
-                            )}
+                                <div className="flex items-center gap-1.5 border-r border-white/10 pr-4 last:border-0">
+                                    <span className="uppercase text-[10px] font-black tracking-widest opacity-60">Sexo</span>
+                                    <span className="text-white drop-shadow-sm">{patient.gender || 'Femenino'}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="uppercase text-[10px] font-black tracking-widest opacity-60">Edad</span>
+                                    <span className="text-white drop-shadow-sm">{getAge(patient.birth_date)}</span>
+                                </div>
+                                {patient.insurance_provider && (
+                                    <div className="flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded ml-2">
+                                        <span className="uppercase text-[9px] font-black tracking-widest opacity-70">Beneficios</span>
+                                        <span className="text-[10px] font-black">{patient.insurance_provider}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Quick Control Cards (Financial Stats Header style) */}
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-end gap-1">
+                                <span className={cn(
+                                    "px-3 py-1 rounded-soft text-xs font-black uppercase tracking-tight flex items-center gap-2 shadow-sm border",
+                                    patient.is_high_risk ? "bg-red-500 text-white border-red-600" : "bg-white/10 text-white border-white/20"
+                                )}>
+                                    <ShieldAlert className="w-4 h-4" /> Alertas médicas
+                                </span>
+                                <span className="text-[10px] font-black text-white/60 uppercase text-right pr-1">
+                                    {patient.is_high_risk ? "1 Alerta Activa" : "Sin información"}
+                                </span>
+                            </div>
+                            
+                            <div className="flex flex-col items-end gap-1">
+                                <span className="px-3 py-1 rounded-soft text-xs font-black uppercase tracking-tight bg-white/10 text-white border border-white/20 flex items-center gap-2 shadow-sm">
+                                    <Activity className="w-4 h-4" /> Enfermedades
+                                </span>
+                                <span className="text-[10px] font-black text-white/60 uppercase text-right pr-1">Sin información</span>
+                            </div>
+
+                            <div className="flex flex-col items-end gap-1">
+                                <span className="px-3 py-1 rounded-soft text-xs font-black uppercase tracking-tight bg-white/10 text-white border border-white/20 flex items-center gap-2 shadow-sm">
+                                    <Pill className="w-4 h-4" /> Medicamentos
+                                </span>
+                                <span className="text-[10px] font-black text-white/60 uppercase text-right pr-1">Sin información</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Financial Summary Widget */}
-                <div className="flex items-center gap-6 pr-4 relative z-10">
-                    <div className="hidden sm:block text-right">
-                        <p className="text-[11px] uppercase font-black text-white/50 tracking-widest mb-0.5">Realizado</p>
-                        <p className="text-xl font-black tracking-tighter text-white">${financialSummary?.total.toLocaleString() || '0'}</p>
+                {/* Patient Context Navigation Bar (Dentalink Like) */}
+                <div className="bg-white/95 backdrop-blur-md px-8 py-3 flex items-center justify-between border-t border-black/5">
+                    <div className="flex items-center gap-8">
+                        {/* Profesional Dropdown */}
+                        <div className="flex items-center gap-3 group">
+                            <div className="w-8 h-8 rounded-full bg-silk-beige flex items-center justify-center text-charcoal/40 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                                <User className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest leading-none mb-1">Profesional a cargo</span>
+                                <div className="flex items-center gap-1 cursor-pointer">
+                                    <span className="text-[11px] font-bold text-primary-600">Dr(a). Javiera Mancilla Abarza</span>
+                                    <ChevronDown className="w-3 h-3 text-primary-600" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Convenio */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-silk-beige flex items-center justify-center text-charcoal/40">
+                                <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest leading-none mb-1">Convenio</span>
+                                <span className="text-[11px] font-bold text-primary-600">{patient.insurance_provider || 'Sin convenio'}</span>
+                            </div>
+                        </div>
+
+                        {/* Sucursal */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-silk-beige flex items-center justify-center text-charcoal/40">
+                                <Building2 className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest leading-none mb-1">Sucursal</span>
+                                <span className="text-[11px] font-bold text-primary-600">{clinicName}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="hidden sm:block text-right">
-                        <p className="text-[11px] uppercase font-black text-white/50 tracking-widest mb-0.5">Abonado</p>
-                        <p className="text-xl font-black tracking-tighter text-emerald-300">${financialSummary?.paid.toLocaleString() || '0'}</p>
-                    </div>
-                    <div className="text-right bg-white/10 backdrop-blur-md p-3 rounded-soft border border-white/20 min-w-[140px] shadow-inner">
-                        <p className="text-[11px] uppercase font-black text-white tracking-widest mb-0.5">Saldo Deuda</p>
-                        <p className={cn(
-                            "text-2xl font-black tracking-tighter text-center",
-                            (financialSummary?.balance || 0) > 0 ? "text-orange-300" : "text-emerald-300"
-                        )}>
-                            ${financialSummary?.balance.toLocaleString() || '0'}
-                        </p>
+
+                    {/* Quick Access Actions */}
+                    <div className="flex items-center gap-4">
+                        <button className="btn-soft px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-primary-50 transition-all border-primary-100">
+                             Agendar
+                        </button>
+                        <button className="btn-primary px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-lg shadow-primary-500/20">
+                             Historia clínica
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Middle Bar: Triple Alert Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 1. Medical Alerts / High Risk */}
-                <div className={cn(
-                    "flex flex-col p-4 rounded-soft border-2 transition-all relative overflow-hidden group",
-                    patient.is_high_risk 
-                        ? "bg-red-50 border-red-200 shadow-md ring-2 ring-red-100 ring-offset-0" 
-                        : "bg-white border-silk-beige"
-                )}>
-                    <div className="flex items-center gap-2 mb-2">
-                        <ShieldAlert className={cn("w-5 h-5", patient.is_high_risk ? "text-red-600 animate-pulse" : "text-charcoal/40")} />
-                        <span className="text-[11px] font-black uppercase tracking-widest text-charcoal/80">Alertas Médicas</span>
-                    </div>
-                    <p className={cn("text-sm font-bold uppercase", patient.is_high_risk ? "text-red-700" : "text-charcoal/40 italic")}>
-                        {patient.is_high_risk ? "PACIENTE DE ALTO RIESGO" : "Sin alertas registradas"}
-                    </p>
-                    {patient.is_high_risk && <div className="absolute -right-2 -bottom-2 opacity-5"><ShieldAlert size={60} /></div>}
+            {/* Tag Badges Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+                {patientTags.map(tag => (
+                    <span
+                        key={tag.id}
+                        className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white border border-silk-beige shadow-sm flex items-center gap-2"
+                        style={{ color: tag.color }}
+                    >
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                        {tag.name}
+                    </span>
+                ))}
+                
+                <div className="relative">
+                    <button
+                        onClick={() => setShowTagSelector?.(!showTagSelector)}
+                        className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed border-silk-beige text-charcoal/40 hover:bg-white hover:text-primary-600 flex items-center gap-2 transition-all bg-silk-beige/20 shadow-sm"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Añadir Etiqueta
+                    </button>
+
+                    {showTagSelector && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-[110]"
+                                onClick={() => setShowTagSelector?.(false)}
+                            />
+                            <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-softer shadow-2xl border border-silk-beige z-[120] overflow-hidden animate-scale-in">
+                                <div className="p-3 border-b border-silk-beige bg-ivory/50">
+                                    <p className="text-[10px] font-black text-charcoal/60 uppercase tracking-widest">Etiquetas Disponibles</p>
+                                </div>
+                                <div className="max-h-64 overflow-y-auto p-1.5">
+                                    {availableTags.length === 0 ? (
+                                        <p className="text-[10px] text-charcoal/40 p-3 text-center italic">No hay etiquetas creadas.</p>
+                                    ) : (
+                                        availableTags.map(tag => {
+                                            const isSelected = patientTags.some(t => t.id === tag.id)
+                                            return (
+                                                <button
+                                                    key={tag.id}
+                                                    onClick={() => onToggleTag?.(tag)}
+                                                    className="w-full text-left px-3 py-2 rounded-soft hover:bg-primary-50 flex items-center justify-between group transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className="w-4 h-4 rounded-full border border-black/5"
+                                                            style={{ backgroundColor: tag.color }}
+                                                        />
+                                                        <span className={cn(
+                                                            "text-xs font-bold",
+                                                            isSelected ? "text-primary-700" : "text-charcoal/70"
+                                                        )}>
+                                                            {tag.name}
+                                                        </span>
+                                                    </div>
+                                                    {isSelected && <Check className="w-4 h-4 text-primary-600" />}
+                                                </button>
+                                            )
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                {/* 2. Allergies */}
-                <div className={cn(
-                    "flex flex-col p-4 rounded-soft border-2 transition-all",
-                    patient.allergies 
-                        ? "bg-amber-50 border-amber-200 shadow-sm" 
-                        : "bg-white border-silk-beige"
-                )}>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Activity className={cn("w-5 h-5", patient.allergies ? "text-amber-600" : "text-charcoal/40")} />
-                        <span className="text-[11px] font-black uppercase tracking-widest text-charcoal/80">Alergias</span>
+                {suggestedTags.length > 0 && (
+                    <div className="flex items-center gap-2 ml-2 pl-4 border-l border-silk-beige">
+                        <span className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest">Sugerencias:</span>
+                        {suggestedTags.map(tag => (
+                            <button
+                                key={tag.id}
+                                onClick={() => onToggleTag?.(tag)}
+                                className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-dashed border-primary-200 text-primary-400 hover:border-primary-400 hover:text-primary-600 transition-all bg-primary-50/30"
+                            >
+                                + {tag.name}
+                            </button>
+                        ))}
                     </div>
-                    <p className={cn("text-sm font-bold leading-tight uppercase", patient.allergies ? "text-amber-800" : "text-charcoal/40 italic")}>
-                        {patient.allergies || "Sin información registrada"}
-                    </p>
-                </div>
-
-                {/* 3. Medical History / Medications */}
-                <div className={cn(
-                    "flex flex-col p-4 rounded-soft border-2 transition-all",
-                    patient.medical_history 
-                        ? "bg-blue-50 border-blue-200 shadow-sm" 
-                        : "bg-white border-silk-beige"
-                )}>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Pill className={cn("w-5 h-5", patient.medical_history ? "text-blue-600" : "text-charcoal/40")} />
-                        <span className="text-[11px] font-black uppercase tracking-widest text-charcoal/80">Medicamentos / Enf.</span>
-                    </div>
-                    <p className={cn("text-sm font-bold leading-tight uppercase", patient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
-                        {patient.medical_history || "Sin información registrada"}
-                    </p>
-                </div>
+                )}
             </div>
         </div>
     )

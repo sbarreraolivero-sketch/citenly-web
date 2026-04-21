@@ -16,6 +16,8 @@ import { suggestTags } from '@/lib/autoTagService'
 import { Odontogram } from './Odontogram'
 import { BudgetManager } from './BudgetManager'
 import { PatientSecurityHeader } from './PatientSecurityHeader'
+import { Periodontogram } from './Periodontogram'
+import { PrescriptionManager } from './PrescriptionManager'
 
 type Patient = Database['public']['Tables']['patients']['Row']
 
@@ -34,8 +36,9 @@ interface PatientDetailsProps {
 
 export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProps) {
     const { profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery' | 'odontogram' | 'budgets'>('history')
+    const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery' | 'odontogram' | 'budgets' | 'periodontogram' | 'prescriptions'>('history')
     const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general'>('aesthetic')
+    const [clinicName, setClinicName] = useState('Clínica')
     const [records, setRecords] = useState<ClinicalRecord[]>([])
     const [loadingRecords, setLoadingRecords] = useState(false)
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
@@ -194,12 +197,13 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
         try {
             const { data } = await (supabase as any)
                 .from('clinic_settings')
-                .select('specialty')
+                .select('specialty, name')
                 .eq('id', profile.clinic_id)
                 .single()
             
-            if (data && (data as any).specialty) {
-                setSpecialty((data as any).specialty as any)
+            if (data) {
+                if ((data as any).specialty) setSpecialty((data as any).specialty as any)
+                if ((data as any).name) setClinicName((data as any).name)
             }
         } catch (error) {
             console.error('Error fetching clinic specialty:', error)
@@ -425,6 +429,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                 showTagSelector={showTagSelector}
                 setShowTagSelector={setShowTagSelector}
                 suggestedTags={suggestedTags}
+                clinicName={clinicName}
             />
 
             {/* Tabs */}
@@ -481,6 +486,36 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                     Odontograma
                                 </div>
                                 {activeTab === 'odontogram' && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('periodontogram')}
+                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'periodontogram'
+                                    ? 'text-primary-600'
+                                    : 'text-charcoal/60 hover:text-charcoal'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-1.5">
+                                    <Layers className="w-4 h-4" />
+                                    Periodontograma
+                                </div>
+                                {activeTab === 'periodontogram' && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('prescriptions')}
+                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'prescriptions'
+                                    ? 'text-primary-600'
+                                    : 'text-charcoal/60 hover:text-charcoal'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-1.5">
+                                    <Pill className="w-4 h-4" />
+                                    Recetas
+                                </div>
+                                {activeTab === 'prescriptions' && (
                                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
                                 )}
                             </button>
@@ -1034,12 +1069,32 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     />
                 )}
 
+                {activeTab === 'periodontogram' && profile?.clinic_id && (
+                    <Periodontogram 
+                        patientId={patient.id} 
+                        clinicId={profile.clinic_id} 
+                    />
+                )}
+
+                {activeTab === 'prescriptions' && profile?.clinic_id && (
+                    <PrescriptionManager 
+                        patientId={patient.id} 
+                        clinicId={profile.clinic_id} 
+                        patientName={patient.name || 'Paciente'}
+                        clinicName={clinicName}
+                    />
+                )}
+
                 {activeTab === 'budgets' && profile?.clinic_id && (
                     <BudgetManager 
                         patientId={patient.id} 
                         clinicId={profile.clinic_id} 
                         initialItems={pendingTreatments}
                         onClearedItems={() => setPendingTreatments([])}
+                        onBudgetCreated={() => {
+                            fetchFinancialData()
+                            fetchRecords()
+                        }}
                     />
                 )}
             </div>
