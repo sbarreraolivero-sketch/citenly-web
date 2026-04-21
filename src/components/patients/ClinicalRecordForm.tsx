@@ -245,7 +245,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                         <h2 className="text-2xl font-black text-charcoal tracking-tight">
                             {record ? 'Editar Evolución' : 'Nuevo Registro de Evolución'}
                         </h2>
-                        <p className="text-xs text-charcoal/40 font-bold uppercase tracking-widest mt-1">Historial Clínico</p>
+                        <p className="text-[11px] text-charcoal/70 font-black uppercase tracking-widest mt-1">Historial Clínico</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -270,8 +270,8 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                 type="button"
                                 onClick={() => setRecordType('general')}
                                 className={cn(
-                                    "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-full transition-all",
-                                    recordType === 'general' ? "bg-white text-primary-600 shadow-premium" : "text-charcoal/40"
+                                    "flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all",
+                                    recordType === 'general' ? "bg-white text-primary-700 shadow-premium" : "text-charcoal/60"
                                 )}
                             >
                                 Evolución General
@@ -280,8 +280,8 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                 type="button"
                                 onClick={() => setRecordType('ortho')}
                                 className={cn(
-                                    "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-full transition-all",
-                                    recordType === 'ortho' ? "bg-white text-primary-600 shadow-premium" : "text-charcoal/40"
+                                    "flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all",
+                                    recordType === 'ortho' ? "bg-white text-primary-700 shadow-premium" : "text-charcoal/60"
                                 )}
                             >
                                 Ficha Ortodoncia
@@ -291,7 +291,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-charcoal/40 tracking-widest mb-3 border-l-4 border-primary-500 pl-3">Fecha del Tratamiento</label>
+                            <label className="block text-[11px] font-black uppercase text-charcoal/80 tracking-widest mb-3 border-l-4 border-primary-500 pl-3">Fecha del Tratamiento</label>
                             <div className="relative">
                                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/20" />
                                 <input
@@ -305,7 +305,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-charcoal/40 tracking-widest mb-3 border-l-4 border-primary-500 pl-3">Tratamiento Realizado</label>
+                            <label className="block text-[11px] font-black uppercase text-charcoal/80 tracking-widest mb-3 border-l-4 border-primary-500 pl-3">Tratamiento Realizado</label>
                             <div className="relative">
                                 <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/20" />
                                 <input
@@ -331,7 +331,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase text-charcoal/40 mb-2">Piezas Tratadas (Separadas por coma)</label>
+                                    <label className="block text-[11px] font-black uppercase text-charcoal/80 mb-2">Piezas Tratadas (Separadas por coma)</label>
                                     <input 
                                         type="text"
                                         value={metadata.tooth_numbers}
@@ -342,7 +342,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-[10px] font-black uppercase text-charcoal/40 mb-2">Aislamiento</label>
+                                        <label className="block text-[11px] font-black uppercase text-charcoal/80 mb-2">Aislamiento</label>
                                         <select 
                                             value={metadata.dental_gen?.isolation_type}
                                             onChange={(e) => setMetadata({ ...metadata, dental_gen: { ...metadata.dental_gen, isolation_type: e.target.value } })}
@@ -353,7 +353,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black uppercase text-charcoal/40 mb-2">Movilidad</label>
+                                        <label className="block text-[11px] font-black uppercase text-charcoal/80 mb-2">Movilidad</label>
                                         <select 
                                             value={metadata.dental_gen?.mobility_level}
                                             onChange={(e) => setMetadata({ ...metadata, dental_gen: { ...metadata.dental_gen, mobility_level: e.target.value } })}
@@ -372,7 +372,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2">
                                         <Syringe className="w-4 h-4 text-emerald-600" />
-                                        <label className="text-[10px] font-black uppercase text-charcoal/40">Anestesia</label>
+                                        <label className="text-[11px] font-black uppercase text-charcoal/80">Anestesia</label>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <input 
@@ -394,7 +394,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2">
                                         <Beaker className="w-4 h-4 text-emerald-600" />
-                                        <label className="text-[10px] font-black uppercase text-charcoal/40">Insumos y Materiales</label>
+                                        <label className="text-[11px] font-black uppercase text-charcoal/80">Insumos y Materiales</label>
                                     </div>
                                     <input 
                                         type="text"
