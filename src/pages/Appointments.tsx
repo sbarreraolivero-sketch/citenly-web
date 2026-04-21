@@ -1712,6 +1712,7 @@ export default function Appointments() {
                             description: selectedAppointment.notes || '',
                             notes: '',
                             attachments: [],
+                            professional_id: selectedAppointment.professional_id || null,
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         }}
