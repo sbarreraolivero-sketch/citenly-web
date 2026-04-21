@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Loader2, Info, RotateCcw, Plus, Activity, Layers, Grid3X3, Check, X, Search } from 'lucide-react'
+import { Save, Loader2, Activity, Plus, Search, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
@@ -8,7 +8,6 @@ interface OdontogramProps {
     patientId: string
     clinicId: string
     onAddTreatment?: (item: any) => void
-    onAddClinicalRecord?: (data: any) => void
 }
 
 interface ToothData {
@@ -48,10 +47,9 @@ const ARCHES = [
     { id: 'inferior', label: 'Arcada Inferior', teeth: ['4.8', '4.7', '4.6', '4.5', '4.4', '4.3', '4.2', '4.1', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8'] }
 ]
 
-export function Odontogram({ patientId, clinicId, onAddTreatment, onAddClinicalRecord }: OdontogramProps) {
+export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<string, ToothData>>({})
     const [selectedTeeth, setSelectedTeeth] = useState<string[]>([])
-    const [dentition, setDentition] = useState<'adult' | 'child'>('adult')
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [showProcedureModal, setShowProcedureModal] = useState(false)
@@ -76,8 +74,8 @@ export function Odontogram({ patientId, clinicId, onAddTreatment, onAddClinicalR
             } else {
                 setTeeth({})
             }
-        } catch (error) {
-            console.error('Error fetching odontogram:', error)
+        } catch (err) {
+            console.error('Error fetching odontogram:', err)
             setTeeth({})
         } finally {
             setLoading(false)
@@ -86,12 +84,12 @@ export function Odontogram({ patientId, clinicId, onAddTreatment, onAddClinicalR
 
     const fetchServices = async () => {
         try {
-            const { data, error } = await (supabase as any).rpc('get_clinic_services_secure', {
+            const { data } = await (supabase as any).rpc('get_clinic_services_secure', {
                 p_clinic_id: clinicId
             })
             if (data) setServices(data)
-        } catch (error) {
-            console.error('Error fetching services:', error)
+        } catch (err) {
+            console.error('Error fetching services:', err)
         }
     }
 
@@ -109,8 +107,8 @@ export function Odontogram({ patientId, clinicId, onAddTreatment, onAddClinicalR
 
             if (error) throw error
             toast.success('Odontograma guardado correctamente')
-        } catch (error) {
-            console.error('Error saving odontogram:', error)
+        } catch (err) {
+            console.error('Error saving odontogram:', err)
             toast.error('Error al guardar el odontograma')
         } finally {
             setSaving(false)

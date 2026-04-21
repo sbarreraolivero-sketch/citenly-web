@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, Check, User, FileText, Building2, ChevronDown } from 'lucide-react'
 import { Database } from '@/types/database'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
 
 type Patient = Database['public']['Tables']['patients']['Row']
 
@@ -31,7 +30,6 @@ interface PatientSecurityHeaderProps {
 
 export function PatientSecurityHeader({ 
     patient, 
-    financialSummary, 
     onBack,
     patientTags = [],
     availableTags = [],
@@ -41,31 +39,10 @@ export function PatientSecurityHeader({
     suggestedTags = [],
     clinicName = "Clínica Dental"
 }: PatientSecurityHeaderProps) {
-    const [professionals, setProfessionals] = useState<any[]>([])
-    const [loadingProfessionals, setLoadingProfessionals] = useState(false)
-    const [assignedProf, setAssignedProf] = useState<string | null>(null)
-
+    
     useEffect(() => {
-        if (patient.clinic_id) {
-            fetchProfessionals()
-        }
+        // No-op for now
     }, [patient.clinic_id])
-
-    const fetchProfessionals = async () => {
-        setLoadingProfessionals(true)
-        try {
-            const { data } = await supabase
-                .from('user_profiles')
-                .select('id, full_name')
-                .eq('clinic_id', patient.clinic_id)
-            
-            if (data) setProfessionals(data)
-        } catch (error) {
-            console.error('Error fetching professionals:', error)
-        } finally {
-            setLoadingProfessionals(false)
-        }
-    }
 
     // Age Calculation Logic
     const getAge = (birthDate: string | null) => {

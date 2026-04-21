@@ -16,6 +16,7 @@ interface BudgetManagerProps {
     clinicId: string
     initialItems?: any[]
     onClearedItems?: () => void
+    onBudgetCreated?: () => void
 }
 
 interface BudgetItem {

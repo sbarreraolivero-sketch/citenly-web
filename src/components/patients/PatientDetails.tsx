@@ -3,7 +3,7 @@ import {
     Phone, MapPin,
     FileText, Plus, Edit2, Trash2,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight,
-    Activity, DollarSign, ShieldAlert, Pill, Loader2
+    Activity, DollarSign, ShieldAlert, Pill, Loader2, Layers
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'

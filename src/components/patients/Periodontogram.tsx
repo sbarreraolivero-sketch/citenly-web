@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Plus, Save, Loader2, Info, Check, X, ArrowUpDown, Maximize2, Activity } from 'lucide-react'
+import { Save, Loader2, Check, Activity } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 
 interface PeriodontogramProps {
     patientId: string
-    clinicId: string
+    clinicId?: string
 }
 
 interface ToothPeriodontalData {
@@ -21,7 +21,7 @@ interface ToothPeriodontalData {
     furca: 0 | 1 | 2 | 3
 }
 
-export function Periodontogram({ patientId, clinicId }: PeriodontogramProps) {
+export function Periodontogram({ patientId }: PeriodontogramProps) {
     const [data, setData] = useState<Record<string, ToothPeriodontalData>>({})
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -135,10 +135,10 @@ export function Periodontogram({ patientId, clinicId }: PeriodontogramProps) {
                         <button 
                             onClick={handleSave}
                             disabled={saving}
-                            className="btn-primary-emerald flex items-center gap-2 px-6 py-2 shadow-lg shadow-emerald-500/20"
+                            className="btn-primary flex items-center gap-2 px-6 py-2 shadow-lg shadow-emerald-500/20 bg-emerald-600 border-none hover:bg-emerald-700"
                         >
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            <span className="font-black text-xs uppercase tracking-widest">Guardar</span>
+                            <span className="font-black text-xs uppercase tracking-widest text-white">Guardar</span>
                         </button>
                     </div>
                 </div>
@@ -271,7 +271,7 @@ export function Periodontogram({ patientId, clinicId }: PeriodontogramProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="card-soft p-6">
                     <h4 className="text-sm font-black text-charcoal uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Info className="w-4 h-4 text-emerald-600" /> Guía de Diligenciamiento
+                        <Activity className="w-4 h-4 text-emerald-600" /> Guía de Diligenciamiento
                     </h4>
                     <div className="space-y-3 text-xs text-charcoal/60 font-medium">
                         <p>• Los valores de <strong>Profundidad</strong> y <strong>Margen</strong> se ingresan por cada una de las 3 caras por pieza (D, M, M).</p>

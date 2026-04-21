@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Printer, Save, Loader2, Pill, Search, ClipboardList, Building2, User } from 'lucide-react'
+import { Plus, Printer, Save, Loader2, Pill, ClipboardList, X, Maximize2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
-import { cn } from '@/lib/utils'
 
 interface PrescriptionManagerProps {
     patientId: string
