@@ -131,8 +131,8 @@ export default function Appointments() {
                 .select('boxes')
                 .eq('clinic_id', profile.clinic_id)
                 .single()
-            if (data?.boxes) {
-                setClinicBoxes(data.boxes as any[])
+            if ((data as any)?.boxes) {
+                setClinicBoxes((data as any).boxes as any[])
             }
         }
         fetchServices()
@@ -1774,6 +1774,9 @@ export default function Appointments() {
                             notes: selectedAppointment.notes,
                             email: null,
                             address: null,
+                            allergies: null,
+                            medical_history: null,
+                            is_high_risk: false,
                         }}
                         onClose={() => {
                             setShowPatientModal(false)

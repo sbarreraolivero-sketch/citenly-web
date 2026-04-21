@@ -1,4 +1,4 @@
-import { ShieldAlert, AlertTriangle, Info, Octagon } from 'lucide-react'
+import { ShieldAlert, AlertTriangle, Octagon } from 'lucide-react'
 import { Database } from '@/types/database'
 import { cn } from '@/lib/utils'
 

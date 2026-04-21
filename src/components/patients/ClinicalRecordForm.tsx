@@ -8,14 +8,15 @@ import { PhotoUpload } from './PhotoUpload'
 // Define the type manually since we might not have regenerated types yet
 export interface ClinicalRecord {
     id: string
-    clinic_id: string
-    patient_id: string
+    clinic_id: string | null
+    patient_id: string | null
     date: string
     treatment_name: string
     description: string | null
     notes: string | null
-    attachments: any[] | null
+    attachments: any | null
     metadata?: any | null
+    professional_id: string | null
     created_at: string
     updated_at: string
 }
@@ -122,7 +123,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                     setMetadata((prev: any) => ({ 
                         ...prev, 
                         dental_gen: dentalData, 
-                        tooth_numbers: dentalData.tooth_numbers?.join(', ') || '' 
+                        tooth_numbers: (dentalData as any).tooth_numbers?.join(', ') || '' 
                     }))
                     setRecordType('general')
                 } else if (record.metadata) {

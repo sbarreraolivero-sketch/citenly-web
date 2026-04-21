@@ -3,13 +3,13 @@ import {
     Phone, Mail, MapPin, Calendar,
     FileText, Plus, Edit2, Trash2, ArrowLeft,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy,
-    Activity, DollarSign
+    Activity, DollarSign, ShieldAlert
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatPhoneNumber } from '@/lib/utils'
+import { formatPhoneNumber, cn } from '@/lib/utils'
 import { ClinicalRecordForm, ClinicalRecord } from './ClinicalRecordForm'
 import { ComparisonView } from './ComparisonView'
 import { suggestTags } from '@/lib/autoTagService'
