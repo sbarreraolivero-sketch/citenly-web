@@ -15,6 +15,7 @@ import { ComparisonView } from './ComparisonView'
 import { suggestTags } from '@/lib/autoTagService'
 import { Odontogram } from './Odontogram'
 import { BudgetManager } from './BudgetManager'
+import { PatientSecurityHeader } from './PatientSecurityHeader'
 
 type Patient = Database['public']['Tables']['patients']['Row']
 
@@ -299,6 +300,9 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
 
     return (
         <div className="space-y-6 animate-fade-in relative pb-20">
+            {/* Clinical Security Header (Sticky) */}
+            <PatientSecurityHeader patient={patient} />
+
             {/* Header / Navigation */}
             <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
@@ -635,6 +639,38 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                     )}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Clinical Security Section */}
+                        <div className="md:col-span-2 bg-red-50/20 p-6 rounded-soft border border-red-100 space-y-4">
+                            <div className="flex items-center gap-2 mb-4">
+                                <ShieldAlert className={cn("w-5 h-5", patient.is_high_risk ? "text-red-600" : "text-charcoal/40")} />
+                                <h3 className="font-bold text-charcoal uppercase tracking-tight text-sm">Seguridad Clínica</h3>
+                                {patient.is_high_risk && (
+                                    <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
+                                        Alto Riesgo
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-charcoal/50 uppercase font-black tracking-widest">Alergias</label>
+                                    <p className={cn("text-sm font-medium", patient.allergies ? "text-red-700 font-bold" : "text-charcoal/40 italic")}>
+                                        {patient.allergies || 'Sin alergias registradas'}
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-charcoal/50 uppercase font-black tracking-widest">Antecedentes Sistémicos</label>
+                                    <p className={cn("text-sm font-medium", patient.medical_history ? "text-amber-800" : "text-charcoal/40 italic")}>
+                                        {patient.medical_history || 'Sin antecedentes registrados'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <p className="text-[10px] text-charcoal/40 pt-2 border-t border-red-100/50">
+                                * Esta información es crítica para la seguridad del paciente. Siempre verifique antes de iniciar cualquier procedimiento invasivo.
+                            </p>
                         </div>
                     </div>
                 )}

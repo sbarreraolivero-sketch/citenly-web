@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react'
-import { X, Loader2, Save, MapPin, Briefcase, Share2 } from 'lucide-react'
+import { X, Loader2, Save, MapPin, Briefcase, Share2, ShieldAlert } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Database } from '@/types/database'
@@ -31,7 +31,10 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
         address: '',
         service: '',
         notes: '',
-        referred_by_code: ''
+        referred_by_code: '',
+        allergies: '',
+        medical_history: '',
+        is_high_risk: false
     })
 
     // Fetch services for dropdown
@@ -62,7 +65,10 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 address: patient.address || '',
                 service: patient.service || '',
                 notes: patient.notes || '',
-                referred_by_code: (patient as any).referred_by_code || ''
+                referred_by_code: (patient as any).referred_by_code || '',
+                allergies: patient.allergies || '',
+                medical_history: patient.medical_history || '',
+                is_high_risk: patient.is_high_risk || false
             })
         }
     }, [patient])
@@ -96,6 +102,9 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 service: formData.service || null,
                 notes: formData.notes || null,
                 referred_by_code: formData.referred_by_code || null,
+                allergies: formData.allergies || null,
+                medical_history: formData.medical_history || null,
+                is_high_risk: formData.is_high_risk
             }
 
             let savedPatient: Patient | null = null
@@ -292,6 +301,46 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                             <p className="text-[10px] text-charcoal/40 mt-1 italic">
                                 Si el paciente viene de parte de alguien, ingresa el código aquí para asignar puntos al referente al completar su cita.
                             </p>
+                        </div>
+
+                        <div className="pt-6 border-t border-red-100 bg-red-50/30 rounded-softer p-4 space-y-4">
+                            <h3 className="text-sm font-black text-red-700 uppercase tracking-tight flex items-center gap-2">
+                                <ShieldAlert className="w-4 h-4" />
+                                Seguridad Clínica
+                            </h3>
+                            
+                            <div className="flex items-center gap-3 mb-4">
+                                <input
+                                    type="checkbox"
+                                    id="is_high_risk"
+                                    checked={formData.is_high_risk}
+                                    onChange={(e) => setFormData({ ...formData, is_high_risk: e.target.checked })}
+                                    className="w-5 h-5 rounded border-red-300 text-red-600 focus:ring-red-500"
+                                />
+                                <label htmlFor="is_high_risk" className="text-sm font-bold text-red-800">
+                                    Paciente de Alto Riesgo / Alerta Crítica
+                                </label>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase text-red-900/40 mb-2">Alergias (Medicamentos, látex, etc.)</label>
+                                <textarea
+                                    value={formData.allergies}
+                                    onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
+                                    className="input-soft border-red-100 focus:border-red-300 focus:ring-red-100 min-h-[60px]"
+                                    placeholder="Ej: Penicilina, AINES, Látex..."
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase text-red-900/40 mb-2">Antecedentes Médicos Relevantes</label>
+                                <textarea
+                                    value={formData.medical_history}
+                                    onChange={(e) => setFormData({ ...formData, medical_history: e.target.value })}
+                                    className="input-soft border-red-100 focus:border-red-300 focus:ring-red-100 min-h-[80px]"
+                                    placeholder="Ej: HTA Controlada, Diabetes Tipo II, Anticoagulado..."
+                                />
+                            </div>
                         </div>
                     </div>
                 </form>

@@ -41,6 +41,7 @@ export interface Database {
                     tiktok_url: string | null
                     website_url: string | null
                     transfer_details: string | null
+                    boxes: Json
                 }
                 Insert: {
                     id?: string
@@ -146,6 +147,7 @@ export interface Database {
                     paid_amount: number
                     status: 'draft' | 'active' | 'completed' | 'cancelled'
                     notes: string | null
+                    professional_id: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -225,6 +227,8 @@ export interface Database {
                     reminder_sent_at: string | null
                     confirmation_received: boolean
                     confirmation_response: string | null
+                    professional_id: string | null
+                    box_id: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -395,6 +399,9 @@ export interface Database {
                     notes: string | null
                     total_appointments: number
                     last_appointment_at: string | null
+                    allergies: string | null
+                    medical_history: string | null
+                    is_high_risk: boolean
                     created_at: string
                     updated_at: string
                 }
@@ -436,6 +443,7 @@ export interface Database {
                     description: string | null
                     notes: string | null
                     attachments: Json | null
+                    professional_id: string | null
                     created_at: string
                     updated_at: string
                 }

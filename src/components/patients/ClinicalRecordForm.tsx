@@ -44,7 +44,7 @@ const ORTHO_PHASES = [
 const ANGLE_CLASSES = ['Clase I', 'Clase II div 1', 'Clase II div 2', 'Clase III']
 
 export function ClinicalRecordForm({ patientId, specialty = 'general', record, onClose, onSave, initialData }: ClinicalRecordFormProps) {
-    const { profile } = useAuth()
+    const { profile, member } = useAuth()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [recordType, setRecordType] = useState<'general' | 'ortho'>(specialty === 'dental' ? 'general' : 'general')
@@ -175,7 +175,8 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                 notes: formData.notes || null,
                 attachments: attachments,
                 metadata: metadata, // Temporary keep metadata updated
-                created_by: profile.id
+                created_by: profile.id,
+                professional_id: member?.id
             }
 
             let recordId = record?.id

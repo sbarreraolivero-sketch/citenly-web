@@ -91,7 +91,8 @@ export default function Appointments() {
         appointment_date: '',
         appointment_time: '',
         notes: '',
-        professional_id: ''
+        professional_id: '',
+        box_id: ''
     })
     const [services, setServices] = useState<any[]>([])
     const [professionals, setProfessionals] = useState<ClinicProfessional[]>([])
@@ -102,6 +103,7 @@ export default function Appointments() {
     const [showPatientModal, setShowPatientModal] = useState(false)
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
     const [foundPatient, setFoundPatient] = useState<Patient | null>(null)
+    const [clinicBoxes, setClinicBoxes] = useState<any[]>([])
 
     // Fetch services and professionals
     useEffect(() => {
@@ -122,8 +124,20 @@ export default function Appointments() {
             })
             if (data) setProfessionals(data)
         }
+        const fetchClinicSettings = async () => {
+            if (!profile?.clinic_id) return
+            const { data } = await supabase
+                .from('clinic_settings')
+                .select('boxes')
+                .eq('clinic_id', profile.clinic_id)
+                .single()
+            if (data?.boxes) {
+                setClinicBoxes(data.boxes as any[])
+            }
+        }
         fetchServices()
         fetchProfessionals()
+        fetchClinicSettings()
     }, [profile?.clinic_id])
 
     // Date filter state
@@ -320,6 +334,7 @@ export default function Appointments() {
                         appointment_date: appointmentDate,
                         notes: newAppointment.notes,
                         professional_id: newAppointment.professional_id || null,
+                        box_id: newAppointment.box_id || null,
                         // Don't update clinic_id or user_id
                     })
                     .eq('id', editingId)
@@ -348,6 +363,7 @@ export default function Appointments() {
                             status: 'confirmed',
                             notes: newAppointment.notes,
                             professional_id: newAppointment.professional_id || null,
+                            box_id: newAppointment.box_id || null,
                         },
                     ])
                     .select()
@@ -419,7 +435,8 @@ export default function Appointments() {
                 appointment_date: '',
                 appointment_time: '',
                 notes: '',
-                professional_id: ''
+                professional_id: '',
+                box_id: ''
             })
             setEditingId(null)
 
@@ -640,7 +657,8 @@ export default function Appointments() {
                                 appointment_date: format(now, 'yyyy-MM-dd'),
                                 appointment_time: '09:00',
                                 notes: '',
-                                professional_id: ''
+                                professional_id: '',
+                                box_id: ''
                             })
                             setShowModal(true)
                         }}
@@ -922,7 +940,8 @@ export default function Appointments() {
                                     appointment_date: format(event.start, 'yyyy-MM-dd'),
                                     appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
-                                    professional_id: event.resource.professional_id || ''
+                                    professional_id: event.resource.professional_id || '',
+                                    box_id: event.resource.box_id || ''
                                 })
                                 setShowModal(true)
                             }}
@@ -949,7 +968,8 @@ export default function Appointments() {
                                     appointment_date: format(event.start, 'yyyy-MM-dd'),
                                     appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
-                                    professional_id: event.resource.professional_id || ''
+                                    professional_id: event.resource.professional_id || '',
+                                    box_id: event.resource.box_id || ''
                                 })
                                 setShowModal(true)
                             }}
@@ -984,7 +1004,8 @@ export default function Appointments() {
                                     appointment_date: format(event.start, 'yyyy-MM-dd'),
                                     appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
-                                    professional_id: event.resource.professional_id || ''
+                                    professional_id: event.resource.professional_id || '',
+                                    box_id: event.resource.box_id || ''
                                 })
                                 setShowModal(true)
                             }}
@@ -1123,7 +1144,8 @@ export default function Appointments() {
                                                                         appointment_date: appointment.appointment_date.split('T')[0],
                                                                         appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
                                                                         notes: appointment.notes || '',
-                                                                        professional_id: appointment.professional_id || ''
+                                                                        professional_id: appointment.professional_id || '',
+                                                                        box_id: (appointment as any).box_id || ''
                                                                     })
                                                                     setShowModal(true) // Open modal
                                                                 }}
@@ -1260,7 +1282,8 @@ export default function Appointments() {
                                                 appointment_date: appointment.appointment_date.split('T')[0],
                                                 appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
                                                 notes: appointment.notes || '',
-                                                professional_id: appointment.professional_id || ''
+                                                professional_id: appointment.professional_id || '',
+                                                box_id: (appointment as any).box_id || ''
                                             })
                                             setShowModal(true)
                                         }}
@@ -1381,7 +1404,8 @@ export default function Appointments() {
                                             appointment_date: '',
                                             appointment_time: '',
                                             notes: '',
-                                            professional_id: ''
+                                            professional_id: '',
+                                            box_id: ''
                                         })
                                     }}
                                     className="p-2 hover:bg-ivory rounded-soft transition-colors"
@@ -1482,6 +1506,27 @@ export default function Appointments() {
                                             })()}
                                         </div>
                                     )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                        Box / Consultorio
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={newAppointment.box_id}
+                                            onChange={(e) => setNewAppointment({ ...newAppointment, box_id: e.target.value })}
+                                            className="input-soft w-full appearance-none"
+                                        >
+                                            <option value="">Sin asignar</option>
+                                            {clinicBoxes.map((box: any) => (
+                                                <option key={box.id} value={box.id}>
+                                                    {box.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40 rotate-90 pointer-events-none" />
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1627,7 +1672,8 @@ export default function Appointments() {
                                                 appointment_date: '',
                                                 appointment_time: '',
                                                 notes: '',
-                                                professional_id: ''
+                                                professional_id: '',
+                                                box_id: ''
                                             })
                                         }}
                                         className="btn-ghost"
