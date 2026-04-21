@@ -472,75 +472,71 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                         )}
                     </button>
 
-                    {specialty === 'dental' && (
-                        <>
-                            <button
-                                onClick={() => setActiveTab('odontogram')}
-                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'odontogram'
-                                    ? 'text-primary-600'
-                                    : 'text-charcoal/60 hover:text-charcoal'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-1.5">
-                                    <Activity className="w-4 h-4" />
-                                    Odontograma
-                                </div>
-                                {activeTab === 'odontogram' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('periodontogram')}
-                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'periodontogram'
-                                    ? 'text-primary-600'
-                                    : 'text-charcoal/60 hover:text-charcoal'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-1.5">
-                                    <Layers className="w-4 h-4" />
-                                    Periodontograma
-                                </div>
-                                {activeTab === 'periodontogram' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('prescriptions')}
-                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'prescriptions'
-                                    ? 'text-primary-600'
-                                    : 'text-charcoal/60 hover:text-charcoal'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-1.5">
-                                    <Pill className="w-4 h-4" />
-                                    Recetas
-                                </div>
-                                {activeTab === 'prescriptions' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('budgets')}
-                                className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'budgets'
-                                    ? 'text-primary-600'
-                                    : 'text-charcoal/60 hover:text-charcoal'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-1.5 justify-center relative">
-                                    <DollarSign className="w-4 h-4" />
-                                    Presupuestos
-                                    {pendingTreatments.length > 0 && (
-                                        <span className="absolute -top-1 -right-4 w-4 h-4 bg-primary-600 text-white text-[10px] flex items-center justify-center rounded-full animate-pulse">
-                                            {pendingTreatments.length}
-                                        </span>
-                                    )}
-                                </div>
-                                {activeTab === 'budgets' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
-                                )}
-                            </button>
-                        </>
-                    )}
+                    <button
+                        onClick={() => setActiveTab('odontogram')}
+                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'odontogram'
+                            ? 'text-primary-600'
+                            : 'text-charcoal/60 hover:text-charcoal'
+                            }`}
+                    >
+                        <div className="flex items-center gap-1.5">
+                            <Activity className="w-4 h-4" />
+                            Odontograma
+                        </div>
+                        {activeTab === 'odontogram' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('periodontogram')}
+                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'periodontogram'
+                            ? 'text-primary-600'
+                            : 'text-charcoal/60 hover:text-charcoal'
+                            }`}
+                    >
+                        <div className="flex items-center gap-1.5">
+                            <Layers className="w-4 h-4" />
+                            Periodontogram
+                        </div>
+                        {activeTab === 'periodontogram' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('prescriptions')}
+                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'prescriptions'
+                            ? 'text-primary-600'
+                            : 'text-charcoal/60 hover:text-charcoal'
+                            }`}
+                    >
+                        <div className="flex items-center gap-1.5">
+                            <Pill className="w-4 h-4" />
+                            Recetas
+                        </div>
+                        {activeTab === 'prescriptions' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('budgets')}
+                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'budgets'
+                            ? 'text-primary-600'
+                            : 'text-charcoal/60 hover:text-charcoal'
+                            }`}
+                    >
+                        <div className="flex items-center gap-1.5 justify-center relative">
+                            <DollarSign className="w-4 h-4" />
+                            Presupuestos
+                            {pendingTreatments.length > 0 && (
+                                <span className="absolute -top-1 -right-4 w-4 h-4 bg-primary-600 text-white text-[10px] flex items-center justify-center rounded-full animate-pulse">
+                                    {pendingTreatments.length}
+                                </span>
+                            )}
+                        </div>
+                        {activeTab === 'budgets' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                        )}
+                    </button>
                 </div>
             </div>
 
