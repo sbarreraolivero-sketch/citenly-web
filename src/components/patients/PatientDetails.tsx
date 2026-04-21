@@ -3,7 +3,7 @@ import {
     Phone, Mail, MapPin, Calendar,
     FileText, Plus, Edit2, Trash2, ArrowLeft,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy,
-    Activity, ShieldAlert, Pill
+    Activity, DollarSign, ShieldAlert
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
