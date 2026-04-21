@@ -1061,7 +1061,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                 ? `${newItems.length} tratamientos añadidos` 
                                 : 'Tratamiento añadido')
                         }}
-                        onAddClinicalRecord={(data) => {
+                        onAddClinicalRecord={(data: any) => {
                             setPrefilledRecordData(data)
                             setEditingRecord(null)
                             setShowRecordForm(true)

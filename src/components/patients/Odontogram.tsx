@@ -8,6 +8,7 @@ interface OdontogramProps {
     patientId: string
     clinicId: string
     onAddTreatment?: (item: any) => void
+    onAddClinicalRecord?: (data: any) => void
 }
 
 interface ToothData {
