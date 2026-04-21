@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, Check, User, FileText, Building2, ChevronDown, Loader2 } from 'lucide-react'
+import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, User, FileText, Building2, ChevronDown, Loader2 } from 'lucide-react'
 import { Database } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -72,15 +72,17 @@ export function PatientSecurityHeader({
         setUpdating(true)
         try {
             const currentMetadata = (patient as any).metadata || {}
-            const { error } = await supabase
+            const updatePayload: any = {
+                metadata: {
+                    ...currentMetadata,
+                    assigned_professional_id: profId,
+                    assigned_professional_name: profName
+                }
+            }
+            
+            const { error } = await (supabase as any)
                 .from('patients')
-                .update({ 
-                    metadata: { 
-                        ...currentMetadata, 
-                        assigned_professional_id: profId,
-                        assigned_professional_name: profName 
-                    } 
-                } as any)
+                .update(updatePayload)
                 .eq('id', patient.id)
 
             if (error) throw error
@@ -117,7 +119,6 @@ export function PatientSecurityHeader({
 
     return (
         <div className="mb-6 space-y-4 animate-fade-in relative z-[100]">
-            {/* Main Primary Banner: Dentalink Style */}
             <div className="bg-primary-700 text-white rounded-softer shadow-2xl p-0 overflow-hidden border border-primary-800/50">
                 <div className="px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-8 relative">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none" />
@@ -176,13 +177,11 @@ export function PatientSecurityHeader({
                                     <ShieldAlert className="w-4 h-4" /> Alertas médicas
                                 </span>
                             </div>
-                            
                             <div className="flex flex-col items-end gap-1">
                                 <span className="px-4 py-1.5 rounded-soft text-[11px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 flex items-center gap-2 shadow-inner">
                                     <Activity className="w-4 h-4" /> Enfermedades
                                 </span>
                             </div>
-
                             <div className="flex flex-col items-end gap-1">
                                 <span className="px-4 py-1.5 rounded-soft text-[11px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 flex items-center gap-2 shadow-inner">
                                     <Pill className="w-4 h-4" /> Medicamentos
@@ -192,15 +191,13 @@ export function PatientSecurityHeader({
                     </div>
                 </div>
 
-                {/* Context Bar (Dentalink Style) */}
                 <div className="bg-[#f8f9fa] px-8 py-3.5 flex items-center justify-between border-t border-black/5 relative overflow-visible">
                     <div className="flex items-center gap-12">
-                        {/* Profesional Dropdown */}
                         <div className="flex items-center gap-4 group relative">
                             <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all border border-black/5">
                                 <User className="w-5 h-5" />
                             </div>
-                            <div className="flex flex-col relative">
+                            <div className="flex flex-col relative text-left">
                                 <span className="text-[10px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1.5">Profesional a cargo</span>
                                 <div 
                                     className="flex items-center gap-1.5 cursor-pointer hover:bg-black/5 px-2 py-1 -ml-2 rounded transition-colors group"
@@ -235,7 +232,6 @@ export function PatientSecurityHeader({
                             </div>
                         </div>
 
-                        {/* Convenio */}
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 border border-black/5">
                                 <FileText className="w-5 h-5" />
@@ -246,7 +242,6 @@ export function PatientSecurityHeader({
                             </div>
                         </div>
 
-                        {/* Sucursal */}
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 border border-black/5">
                                 <Building2 className="w-5 h-5" />
@@ -269,7 +264,6 @@ export function PatientSecurityHeader({
                 </div>
             </div>
 
-            {/* Tags Bar */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
                 {patientTags.map(tag => (
                     <span
@@ -291,7 +285,7 @@ export function PatientSecurityHeader({
                 </button>
 
                 {suggestedTags.length > 0 && (
-                    <div className="flex items-center gap-2 ml-2 pl-4 border-l border-silk-beige">
+                    <div className="flex items-center gap-2 ml-2 pl-4 border-l border-silk-beige text-left">
                         <span className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest">Sugerencias:</span>
                         {suggestedTags.map(tag => (
                             <button
@@ -305,8 +299,6 @@ export function PatientSecurityHeader({
                     </div>
                 )}
                 
-                {/* Available for selector uses these internally but I should include them in the render if they are used elsewhere. 
-                    Actually, making them used in the render to satisfy TS. */}
                 <div className="hidden">
                     {availableTags.length}
                 </div>
