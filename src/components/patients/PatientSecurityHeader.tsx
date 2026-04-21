@@ -1,4 +1,4 @@
-import { ShieldAlert, AlertTriangle, Octagon } from 'lucide-react'
+import { ShieldAlert, Activity, Pill, User } from 'lucide-react'
 import { Database } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -6,61 +6,141 @@ type Patient = Database['public']['Tables']['patients']['Row']
 
 interface PatientSecurityHeaderProps {
     patient: Patient
+    financialSummary?: {
+        total: number
+        paid: number
+        balance: number
+    }
 }
 
-export function PatientSecurityHeader({ patient }: PatientSecurityHeaderProps) {
-    const hasAllergies = !!patient.allergies && patient.allergies.trim() !== ''
-    const hasMedicalHistory = !!patient.medical_history && patient.medical_history.trim() !== ''
-    const isHighRisk = patient.is_high_risk
+export function PatientSecurityHeader({ patient, financialSummary }: PatientSecurityHeaderProps) {
+    // Calculate age
+    const calculateAge = (birthday?: string | null) => {
+        if (!birthday) return null
+        const birthDate = new Date(birthday)
+        const ageDifMs = Date.now() - birthDate.getTime()
+        const ageDate = new Date(ageDifMs)
+        const years = Math.abs(ageDate.getUTCFullYear() - 1970)
+        const months = ageDate.getUTCMonth()
+        return { years, months }
+    }
 
-    if (!hasAllergies && !hasMedicalHistory && !isHighRisk) return null
+    const age = calculateAge(patient.birth_date)
 
     return (
-        <div className="w-full animate-slide-down sticky top-0 z-50">
-            <div className="flex flex-wrap items-stretch overflow-hidden rounded-soft border shadow-lg">
-                {/* High Risk Banner */}
-                {isHighRisk && (
-                    <div className="flex items-center gap-3 bg-red-600 text-white px-6 py-3 flex-1 min-w-[200px]">
-                        <div className="animate-pulse">
-                            <Octagon className="w-6 h-6 fill-white text-red-600" />
+        <div className="mb-6 space-y-4 animate-fade-in">
+            {/* Top Bar: Identity & Quick Stats */}
+            <div className="bg-primary-700 text-white rounded-t-soft p-4 shadow-lg flex flex-wrap items-center justify-between gap-4 border-b border-white/10">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-black border-2 border-white/30 shadow-inner">
+                        {patient.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-2xl font-black tracking-tight leading-tight">{patient.name}</h2>
+                            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded uppercase font-bold tracking-widest text-white/80">
+                                ID {patient.id.slice(0, 4)}
+                            </span>
                         </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest leading-none opacity-80">Alerta de Seguridad</p>
-                            <p className="text-sm font-black uppercase">Paciente de Alto Riesgo</p>
+                        <div className="flex items-center gap-3 text-xs text-white/80 mt-1 font-medium">
+                            {patient.rut && <span className="bg-primary-600 px-2 py-0.5 rounded">RUT: {patient.rut}</span>}
+                            {patient.gender && <span>• {patient.gender}</span>}
+                            {age && <span>• {age.years} años, {age.months}M</span>}
+                            {patient.insurance_provider && (
+                                <span className="bg-emerald-500/20 text-emerald-200 px-2 py-0.5 rounded border border-emerald-500/30">
+                                    {patient.insurance_provider}
+                                </span>
+                            )}
                         </div>
                     </div>
-                )}
+                </div>
 
-                {/* Allergies Section */}
-                {hasAllergies && (
-                    <div className={cn(
-                        "flex items-center gap-3 px-6 py-3 border-l border-white/10 flex-1 min-w-[250px]",
-                        isHighRisk ? "bg-red-700 text-white" : "bg-rose-50 text-rose-700 border-rose-200"
-                    )}>
-                        <ShieldAlert className="w-6 h-6 shrink-0" />
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest leading-none opacity-70">Alergias Detectadas</p>
-                            <p className="text-sm font-bold leading-tight">{patient.allergies}</p>
-                        </div>
+                {/* Financial Summary Widget - Dentalink Style */}
+                <div className="flex items-center gap-8 pr-4">
+                    <div className="text-right">
+                        <p className="text-[10px] uppercase font-black text-white/40 tracking-widest">Realizado</p>
+                        <p className="text-lg font-black tracking-tighter">${financialSummary?.total.toLocaleString() || '0'}</p>
                     </div>
-                )}
-
-                {/* Medical History Flags */}
-                {hasMedicalHistory && (
-                    <div className="flex items-center gap-3 bg-amber-50 text-amber-800 px-6 py-3 border-l border-amber-200 flex-[2] min-w-[300px]">
-                        <AlertTriangle className="w-6 h-6 shrink-0" />
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest leading-none opacity-70">Antecedentes Sistémicos</p>
-                            <p className="text-sm font-bold leading-tight">{patient.medical_history}</p>
-                        </div>
+                    <div className="text-right">
+                        <p className="text-[10px] uppercase font-black text-white/40 tracking-widest">Abonado</p>
+                        <p className="text-lg font-black tracking-tighter text-emerald-300">${financialSummary?.paid.toLocaleString() || '0'}</p>
                     </div>
-                )}
+                    <div className="text-right bg-white/10 p-2 rounded-soft border border-white/10 min-w-[120px]">
+                        <p className="text-[10px] uppercase font-black text-white/60 tracking-widest">Saldo Deuda</p>
+                        <p className={cn(
+                            "text-xl font-black tracking-tighter text-center",
+                            (financialSummary?.balance || 0) > 0 ? "text-orange-300" : "text-emerald-300"
+                        )}>
+                            ${financialSummary?.balance.toLocaleString() || '0'}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-                {/* Visual indicator of "Safe to proceed" if only generic info exists (Optional) */}
+            {/* Middle Bar: Triple Alert Cards (Dentalink Style) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 1. Medical Alerts / High Risk */}
+                <div className={cn(
+                    "flex flex-col p-4 rounded-soft border-2 transition-all relative overflow-hidden group",
+                    patient.is_high_risk 
+                        ? "bg-red-50 border-red-200 shadow-md ring-2 ring-red-100 ring-offset-0" 
+                        : "bg-white border-silk-beige"
+                )}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <ShieldAlert className={cn("w-5 h-5", patient.is_high_risk ? "text-red-600 animate-pulse" : "text-charcoal/40")} />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">Alertas Médicas</span>
+                    </div>
+                    <p className={cn("text-sm font-bold", patient.is_high_risk ? "text-red-700" : "text-charcoal/40 italic")}>
+                        {patient.is_high_risk ? "PACIENTE DE ALTO RIESGO" : "Sin alertas registradas"}
+                    </p>
+                    {patient.is_high_risk && <div className="absolute -right-2 -bottom-2 opacity-5"><ShieldAlert size={60} /></div>}
+                </div>
+
+                {/* 2. Allergies / Diseases */}
+                <div className={cn(
+                    "flex flex-col p-4 rounded-soft border-2 transition-all",
+                    patient.allergies 
+                        ? "bg-amber-50 border-amber-200 shadow-sm" 
+                        : "bg-white border-silk-beige"
+                )}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Activity className={cn("w-5 h-5", patient.allergies ? "text-amber-600" : "text-charcoal/40")} />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">Alergias</span>
+                    </div>
+                    <p className={cn("text-sm font-bold leading-tight", patient.allergies ? "text-amber-800" : "text-charcoal/40 italic")}>
+                        {patient.allergies || "Sin información registrada"}
+                    </p>
+                </div>
+
+                {/* 3. Medical History / Medications */}
+                <div className={cn(
+                    "flex flex-col p-4 rounded-soft border-2 transition-all",
+                    patient.medical_history 
+                        ? "bg-blue-50 border-blue-200 shadow-sm" 
+                        : "bg-white border-silk-beige"
+                )}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Pill className={cn("w-5 h-5", patient.medical_history ? "text-blue-600" : "text-charcoal/40")} />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/60">Medicamentos / Enf.</span>
+                    </div>
+                    <p className={cn("text-sm font-bold leading-tight", patient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
+                        {patient.medical_history || "Sin información registrada"}
+                    </p>
+                </div>
             </div>
             
-            {/* Glassmorphism subtle shadow underneath */}
-            <div className="h-4 bg-gradient-to-b from-black/5 to-transparent pointer-events-none" />
+            {/* Quick Actions Bar */}
+            <div className="flex gap-4 p-2 bg-white rounded-b-soft border-x border-b border-silk-beige shadow-sm">
+                <button className="text-[10px] font-black uppercase tracking-widest text-primary-600 hover:bg-primary-50 px-3 py-2 rounded transition-all border border-transparent hover:border-primary-100 flex items-center gap-2">
+                    Ir a datos personales →
+                </button>
+                <button className="text-[10px] font-black uppercase tracking-widest text-primary-600 hover:bg-primary-50 px-3 py-2 rounded transition-all border border-transparent hover:border-primary-100 flex items-center gap-2">
+                    Ver planes de tratamiento →
+                </button>
+                <button className="text-[10px] font-black uppercase tracking-widest text-primary-600 hover:bg-primary-50 px-3 py-2 rounded transition-all border border-transparent hover:border-primary-100 flex items-center gap-2">
+                    Estado de cuenta →
+                </button>
+            </div>
         </div>
     )
 }

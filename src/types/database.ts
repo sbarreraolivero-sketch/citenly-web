@@ -402,6 +402,11 @@ export interface Database {
                     allergies: string | null
                     medical_history: string | null
                     is_high_risk: boolean
+                    rut: string | null
+                    gender: string | null
+                    birth_date: string | null
+                    insurance_provider: string | null
+                    internal_id: string | null
                     created_at: string
                     updated_at: string
                 }

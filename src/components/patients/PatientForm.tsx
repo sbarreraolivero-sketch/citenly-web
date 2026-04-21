@@ -32,6 +32,11 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
         service: '',
         notes: '',
         referred_by_code: '',
+        rut: '',
+        gender: '',
+        birth_date: '',
+        insurance_provider: '',
+        internal_id: '',
         allergies: '',
         medical_history: '',
         is_high_risk: false
@@ -66,6 +71,11 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 service: patient.service || '',
                 notes: patient.notes || '',
                 referred_by_code: (patient as any).referred_by_code || '',
+                rut: (patient as any).rut || '',
+                gender: (patient as any).gender || '',
+                birth_date: (patient as any).birth_date || '',
+                insurance_provider: (patient as any).insurance_provider || '',
+                internal_id: (patient as any).internal_id || '',
                 allergies: patient.allergies || '',
                 medical_history: patient.medical_history || '',
                 is_high_risk: patient.is_high_risk || false
@@ -102,6 +112,11 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                 service: formData.service || null,
                 notes: formData.notes || null,
                 referred_by_code: formData.referred_by_code || null,
+                rut: formData.rut || null,
+                gender: formData.gender || null,
+                birth_date: formData.birth_date || null,
+                insurance_provider: formData.insurance_provider || null,
+                internal_id: formData.internal_id || null,
                 allergies: formData.allergies || null,
                 medical_history: formData.medical_history || null,
                 is_high_risk: formData.is_high_risk
@@ -193,6 +208,62 @@ export function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
                                 className="input-soft"
                                 placeholder="Ej: Maria Perez"
                             />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-2">
+                                    RUT / ID legal
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.rut}
+                                    onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                                    className="input-soft"
+                                    placeholder="Ej: 12.345.678-9"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-2">
+                                    Fecha de Nacimiento
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.birth_date}
+                                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                                    className="input-soft"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-2">
+                                    Género
+                                </label>
+                                <select
+                                    value={formData.gender}
+                                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                    className="input-soft"
+                                >
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal mb-2">
+                                    Convenio / Seguro
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.insurance_provider}
+                                    onChange={(e) => setFormData({ ...formData, insurance_provider: e.target.value })}
+                                    className="input-soft"
+                                    placeholder="Ej: Sin convenio"
+                                />
+                            </div>
                         </div>
 
                         <div>

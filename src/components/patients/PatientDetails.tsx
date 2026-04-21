@@ -39,6 +39,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const [loadingRecords, setLoadingRecords] = useState(false)
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
     const [pendingTreatments, setPendingTreatments] = useState<any[]>([])
+    const [financialSummary, setFinancialSummary] = useState({ total: 0, paid: 0, balance: 0 })
 
     // Tag state
     const [patientTags, setPatientTags] = useState<Tag[]>([])
@@ -205,9 +206,33 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
         }
     }
 
+    const fetchFinancialData = async () => {
+        if (!patient.id) return
+        try {
+            const { data, error } = await supabase
+                .from('dental_budgets')
+                .select('total_amount, paid_amount')
+                .eq('patient_id', patient.id)
+                .neq('status', 'cancelled')
+
+            if (data) {
+                const total = data.reduce((acc, b) => acc + (b.total_amount || 0), 0)
+                const paid = data.reduce((acc, b) => acc + (b.paid_amount || 0), 0)
+                setFinancialSummary({
+                    total,
+                    paid,
+                    balance: total - paid
+                })
+            }
+        } catch (err) {
+            console.error('Error fetching financial data:', err)
+        }
+    }
+
     useEffect(() => {
-        if (activeTab === 'history' || activeTab === 'gallery') {
+        if (activeTab === 'history' || activeTab === 'gallery' || activeTab === 'info') {
             fetchRecords()
+            fetchFinancialData()
         }
     }, [activeTab, patient.id])
 
@@ -301,7 +326,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     return (
         <div className="space-y-6 animate-fade-in relative pb-20">
             {/* Clinical Security Header (Sticky) */}
-            <PatientSecurityHeader patient={patient} />
+            <PatientSecurityHeader patient={patient} financialSummary={financialSummary} />
 
             {/* Header / Navigation */}
             <div className="flex flex-col gap-4">
