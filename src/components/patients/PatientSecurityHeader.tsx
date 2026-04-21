@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, User, FileText, Building2, ChevronDown, Loader2 } from 'lucide-react'
+import { ShieldAlert, Activity, Pill, ArrowLeft, Plus, User, FileText, Building2, ChevronDown, Loader2, Monitor } from 'lucide-react'
 import { Database } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -44,7 +44,11 @@ export function PatientSecurityHeader({
     const [professionals, setProfessionals] = useState<any[]>([])
     const [loadingProfessionals, setLoadingProfessionals] = useState(false)
     const [showProfDropdown, setShowProfDropdown] = useState(false)
+    const [showBoxDropdown, setShowBoxDropdown] = useState(false)
     const [updating, setUpdating] = useState(false)
+
+    // Standard boxes for dental clinics - in a real app these come from settings
+    const BOX_OPTIONS = ['BOX 1', 'BOX 2', 'BOX 3', 'BOX 4', 'BOX 5', 'Sillón Principal', 'Sillón Cirugía', 'Urgencias']
 
     useEffect(() => {
         if (patient.clinic_id) {
@@ -68,15 +72,14 @@ export function PatientSecurityHeader({
         }
     }
 
-    const handleAssignProfessional = async (profId: string, profName: string) => {
+    const handleUpdateMetadata = async (key: string, value: string) => {
         setUpdating(true)
         try {
             const currentMetadata = (patient as any).metadata || {}
             const updatePayload: any = {
                 metadata: {
                     ...currentMetadata,
-                    assigned_professional_id: profId,
-                    assigned_professional_name: profName
+                    [key]: value
                 }
             }
             
@@ -86,12 +89,13 @@ export function PatientSecurityHeader({
                 .eq('id', patient.id)
 
             if (error) throw error
-            toast.success(`Asignado a ${profName}`)
+            toast.success(`Actualizado: ${value}`)
             setShowProfDropdown(false)
+            setShowBoxDropdown(false)
             window.location.reload()
         } catch (error) {
-            console.error('Error assigning professional:', error)
-            toast.error('Error al asignar profesional')
+            console.error('Error updating metadata:', error)
+            toast.error('Error al actualizar')
         } finally {
             setUpdating(false)
         }
@@ -115,6 +119,7 @@ export function PatientSecurityHeader({
 
     const initials = patient.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'PP'
     const currentProfessional = (patient as any).metadata?.assigned_professional_name || 'Sin asignar'
+    const currentBox = (patient as any).metadata?.assigned_box || 'Sin asignar'
 
     return (
         <div className="mb-6 space-y-4 animate-fade-in relative z-[100]">
@@ -180,14 +185,12 @@ export function PatientSecurityHeader({
                                     <span className={patient.is_high_risk ? "text-white" : "text-primary-700"}>Alertas médicas</span>
                                 </span>
                             </div>
-                            
                             <div className="group flex flex-col items-end gap-1">
                                 <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-primary-700 border border-white hover:bg-ivory flex items-center gap-2.5 transition-all shadow-lg">
                                     <Activity className="w-4.5 h-4.5 text-emerald-500" /> 
                                     <span>Enfermedades</span>
                                 </span>
                             </div>
-
                             <div className="group flex flex-col items-end gap-1">
                                 <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-primary-700 border border-white hover:bg-ivory flex items-center gap-2.5 transition-all shadow-lg">
                                     <Pill className="w-4.5 h-4.5 text-indigo-500" /> 
@@ -198,34 +201,36 @@ export function PatientSecurityHeader({
                     </div>
                 </div>
 
+                {/* Context Bar: Professional, Convenio, Sucursal, BOX */}
                 <div className="bg-[#f8f9fa] px-8 py-3.5 flex items-center justify-between border-t border-black/5 relative overflow-visible">
-                    <div className="flex items-center gap-12">
-                        <div className="flex items-center gap-4 group relative">
-                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all border border-black/5">
-                                <User className="w-5 h-5" />
+                    <div className="flex items-center gap-8">
+                        {/* Profesional Dropdown */}
+                        <div className="flex items-center gap-3 group relative">
+                            <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all border border-black/5">
+                                <User className="w-4.5 h-4.5" />
                             </div>
                             <div className="flex flex-col relative text-left">
-                                <span className="text-[10px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1.5">Profesional a cargo</span>
+                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Profesional</span>
                                 <div 
-                                    className="flex items-center gap-1.5 cursor-pointer hover:bg-black/5 px-2 py-1 -ml-2 rounded transition-colors group"
-                                    onClick={() => setShowProfDropdown(!showProfDropdown)}
+                                    className="flex items-center gap-1 cursor-pointer hover:bg-black/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
+                                    onClick={() => { setShowProfDropdown(!showProfDropdown); setShowBoxDropdown(false); }}
                                 >
-                                    <span className="text-sm font-black text-primary-700">{currentProfessional}</span>
-                                    <ChevronDown className={cn("w-4 h-4 text-primary-500 transition-transform", showProfDropdown && "rotate-180")} />
+                                    <span className="text-xs font-black text-primary-700 truncate max-w-[120px]">{currentProfessional}</span>
+                                    <ChevronDown className={cn("w-3.5 h-3.5 text-primary-500 transition-transform", showProfDropdown && "rotate-180")} />
                                 </div>
 
                                 {showProfDropdown && (
-                                    <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-softer shadow-2xl border border-silk-beige z-[200] overflow-hidden animate-scale-in">
+                                    <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-softer shadow-2xl border border-silk-beige z-[200] overflow-hidden animate-scale-in">
                                         <div className="p-3 bg-ivory/50 border-b border-silk-beige">
                                             <p className="text-[10px] font-black text-charcoal/40 uppercase tracking-widest">Seleccionar Profesional</p>
                                         </div>
-                                        <div className="max-h-64 overflow-y-auto">
+                                        <div className="max-h-60 overflow-y-auto">
                                             {loadingProfessionals ? (
                                                 <div className="p-6 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>
                                             ) : professionals.map(prof => (
                                                 <button
                                                     key={prof.id}
-                                                    onClick={() => handleAssignProfessional(prof.id, prof.full_name)}
+                                                    onClick={() => handleUpdateMetadata('assigned_professional_name', prof.full_name)}
                                                     className="w-full text-left px-4 py-3 hover:bg-primary-50 flex flex-col transition-colors border-b border-silk-beige/30 last:border-0"
                                                     disabled={updating}
                                                 >
@@ -239,38 +244,78 @@ export function PatientSecurityHeader({
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 border border-black/5">
-                                <FileText className="w-5 h-5" />
+                        {/* BOX Dropdown */}
+                        <div className="flex items-center gap-3 group relative">
+                            <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all border border-black/5">
+                                <Monitor className="w-4.5 h-4.5" />
                             </div>
-                            <div className="flex flex-col text-left">
-                                <span className="text-[10px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1.5">Convenio</span>
-                                <span className="text-sm font-black text-emerald-700">{patient.insurance_provider || 'Particular / Sin convenio'}</span>
+                            <div className="flex flex-col relative text-left">
+                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">BOX / SILLÓN</span>
+                                <div 
+                                    className="flex items-center gap-1 cursor-pointer hover:bg-black/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
+                                    onClick={() => { setShowBoxDropdown(!showBoxDropdown); setShowProfDropdown(false); }}
+                                >
+                                    <span className="text-xs font-black text-primary-700">{currentBox}</span>
+                                    <ChevronDown className={cn("w-3.5 h-3.5 text-primary-500 transition-transform", showBoxDropdown && "rotate-180")} />
+                                </div>
+
+                                {showBoxDropdown && (
+                                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-softer shadow-2xl border border-silk-beige z-[200] overflow-hidden animate-scale-in">
+                                        <div className="p-3 bg-ivory/50 border-b border-silk-beige">
+                                            <p className="text-[10px] font-black text-charcoal/40 uppercase tracking-widest">Asignar Box</p>
+                                        </div>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {BOX_OPTIONS.map(box => (
+                                                <button
+                                                    key={box}
+                                                    onClick={() => handleUpdateMetadata('assigned_box', box)}
+                                                    className="w-full text-left px-4 py-3 hover:bg-primary-50 font-black text-sm text-charcoal transition-colors border-b border-silk-beige/30 last:border-0"
+                                                    disabled={updating}
+                                                >
+                                                    {box}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 border border-black/5">
-                                <Building2 className="w-5 h-5" />
+                        {/* Convenio */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 border border-black/5">
+                                <FileText className="w-4.5 h-4.5" />
                             </div>
                             <div className="flex flex-col text-left">
-                                <span className="text-[10px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1.5">Sucursal</span>
-                                <span className="text-sm font-black text-charcoal">{clinicName}</span>
+                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Convenio</span>
+                                <span className="text-xs font-black text-emerald-700">{patient.insurance_provider || 'Part.'}</span>
+                            </div>
+                        </div>
+
+                        {/* Sucursal */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 border border-black/5">
+                                <Building2 className="w-4.5 h-4.5" />
+                            </div>
+                            <div className="flex flex-col text-left">
+                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Sucursal</span>
+                                <span className="text-xs font-black text-charcoal truncate max-w-[100px]">{clinicName}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="px-6 py-2.5 bg-white border border-silk-beige text-charcoal text-xs font-black uppercase tracking-widest rounded-soft hover:bg-ivory transition-all shadow-sm">
-                             Agendar Cita
+                        <button className="px-5 py-2 bg-white border border-silk-beige text-charcoal text-[10px] font-black uppercase tracking-widest rounded-soft hover:bg-ivory transition-all shadow-sm">
+                             Agendar
                         </button>
-                        <button className="px-6 py-2.5 bg-primary-600 text-white rounded-soft text-xs font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all">
-                             Historia Clínica
+                        <button className="px-5 py-2 bg-primary-600 text-white rounded-soft text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all">
+                             Historia
                         </button>
                     </div>
                 </div>
             </div>
 
+            {/* Tags Bar */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
                 {patientTags.map(tag => (
                     <span
