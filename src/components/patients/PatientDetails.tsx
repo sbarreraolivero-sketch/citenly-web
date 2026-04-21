@@ -90,25 +90,53 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
         window.scrollTo(0, 0)
     }, [])
 
-    // Sync buffers when patient prop updates
+    const [localPatient, setLocalPatient] = useState<any>(patient)
+    const [loadingLocal, setLoadingLocal] = useState(true)
+
+    // Fetch FULL patient details on mount or ID change
     useEffect(() => {
-        setNotesBuffer(patient.notes || '')
+        const fetchFullPatient = async () => {
+            if (!patient.id) return
+            setLoadingLocal(true)
+            try {
+                const { data, error } = await supabase
+                    .from('patients')
+                    .select('*')
+                    .eq('id', patient.id)
+                    .single()
+                
+                if (error) throw error
+                if (data) {
+                    setLocalPatient(data)
+                }
+            } catch (error) {
+                console.error('Error fetching full patient info:', error)
+            } finally {
+                setLoadingLocal(false)
+            }
+        }
+        fetchFullPatient()
+    }, [patient.id])
+
+    // Sync buffers when localPatient updates
+    useEffect(() => {
+        setNotesBuffer(localPatient.notes || '')
         setInfoForm({
-            name: patient.name || '',
-            rut: patient.rut || '',
-            email: patient.email || '',
-            address: patient.address || '',
-            gender: patient.gender || '',
-            insurance_provider: patient.insurance_provider || '',
-            internal_id: patient.internal_id || '',
-            birth_date: patient.birth_date || ''
+            name: localPatient.name || '',
+            rut: localPatient.rut || '',
+            email: localPatient.email || '',
+            address: localPatient.address || '',
+            gender: localPatient.gender || '',
+            insurance_provider: localPatient.insurance_provider || '',
+            internal_id: localPatient.internal_id || '',
+            birth_date: localPatient.birth_date || ''
         })
         setSecurityForm({
-            is_high_risk: patient.is_high_risk || false,
-            allergies: patient.allergies || '',
-            medical_history: patient.medical_history || ''
+            is_high_risk: localPatient.is_high_risk || false,
+            allergies: localPatient.allergies || '',
+            medical_history: localPatient.medical_history || ''
         })
-    }, [patient])
+    }, [localPatient])
 
     const handleSaveInfo = async () => {
         setSavingInfo(true)
@@ -131,14 +159,21 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const handleSaveSecurity = async () => {
         setSavingSecurity(true)
         try {
-            const { error } = await (supabase.from('patients') as any)
+            const { data, error } = await (supabase.from('patients') as any)
                 .update(securityForm)
                 .eq('id', patient.id)
+                .select()
             
             if (error) throw error
-            toast.success('Seguridad clínica actualizada')
-            if (onUpdate) await (onUpdate as any)()
-            setIsEditingSecurity(false)
+            if (!data || data.length === 0) {
+                console.warn('Supabase no devolvió datos. Es posible que el ID no coincida o no tengas permisos.')
+                toast.error('No se pudo confirmar el guardado. Verifica tus permisos.')
+            } else {
+                toast.success('Seguridad clínica actualizada correctamente')
+                setLocalPatient(data[0]) // Actualizar estado local inmediatamente
+                if (onUpdate) await (onUpdate as any)()
+                setIsEditingSecurity(false)
+            }
         } catch (error) {
             console.error('Error updating security:', error)
             toast.error('Error al actualizar seguridad')
@@ -374,7 +409,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
         <div className="space-y-6 animate-fade-in relative pb-20">
             {/* Clinical Security Header (Sticky & Consolidated) */}
             <PatientSecurityHeader 
-                patient={patient} 
+                patient={localPatient} 
                 financialSummary={financialSummary} 
                 onBack={onBack}
                 patientTags={patientTags}
@@ -515,7 +550,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     className="input-soft w-full text-sm py-1 px-2"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold">{patient.name || '---'}</p>
+                                                <p className="text-charcoal font-bold">{localPatient.name || '---'}</p>
                                             )}
                                         </div>
                                         <div>
@@ -528,7 +563,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     className="input-soft w-full text-sm py-1 px-2"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold">{patient.rut || '---'}</p>
+                                                <p className="text-charcoal font-bold">{localPatient.rut || '---'}</p>
                                             )}
                                         </div>
                                     </div>
@@ -544,14 +579,14 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     className="input-soft w-full text-sm py-1 px-2"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold truncate">{patient.email || '---'}</p>
+                                                <p className="text-charcoal font-bold truncate">{localPatient.email || '---'}</p>
                                             )}
                                         </div>
                                         <div>
                                             <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Teléfono (No editable)</label>
                                             <div className="flex items-center gap-2 text-charcoal/40 font-bold">
                                                 <Phone className="w-3.5 h-3.5" />
-                                                <span>{formatPhoneNumber(patient.phone_number)}</span>
+                                                <span>{formatPhoneNumber(localPatient.phone_number)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -568,7 +603,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                         ) : (
                                             <div className="flex items-start gap-2">
                                                 <MapPin className="w-4 h-4 text-charcoal/30 mt-0.5" />
-                                                <p className="text-charcoal font-bold">{patient.address || 'No especificada'}</p>
+                                                <p className="text-charcoal font-bold">{localPatient.address || 'No especificada'}</p>
                                             </div>
                                         )}
                                     </div>
@@ -588,7 +623,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     <option value="Otro">Otro</option>
                                                 </select>
                                             ) : (
-                                                <p className="text-charcoal font-bold">{patient.gender || '---'}</p>
+                                                <p className="text-charcoal font-bold">{localPatient.gender || '---'}</p>
                                             )}
                                         </div>
                                         <div>
@@ -602,7 +637,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     placeholder="Ej: Particular / Isapre"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold">{patient.insurance_provider || '---'}</p>
+                                                <p className="text-charcoal font-bold">{localPatient.insurance_provider || '---'}</p>
                                             )}
                                         </div>
                                     </div>
@@ -612,12 +647,12 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                             {/* 2. Seguridad Clínica Card (Editable, Replaces old Notes) */}
                             <div className={cn(
                                 "card-soft p-6 shadow-md transition-all relative border-2",
-                                patient.is_high_risk ? "bg-red-50 border-red-200" : "bg-white border-silk-beige"
+                                localPatient.is_high_risk ? "bg-red-50 border-red-200" : "bg-white border-silk-beige"
                             )}>
                                 <div className="flex justify-between items-center mb-6 border-b border-black/5 pb-2">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-black text-charcoal uppercase tracking-tight text-sm">Seguridad Clínica</h3>
-                                        {patient.is_high_risk && <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">ALTO RIESGO</span>}
+                                        {localPatient.is_high_risk && <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">ALTO RIESGO</span>}
                                     </div>
                                     {!isEditingSecurity ? (
                                         <button 
@@ -684,8 +719,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                 placeholder="Ej: Penicilina, Látex..."
                                             />
                                         ) : (
-                                            <p className={cn("text-sm font-bold min-h-[40px] p-2 bg-black/5 rounded", patient.allergies ? "text-amber-800" : "text-charcoal/40 italic")}>
-                                                {patient.allergies || 'Sin alergias registradas'}
+                                            <p className={cn("text-sm font-bold min-h-[40px] p-2 bg-black/5 rounded", localPatient.allergies ? "text-amber-800" : "text-charcoal/40 italic")}>
+                                                {localPatient.allergies || 'Sin alergias registradas'}
                                             </p>
                                         )}
                                     </div>
@@ -703,8 +738,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                 placeholder="Ej: Hipertensión, Metformina 500mg..."
                                             />
                                         ) : (
-                                            <p className={cn("text-sm font-bold min-h-[40px] p-2 bg-black/5 rounded", patient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
-                                                {patient.medical_history || 'Sin antecedentes registrados'}
+                                            <p className={cn("text-sm font-bold min-h-[40px] p-2 bg-black/5 rounded", localPatient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
+                                                {localPatient.medical_history || 'Sin antecedentes registrados'}
                                             </p>
                                         )}
                                     </div>

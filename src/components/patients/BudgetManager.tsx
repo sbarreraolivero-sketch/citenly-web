@@ -452,13 +452,13 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                         <div className="p-6 border-b border-silk-beige bg-ivory/50 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-charcoal">Nuevo Presupuesto Dental</h3>
                             <button onClick={() => setShowNewModal(false)} className="p-2 hover:bg-silk-beige rounded-full transition-colors">
-                                <Plus className="w-6 h-6 rotate-45 text-charcoal/40" />
+                                <Plus className="w-6 h-6 rotate-45 text-charcoal/70" />
                             </button>
                         </div>
 
                         <div className="p-6 overflow-y-auto flex-1 space-y-6">
                             <div>
-                                <label className="block text-xs font-black uppercase text-charcoal/40 tracking-widest mb-2">Nombre / Título del Presupuesto</label>
+                                <label className="block text-xs font-black uppercase text-charcoal/70 tracking-widest mb-2">Nombre / Título del Presupuesto</label>
                                 <input 
                                     type="text"
                                     placeholder="Ej: Tratamiento Ortodoncia Integral"
@@ -469,12 +469,12 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                             </div>
 
                             <div className="space-y-3">
-                                <label className="block text-xs font-black uppercase text-charcoal/40 tracking-widest">Ítems del Presupuesto</label>
+                                <label className="block text-xs font-black uppercase text-charcoal/70 tracking-widest">Ítems del Presupuesto</label>
                                 <div className="space-y-4">
                                     {newItems.map((item, idx) => (
                                         <div key={idx} className="grid grid-cols-12 gap-3 items-end bg-ivory/30 p-4 rounded-soft border border-silk-beige/30 relative group">
                                             <div className="col-span-5">
-                                                <label className="text-[10px] font-bold text-charcoal/40 uppercase mb-1 block">Descripción del Procedimiento</label>
+                                                <label className="text-[10px] font-bold text-charcoal/70 uppercase mb-1 block">Descripción del Procedimiento</label>
                                                 <input 
                                                     type="text"
                                                     className="input-soft w-full"
@@ -484,7 +484,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                                                 />
                                             </div>
                                             <div className="col-span-2">
-                                                <label className="text-[10px] font-bold text-charcoal/40 uppercase mb-1 block">Pieza #</label>
+                                                <label className="text-[10px] font-bold text-charcoal/70 uppercase mb-1 block">Pieza #</label>
                                                 <input 
                                                     type="number"
                                                     className="input-soft w-full"
@@ -494,7 +494,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                                                 />
                                             </div>
                                             <div className="col-span-2">
-                                                <label className="text-[10px] font-bold text-charcoal/40 uppercase mb-1 block">Precio Unit.</label>
+                                                <label className="text-[10px] font-bold text-charcoal/70 uppercase mb-1 block">Precio Unit.</label>
                                                 <div className="relative">
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/30">$</span>
                                                     <input 
@@ -506,7 +506,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                                                 </div>
                                             </div>
                                             <div className="col-span-1">
-                                                <label className="text-[10px] font-bold text-charcoal/40 uppercase mb-1 block">Cant</label>
+                                                <label className="text-[10px] font-bold text-charcoal/70 uppercase mb-1 block">Cant</label>
                                                 <input 
                                                     type="number"
                                                     className="input-soft w-full"
@@ -515,7 +515,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                                                 />
                                             </div>
                                             <div className="col-span-1">
-                                                <label className="text-[10px] font-bold text-charcoal/40 uppercase mb-1 block">Total</label>
+                                                <label className="text-[10px] font-bold text-charcoal/70 uppercase mb-1 block">Total</label>
                                                 <div className="h-10 flex items-center font-bold text-charcoal">
                                                     ${item.total_price.toLocaleString()}
                                                 </div>
@@ -541,14 +541,14 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
                             </div>
 
                             <div className="flex flex-col gap-4 border-t border-silk-beige pt-6">
-                                <label className="block text-xs font-black uppercase text-charcoal/40 tracking-widest">Notas del Presupuesto (Opcional)</label>
+                                <label className="block text-xs font-black uppercase text-charcoal/70 tracking-widest">Notas del Presupuesto (Opcional)</label>
                                 <textarea className="input-soft w-full min-h-[80px]" placeholder="Ej: Válido por 30 días. Incluye radiografía inicial..." />
                             </div>
                         </div>
 
                         <div className="p-6 border-t border-silk-beige bg-white flex items-center justify-between shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
                             <div>
-                                <p className="text-xs uppercase font-bold text-charcoal/40 mb-1 tracking-widest">Total del Presupuesto</p>
+                                <p className="text-xs uppercase font-bold text-charcoal/70 mb-1 tracking-widest">Total del Presupuesto</p>
                                 <p className="text-3xl font-black text-charcoal">${calculateTotal().toLocaleString()}</p>
                             </div>
                             <div className="flex gap-4">
