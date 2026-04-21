@@ -38,15 +38,7 @@ export function PatientSecurityHeader({
     suggestedTags = []
 }: PatientSecurityHeaderProps) {
     // Calculate age
-    const calculateAge = (birthday?: string | null) => {
-        if (!birthday) return null
-        const birthDate = new Date(birthday)
-        const ageDifMs = Date.now() - birthDate.getTime()
-        const ageDate = new Date(ageDifMs)
-        const years = Math.abs(ageDate.getUTCFullYear() - 1970)
-        const months = ageDate.getUTCMonth()
-        return { years, months }
-    }
+
 
 
 
