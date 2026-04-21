@@ -113,10 +113,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const handleSaveInfo = async () => {
         setSavingInfo(true)
         try {
-            // @ts-ignore
-            const { error } = await supabase
-                .from('patients')
-                .update(infoForm as any)
+            const { error } = await (supabase.from('patients') as any)
+                .update(infoForm)
                 .eq('id', patient.id)
             
             if (error) throw error
@@ -133,10 +131,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const handleSaveSecurity = async () => {
         setSavingSecurity(true)
         try {
-            // @ts-ignore
-            const { error } = await supabase
-                .from('patients')
-                .update(securityForm as any)
+            const { error } = await (supabase.from('patients') as any)
+                .update(securityForm)
                 .eq('id', patient.id)
             
             if (error) throw error
@@ -335,10 +331,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const handleSaveNotes = async () => {
         setSavingNotes(true)
         try {
-            // @ts-ignore
-            await supabase
-                .from('patients')
-                .update({ notes: notesBuffer } as any)
+            await (supabase.from('patients') as any)
+                .update({ notes: notesBuffer })
                 .eq('id', patient.id)
 
             if (onUpdate) await (onUpdate as any)()
