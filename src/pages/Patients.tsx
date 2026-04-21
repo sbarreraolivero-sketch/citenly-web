@@ -8,10 +8,12 @@ import {
     Trash2,
     X,
     Filter,
-    Tag
+    Tag,
+    Monitor
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { DentalChairDashboard } from '@/components/dashboard/DentalChairDashboard'
 
 import { PatientForm } from '@/components/patients/PatientForm'
 import { PatientDetails } from '@/components/patients/PatientDetails'
@@ -46,6 +48,7 @@ export default function Patients() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [contacts, setContacts] = useState<Contact[]>([])
+    const [activeView, setActiveView] = useState<'list' | 'chair'>('list')
     const [activeTab, setActiveTab] = useState<'all' | 'patients' | 'prospects'>('all')
     const [showTagSidebar, setShowTagSidebar] = useState(false)
     const [editingPatient, setEditingPatient] = useState<any | null>(null)
@@ -220,36 +223,70 @@ export default function Patients() {
                         </p>
                     </GuideBox>
 
-                    {/* Tabs */}
-                    <div className="flex items-center gap-1 bg-silk-beige/30 p-1 rounded-lg w-fit">
+                    {/* View Toggle */}
+                    <div className="flex items-center gap-1 bg-silk-beige/30 p-1.5 rounded-softer w-fit border border-silk-beige/50">
                         <button
-                            onClick={() => setActiveTab('all')}
+                            onClick={() => setActiveView('list')}
                             className={cn(
-                                "px-4 py-2 text-sm font-medium rounded-md transition-all",
-                                activeTab === 'all' ? "bg-white text-primary-700 shadow-sm" : "text-charcoal/60 hover:text-charcoal"
+                                "flex items-center gap-2 px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-soft transition-all",
+                                activeView === 'list' 
+                                    ? "bg-white text-primary-700 shadow-lg shadow-black/5" 
+                                    : "text-charcoal/40 hover:text-charcoal"
                             )}
                         >
-                            Todos
+                            <UserIcon className="w-4 h-4" />
+                            Lista de Pacientes
                         </button>
                         <button
-                            onClick={() => setActiveTab('patients')}
+                            onClick={() => setActiveView('chair')}
                             className={cn(
-                                "px-4 py-2 text-sm font-medium rounded-md transition-all",
-                                activeTab === 'patients' ? "bg-white text-primary-700 shadow-sm" : "text-charcoal/60 hover:text-charcoal"
+                                "flex items-center gap-2 px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-soft transition-all",
+                                activeView === 'chair' 
+                                    ? "bg-white text-primary-700 shadow-lg shadow-black/5" 
+                                    : "text-charcoal/40 hover:text-charcoal"
                             )}
                         >
-                            Pacientes
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('prospects')}
-                            className={cn(
-                                "px-4 py-2 text-sm font-medium rounded-md transition-all",
-                                activeTab === 'prospects' ? "bg-white text-primary-700 shadow-sm" : "text-charcoal/60 hover:text-charcoal"
-                            )}
-                        >
-                            Prospectos
+                            <Monitor className="w-4 h-4" />
+                            Tablero de Sillones
                         </button>
                     </div>
+
+                    {activeView === 'chair' ? (
+                        <DentalChairDashboard />
+                    ) : (
+                        <>
+                            {/* Tabs */}
+                            <div className="flex items-center gap-1 bg-silk-beige/30 p-1 rounded-lg w-fit">
+                                <button
+                                    onClick={() => setActiveTab('all')}
+                                    className={cn(
+                                        "px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                        activeTab === 'all' ? "bg-white text-primary-700 shadow-sm" : "text-charcoal/60 hover:text-charcoal"
+                                    )}
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('patients')}
+                                    className={cn(
+                                        "px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                        activeTab === 'patients' ? "bg-white text-primary-700 shadow-sm" : "text-charcoal/60 hover:text-charcoal"
+                                    )}
+                                >
+                                    Pacientes
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('prospects')}
+                                    className={cn(
+                                        "px-4 py-2 text-sm font-medium rounded-md transition-all",
+                                        activeTab === 'prospects' ? "bg-white text-primary-700 shadow-sm" : "text-charcoal/60 hover:text-charcoal"
+                                    )}
+                                >
+                                    Prospectos
+                                </button>
+                            </div>
+                        </>
+                    )}
 
                     <div className="flex gap-6 relative">
                         {/* Main Content */}
@@ -550,7 +587,8 @@ export default function Patients() {
                                 </div>
                             </div>
                         )}
-                    </div>
+                        </>
+                    )}
                 </div>
             )}
 
