@@ -16,7 +16,7 @@ export interface ClinicalRecord {
     notes: string | null
     attachments: any | null
     metadata?: any | null
-    professional_id?: string | null
+    professional_id: string | null
     created_at: string
     updated_at: string
 }

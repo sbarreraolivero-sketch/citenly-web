@@ -215,7 +215,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     useEffect(() => {
         if (availableTags.length > 0) {
             console.log('Computing suggestions...', { patient, records: records.length, available: availableTags.map(t => t.name) })
-            const suggestions = suggestTags(patient, records, patientTags, availableTags)
+            const suggestions = suggestTags(patient, records as any, patientTags, availableTags)
             console.log('Suggestions computed:', suggestions)
             setSuggestedTags(suggestions)
         } else {
