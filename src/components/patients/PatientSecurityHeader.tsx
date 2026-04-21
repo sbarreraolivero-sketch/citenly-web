@@ -43,7 +43,7 @@ export function PatientSecurityHeader({
 
 
     return (
-        <div className="mb-6 space-y-4 animate-fade-in sticky top-0 z-30 bg-silk-beige/50 backdrop-blur-sm -mx-4 px-4 py-2 border-b border-silk-beige">
+        <div className="mb-6 space-y-4 animate-fade-in relative z-10">
             {/* Top Bar: Identity & Quick Stats */}
             <div className="bg-primary-700 text-white rounded-soft p-4 shadow-lg flex flex-wrap items-center justify-between gap-4 border-b border-white/10 relative overflow-hidden">
                 {/* Decorative background element */}
