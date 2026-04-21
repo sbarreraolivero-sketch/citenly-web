@@ -3,7 +3,7 @@ import {
     Phone, MapPin,
     FileText, Plus, Edit2, Trash2,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight,
-    Activity, DollarSign, ShieldAlert, Pill
+    Activity, DollarSign, ShieldAlert, Pill, Loader2
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -404,6 +404,13 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     ).filter(img => img.url)
 
     // copyReferralLink removed as it was unused in JSX
+
+    if (loadingLocal) return (
+        <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <Loader2 className="w-12 h-12 text-primary-500 animate-spin" />
+            <p className="text-charcoal/40 font-bold animate-pulse uppercase tracking-[0.2em] text-[10px]">Cargando Ficha Clínica...</p>
+        </div>
+    )
 
     return (
         <div className="space-y-6 animate-fade-in relative pb-20">
