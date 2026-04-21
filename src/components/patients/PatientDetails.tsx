@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react'
+import {
     Phone, MapPin,
     FileText, Plus, Edit2, Trash2,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight,
