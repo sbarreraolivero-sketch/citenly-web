@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Monitor, User, UserPlus, LogOut, Clock, Loader2, RefreshCw, Plus, Check, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -205,8 +206,8 @@ export function DentalChairDashboard() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {boxes.map(box => {
-                    const session = sessions.find(s => s.box_id === box.id)
+                {boxes.map((box: Box) => {
+                    const session = sessions.find((s: Session) => s.box_id === box.id)
                     const isOccupied = !!session
 
                     return (
