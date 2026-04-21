@@ -447,7 +447,7 @@ export function BudgetManager({ patientId, clinicId, initialItems, onClearedItem
 
             {/* New Budget Modal */}
             {showNewModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-softer w-full max-w-4xl shadow-2xl relative animate-scale-in max-h-[90vh] overflow-hidden flex flex-col">
                         <div className="p-6 border-b border-silk-beige bg-ivory/50 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-charcoal">Nuevo Presupuesto Dental</h3>

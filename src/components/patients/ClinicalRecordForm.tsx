@@ -238,7 +238,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
     }
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fade-in p-4">
+        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4">
             <div className="bg-white rounded-softer w-full max-w-2xl shadow-2xl flex flex-col max-h-[92vh] border border-silk-beige">
                 <div className="p-8 border-b border-silk-beige flex items-center justify-between bg-ivory/30">
                     <div>
@@ -408,12 +408,11 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                         </div>
                     )}
 
-                    {/* Orthodontic Specific Section */}
                     {recordType === 'ortho' && (
-                        <div className="space-y-8 p-6 bg-primary-50/30 rounded-softer border border-primary-100 animate-slide-up">
+                        <div className="space-y-8 p-6 bg-emerald-600/5 rounded-softer border-2 border-emerald-600/20 animate-slide-up">
                             <div className="flex items-center gap-3 mb-2">
-                                <TrendingUp className="w-5 h-5 text-primary-600" />
-                                <h3 className="font-black text-charcoal uppercase tracking-tighter">Control de Ortodoncia</h3>
+                                <TrendingUp className="w-5 h-5 text-emerald-700" />
+                                <h3 className="font-black text-emerald-900 uppercase tracking-tighter">Control de Ortodoncia</h3>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -438,7 +437,7 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                                                 onClick={() => setMetadata({ ...metadata, ortho: { ...metadata.ortho, hygiene: h } })}
                                                 className={cn(
                                                     "flex-1 py-2 text-[10px] font-black uppercase rounded-full border transition-all",
-                                                    metadata.ortho?.hygiene === h ? "bg-primary-600 text-white border-primary-600" : "bg-white text-charcoal/40 border-silk-beige"
+                                                    metadata.ortho?.hygiene === h ? "bg-emerald-800 text-white border-emerald-800" : "bg-white text-charcoal/40 border-silk-beige"
                                                 )}
                                             >
                                                 {h}
