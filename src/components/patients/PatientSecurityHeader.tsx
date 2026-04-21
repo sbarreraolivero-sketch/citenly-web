@@ -97,7 +97,6 @@ export function PatientSecurityHeader({
         }
     }
 
-    // Age Calculation Logic
     const getAge = (birthDate: string | null) => {
         if (!birthDate) return '---'
         const birth = new Date(birthDate)
@@ -119,6 +118,7 @@ export function PatientSecurityHeader({
 
     return (
         <div className="mb-6 space-y-4 animate-fade-in relative z-[100]">
+            {/* Main Primary Banner: Dentalink Style */}
             <div className="bg-primary-700 text-white rounded-softer shadow-2xl p-0 overflow-hidden border border-primary-800/50">
                 <div className="px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-8 relative">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none" />
@@ -148,19 +148,19 @@ export function PatientSecurityHeader({
                                 </div>
                             </div>
                             
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-white/70 font-bold text-sm">
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 font-bold text-sm">
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest opacity-40">RUT</span>
+                                    <span className="uppercase text-[10px] font-black tracking-widest text-gray-300">RUT</span>
                                     <span className="text-white">{patient.rut || 'No definido'}</span>
                                 </div>
                                 <div className="h-3 w-px bg-white/10" />
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest opacity-40">Sexo</span>
+                                    <span className="uppercase text-[10px] font-black tracking-widest text-gray-300">Sexo</span>
                                     <span className="text-white">{patient.gender || 'Femenino'}</span>
                                 </div>
                                 <div className="h-3 w-px bg-white/10" />
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest opacity-40">Edad</span>
+                                    <span className="uppercase text-[10px] font-black tracking-widest text-gray-300">Edad</span>
                                     <span className="text-white">{getAge(patient.birth_date)}</span>
                                 </div>
                             </div>
@@ -168,23 +168,30 @@ export function PatientSecurityHeader({
                     </div>
 
                     <div className="flex items-center gap-4 relative z-10">
-                        <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-3">
+                            <div className="group flex flex-col items-end gap-1">
                                 <span className={cn(
-                                    "px-4 py-1.5 rounded-soft text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-inner border transition-all",
-                                    patient.is_high_risk ? "bg-red-500 text-white border-red-600 scale-105" : "bg-white/5 text-white/40 border-white/10"
+                                    "px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2.5 transition-all border shadow-lg",
+                                    patient.is_high_risk 
+                                        ? "bg-red-500 text-white border-red-400 scale-105" 
+                                        : "bg-white text-primary-700 border-white hover:bg-ivory"
                                 )}>
-                                    <ShieldAlert className="w-4 h-4" /> Alertas médicas
+                                    <ShieldAlert className={cn("w-4.5 h-4.5", patient.is_high_risk ? "text-white" : "text-red-500")} /> 
+                                    <span className={patient.is_high_risk ? "text-white" : "text-primary-700"}>Alertas médicas</span>
                                 </span>
                             </div>
-                            <div className="flex flex-col items-end gap-1">
-                                <span className="px-4 py-1.5 rounded-soft text-[11px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 flex items-center gap-2 shadow-inner">
-                                    <Activity className="w-4 h-4" /> Enfermedades
+                            
+                            <div className="group flex flex-col items-end gap-1">
+                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-primary-700 border border-white hover:bg-ivory flex items-center gap-2.5 transition-all shadow-lg">
+                                    <Activity className="w-4.5 h-4.5 text-emerald-500" /> 
+                                    <span>Enfermedades</span>
                                 </span>
                             </div>
-                            <div className="flex flex-col items-end gap-1">
-                                <span className="px-4 py-1.5 rounded-soft text-[11px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 flex items-center gap-2 shadow-inner">
-                                    <Pill className="w-4 h-4" /> Medicamentos
+
+                            <div className="group flex flex-col items-end gap-1">
+                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-primary-700 border border-white hover:bg-ivory flex items-center gap-2.5 transition-all shadow-lg">
+                                    <Pill className="w-4.5 h-4.5 text-indigo-500" /> 
+                                    <span>Medicamentos</span>
                                 </span>
                             </div>
                         </div>
