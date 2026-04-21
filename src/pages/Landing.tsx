@@ -44,90 +44,11 @@ const features = [
     },
 ]
 
-const plans = [
-    {
-        id: 'essence',
-        name: 'Plan Essence',
-        tagline: 'Control Esencial y Automatización',
-        price: 99,
-        period: '/mes',
-        description: 'Ideal para profesionales independientes que buscan automatizar sus citas y tener presencia digital básica.',
-        highlight: false,
-        icon: Sparkles,
-        features: [
-            'Hasta 2 Usuarios',
-            'Agente de IA especializado en medicina estética y salud',
-            'Hasta 50 citas automatizadas mensuales',
-            'Integración con Google Maps (Reservas geolocalizadas)',
-            'Hasta 1 agenda disponible',
-            'Gestión de servicios y procedimientos',
-            'Fichas clínicas + historial médico',
-            'Dashboard básico de Gestión',
-            'Integración oficial de WhatsApp (Meta). Libre de bloqueos',
-        ],
-        cta: 'Agendar Implementación',
-        gradient: 'from-gray-500 to-gray-700',
-    },
-    {
-        id: 'radiance',
-        name: 'Plan Radiance',
-        tagline: 'Escalamiento Profesional y Retención Activa',
-        price: 159,
-        period: '/mes',
-        description: 'Diseñado para clínicas en expansión que necesitan un equipo coordinado y retención activa mediante IA.',
-        highlight: true,
-        icon: Zap,
-        features: [
-            'Todo lo de Essence, más:',
-            'Hasta 5 usuarios (Adm, Médicos, Recepcionista)',
-            '5 agendas independientes disponibles',
-            'Recordatorios de sesiones/tratamientos con IA',
-            'Recordatorios confirmación (Hasta 50/mes)',
-            'CRM de ventas para prospectos',
-            'Campañas Marketing masivo (WhatsApp)',
-            'Sistema Inteligente de Referidos con IA',
-            'Módulo de Gestión Financiera',
-            'Citas Ilimitadas',
-            'Encuestas de satisfacción personalizadas',
-        ],
-        cta: 'Agendar Implementación',
-        gradient: 'from-primary-500 to-primary-700',
-        badge: 'Popular',
-    },
-    {
-        id: 'prestige',
-        name: 'Plan Prestige',
-        tagline: 'Potencia Empresarial y Multi-Sede',
-        price: 297,
-        period: '/mes',
-        description: 'La solución definitiva para redes de clínicas y centros médicos con múltiples sedes.',
-        highlight: false,
-        icon: Crown,
-        features: [
-            'Todo lo de Radiance, más:',
-            'Usuarios ilimitados (Sin restricciones)',
-            'Multi-sucursal / Multi-sedes',
-            'IA personalizada (especialidades médicas)',
-            'Recordatorios confirmación ilimitados',
-            'Benchmark entre sedes. Super Administrador',
-            'Consultoría de Negocio Trimestral',
-        ],
-        cta: 'Agendar Implementación',
-        gradient: 'from-charcoal to-charcoal/90',
-    },
-]
 
-type CurrencyCode = 'USD' | 'CLP' | 'COP' | 'MXN' | 'EUR';
-const exchangeRates: Record<CurrencyCode, { rate: number, symbol: string, label: string }> = {
-    USD: { rate: 1, symbol: 'US$', label: 'USD (Dólares)' },
-    CLP: { rate: 939.4, symbol: '$', label: 'CLP (Pesos Chilenos)' },
-    COP: { rate: 4200, symbol: '$', label: 'COP (Pesos Colombianos)' },
-    MXN: { rate: 18, symbol: '$', label: 'MXN (Pesos Mexicanos)' },
-    EUR: { rate: 0.92, symbol: '€', label: 'EUR (Euros)' },
-};
+
+
 
 export default function Landing() {
-    const [currency, setCurrency] = useState<CurrencyCode>('USD');
 
     return (
         <div className="min-h-screen bg-ivory font-sans selection:bg-primary-200 overflow-hidden">
@@ -178,7 +99,6 @@ export default function Landing() {
                             <a href="#problema" className="text-charcoal/80 hover:text-primary-600 transition-colors">El Problema</a>
                             <a href="#retention" className="text-charcoal/80 hover:text-primary-600 transition-colors">Revenue Retention™</a>
                             <a href="#modulos" className="text-charcoal/80 hover:text-primary-600 transition-colors">Módulos</a>
-                            <a href="#pricing" className="text-charcoal/80 hover:text-primary-600 transition-colors">Planes</a>
                         </div>
 
                         <div className="flex flex-col-reverse sm:flex-row items-center gap-1 sm:gap-4">
@@ -725,89 +645,8 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* PRECIOS - Ahora integrados en la Landing */}
-            <section id="pricing" className="py-32 px-4 sm:px-6 lg:px-8 bg-ivory border-t border-silk-beige relative">
-                {/* Decoration */}
-                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent"></div>
 
-                <div className="max-w-7xl mx-auto relative z-10">
-                    <div className="text-center mb-16">
-                        <span className="text-primary-600 font-bold uppercase tracking-wider text-sm mb-3 block">Planes Transparentes</span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-charcoal mb-6">Invierte en Inteligencia, NO en gastos operativos</h2>
-                        <p className="text-xl text-charcoal/80 font-medium max-w-3xl mx-auto mb-10">Selecciona la capacidad del motor inteligente que se adapte al volumen actual de tu centro de estética.</p>
 
-                        {/* Currency Selector */}
-                        <div className="inline-flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl shadow-sm border-2 border-primary-100 hover:border-primary-300 transition-colors">
-                            <label htmlFor="currency" className="text-sm font-bold text-charcoal">Moneda local:</label>
-                            <select
-                                id="currency"
-                                value={currency}
-                                onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                                className="bg-transparent text-primary-600 font-extrabold outline-none border-none focus:ring-0 cursor-pointer text-base"
-                            >
-                                {Object.entries(exchangeRates).map(([code, data]) => (
-                                    <option key={code} value={code} className="font-medium text-charcoal">{data.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8 items-stretch pt-4">
-                        {plans.map((plan) => (
-                            <div
-                                key={plan.id}
-                                className={`relative rounded-[2.5rem] p-10 border-2 flex flex-col h-full bg-white transition-all duration-300 ${plan.highlight
-                                    ? 'border-primary-400 shadow-[0_30px_60px_rgba(var(--color-primary-500),0.15)] transform md:-translate-y-6 md:scale-105 z-10'
-                                    : 'border-silk-beige shadow-lg hover:shadow-xl hover:-translate-y-2'
-                                    }`}
-                            >
-                                {plan.highlight && (
-                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary-400 to-accent-500 text-white font-extrabold px-6 py-2 rounded-full uppercase tracking-widest shadow-lg border-2 border-white z-20 whitespace-nowrap">
-                                        {plan.badge}
-                                    </div>
-                                )}
-
-                                <div className="mb-6 h-12 flex items-center">
-                                    <h3 className="text-3xl font-black text-charcoal">{plan.name}</h3>
-                                </div>
-                                <p className="text-base font-bold text-charcoal/70 mb-8 h-12 pr-4">{plan.tagline}</p>
-
-                                <div className="mb-8 p-6 bg-ivory/50 rounded-2xl border border-silk-beige/50">
-                                    <div className="flex items-baseline">
-                                        <span className={`font-black text-charcoal ${currency === 'COP' || currency === 'CLP' ? 'text-4xl' : 'text-5xl'}`}>
-                                            {exchangeRates[currency].symbol}{Math.round(plan.price * exchangeRates[currency].rate).toLocaleString('es-CL')}
-                                        </span>
-                                        <span className="text-charcoal/60 font-bold ml-1 text-lg">{plan.period}</span>
-                                    </div>
-                                </div>
-
-                                <p className="text-base text-charcoal/90 font-medium mb-8 pb-8 border-b border-silk-beige border-dashed">{plan.description}</p>
-
-                                <ul className="space-y-4 mb-12 flex-grow">
-                                    {plan.features.map((feature, index) => (
-                                        <li key={index} className="flex items-start gap-4">
-                                            <div className={`mt-0.5 rounded-full p-1 flex-shrink-0 ${plan.highlight ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-charcoal/60'}`}>
-                                                <Check className="w-4 h-4" strokeWidth={4} />
-                                            </div>
-                                            <span className="text-base font-bold text-charcoal/90 leading-tight pt-0.5">{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                <Link
-                                    to="/register"
-                                    className={`w-full block text-center py-5 rounded-2xl font-black text-lg tracking-wide transition-all ${plan.highlight
-                                        ? 'bg-charcoal text-white hover:bg-gradient-to-r hover:from-yellow-500 hover:to-amber-600 hover:text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)] hover:-translate-y-1'
-                                        : 'bg-white border-2 border-silk-beige text-charcoal hover:text-white hover:border-transparent hover:bg-gradient-to-r hover:from-yellow-400 hover:to-amber-500 hover:-translate-y-1'
-                                        }`}
-                                >
-                                    {plan.cta}
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             {/* 10. CTA Final Futurista */}
             <section className="py-40 px-4 sm:px-6 lg:px-8 bg-[#0a0f18] relative overflow-hidden text-center text-white border-t border-primary-500/20">
@@ -875,7 +714,6 @@ export default function Landing() {
                                     <li><a href="#retention" className="hover:text-primary-400 transition-colors">Revenue Retention Engine</a></li>
                                     <li><a href="#modulos" className="hover:text-primary-400 transition-colors">Agente AI Conversacional</a></li>
                                     <li><a href="#modulos" className="hover:text-primary-400 transition-colors">CRM Clínico Estético</a></li>
-                                    <li><a href="#pricing" className="hover:text-primary-400 transition-colors">Planes y Precios</a></li>
                                 </ul>
                             </div>
                             <div>
