@@ -83,9 +83,9 @@ export function PatientSecurityHeader({
                 }
             }
             
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('patients')
-                .update(updatePayload as any)
+                .update(updatePayload)
                 .eq('id', patient.id)
 
             if (error) throw error
