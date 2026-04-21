@@ -1,4 +1,4 @@
-import { ShieldAlert, Activity, Pill, User } from 'lucide-react'
+import { ShieldAlert, Activity, Pill } from 'lucide-react'
 import { Database } from '@/types/database'
 import { cn } from '@/lib/utils'
 

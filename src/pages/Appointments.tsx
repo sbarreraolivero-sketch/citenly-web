@@ -1778,6 +1778,11 @@ export default function Appointments() {
                             allergies: null,
                             medical_history: null,
                             is_high_risk: false,
+                            rut: null,
+                            gender: null,
+                            birth_date: null,
+                            insurance_provider: null,
+                            internal_id: null,
                         }}
                         onClose={() => {
                             setShowPatientModal(false)

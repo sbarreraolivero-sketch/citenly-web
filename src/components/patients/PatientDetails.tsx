@@ -3,7 +3,7 @@ import {
     Phone, Mail, MapPin, Calendar,
     FileText, Plus, Edit2, Trash2, ArrowLeft,
     StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy,
-    Activity, DollarSign, ShieldAlert
+    Activity, ShieldAlert, Pill
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -209,15 +209,15 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
     const fetchFinancialData = async () => {
         if (!patient.id) return
         try {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('dental_budgets')
                 .select('total_amount, paid_amount')
                 .eq('patient_id', patient.id)
                 .neq('status', 'cancelled')
 
             if (data) {
-                const total = data.reduce((acc, b) => acc + (b.total_amount || 0), 0)
-                const paid = data.reduce((acc, b) => acc + (b.paid_amount || 0), 0)
+                const total = (data as any[]).reduce((acc, b) => acc + (b.total_amount || 0), 0)
+                const paid = (data as any[]).reduce((acc, b) => acc + (b.paid_amount || 0), 0)
                 setFinancialSummary({
                     total,
                     paid,
