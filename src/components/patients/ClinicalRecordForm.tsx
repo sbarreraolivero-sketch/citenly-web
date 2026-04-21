@@ -323,10 +323,10 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
 
                     {/* Dental General Specific Section */}
                     {specialty === 'dental' && recordType === 'general' && (
-                        <div className="space-y-8 p-6 bg-emerald-50/30 rounded-softer border border-emerald-100 animate-slide-up">
+                        <div className="space-y-8 p-6 bg-emerald-50/60 rounded-softer border-2 border-emerald-200 animate-slide-up shadow-sm">
                             <div className="flex items-center gap-3 mb-2">
-                                <Zap className="w-5 h-5 text-emerald-600" />
-                                <h3 className="font-black text-charcoal uppercase tracking-tighter">Detalle Odontológico</h3>
+                                <Zap className="w-5 h-5 text-emerald-700" />
+                                <h3 className="font-black text-emerald-900 uppercase tracking-tighter">Detalle Odontológico</h3>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -498,12 +498,16 @@ export function ClinicalRecordForm({ patientId, specialty = 'general', record, o
                     )}
 
                     <div className="grid grid-cols-1 gap-6">
+                        {/* Technical Description */}
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-charcoal/40 tracking-widest mb-3 border-l-4 border-primary-500 pl-3">Descripción Técnica / Protocolo</label>
+                            <div className="flex items-center gap-2 mb-3 border-l-4 border-charcoal pl-3">
+                                <h3 className="text-[11px] font-black uppercase text-charcoal tracking-widest">Descripción Técnica / Protocolo</h3>
+                            </div>
                             <textarea
+                                required
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                className="input-soft w-full min-h-[140px] p-6 font-medium shadow-inner"
+                                className="input-soft w-full min-h-[140px] p-4 text-sm font-medium border-charcoal/30 focus:border-primary-500"
                                 placeholder="Escribe aquí los pasos realizados hoy..."
                             />
                         </div>

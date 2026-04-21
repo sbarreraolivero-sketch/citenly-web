@@ -150,6 +150,10 @@ export default function Patients() {
                     patient={selectedContact as any}
                     onBack={() => setSelectedContact(null)}
                     onUpdate={fetchContacts}
+                    onEdit={(p) => {
+                        setEditingPatient(p)
+                        setIsFormOpen(true)
+                    }}
                 />
             ) : (
                 <div className="space-y-6 animate-fade-in relative min-h-screen pb-20">

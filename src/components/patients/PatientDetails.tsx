@@ -29,9 +29,10 @@ interface PatientDetailsProps {
     patient: Patient
     onBack: () => void
     onUpdate: () => Promise<void> | void
+    onEdit?: (patient: Patient) => void
 }
 
-export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProps) {
+export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDetailsProps) {
     const { profile } = useAuth()
     const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery' | 'odontogram' | 'budgets'>('history')
     const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general'>('aesthetic')
@@ -580,47 +581,38 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
             <div className="min-h-[400px]">
                 {activeTab === 'info' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                        <div className="bg-white p-6 rounded-soft border border-silk-beige space-y-4">
-                            <h3 className="font-medium text-charcoal mb-4">Datos de Contacto</h3>
+                        {/* Contact Information */}
+                        <div className="card-soft p-6 shadow-md border-silk-beige-dark">
+                            <h3 className="font-bold text-charcoal uppercase tracking-tight text-sm mb-6 border-b border-silk-beige pb-2">Datos de Contacto</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-xs text-charcoal/50 uppercase font-medium">Dirección</label>
-                                    <div className="flex items-start gap-2 mt-1">
-                                        <MapPin className="w-4 h-4 text-charcoal/40 mt-0.5" />
-                                        <p className="text-charcoal">{patient.address || 'No especificada'}</p>
+                                    <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest block mb-1">Dirección</label>
+                                    <div className="flex items-start gap-2">
+                                        <MapPin className="w-4 h-4 text-charcoal/40 mt-1" />
+                                        <p className="text-charcoal font-medium">{patient.address || 'No especificada'}</p>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-charcoal/50 uppercase font-medium">Servicio de Interés</label>
-                                    <p className="text-charcoal mt-1">{patient.service || 'No especificado'}</p>
+                                    <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest block mb-1">Servicio de Interés</label>
+                                    <p className="text-charcoal font-bold">{patient.service || 'No especificado'}</p>
                                 </div>
-                                <div className="pt-2 border-t border-silk-beige/30 flex items-center justify-between">
+                                {patient.referred_by_code && (
                                     <div>
-                                        <label className="text-xs text-primary-600 uppercase font-bold tracking-wider">Código de Referido (Embajador)</label>
-                                        <p className="text-primary-700 font-bold font-mono text-lg mt-0.5">{(patient as any).referral_code || 'No asignado'}</p>
+                                        <label className="text-[11px] text-charcoal/70 uppercase font-black tracking-widest block mb-1">Referido por Código</label>
+                                        <p className="text-charcoal font-bold">{patient.referred_by_code}</p>
                                     </div>
-                                    {(patient as any).referral_code && (
+                                )}
+                                <div className="pt-4 border-t border-silk-beige mt-4">
+                                    <label className="text-[11px] text-primary-700 uppercase font-black tracking-widest block mb-2">Código de Referido (Embajador)</label>
+                                    <div className="flex items-center justify-between bg-primary-50 p-3 rounded-soft border border-primary-100">
+                                        <span className="text-lg font-black text-primary-900">{(patient as any).referral_code || '---'}</span>
                                         <button 
                                             onClick={copyReferralLink}
-                                            className="bg-primary-50 text-primary-700 hover:bg-primary-100 px-3 py-2 rounded-soft text-xs font-bold transition-all flex items-center gap-2 border border-primary-200"
+                                            className="btn-soft bg-white text-primary-600 hover:bg-white shadow-sm flex items-center gap-2 px-3 py-1.5"
                                         >
-                                            <Copy className="w-3.5 h-3.5" />
+                                            <Copy className="w-3 h-3" />
                                             Copiar Link Mágico
                                         </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white p-6 rounded-soft border border-silk-beige space-y-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-medium text-charcoal">Notas Generales</h3>
-                                {!isEditingNotes && (
-                                    <button
-                                        onClick={() => {
-                                            setNotesBuffer(patient.notes || '')
-                                            setIsEditingNotes(true)
-                                        }}
                                         className="p-1.5 hover:bg-silk-beige rounded text-charcoal/60 transition-colors"
                                         title="Editar notas"
                                     >
@@ -667,35 +659,74 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                         </div>
 
                         {/* Clinical Security Section */}
-                        <div className="md:col-span-2 bg-red-50/20 p-6 rounded-soft border border-red-100 space-y-4">
-                            <div className="flex items-center gap-2 mb-4">
-                                <ShieldAlert className={cn("w-5 h-5", patient.is_high_risk ? "text-red-600" : "text-charcoal/40")} />
-                                <h3 className="font-bold text-charcoal uppercase tracking-tight text-sm">Seguridad Clínica</h3>
-                                {patient.is_high_risk && (
-                                    <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
-                                        Alto Riesgo
-                                    </span>
-                                )}
+                        <div className={cn(
+                            "md:col-span-2 p-8 rounded-softer border-2 transition-all relative overflow-hidden",
+                            patient.is_high_risk 
+                                ? "bg-red-50 border-red-200 shadow-lg shadow-red-100" 
+                                : "bg-white border-primary-100 shadow-sm"
+                        )}>
+                            <div className="flex items-center justify-between mb-8 border-b border-black/5 pb-4">
+                                <div className="flex items-center gap-4">
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-full flex items-center justify-center",
+                                        patient.is_high_risk ? "bg-red-600 text-white animate-pulse" : "bg-primary-100 text-primary-700"
+                                    )}>
+                                        <ShieldAlert className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-black text-charcoal uppercase tracking-tight text-lg">Seguridad Clínica</h3>
+                                        <p className="text-[11px] text-charcoal/60 font-bold uppercase tracking-widest">Protocolo de Riesgo y Alertas</p>
+                                    </div>
+                                    {patient.is_high_risk && (
+                                        <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ml-4">
+                                            Alto Riesgo Confirmado
+                                        </span>
+                                    )}
+                                </div>
+                                <button 
+                                    onClick={() => onEdit && onEdit(patient)}
+                                    className="btn-soft bg-white border-silk-beige hover:border-primary-500 shadow-sm flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest text-primary-700"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                    Editar Seguridad
+                                </button>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] text-charcoal/50 uppercase font-black tracking-widest">Alergias</label>
-                                    <p className={cn("text-sm font-medium", patient.allergies ? "text-red-700 font-bold" : "text-charcoal/40 italic")}>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className={cn(
+                                    "p-4 rounded-soft border-l-4 transition-all",
+                                    patient.allergies ? "bg-red-50/50 border-red-500" : "bg-silk-beige/20 border-silk-beige"
+                                )}>
+                                    <label className="text-[11px] text-charcoal/80 uppercase font-black tracking-widest block mb-2">Alergias</label>
+                                    <p className={cn("text-base font-bold", patient.allergies ? "text-red-700" : "text-charcoal/40 italic")}>
                                         {patient.allergies || 'Sin alergias registradas'}
                                     </p>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] text-charcoal/50 uppercase font-black tracking-widest">Antecedentes Sistémicos</label>
-                                    <p className={cn("text-sm font-medium", patient.medical_history ? "text-amber-800" : "text-charcoal/40 italic")}>
+                                
+                                <div className={cn(
+                                    "p-4 rounded-soft border-l-4 transition-all",
+                                    patient.medical_history ? "bg-blue-50/50 border-blue-500" : "bg-silk-beige/20 border-silk-beige"
+                                )}>
+                                    <label className="text-[11px] text-charcoal/80 uppercase font-black tracking-widest block mb-2">Condiciones Médicas</label>
+                                    <p className={cn("text-base font-bold", patient.medical_history ? "text-blue-800" : "text-charcoal/40 italic")}>
                                         {patient.medical_history || 'Sin antecedentes registrados'}
+                                    </p>
+                                </div>
+
+                                <div className={cn(
+                                    "p-4 rounded-soft border-l-4 transition-all bg-silk-beige/20 border-silk-beige"
+                                )}>
+                                    <label className="text-[11px] text-charcoal/80 uppercase font-black tracking-widest block mb-2">Convenio / Seguro</label>
+                                    <p className={cn("text-base font-bold", patient.insurance_provider ? "text-primary-800" : "text-charcoal/40 italic")}>
+                                        {patient.insurance_provider || 'Particular / Sin convenio'}
                                     </p>
                                 </div>
                             </div>
                             
-                            <p className="text-[10px] text-charcoal/40 pt-2 border-t border-red-100/50">
-                                * Esta información es crítica para la seguridad del paciente. Siempre verifique antes de iniciar cualquier procedimiento invasivo.
-                            </p>
+                            <div className="mt-8 flex items-center gap-3 text-[10px] text-charcoal/50 font-medium bg-black/5 p-3 rounded border border-black/5">
+                                <Info className="w-4 h-4 shrink-0" />
+                                <p>* Esta información es crítica para la seguridad del paciente. Siempre verifique antes de iniciar cualquier procedimiento invasivo.</p>
+                            </div>
                         </div>
                     </div>
                 )}
