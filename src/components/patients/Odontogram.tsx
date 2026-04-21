@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Loader2, Activity, Plus, Search, X } from 'lucide-react'
+import { Save, Loader2, Activity, Plus, Search, X, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
@@ -48,7 +48,7 @@ const ARCHES = [
     { id: 'inferior', label: 'Arcada Inferior', teeth: ['4.8', '4.7', '4.6', '4.5', '4.4', '4.3', '4.2', '4.1', '3.1', '3.2', '3.3', '3.4', '3.5', '3.6', '3.7', '3.8'] }
 ]
 
-export function Odontogram({ patientId, clinicId, onAddTreatment }: OdontogramProps) {
+export function Odontogram({ patientId, clinicId, onAddTreatment, onAddClinicalRecord }: OdontogramProps) {
     const [teeth, setTeeth] = useState<Record<string, ToothData>>({})
     const [selectedTeeth, setSelectedTeeth] = useState<string[]>([])
     const [loading, setLoading] = useState(true)

@@ -76,16 +76,16 @@ export function PatientSecurityHeader({
         setUpdating(true)
         try {
             const currentMetadata = (patient as any).metadata || {}
-            const updatePayload: any = {
+            const updatePayload = {
                 metadata: {
                     ...currentMetadata,
                     [key]: value
                 }
             }
             
-            const { error } = await (supabase as any)
+            const { error } = await supabase
                 .from('patients')
-                .update(updatePayload)
+                .update(updatePayload as any)
                 .eq('id', patient.id)
 
             if (error) throw error
@@ -155,17 +155,17 @@ export function PatientSecurityHeader({
                             
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 font-bold text-sm">
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest text-gray-300">RUT</span>
+                                    <span className="uppercase text-[10px] font-black tracking-widest text-white/50">RUT</span>
                                     <span className="text-white">{patient.rut || 'No definido'}</span>
                                 </div>
                                 <div className="h-3 w-px bg-white/10" />
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest text-gray-300">Sexo</span>
+                                    <span className="uppercase text-[10px] font-black tracking-widest text-white/50">Sexo</span>
                                     <span className="text-white">{patient.gender || 'Femenino'}</span>
                                 </div>
                                 <div className="h-3 w-px bg-white/10" />
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest text-gray-300">Edad</span>
+                                    <span className="uppercase text-[10px] font-black tracking-widest text-white/50">Edad</span>
                                     <span className="text-white">{getAge(patient.birth_date)}</span>
                                 </div>
                             </div>
@@ -176,24 +176,24 @@ export function PatientSecurityHeader({
                         <div className="flex items-center gap-3">
                             <div className="group flex flex-col items-end gap-1">
                                 <span className={cn(
-                                    "px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2.5 transition-all border shadow-lg",
+                                    "px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2.5 transition-all border shadow-lg backdrop-blur-sm",
                                     patient.is_high_risk 
                                         ? "bg-red-500 text-white border-red-400 scale-105" 
-                                        : "bg-white text-primary-700 border-white hover:bg-ivory"
+                                        : "bg-white/10 text-white border-white/20 hover:bg-white/20"
                                 )}>
-                                    <ShieldAlert className={cn("w-4.5 h-4.5", patient.is_high_risk ? "text-white" : "text-red-500")} /> 
-                                    <span className={patient.is_high_risk ? "text-white" : "text-primary-700"}>Alertas médicas</span>
+                                    <ShieldAlert className={cn("w-4.5 h-4.5", patient.is_high_risk ? "text-white" : "text-red-400")} /> 
+                                    <span>Alertas médicas</span>
                                 </span>
                             </div>
                             <div className="group flex flex-col items-end gap-1">
-                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-primary-700 border border-white hover:bg-ivory flex items-center gap-2.5 transition-all shadow-lg">
-                                    <Activity className="w-4.5 h-4.5 text-emerald-500" /> 
+                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 hover:bg-white/20 flex items-center gap-2.5 transition-all shadow-lg backdrop-blur-sm">
+                                    <Activity className="w-4.5 h-4.5 text-emerald-400" /> 
                                     <span>Enfermedades</span>
                                 </span>
                             </div>
                             <div className="group flex flex-col items-end gap-1">
-                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-primary-700 border border-white hover:bg-ivory flex items-center gap-2.5 transition-all shadow-lg">
-                                    <Pill className="w-4.5 h-4.5 text-indigo-500" /> 
+                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 hover:bg-white/20 flex items-center gap-2.5 transition-all shadow-lg backdrop-blur-sm">
+                                    <Pill className="w-4.5 h-4.5 text-indigo-400" /> 
                                     <span>Medicamentos</span>
                                 </span>
                             </div>
