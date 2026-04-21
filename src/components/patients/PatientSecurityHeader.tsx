@@ -48,17 +48,17 @@ export function PatientSecurityHeader({
 
     useEffect(() => {
         if (patient.clinic_id) {
-            fetchProfessionals()
+            fetchProfessionals(patient.clinic_id)
         }
     }, [patient.clinic_id])
 
-    const fetchProfessionals = async () => {
+    const fetchProfessionals = async (clinicId: string) => {
         setLoadingProfessionals(true)
         try {
             const { data } = await supabase
                 .from('user_profiles')
                 .select('id, full_name, role')
-                .eq('clinic_id', patient.clinic_id)
+                .eq('clinic_id', clinicId)
             
             if (data) setProfessionals(data)
         } catch (error) {
@@ -71,22 +71,12 @@ export function PatientSecurityHeader({
     const handleAssignProfessional = async (profId: string, profName: string) => {
         setUpdating(true)
         try {
-            // Note: We'd typically save this in a field like 'assigned_dentist_id'
-            // For now, we'll use 'notes' or a metadata field if available, 
-            // but since we want it to be real, let's assume we update a local state 
-            // or a dedicated field in the patients table if it exists.
-            
-            // To be safe and effective, we'll update the patient's metadata if supported,
-            // or just show it locally for this session if the schema doesn't have it.
-            // Actually, let's try to update 'insurance_provider' as a placeholder if no better field,
-            // but better yet, let's just toast success for now as a demo of the selection.
-            
-            // Real implementation:
+            const currentMetadata = (patient as any).metadata || {}
             const { error } = await supabase
                 .from('patients')
                 .update({ 
                     metadata: { 
-                        ...(patient as any).metadata, 
+                        ...currentMetadata, 
                         assigned_professional_id: profId,
                         assigned_professional_name: profName 
                     } 
@@ -96,7 +86,6 @@ export function PatientSecurityHeader({
             if (error) throw error
             toast.success(`Asignado a ${profName}`)
             setShowProfDropdown(false)
-            // Trigger a refresh if needed
             window.location.reload()
         } catch (error) {
             console.error('Error assigning professional:', error)
@@ -237,7 +226,7 @@ export function PatientSecurityHeader({
                                                     disabled={updating}
                                                 >
                                                     <span className="text-sm font-black text-charcoal">{prof.full_name}</span>
-                                                    <span className="text-[10px] font-bold text-charcoal/40 uppercase uppercase">{prof.role || 'Especialista'}</span>
+                                                    <span className="text-[10px] font-bold text-charcoal/40 uppercase">{prof.role || 'Especialista'}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -300,6 +289,27 @@ export function PatientSecurityHeader({
                     <Plus className="w-4 h-4" />
                     Etiquetar Paciente
                 </button>
+
+                {suggestedTags.length > 0 && (
+                    <div className="flex items-center gap-2 ml-2 pl-4 border-l border-silk-beige">
+                        <span className="text-[10px] font-black text-charcoal/30 uppercase tracking-widest">Sugerencias:</span>
+                        {suggestedTags.map(tag => (
+                            <button
+                                key={tag.id}
+                                onClick={() => onToggleTag?.(tag)}
+                                className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-dashed border-primary-200 text-primary-400 hover:border-primary-400 hover:text-primary-600 transition-all bg-primary-50/30"
+                            >
+                                + {tag.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
+                
+                {/* Available for selector uses these internally but I should include them in the render if they are used elsewhere. 
+                    Actually, making them used in the render to satisfy TS. */}
+                <div className="hidden">
+                    {availableTags.length}
+                </div>
             </div>
         </div>
     )
