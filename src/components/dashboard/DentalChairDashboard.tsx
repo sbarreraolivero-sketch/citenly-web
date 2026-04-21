@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { Monitor, User, UserPlus, LogOut, Clock, Loader2, RefreshCw } from 'lucide-react'
+import { Monitor, User, UserPlus, LogOut, Clock, Loader2, RefreshCw, Plus, Check, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -27,6 +26,9 @@ export function DentalChairDashboard() {
     const [boxes, setBoxes] = useState<Box[]>([])
     const [sessions, setSessions] = useState<Session[]>([])
     const [loading, setLoading] = useState(true)
+    const [initializing, setInitializing] = useState(false)
+    const [showAddBox, setShowAddBox] = useState(false)
+    const [newBoxName, setNewBoxName] = useState('')
 
     useEffect(() => {
         if (profile?.clinic_id) {
@@ -63,6 +65,52 @@ export function DentalChairDashboard() {
             console.error('Error fetching dashboard data:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const initializeDefaultBoxes = async () => {
+        if (!profile?.clinic_id) return
+        setInitializing(true)
+        try {
+            const defaults = [
+                { clinic_id: profile.clinic_id, name: 'BOX 1' },
+                { clinic_id: profile.clinic_id, name: 'BOX 2' },
+                { clinic_id: profile.clinic_id, name: 'BOX 3' },
+                { clinic_id: profile.clinic_id, name: 'Sillón Principal' }
+            ]
+
+            const { error } = await (supabase as any)
+                .from('dental_boxes')
+                .insert(defaults)
+
+            if (error) throw error
+            toast.success('Sillones inicializados')
+            fetchData()
+        } catch (error) {
+            console.error('Error initializing boxes:', error)
+            toast.error('Error al inicializar')
+        } finally {
+            setInitializing(false)
+        }
+    }
+
+    const handleAddBox = async () => {
+        if (!newBoxName.trim() || !profile?.clinic_id) return
+        setInitializing(true)
+        try {
+            const { error } = await (supabase as any)
+                .from('dental_boxes')
+                .insert({ clinic_id: profile.clinic_id, name: newBoxName.trim() })
+
+            if (error) throw error
+            toast.success('Box agregado')
+            setNewBoxName('')
+            setShowAddBox(false)
+            fetchData()
+        } catch (error) {
+            toast.error('Error al agregar')
+        } finally {
+            setInitializing(false)
         }
     }
 
@@ -108,13 +156,53 @@ export function DentalChairDashboard() {
                     <h3 className="text-2xl font-black text-charcoal">Tablero de Sillones</h3>
                     <p className="text-sm text-charcoal/40 font-bold uppercase tracking-widest">Estado de la clínica en tiempo real</p>
                 </div>
-                <button 
-                    onClick={fetchData}
-                    className="p-2.5 hover:bg-ivory rounded-full border border-silk-beige text-charcoal/40 hover:text-primary-600 transition-all"
-                >
-                    <RefreshCw className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setShowAddBox(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-silk-beige text-charcoal/60 text-[10px] font-black uppercase tracking-widest rounded-soft hover:bg-ivory transition-all shadow-sm"
+                    >
+                        <Plus className="w-4 h-4" /> Agregar Box
+                    </button>
+                    <button 
+                        onClick={fetchData}
+                        className="p-2.5 hover:bg-ivory rounded-full border border-silk-beige text-charcoal/40 hover:text-primary-600 transition-all"
+                    >
+                        <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
+                    </button>
+                </div>
             </div>
+
+            {showAddBox && (
+                <div className="bg-ivory/50 p-6 rounded-softer border border-silk-beige flex items-center justify-between animate-scale-in">
+                    <div className="flex-1 max-w-md">
+                        <label className="text-[10px] font-black text-charcoal/40 uppercase tracking-widest block mb-2">Nombre del Nuevo Box / Sillón</label>
+                        <div className="flex gap-3">
+                            <input 
+                                type="text"
+                                value={newBoxName}
+                                onChange={(e) => setNewBoxName(e.target.value)}
+                                placeholder="Ej: BOX 4 o Sillón Cirugía"
+                                className="input-soft flex-1 font-bold"
+                                autoFocus
+                            />
+                            <button 
+                                onClick={handleAddBox}
+                                disabled={initializing || !newBoxName.trim()}
+                                className="px-6 py-2 bg-primary-600 text-white rounded-soft flex items-center gap-2 font-black text-xs uppercase tracking-widest disabled:opacity-50"
+                            >
+                                {initializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                Confirmar
+                            </button>
+                            <button 
+                                onClick={() => setShowAddBox(false)}
+                                className="p-2 text-charcoal/40 hover:text-red-500 transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {boxes.map(box => {
@@ -197,13 +285,30 @@ export function DentalChairDashboard() {
                     )
                 })}
 
-                {boxes.length === 0 && (
-                    <div className="col-span-full py-20 text-center space-y-4">
+                    <div className="col-span-full py-20 text-center space-y-6">
                         <Monitor className="w-16 h-16 text-charcoal/10 mx-auto" />
-                        <h4 className="text-xl font-black text-charcoal/40">No hay boxes configurados</h4>
-                        <p className="text-sm text-charcoal/30">Agrega tus sillones en la configuración de la clínica para usar el tablero.</p>
+                        <div className="space-y-2">
+                            <h4 className="text-xl font-black text-charcoal/40">No hay boxes configurados</h4>
+                            <p className="text-sm text-charcoal/30 max-w-sm mx-auto">Inicializa los sillones básicos o agrega los tuyos manualmente para empezar a monitorear la clínica.</p>
+                        </div>
+                        <div className="flex items-center justify-center gap-4">
+                            <button 
+                                onClick={initializeDefaultBoxes}
+                                disabled={initializing}
+                                className="px-8 py-3 bg-primary-600 text-white rounded-soft font-black text-xs uppercase tracking-widest shadow-xl shadow-primary-500/20 hover:bg-primary-700 transition-all disabled:opacity-50 flex items-center gap-3"
+                            >
+                                {initializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                Inicializar Básicos
+                            </button>
+                            <button 
+                                onClick={() => setShowAddBox(true)}
+                                className="px-8 py-3 bg-white border border-silk-beige text-charcoal/60 rounded-soft font-black text-xs uppercase tracking-widest hover:bg-ivory transition-all shadow-sm flex items-center gap-3"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Agregar Manualmente
+                            </button>
+                        </div>
                     </div>
-                )}
             </div>
         </div>
     )
