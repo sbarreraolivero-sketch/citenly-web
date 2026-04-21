@@ -48,7 +48,7 @@ export function PatientSecurityHeader({
         return { years, months }
     }
 
-    const age = calculateAge(patient.birth_date)
+
 
     return (
         <div className="mb-6 space-y-4 animate-fade-in sticky top-0 z-30 bg-silk-beige/50 backdrop-blur-sm -mx-4 px-4 py-2 border-b border-silk-beige">

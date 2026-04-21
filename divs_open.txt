@@ -1,0 +1,75 @@
+389:        <div className="space-y-6 animate-fade-in relative pb-20">
+404:            <div className="border-b border-silk-beige">
+405:                <div className="flex gap-6">
+415:                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+427:                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+439:                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+452:                                <div className="flex items-center gap-1.5">
+457:                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+467:                                <div className="flex items-center gap-1.5 justify-center relative">
+477:                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+486:            <div className="min-h-[400px]">
+488:                    <div className="animate-fade-in space-y-6">
+489:                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+491:                            <div className="card-soft p-6 shadow-md border-silk-beige-dark relative">
+492:                                <div className="flex justify-between items-center mb-6 border-b border-silk-beige pb-2">
+502:                                        <div className="flex gap-2">
+521:                                <div className="space-y-4">
+522:                                    <div className="grid grid-cols-2 gap-4">
+523:                                        <div>
+536:                                        <div>
+551:                                    <div className="grid grid-cols-2 gap-4">
+552:                                        <div>
+565:                                        <div>
+567:                                            <div className="flex items-center gap-2 text-charcoal/40 font-bold">
+574:                                    <div>
+584:                                            <div className="flex items-start gap-2">
+591:                                    <div className="grid grid-cols-2 gap-4">
+592:                                        <div>
+609:                                        <div>
+628:                            <div className={cn(
+632:                                <div className="flex justify-between items-center mb-6 border-b border-black/5 pb-2">
+633:                                    <div className="flex items-center gap-2">
+645:                                        <div className="flex gap-2">
+664:                                <div className="space-y-4">
+665:                                    <div className="flex items-center justify-between bg-black/5 p-3 rounded-soft">
+666:                                        <div className="flex items-center gap-2">
+668:                                            <div>
+682:                                            <div className={cn(
+689:                                    <div>
+690:                                        <div className="flex items-center gap-2 mb-1.5">
+708:                                    <div>
+709:                                        <div className="flex items-center gap-2 mb-1.5">
+731:                        <div className="card-soft p-6 shadow-md border-silk-beige-dark">
+732:                            <div className="flex justify-between items-center mb-6 border-b border-silk-beige pb-2">
+742:                                    <div className="flex gap-2">
+770:                                <div className="bg-silk-beige/30 p-4 rounded-soft border border-silk-beige/50 min-h-[100px]">
+784:                    <div className="space-y-6">
+785:                        <div className="flex justify-between items-center">
+799:                            <div className="text-center py-12">
+800:                                <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+804:                            <div className="text-center py-20 bg-white rounded-soft border border-dashed border-silk-beige">
+805:                                <div className="w-12 h-12 bg-silk-beige/30 rounded-full flex items-center justify-center mx-auto mb-3">
+821:                            <div className="relative pl-8 border-l-2 border-silk-beige space-y-8">
+823:                                    <div key={record.id} className="relative">
+825:                                        <div className="absolute -left-[39px] top-0 w-5 h-5 rounded-full bg-primary-100 border-2 border-white shadow-sm flex items-center justify-center">
+829:                                        <div className="card-soft p-5 hover:shadow-premium transition-shadow group">
+830:                                            <div className="flex justify-between items-start mb-2">
+831:                                                <div>
+832:                                                    <div className="flex items-center gap-2 mb-1">
+841:                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+870:                                                <div className="flex flex-wrap gap-2 mt-3 mb-3">
+875:                                                            <div key={idx} className="w-20 h-20 rounded overflow-hidden border border-silk-beige relative group/img cursor-pointer">
+888:                                                <div className="mt-2 pt-2 border-t border-silk-beige/50">
+904:                    <div className="space-y-6">
+905:                        <div className="flex justify-between items-center">
+906:                            <div>
+912:                            <div className="flex gap-2">
+930:                            <div className="text-center py-20 bg-white rounded-soft border border-dashed border-silk-beige">
+931:                                <div className="w-12 h-12 bg-silk-beige/30 rounded-full flex items-center justify-center mx-auto mb-3">
+938:                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+942:                                        <div
+959:                                                <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+960:                                                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${isSelected ? 'bg-primary-500 border-primary-500 text-white' : 'border-white bg-black/30'
+967:                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 pointer-events-none">
+979:                            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 animate-fade-in-up">

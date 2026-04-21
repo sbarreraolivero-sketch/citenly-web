@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react'
-import {
-    Phone, Mail, MapPin, Calendar,
-    FileText, Plus, Edit2, Trash2, ArrowLeft,
-    StickyNote, Check, Image as ImageIcon, ArrowLeftRight, Share2, Copy,
-    Activity, DollarSign, ShieldAlert, Pill, Info
+    Phone, MapPin,
+    FileText, Plus, Edit2, Trash2,
+    StickyNote, Check, Image as ImageIcon, ArrowLeftRight,
+    Activity, DollarSign, ShieldAlert, Pill
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -32,7 +30,7 @@ interface PatientDetailsProps {
     onEdit?: (patient: Patient) => void
 }
 
-export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDetailsProps) {
+export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProps) {
     const { profile } = useAuth()
     const [activeTab, setActiveTab] = useState<'info' | 'history' | 'gallery' | 'odontogram' | 'budgets'>('history')
     const [specialty, setSpecialty] = useState<'aesthetic' | 'dental' | 'general'>('aesthetic')
@@ -115,12 +113,11 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
         try {
             const { error } = await supabase
                 .from('patients')
-                .update(infoForm)
+                .update(infoForm as any)
                 .eq('id', patient.id)
             
             if (error) throw error
-            toast.success('Información personal actualizada')
-            if (onUpdate) await onUpdate()
+            if (onUpdate) await (onUpdate as any)()
             setIsEditingInfo(false)
         } catch (error) {
             console.error('Error updating info:', error)
@@ -135,12 +132,12 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
         try {
             const { error } = await supabase
                 .from('patients')
-                .update(securityForm)
+                .update(securityForm as any)
                 .eq('id', patient.id)
             
             if (error) throw error
             toast.success('Seguridad clínica actualizada')
-            if (onUpdate) await onUpdate()
+            if (onUpdate) await (onUpdate as any)()
             setIsEditingSecurity(false)
         } catch (error) {
             console.error('Error updating security:', error)
@@ -224,7 +221,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
                 if (error) throw error
                 setPatientTags([...patientTags, tag])
             }
-            if (onUpdate) await onUpdate()
+            if (onUpdate) await (onUpdate as any)()
         } catch (error) {
             console.error('Error toggling tag:', error)
             alert('Error al actualizar etiqueta')
@@ -336,12 +333,10 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
         try {
             const { error } = await supabase
                 .from('patients')
-                .update({ notes: notesBuffer })
+                .update({ notes: notesBuffer } as any)
                 .eq('id', patient.id)
 
-            if (error) throw error
-
-            if (onUpdate) await onUpdate()
+            if (onUpdate) await (onUpdate as any)()
             setIsEditingNotes(false)
         } catch (error) {
             console.error('Error updating notes:', error)
@@ -374,16 +369,7 @@ export function PatientDetails({ patient, onBack, onUpdate, onEdit }: PatientDet
             }))
     ).filter(img => img.url)
 
-    const copyReferralLink = () => {
-        const code = (patient as any).referral_code
-        if (!code) {
-            toast.error('Paciente no tiene código de referido')
-            return
-        }
-        const link = `${window.location.origin}/r/${code}`
-        navigator.clipboard.writeText(link)
-        toast.success('¡Enlace mágico copiado!')
-    }
+    // copyReferralLink removed as it was unused in JSX
 
     return (
         <div className="space-y-6 animate-fade-in relative pb-20">

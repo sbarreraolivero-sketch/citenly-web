@@ -1,0 +1,75 @@
+415:                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+427:                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+439:                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+455:                                </div>
+457:                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+475:                                </div>
+477:                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+482:                </div>
+483:            </div>
+517:                                        </div>
+519:                                </div>
+535:                                        </div>
+548:                                        </div>
+549:                                    </div>
+564:                                        </div>
+570:                                            </div>
+571:                                        </div>
+572:                                    </div>
+587:                                            </div>
+589:                                    </div>
+608:                                        </div>
+622:                                        </div>
+623:                                    </div>
+624:                                </div>
+625:                            </div>
+636:                                    </div>
+660:                                        </div>
+662:                                </div>
+671:                                            </div>
+672:                                        </div>
+685:                                            )}></div>
+687:                                    </div>
+693:                                        </div>
+706:                                    </div>
+712:                                        </div>
+725:                                    </div>
+726:                                </div>
+727:                            </div>
+728:                        </div>
+757:                                    </div>
+759:                            </div>
+777:                                </div>
+779:                        </div>
+780:                    </div>
+797:                        </div>
+800:                                <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+802:                            </div>
+807:                                </div>
+819:                            </div>
+827:                                        </div>
+839:                                                    </div>
+840:                                                </div>
+859:                                                </div>
+860:                                            </div>
+881:                                                            </div>
+884:                                                </div>
+893:                                                </div>
+895:                                        </div>
+896:                                    </div>
+898:                            </div>
+900:                    </div>
+911:                            </div>
+926:                            </div>
+927:                        </div>
+933:                                </div>
+936:                            </div>
+963:                                                    </div>
+964:                                                </div>
+970:                                            </div>
+971:                                        </div>
+974:                            </div>
+987:                            </div>
+989:                    </div>
+1020:            </div>
+1047:        </div>
