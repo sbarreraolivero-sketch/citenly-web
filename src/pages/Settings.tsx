@@ -23,8 +23,6 @@ import {
     User,
     Webhook,
     Globe,
-    Bot,
-    Info,
     ToggleLeft,
     ToggleRight,
     Send,
@@ -39,8 +37,8 @@ import {
     RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, CREDIT_PACKS_4O, redirectToCreditsCheckout } from '@/lib/mercadopago'
-import { LS_PLANS, type LSPlanId, LS_CREDIT_PACKS, LS_CREDIT_PACKS_4O, redirectToLemonCheckout, redirectToLemonCreditsCheckout } from '@/lib/lemonsqueezy'
+import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, redirectToCreditsCheckout } from '@/lib/mercadopago'
+import { LS_PLANS, type LSPlanId, LS_CREDIT_PACKS, redirectToLemonCheckout, redirectToLemonCreditsCheckout } from '@/lib/lemonsqueezy'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
@@ -154,21 +152,17 @@ export default function Settings() {
     const [yCloudApiKey, setYCloudApiKey] = useState('')
     const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
     const [openaiModel] = useState('gpt-4o-mini')
-    const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
-    const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
-    const [aiMessagesUsed, setAiMessagesUsed] = useState(0)
     const [aiStrategy, setAiStrategy] = useState<'auto' | 'eco' | 'pro'>('auto')
     const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
     const [aiCreditsLimit, setAiCreditsLimit] = useState(500)
     const [aiCreditsExtra, setAiCreditsExtra] = useState(0)
     
-    // Legacy support for display
-    const [aiCreditsExtra4o, setAiCreditsExtra4o] = useState(0)
+    // Legacy support for display (remaining metrics)
     const [aiMessagesUsed4o, setAiMessagesUsed4o] = useState(0)
     
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
     const [aiActiveModel, setAiActiveModel] = useState<'mini' | '4o'>('mini')
-    const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
+    const [selectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
     const [copiedWebhook, setCopiedWebhook] = useState(false)
@@ -405,9 +399,6 @@ export default function Settings() {
                     setYCloudApiKey(data.ycloud_api_key || '')
                     setYCloudPhoneNumber(data.ycloud_phone_number || '')
                     
-                    setAiCreditsMonthlyLimit(data.ai_credits_monthly_limit || 500)
-                    setAiCreditsExtraBalance(data.ai_credits_extra_balance || 0)
-                    setAiCreditsExtra4o(data.ai_credits_extra_4o || 0)
                     setAiActiveModel(data.ai_active_model || 'mini')
                     setAiStrategy(data.ai_strategy || 'auto')
                     setAiCreditsUsed(data.ai_credits_used || 0)
@@ -823,9 +814,6 @@ export default function Settings() {
         }
     }
 
-    const [savingAI, setSavingAI] = useState(false)
-    const [aiSaved, setAiSaved] = useState(false)
-
     const handleSaveAI = async () => {
         if (!profile?.clinic_id) return
         setSavingAI(true)
@@ -836,7 +824,9 @@ export default function Settings() {
                 .from('clinic_settings')
                 .update({ 
                     ai_auto_respond: aiAutoRespond,
-                    ai_strategy: aiStrategy
+                    ai_strategy: aiStrategy,
+                    ai_active_model: aiActiveModel, // Ensure model matches strategy if needed
+                    updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
 
@@ -845,6 +835,7 @@ export default function Settings() {
             setTimeout(() => setAiSaved(false), 3000)
         } catch (error) {
             console.error('Error saving AI settings:', error)
+            alert('Error al guardar la configuración de IA')
         } finally {
             setSavingAI(false)
         }
@@ -960,34 +951,8 @@ export default function Settings() {
         }
     }
 
-    const handleSaveAI = async () => {
-        setSavingAI(true)
-        setAiSaved(false)
-
-        if (!profile?.clinic_id) {
-            setSavingAI(false)
-            return
-        }
-
-        try {
-            const { error } = await (supabase as any)
-                .from('clinic_settings')
-                .update({
-                    ai_auto_respond: aiAutoRespond,
-                    ai_active_model: aiActiveModel,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', profile.clinic_id)
-
-            if (error) throw error
-            setAiSaved(true)
-            setTimeout(() => setAiSaved(false), 3000)
-        } catch (error) {
-            console.error('Error saving AI settings:', error)
-            alert('Error al guardar la configuración de IA')
-        } finally {
-            setSavingAI(false)
-        }
+    const handleSaveAI_Legacy = () => {
+        // Obsolete function removed - replaced by improved handleSaveAI at line 826
     }
 
     const handlePlanSelection = async (planId: PlanId) => {
