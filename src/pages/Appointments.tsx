@@ -106,7 +106,8 @@ export default function Appointments() {
     const [foundPatient, setFoundPatient] = useState<Patient | null>(null)
     const [clinicBoxes, setClinicBoxes] = useState<any[]>([])
     const [patientSuggestions, setPatientSuggestions] = useState<Patient[]>([])
-    const [isSelectingPatient, setIsSelectingPatient] = useState(false)
+    const [isSelectingPatient, setIsSelectingPatientState] = useState(false)
+    const isSelectingPatientRef = useRef(false)
 
     // Fetch services and professionals
     useEffect(() => {
@@ -146,8 +147,9 @@ export default function Appointments() {
     // Patient autocomplete search
     useEffect(() => {
         const searchPatients = async () => {
-            if (isSelectingPatient) {
-                setIsSelectingPatient(false)
+            if (isSelectingPatientRef.current) {
+                isSelectingPatientRef.current = false
+                setIsSelectingPatientState(false)
                 return
             }
 
@@ -158,7 +160,7 @@ export default function Appointments() {
 
             if (!profile?.clinic_id) return
 
-            // Search for names starting with the input OR having a word starting with the input
+            // Search for names starting with the input
             const { data, error } = await supabase
                 .from('patients')
                 .select('*')
@@ -175,7 +177,7 @@ export default function Appointments() {
 
         const timer = setTimeout(searchPatients, 300)
         return () => clearTimeout(timer)
-    }, [newAppointment.patient_name, profile?.clinic_id, isSelectingPatient])
+    }, [newAppointment.patient_name, profile?.clinic_id])
 
     // Date filter state
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'week'>('all')
@@ -1510,7 +1512,8 @@ export default function Appointments() {
                                                     key={patient.id}
                                                     type="button"
                                                     onClick={() => {
-                                                        setIsSelectingPatient(true)
+                                                        isSelectingPatientRef.current = true
+                                                         setIsSelectingPatientState(true)
                                                         setNewAppointment({
                                                             ...newAppointment,
                                                             patient_name: patient.name || '',
