@@ -146,13 +146,14 @@ export default function Appointments() {
 
     // Patient autocomplete search
     useEffect(() => {
+        let ignore = false
         const searchPatients = async () => {
             if (isSelectingPatientRef.current) {
                 return
             }
 
             if (!newAppointment.patient_name || newAppointment.patient_name.length < 1) {
-                setPatientSuggestions([])
+                if (!ignore) setPatientSuggestions([])
                 return
             }
 
@@ -170,11 +171,14 @@ export default function Appointments() {
                 console.error("Search error:", error)
                 return
             }
-            if (data) setPatientSuggestions(data)
+            if (data && !ignore) setPatientSuggestions(data)
         }
 
         const timer = setTimeout(searchPatients, 300)
-        return () => clearTimeout(timer)
+        return () => {
+            ignore = true
+            clearTimeout(timer)
+        }
     }, [newAppointment.patient_name, profile?.clinic_id])
 
     // Date filter state
