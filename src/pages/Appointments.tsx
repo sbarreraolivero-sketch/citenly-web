@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
@@ -106,7 +106,7 @@ export default function Appointments() {
     const [foundPatient, setFoundPatient] = useState<Patient | null>(null)
     const [clinicBoxes, setClinicBoxes] = useState<any[]>([])
     const [patientSuggestions, setPatientSuggestions] = useState<Patient[]>([])
-    const [isSelectingPatient, setIsSelectingPatientState] = useState(false)
+    const [, setIsSelectingPatientState] = useState(false)
     const isSelectingPatientRef = useRef(false)
 
     // Fetch services and professionals
