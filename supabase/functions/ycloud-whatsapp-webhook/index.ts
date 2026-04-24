@@ -73,6 +73,36 @@ const transcribeAudioData = async (audioBlob: Blob, openAiKey: string): Promise<
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const VERCEL_AI_GATEWAY = Deno.env.get("VERCEL_AI_GATEWAY_URL") || "https://api.openai.com/v1";
+
+// =============================================
+// Hybrid AI Architecture Constants & Helpers
+// =============================================
+const TIER_COSTS: Record<number, number> = { 1: 1, 2: 8, 3: 60 };
+
+const classifyMessage = (body: string, isImage: boolean): number => {
+    const lowerBody = body.toLowerCase();
+    
+    // N3: Sovereign Pro - GPT-5. Se activa ante casos complejos o imágenes.
+    const n3Keywords = ["pro", "complejo", "cirugia", "clinico", "evaluacion", "diagnostico", "presupuesto", "estudio", "analisis", "comprobante", "pago", "recibo", "transferencia"];
+    if (isImage || n3Keywords.some(kw => lowerBody.includes(kw)) || body.length > 500) return 3;
+    
+    // N2: Standard - GPT-5.4. Gestión de agendamientos y ventas.
+    const n2Keywords = ["agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion"];
+    if (n2Keywords.some(kw => lowerBody.includes(kw))) return 2;
+    
+    // N1: Flash Mini - GPT-5.4. Saludos y confirmaciones simples.
+    return 1;
+};
+
+const getOptimalModel = (tier: number, strategy: string = 'auto'): string => {
+    if (strategy === 'eco') return "gpt-4o-mini"; // Ahorro Máximo (Fuerza N1)
+    if (strategy === 'pro') return "gpt-4o";      // Máximo Poder (Fuerza N3)
+    
+    // Híbrido Automático (Optimizado)
+    if (tier === 1) return "gpt-4o-mini"; // Flash Mini
+    return "gpt-4o"; // Standard (N2) & Sovereign Pro (N3)
+};
 
 // =============================================
 // OpenAI Function Definitions (Agent Tools)
@@ -1222,7 +1252,8 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
 };
 
 const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true) => {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const baseUrl = VERCEL_AI_GATEWAY || "https://api.openai.com/v1";
+    const r = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
         body: JSON.stringify({
@@ -1422,31 +1453,26 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
 
-        // --- AI CREDIT CHECK ---
+        // --- UNIFIED AI CREDIT CHECK ---
         const firstDayOfMonth = new Date();
         firstDayOfMonth.setDate(1);
         firstDayOfMonth.setHours(0, 0, 0, 0);
 
-        const { count: usageCount } = await sb.from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("clinic_id", clinic.id)
-            .eq("ai_generated", true)
-            .gte("created_at", firstDayOfMonth.toISOString());
-
-        const monthlyLimit = clinic.ai_credits_monthly_limit || 500;
-        const extraBalance = clinic.ai_credits_extra_balance || 0;
+        const currentUsed = clinic.ai_credits_used || 0;
+        const monthlyLimit = clinic.ai_credits_limit || 500;
+        const extraBalance = clinic.ai_credits_extra || 0;
         const totalCreditsAvailable = monthlyLimit + extraBalance;
 
-        if ((usageCount || 0) >= totalCreditsAvailable) {
-            await debugLog(sb, `IA silenciosa: Créditos agotados`, { 
+        if (currentUsed >= totalCreditsAvailable) {
+            await debugLog(sb, `IA silenciosa: Créditos Citenly agotados`, { 
                 clinic_id: clinic.id, 
-                used: usageCount, 
+                used: currentUsed, 
                 limit: monthlyLimit,
                 extra: extraBalance 
             });
             return new Response(JSON.stringify({ status: "saved_silently", reason: "insufficient_credits" }), { headers: corsHeaders });
         }
-        // -----------------------
+        // ------------------------------
 
         const asyncProcess = async () => {
             try {
@@ -1683,41 +1709,21 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     msgs.push({ role: "user", content: userContentBlocks });
                 }
 
-                // --- MODEL SELECTION & FALLBACK LOGIC ---
-                let activeModelKey = clinic.ai_active_model === '4o' ? 'gpt-4o' : 'gpt-4o-mini';
-                let activeModelShort = clinic.ai_active_model === '4o' ? '4o' : 'mini';
+                // --- HYBRID AI ROUTING & CLASSIFICATION ---
+                const tier = classifyMessage(body, isImage);
+                const optimalModel = getOptimalModel(tier, clinic.ai_strategy || 'auto');
+                const creditCost = TIER_COSTS[tier] || 1;
 
-                // If premium model is selected, check if there is enough budget
-                if (clinic.ai_active_model === '4o') {
-                    const startOfMonth = new Date();
-                    startOfMonth.setDate(1);
-                    startOfMonth.setHours(0, 0, 0, 0);
+                console.log(`[Hybrid AI] Message classified as N${tier}. Cost: ${creditCost}x. Model: ${optimalModel}`);
+                await debugLog(sb, `Hybrid Router: N${tier}`, { tier, model: optimalModel, cost: creditCost });
 
-                    // Count GPT-4o messages this month
-                    const { count: usage4o } = await sb.from("messages")
-                        .select("*", { count: "exact", head: true })
-                        .eq("clinic_id", clinic.id)
-                        .eq("ai_generated", true)
-                        .eq("ai_model", "4o")
-                        .gte("created_at", startOfMonth.toISOString());
+                let res = await callOpenAI(openaiApiKey, optimalModel, msgs);
 
-                    const monthly4oLimit = clinic.ai_credits_monthly_4o_limit || 100;
-                    const extra4oBalance = clinic.ai_credits_extra_4o || 0;
-                    const total4oAvailable = monthly4oLimit + extra4oBalance;
+                // Track usage (unified credits)
+                await sb.from("clinic_settings")
+                    .update({ ai_credits_used: (clinic.ai_credits_used || 0) + creditCost })
+                    .eq("id", clinic.id);
 
-                    if ((usage4o || 0) >= total4oAvailable) {
-                        // FALLBACK TO MINI
-                        activeModelKey = 'gpt-4o-mini';
-                        activeModelShort = 'mini';
-                        await debugLog(sb, "FALLBACK: GPT-4o agotado. Bajando a mini.", { 
-                            clinic_id: clinic.id, 
-                            used_4o: usage4o, 
-                            limit_4o: total4oAvailable 
-                        });
-                    }
-                }
-
-                let res = await callOpenAI(openaiApiKey, activeModelKey, msgs);
                 let assistant = res.choices[0].message;
                 let funcResult: Record<string, unknown> | null = null;
                 let allFuncResults: Record<string, unknown>[] = [];
@@ -1734,7 +1740,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                         { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
                     );
 
-                    res = await callOpenAI(openaiApiKey, activeModelKey, msgs);
+                    res = await callOpenAI(openaiApiKey, optimalModel, msgs);
                     assistant = res.choices[0].message;
                     maxCalls--;
                 }
@@ -1742,13 +1748,15 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 const reply = assistant.content || "Error. ¿Puedes repetir?";
                 await saveMsg(sb, clinic.id, from, reply, "outbound", {
                     ai_generated: true,
-                    ai_model: activeModelShort,
+                    ai_model: optimalModel,
+                    ai_tier: tier,
+                    ai_cost: creditCost,
                     ai_function_called: allFuncResults.length > 0 ? allFuncResults.map(r => (r as Record<string, unknown>).name).join(", ") : null,
                     ai_function_result: allFuncResults.length > 0 ? allFuncResults : null
                 });
 
                 await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply);
-                await debugLog(sb, `AI Response Sent`, { to: from, msgId: msgRowId });
+                await debugLog(sb, `Citenly AI Response Sent`, { to: from, msgId: msgRowId, tier, model: optimalModel });
             } catch (err) {
                 console.error("Async Process Error:", err);
                 await debugLog(sb, "Async Process Error (OpenAI/Otros)", { error: (err as Error).message, phone: from });

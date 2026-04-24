@@ -21,46 +21,21 @@ export function CreditWarningBanner() {
             if (!profile?.clinic_id) return
 
             try {
-                // Fetch settings
+                // Fetch settings with unified credits
                 const { data: settings } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_credits_monthly_limit, ai_credits_extra_balance, ai_credits_monthly_4o_limit, ai_credits_extra_4o, ai_active_model')
+                    .select('ai_credits_used, ai_credits_limit, ai_credits_extra')
                     .eq('id', profile.clinic_id)
                     .single()
 
                 if (!settings) return
 
-                const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+                const totalLimit = (settings.ai_credits_limit || 500) + (settings.ai_credits_extra || 0)
+                const used = settings.ai_credits_used || 0
+                const pct = used / totalLimit
 
-                // Fetch Mini Usage
-                const { count: usageMini } = await (supabase as any)
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', profile.clinic_id)
-                    .eq('ai_generated', true)
-                    .or('ai_model.eq.mini,ai_model.is.null')
-                    .gte('created_at', startOfMonth)
-
-                // Fetch 4o Usage
-                const { count: usage4o } = await (supabase as any)
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', profile.clinic_id)
-                    .eq('ai_generated', true)
-                    .eq('ai_model', '4o')
-                    .gte('created_at', startOfMonth)
-
-                const miniLimit = (settings.ai_credits_monthly_limit || 500) + (settings.ai_credits_extra_balance || 0)
-                const limit4o = (settings.ai_credits_monthly_4o_limit || 100) + (settings.ai_credits_extra_4o || 0)
-
-                const miniPct = (usageMini || 0) / miniLimit
-                const pct4o = (usage4o || 0) / limit4o
-
-                // Priority to 4o if both are critical
-                if (pct4o >= 0.9) {
-                    setWarning({ model: '4o', percentage: Math.round(pct4o * 100), limit: limit4o, used: usage4o || 0 })
-                } else if (miniPct >= 0.9) {
-                    setWarning({ model: 'mini', percentage: Math.round(miniPct * 100), limit: miniLimit, used: usageMini || 0 })
+                if (pct >= 0.9) {
+                    setWarning({ model: 'mini', percentage: Math.round(pct * 100), limit: totalLimit, used: used })
                 } else {
                     setWarning(null)
                 }
@@ -82,26 +57,24 @@ export function CreditWarningBanner() {
     return (
         <div className={cn(
             "sticky top-0 z-[60] w-full border-b backdrop-blur-md animate-slide-down",
-            warning.model === '4o' 
-                ? "bg-violet-600/95 border-violet-400 text-white" 
-                : "bg-amber-500/95 border-amber-400 text-white"
+            isExhausted ? "bg-rose-600/95 border-rose-400 text-white" : "bg-amber-500/95 border-amber-400 text-white"
         )}>
             <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                        {warning.model === '4o' ? <Zap className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                        {isExhausted ? <AlertTriangle className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
                     </div>
                     <div>
                         <p className="text-sm font-bold leading-tight">
                             {isExhausted 
-                                ? `¡Créditos ${warning.model === '4o' ? 'Premium (4o)' : 'Estándar (mini)'} agotados!`
-                                : `Atención: Quedan pocos créditos ${warning.model === '4o' ? 'Premium (4o)' : 'Estándar (mini)'}`
+                                ? `¡Citenly Credits agotados!`
+                                : `Atención: Quedan pocos Citenly Credits`
                             }
                         </p>
                         <p className="text-[11px] opacity-90 leading-tight">
-                            {warning.model === '4o' 
-                                ? "Al agotarse, el sistema bajará automáticamente a GPT-4o-mini para no interrumpir el servicio." 
-                                : "Al agotarse, la IA dejará de responder automáticamente en WhatsApp."
+                            {isExhausted 
+                                ? "La IA ha dejado de responder automáticamente en WhatsApp. Recarga para restaurar el servicio." 
+                                : "Tu saldo de inteligencia artificial está por agotarse. Evita interrupciones recargando ahora."
                             }
                         </p>
                     </div>
