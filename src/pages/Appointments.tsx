@@ -156,11 +156,13 @@ export default function Appointments() {
                 return
             }
 
+            if (!profile?.clinic_id) return
+
             const { data } = await supabase
                 .from('patients')
                 .select('*')
                 .ilike('name', `%${newAppointment.patient_name}%`)
-                .eq('clinic_id', profile?.clinic_id)
+                .eq('clinic_id', profile.clinic_id)
                 .limit(5)
             
             if (data) setPatientSuggestions(data)
