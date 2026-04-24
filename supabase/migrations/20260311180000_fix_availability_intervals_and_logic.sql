@@ -85,7 +85,7 @@ BEGIN
   v_day_hours := v_working_hours->v_day_name;
   
   -- Clinic closure check
-  IF v_day_hours IS NULL OR v_day_hours = 'null'::jsonb OR (v_day_hours->>'enabled')::BOOLEAN IS FALSE THEN
+  IF v_day_hours IS NULL OR v_day_hours = 'null'::jsonb OR (v_day_hours->>'enabled')::BOOLEAN IS NOT TRUE THEN
     RETURN;
   END IF;
   

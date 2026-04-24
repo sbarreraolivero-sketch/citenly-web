@@ -27,6 +27,7 @@ import {
     BellOff
 } from 'lucide-react'
 import { AIChatWidget } from '../AIChatWidget'
+import { CreditWarningBanner } from './CreditWarningBanner'
 import { cn, getInitials } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -387,7 +388,8 @@ export default function DashboardLayout() {
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col w-full min-w-0">
+            <div className="flex-1 flex flex-col w-full min-w-0 relative">
+                <CreditWarningBanner />
                 {/* Header */}
                 <header className="h-16 border-b border-silk-beige flex items-center justify-between px-4 md:px-6 bg-ivory">
                     <div className="flex items-center gap-3">

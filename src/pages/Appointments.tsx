@@ -26,6 +26,7 @@ import {
     Lightbulb
 } from 'lucide-react'
 import { cn, formatPhoneNumber, getStatusColor, getStatusLabel } from '@/lib/utils'
+import toast, { Toaster } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { GuideBox } from '@/components/ui/GuideBox'
@@ -104,6 +105,8 @@ export default function Appointments() {
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
     const [foundPatient, setFoundPatient] = useState<Patient | null>(null)
     const [clinicBoxes, setClinicBoxes] = useState<any[]>([])
+    const [patientSuggestions, setPatientSuggestions] = useState<Patient[]>([])
+    const [isSelectingPatient, setIsSelectingPatient] = useState(false)
 
     // Fetch services and professionals
     useEffect(() => {
@@ -139,6 +142,33 @@ export default function Appointments() {
         fetchProfessionals()
         fetchClinicSettings()
     }, [profile?.clinic_id])
+
+    // Patient autocomplete search
+    useEffect(() => {
+        const searchPatients = async () => {
+            if (isSelectingPatient) {
+                setIsSelectingPatient(false)
+                return
+            }
+
+            if (!newAppointment.patient_name || newAppointment.patient_name.length < 1) {
+                setPatientSuggestions([])
+                return
+            }
+
+            const { data } = await supabase
+                .from('patients')
+                .select('*')
+                .ilike('name', `%${newAppointment.patient_name}%`)
+                .eq('clinic_id', profile?.clinic_id)
+                .limit(5)
+            
+            if (data) setPatientSuggestions(data)
+        }
+
+        const timer = setTimeout(searchPatients, 300)
+        return () => clearTimeout(timer)
+    }, [newAppointment.patient_name, profile?.clinic_id])
 
     // Date filter state
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'week'>('all')
@@ -302,13 +332,31 @@ export default function Appointments() {
 
     const handleSaveAppointment = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (saving) return
         if (!user || !profile) return
 
-        setSaving(true)
         try {
+            setSaving(true)
+
             // Construct Date from local inputs to get correct UTC time
-            const [year, month, day] = newAppointment.appointment_date.split('-').map(Number)
-            const [hours, minutes] = newAppointment.appointment_time.split(':').map(Number)
+            const dateStr = newAppointment.appointment_date
+            const timeStr = newAppointment.appointment_time
+
+            if (!dateStr || !timeStr) {
+                toast.error('La fecha y hora son obligatorias')
+                setSaving(false)
+                return
+            }
+
+            const [year, month, day] = dateStr.split('-').map(Number)
+            const [hours, minutes] = timeStr.split(':').map(Number)
+
+            if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) {
+                toast.error('Formato de fecha u hora inválido')
+                setSaving(false)
+                return
+            }
+
             const localDate = new Date(year, month - 1, day, hours, minutes)
             const appointmentDate = localDate.toISOString()
 
@@ -370,6 +418,7 @@ export default function Appointments() {
                     .single()
 
                 if (error) throw error
+                toast.success('Cita creada correctamente')
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 appointmentId = (data as any).id
             }
@@ -443,8 +492,9 @@ export default function Appointments() {
             // Refresh list
             fetchAppointments()
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating appointment:', error)
+            toast.error(`Error al guardar: ${error.message || 'Error desconocido'}`)
         } finally {
             setSaving(false)
         }
@@ -1415,7 +1465,7 @@ export default function Appointments() {
                             </div>
 
                             <div className="p-6 space-y-4 overflow-y-auto flex-1">
-                                <div>
+                                <div className="relative">
                                     <label className="block text-sm font-medium text-charcoal mb-2">
                                         Nombre del Paciente *
                                     </label>
@@ -1425,7 +1475,37 @@ export default function Appointments() {
                                         onChange={(e) => setNewAppointment({ ...newAppointment, patient_name: e.target.value })}
                                         placeholder="Ej: María García"
                                         className="input-soft w-full"
+                                        autoComplete="off"
                                     />
+                                    {patientSuggestions.length > 0 && (
+                                        <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-white rounded-soft border border-silk-beige shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                                            {patientSuggestions.map((patient) => (
+                                                <button
+                                                    key={patient.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsSelectingPatient(true)
+                                                        setNewAppointment({
+                                                            ...newAppointment,
+                                                            patient_name: patient.name || '',
+                                                            phone_number: patient.phone_number
+                                                        })
+                                                        setPatientSuggestions([])
+                                                    }}
+                                                    className="w-full text-left px-4 py-3 hover:bg-ivory transition-colors flex items-center justify-between border-b border-silk-beige/30 last:border-0"
+                                                >
+                                                    <div>
+                                                        <div className="text-sm font-bold text-charcoal">{patient.name}</div>
+                                                        <div className="text-[11px] text-charcoal/50 flex items-center gap-1 mt-0.5">
+                                                            <Phone className="w-3 h-3" />
+                                                            {patient.phone_number}
+                                                        </div>
+                                                    </div>
+                                                    <Plus className="w-4 h-4 text-primary-500" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>
@@ -1549,13 +1629,17 @@ export default function Appointments() {
                                             <select
                                                 className="input-soft w-full appearance-none text-center !px-1 sm:!px-4"
                                                 value={(() => {
-                                                    const [h] = newAppointment.appointment_time.split(':').map(Number)
+                                                    const hStr = newAppointment.appointment_time.split(':')[0]
+                                                    const h = parseInt(hStr)
+                                                    if (isNaN(h)) return 12
                                                     if (h === 0) return 12
                                                     if (h > 12) return h - 12
-                                                    return h || 12 // Default to 12 if empty/NaN? Actually value should be valid.
+                                                    return h
                                                 })()}
                                                 onChange={(e) => {
-                                                    const [currentH, currentM] = newAppointment.appointment_time.split(':').map(Number)
+                                                    const timeParts = newAppointment.appointment_time.split(':')
+                                                    const currentH = parseInt(timeParts[0]) || 9
+                                                    const currentM = parseInt(timeParts[1]) || 0
                                                     // Determine current AM/PM
                                                     const isPM = currentH >= 12
                                                     let newH = parseInt(e.target.value)
@@ -1575,10 +1659,9 @@ export default function Appointments() {
                                             </select>
                                             <select
                                                 className="input-soft w-full appearance-none text-center !px-1 sm:!px-4"
-                                                value={newAppointment.appointment_time.split(':')[1]}
+                                                value={newAppointment.appointment_time.split(':')[1] || '00'}
                                                 onChange={(e) => {
-                                                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                                    const [currentH, _] = newAppointment.appointment_time.split(':').map(Number)
+                                                    const currentH = parseInt(newAppointment.appointment_time.split(':')[0]) || 9
                                                     // Handle NaN minutes if initialization failed
 
                                                     setNewAppointment({
@@ -1593,9 +1676,14 @@ export default function Appointments() {
                                             </select>
                                             <select
                                                 className="input-soft w-[65px] sm:w-[80px] appearance-none text-center bg-primary-50 font-medium text-primary-700 border-primary-200 !px-1 sm:!px-4"
-                                                value={parseInt(newAppointment.appointment_time.split(':')[0]) >= 12 ? 'PM' : 'AM'}
+                                                value={(() => {
+                                                    const h = parseInt(newAppointment.appointment_time.split(':')[0])
+                                                    return isNaN(h) || h < 12 ? 'AM' : 'PM'
+                                                })()}
                                                 onChange={(e) => {
-                                                    const [currentH, currentM] = newAppointment.appointment_time.split(':').map(Number)
+                                                    const timeParts = newAppointment.appointment_time.split(':')
+                                                    const currentH = parseInt(timeParts[0]) || 9
+                                                    const currentM = parseInt(timeParts[1]) || 0
                                                     const newIsPM = e.target.value === 'PM'
                                                     let newH = currentH
 
@@ -1800,6 +1888,7 @@ export default function Appointments() {
                     />
                 )
             }
+            <Toaster position="top-right" />
         </div >
     )
 }

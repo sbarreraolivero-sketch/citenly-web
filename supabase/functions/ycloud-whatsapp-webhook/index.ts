@@ -258,7 +258,26 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         if (requestedDateStr === todayStr || requestedDateStr === tomorrowStr) {
             return { 
                 available: false, 
-                message: "Lo sentimos, para la sucursal de Elizabeth requerimos al menos 1 día de anticipación para NUEVAS RESERVAS. No es posible agendar citas nuevas para hoy ni para mañana. Esta regla SÓLO aplica a nuevas reservas; las confirmaciones y cancelaciones de citas existentes se pueden hacer para cualquier día." 
+                message: "Lo sentimos, para la sucursal de Elizabeth requerimos al menos 1 día de anticipación para NUEVAS RESERVAS. No es posible agendar citas nuevas para hoy ni para mañana. Esta regla SÓLO aplica a nuevas reservas."
+            };
+        }
+    }
+
+    // 2. Explicit Closing Check (e.g. Saturdays)
+    if (clinicWorkingHours) {
+        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const dowIdx = new Date(date + 'T12:00:00').getDay();
+        const dow = dayNames[dowIdx];
+        const dayConfig = clinicWorkingHours[dow];
+        
+        if (!dayConfig || dayConfig.enabled === false) {
+            const dayNamesES: Record<string, string> = {
+                monday: "Lunes", tuesday: "Martes", wednesday: "Miércoles", 
+                thursday: "Jueves", friday: "Viernes", saturday: "Sábado", sunday: "Domingo"
+            };
+            return { 
+                available: false, 
+                message: `Lo sentimos, la clínica se encuentra cerrada los días ${dayNamesES[dow] || dow}. Por favor consulta disponibilidad para otro día.` 
             };
         }
     }
@@ -390,7 +409,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
             return `${h > 12 ? h - 12 : h}:${t.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
         });
 
-    const displaySlots = availableSlots.slice(0, 8);
+    const displaySlots = availableSlots.slice(0, 15);
 
     return availableSlots.length
         ? { available: true, slots: displaySlots, duration_used: duration, message: `Disponibilidad el ${date} (${duration} min): ${displaySlots.join(", ")}` }
@@ -1664,8 +1683,39 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     msgs.push({ role: "user", content: userContentBlocks });
                 }
 
-                const activeModelKey = clinic.ai_active_model === '4o' ? 'gpt-4o' : 'gpt-4o-mini';
-                const activeModelShort = clinic.ai_active_model === '4o' ? '4o' : 'mini';
+                // --- MODEL SELECTION & FALLBACK LOGIC ---
+                let activeModelKey = clinic.ai_active_model === '4o' ? 'gpt-4o' : 'gpt-4o-mini';
+                let activeModelShort = clinic.ai_active_model === '4o' ? '4o' : 'mini';
+
+                // If premium model is selected, check if there is enough budget
+                if (clinic.ai_active_model === '4o') {
+                    const startOfMonth = new Date();
+                    startOfMonth.setDate(1);
+                    startOfMonth.setHours(0, 0, 0, 0);
+
+                    // Count GPT-4o messages this month
+                    const { count: usage4o } = await sb.from("messages")
+                        .select("*", { count: "exact", head: true })
+                        .eq("clinic_id", clinic.id)
+                        .eq("ai_generated", true)
+                        .eq("ai_model", "4o")
+                        .gte("created_at", startOfMonth.toISOString());
+
+                    const monthly4oLimit = clinic.ai_credits_monthly_4o_limit || 100;
+                    const extra4oBalance = clinic.ai_credits_extra_4o || 0;
+                    const total4oAvailable = monthly4oLimit + extra4oBalance;
+
+                    if ((usage4o || 0) >= total4oAvailable) {
+                        // FALLBACK TO MINI
+                        activeModelKey = 'gpt-4o-mini';
+                        activeModelShort = 'mini';
+                        await debugLog(sb, "FALLBACK: GPT-4o agotado. Bajando a mini.", { 
+                            clinic_id: clinic.id, 
+                            used_4o: usage4o, 
+                            limit_4o: total4oAvailable 
+                        });
+                    }
+                }
 
                 let res = await callOpenAI(openaiApiKey, activeModelKey, msgs);
                 let assistant = res.choices[0].message;
