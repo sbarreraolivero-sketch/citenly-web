@@ -148,8 +148,6 @@ export default function Appointments() {
     useEffect(() => {
         const searchPatients = async () => {
             if (isSelectingPatientRef.current) {
-                isSelectingPatientRef.current = false
-                setIsSelectingPatientState(false)
                 return
             }
 
@@ -1500,7 +1498,11 @@ export default function Appointments() {
                                     <input
                                         type="text"
                                         value={newAppointment.patient_name}
-                                        onChange={(e) => setNewAppointment({ ...newAppointment, patient_name: e.target.value })}
+                                        onChange={(e) => {
+                                            isSelectingPatientRef.current = false
+                                            setIsSelectingPatientState(false)
+                                            setNewAppointment({ ...newAppointment, patient_name: e.target.value })
+                                        }}
                                         placeholder="Ej: María García"
                                         className="input-soft w-full"
                                         autoComplete="off"
