@@ -160,6 +160,9 @@ export default function Settings() {
     // Legacy support for display (remaining metrics)
     
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
+    const [aiActiveModel, setAiActiveModel] = useState<'mini' | '4o'>('mini')
+    const [savingAI, setSavingAI] = useState(false)
+    const [aiSaved, setAiSaved] = useState(false)
     const [selectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
@@ -577,32 +580,6 @@ export default function Settings() {
         }
     }
 
-    const handleSaveAI = async () => {
-        if (!profile?.clinic_id) return
-        setSavingAI(true)
-        setAiSaved(false)
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('clinic_settings')
-                .update({ 
-                    ai_auto_respond: aiAutoRespond,
-                    ai_strategy: aiStrategy,
-                    ai_active_model: aiActiveModel,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', profile.clinic_id)
-
-            if (error) throw error
-            setAiSaved(true)
-            setTimeout(() => setAiSaved(false), 3000)
-        } catch (error) {
-            console.error('Error saving AI settings:', error)
-            alert('Error al guardar la configuración de IA')
-        } finally {
-            setSavingAI(false)
-        }
-    }
 
     // Webhook CRUD
     const openWebhookModal = (webhook?: WebhookConfig) => {
