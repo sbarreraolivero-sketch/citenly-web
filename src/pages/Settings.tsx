@@ -3221,7 +3221,7 @@ export default function Settings() {
                                     className="btn-primary flex items-center gap-2"
                                 >
                                     {isSavingIntegrations ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    Guardar Configuración Vetly
+                                    Guardar Configuración Citenly
                                 </button>
                                 {saveStatus === 'success' && (
                                     <span className="text-emerald-600 text-sm font-bold animate-fade-in flex items-center gap-1">
