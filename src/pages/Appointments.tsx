@@ -158,19 +158,24 @@ export default function Appointments() {
 
             if (!profile?.clinic_id) return
 
-            const { data } = await supabase
+            // Search for names starting with the input OR having a word starting with the input
+            const { data, error } = await supabase
                 .from('patients')
                 .select('*')
-                .ilike('name', `${newAppointment.patient_name}%`)
+                .or(`name.ilike.${newAppointment.patient_name}%,name.ilike.% ${newAppointment.patient_name}%`)
                 .eq('clinic_id', profile.clinic_id)
                 .limit(5)
             
+            if (error) {
+                console.error("Search error:", error)
+                return
+            }
             if (data) setPatientSuggestions(data)
         }
 
         const timer = setTimeout(searchPatients, 300)
         return () => clearTimeout(timer)
-    }, [newAppointment.patient_name, profile?.clinic_id])
+    }, [newAppointment.patient_name, profile?.clinic_id, isSelectingPatient])
 
     // Date filter state
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'week'>('all')
@@ -371,58 +376,73 @@ export default function Appointments() {
             let appointmentId = editingId
             let googleEventId = null
 
+            let appointmentData: any = {
+                clinic_id: profile.clinic_id,
+                patient_name: newAppointment.patient_name,
+                phone_number: newAppointment.phone_number,
+                service: newAppointment.service,
+                duration: durationMinutes,
+                appointment_date: appointmentDate,
+                status: 'confirmed',
+                notes: newAppointment.notes,
+                professional_id: newAppointment.professional_id || null,
+                box_id: newAppointment.box_id || null,
+            }
+
             if (editingId) {
                 // UPDATE existing appointment
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-                const { error } = await (supabase as any)
+                const { error } = await supabase
                     .from('appointments')
-                    .update({
-                        patient_name: newAppointment.patient_name,
-                        phone_number: newAppointment.phone_number,
-                        service: newAppointment.service,
-                        duration: durationMinutes,
-                        appointment_date: appointmentDate,
-                        notes: newAppointment.notes,
-                        professional_id: newAppointment.professional_id || null,
-                        box_id: newAppointment.box_id || null,
-                        // Don't update clinic_id or user_id
-                    })
+                    .update(appointmentData)
                     .eq('id', editingId)
-                    .select()
-                    .single()
 
-                if (error) throw error
-
+                if (error) {
+                    // Try without box_id if it fails due to missing column
+                    if (error.message.includes('box_id') || error.code === '42703') {
+                        delete appointmentData.box_id
+                        const { error: retryError } = await supabase
+                            .from('appointments')
+                            .update(appointmentData)
+                            .eq('id', editingId)
+                        if (retryError) throw retryError
+                        toast.error('Atención: La columna "box_id" falta en tu base de datos. Ejecuta las migraciones.')
+                    } else {
+                        throw error
+                    }
+                }
+                toast.success('Cita actualizada correctamente')
+                
                 // Get the existing google_event_id to update it
                 const existingAppt = appointments.find(a => a.id === editingId)
                 googleEventId = existingAppt?.google_event_id
 
             } else {
                 // CREATE new appointment
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data, error } = await (supabase as any)
+                const { data, error } = await supabase
                     .from('appointments')
-                    .insert([
-                        {
-                            clinic_id: profile.clinic_id,
-                            patient_name: newAppointment.patient_name,
-                            phone_number: newAppointment.phone_number,
-                            service: newAppointment.service,
-                            duration: durationMinutes,
-                            appointment_date: appointmentDate,
-                            status: 'confirmed',
-                            notes: newAppointment.notes,
-                            professional_id: newAppointment.professional_id || null,
-                            box_id: newAppointment.box_id || null,
-                        },
-                    ])
+                    .insert([appointmentData])
                     .select()
                     .single()
 
-                if (error) throw error
-                toast.success('Cita creada correctamente')
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                appointmentId = (data as any).id
+                if (error) {
+                    // Try without box_id if it fails due to missing column
+                    if (error.message.includes('box_id') || error.code === '42703') {
+                        delete appointmentData.box_id
+                        const { data: retryData, error: retryError } = await supabase
+                            .from('appointments')
+                            .insert([appointmentData])
+                            .select()
+                            .single()
+                        if (retryError) throw retryError
+                        toast.error('Atención: La columna "box_id" falta en tu base de datos. Ejecuta las migraciones.')
+                        appointmentId = (retryData as any).id
+                    } else {
+                        throw error
+                    }
+                } else {
+                    toast.success('Cita creada correctamente')
+                    appointmentId = (data as any).id
+                }
             }
 
             // Sync with Google Calendar (Create or Update)
