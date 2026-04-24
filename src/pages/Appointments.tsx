@@ -391,7 +391,7 @@ export default function Appointments() {
 
             if (editingId) {
                 // UPDATE existing appointment
-                const { error } = await supabase
+                const { error } = await (supabase as any)
                     .from('appointments')
                     .update(appointmentData)
                     .eq('id', editingId)
@@ -400,7 +400,7 @@ export default function Appointments() {
                     // Try without box_id if it fails due to missing column
                     if (error.message.includes('box_id') || error.code === '42703') {
                         delete appointmentData.box_id
-                        const { error: retryError } = await supabase
+                        const { error: retryError } = await (supabase as any)
                             .from('appointments')
                             .update(appointmentData)
                             .eq('id', editingId)
@@ -418,7 +418,7 @@ export default function Appointments() {
 
             } else {
                 // CREATE new appointment
-                const { data, error } = await supabase
+                const { data, error } = await (supabase as any)
                     .from('appointments')
                     .insert([appointmentData])
                     .select()
@@ -428,7 +428,7 @@ export default function Appointments() {
                     // Try without box_id if it fails due to missing column
                     if (error.message.includes('box_id') || error.code === '42703') {
                         delete appointmentData.box_id
-                        const { data: retryData, error: retryError } = await supabase
+                        const { data: retryData, error: retryError } = await (supabase as any)
                             .from('appointments')
                             .insert([appointmentData])
                             .select()
