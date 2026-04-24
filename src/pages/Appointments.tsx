@@ -161,7 +161,7 @@ export default function Appointments() {
             const { data } = await supabase
                 .from('patients')
                 .select('*')
-                .ilike('name', `%${newAppointment.patient_name}%`)
+                .ilike('name', `${newAppointment.patient_name}%`)
                 .eq('clinic_id', profile.clinic_id)
                 .limit(5)
             
