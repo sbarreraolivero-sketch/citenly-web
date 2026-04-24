@@ -158,10 +158,8 @@ export default function Settings() {
     const [aiCreditsExtra, setAiCreditsExtra] = useState(0)
     
     // Legacy support for display (remaining metrics)
-    const [aiMessagesUsed4o, setAiMessagesUsed4o] = useState(0)
     
     const [aiAutoRespond, setAiAutoRespond] = useState(true)
-    const [aiActiveModel, setAiActiveModel] = useState<'mini' | '4o'>('mini')
     const [selectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
@@ -245,10 +243,6 @@ export default function Settings() {
     // Schedule settings state
     const [savingSchedule, setSavingSchedule] = useState(false)
     const [scheduleSaved, setScheduleSaved] = useState(false)
-
-    // AI settings state
-    const [savingAI, setSavingAI] = useState(false)
-    const [aiSaved, setAiSaved] = useState(false)
 
     // Profile settings state
     const [newPassword, setNewPassword] = useState('')
@@ -433,45 +427,7 @@ export default function Settings() {
                 console.error('Error loading settings:', error)
             }
 
-            try {
-                // Fetch AI messages count for current month
-                const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-                const { error: countError } = await (supabase as any)
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', profile.clinic_id)
-                    .eq('ai_generated', true)
-                    .gte('created_at', startOfMonth)
-
-                if (countError) {
-                    console.error('Error fetching AI message count:', countError)
-                } else {
-                    // Fetch split counts
-                    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-                    
-                    // GPT-4o Messages
-                    const { count: count4o } = await (supabase as any)
-                        .from('messages')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('clinic_id', profile.clinic_id)
-                        .eq('ai_generated', true)
-                        .eq('ai_model', '4o')
-                        .gte('created_at', startOfMonth)
-                    setAiMessagesUsed4o(count4o || 0)
-
-                    // GPT-4o-mini Messages (including legacy null model)
-                    const { count: countMini } = await (supabase as any)
-                        .from('messages')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('clinic_id', profile.clinic_id)
-                        .eq('ai_generated', true)
-                        .or('ai_model.eq.mini,ai_model.is.null')
-                        .gte('created_at', startOfMonth)
-                    setAiMessagesUsed(countMini || 0)
-                }
-            } catch (error) {
-                console.error('Error counting AI messages:', error)
-            }
+            // AI Usage is now tracked via unified credits (ai_credits_used)
 
             try {
                 // Fetch services
@@ -618,6 +574,33 @@ export default function Settings() {
             setTimeout(() => setSaveStatus('idle'), 3000)
         } finally {
             setIsSavingIntegrations(false)
+        }
+    }
+
+    const handleSaveAI = async () => {
+        if (!profile?.clinic_id) return
+        setSavingAI(true)
+        setAiSaved(false)
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any)
+                .from('clinic_settings')
+                .update({ 
+                    ai_auto_respond: aiAutoRespond,
+                    ai_strategy: aiStrategy,
+                    ai_active_model: aiActiveModel,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', profile.clinic_id)
+
+            if (error) throw error
+            setAiSaved(true)
+            setTimeout(() => setAiSaved(false), 3000)
+        } catch (error) {
+            console.error('Error saving AI settings:', error)
+            alert('Error al guardar la configuración de IA')
+        } finally {
+            setSavingAI(false)
         }
     }
 
@@ -951,9 +934,6 @@ export default function Settings() {
         }
     }
 
-    const handleSaveAI_Legacy = () => {
-        // Obsolete function removed - replaced by improved handleSaveAI at line 826
-    }
 
     const handlePlanSelection = async (planId: PlanId) => {
         console.log('handlePlanSelection called with:', planId)
@@ -3102,6 +3082,26 @@ export default function Settings() {
                                             <p className="text-xs text-charcoal/50 leading-relaxed">{strat.desc}</p>
                                         </button>
                                     ))}
+                                </div>
+
+                                <div className="mt-8 pt-6 border-t border-violet-100 flex items-center gap-4">
+                                    <button
+                                        onClick={handleSaveAI}
+                                        disabled={savingAI}
+                                        className="btn-primary bg-violet-600 hover:bg-violet-700 flex items-center gap-2 shadow-lg shadow-violet-200"
+                                    >
+                                        {savingAI ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                        ) : (
+                                            <><Save className="w-4 h-4" /> Guardar Configuración</>
+                                        )}
+                                    </button>
+                                    {aiSaved && (
+                                        <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft border border-emerald-100">
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            ¡Configuración guardada!
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
