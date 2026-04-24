@@ -386,7 +386,11 @@ export default function Appointments() {
                 status: 'confirmed',
                 notes: newAppointment.notes,
                 professional_id: newAppointment.professional_id || null,
-                box_id: newAppointment.box_id || null,
+            }
+
+            // Only add box_id if it's actually provided to avoid errors on legacy schemas
+            if (newAppointment.box_id) {
+                appointmentData.box_id = newAppointment.box_id
             }
 
             if (editingId) {
