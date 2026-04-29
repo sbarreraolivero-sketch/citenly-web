@@ -12,7 +12,6 @@ import {
     LogOut,
     ChevronDown,
     CalendarPlus,
-    CalendarCheck,
     CalendarX,
     Clock,
     Star,
