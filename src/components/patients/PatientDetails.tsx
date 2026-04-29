@@ -472,36 +472,40 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                         )}
                     </button>
 
-                    <button
-                        onClick={() => setActiveTab('odontogram')}
-                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'odontogram'
-                            ? 'text-primary-theme'
-                            : 'text-secondary-theme hover:text-primary-theme'
-                            }`}
-                    >
-                        <div className="flex items-center gap-1.5">
-                            <Activity className="w-4 h-4" />
-                            Odontograma
-                        </div>
-                        {activeTab === 'odontogram' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('periodontogram')}
-                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'periodontogram'
-                            ? 'text-primary-theme'
-                            : 'text-secondary-theme hover:text-primary-theme'
-                            }`}
-                    >
-                        <div className="flex items-center gap-1.5">
-                            <Layers className="w-4 h-4" />
-                            Periodontogram
-                        </div>
-                        {activeTab === 'periodontogram' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
-                        )}
-                    </button>
+                    {specialty === 'dental' && (
+                        <button
+                            onClick={() => setActiveTab('odontogram')}
+                            className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'odontogram'
+                                ? 'text-primary-theme'
+                                : 'text-secondary-theme hover:text-primary-theme'
+                                }`}
+                        >
+                            <div className="flex items-center gap-1.5">
+                                <Activity className="w-4 h-4" />
+                                Odontograma
+                            </div>
+                            {activeTab === 'odontogram' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-theme rounded-t-full shadow-[0_0_8px_var(--glow)]"></div>
+                            )}
+                        </button>
+                    )}
+                    {specialty === 'dental' && (
+                        <button
+                            onClick={() => setActiveTab('periodontogram')}
+                            className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'periodontogram'
+                                ? 'text-primary-theme'
+                                : 'text-secondary-theme hover:text-primary-theme'
+                                }`}
+                        >
+                            <div className="flex items-center gap-1.5">
+                                <Layers className="w-4 h-4" />
+                                Periodontogram
+                            </div>
+                            {activeTab === 'periodontogram' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-theme rounded-t-full shadow-[0_0_8px_var(--glow)]"></div>
+                            )}
+                        </button>
+                    )}
                     <button
                         onClick={() => setActiveTab('prescriptions')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'prescriptions'
