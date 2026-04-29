@@ -845,7 +845,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                 {activeTab === 'history' && (
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-medium text-charcoal">Historial de Tratamientos</h3>
+                            <h3 className="text-lg font-medium text-primary-theme">Historial de Tratamientos</h3>
                             <button
                                 onClick={() => {
                                     setEditingRecord(null)
@@ -860,15 +860,15 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                         {loadingRecords ? (
                             <div className="text-center py-12">
                                 <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                                <p className="text-charcoal/50">Cargando historial...</p>
+                                <p className="text-secondary-theme">Cargando historial...</p>
                             </div>
                         ) : records.length === 0 ? (
-                            <div className="text-center py-20 bg-white rounded-soft border border-dashed border-silk-beige">
+                            <div className="text-center py-20 bg-secondary-theme rounded-soft border border-dashed border-theme">
                                 <div className="w-12 h-12 bg-silk-beige/30 rounded-full flex items-center justify-center mx-auto mb-3">
                                     <FileText className="w-6 h-6 text-charcoal/40" />
                                 </div>
-                                <h3 className="text-charcoal font-medium">Sin historial clínico</h3>
-                                <p className="text-charcoal/60 text-sm mt-1">Crea el primer registro para este paciente</p>
+                                <h3 className="text-primary-theme font-medium">Sin historial clínico</h3>
+                                <p className="text-secondary-theme text-sm mt-1">Crea el primer registro para este paciente</p>
                                 <button
                                     onClick={() => {
                                         setEditingRecord(null)
@@ -922,7 +922,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                             </div>
 
                                             {record.description && (
-                                                <p className="text-charcoal/80 text-sm mb-3 whitespace-pre-wrap">
+                                                <p className="text-primary-theme text-sm mb-3 whitespace-pre-wrap">
                                                     {record.description}
                                                 </p>
                                             )}

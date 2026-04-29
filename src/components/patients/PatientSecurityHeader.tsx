@@ -174,26 +174,24 @@ export function PatientSecurityHeader({
 
                     <div className="flex items-center gap-4 relative z-10">
                         <div className="flex items-center gap-3">
-                            <div className="group flex flex-col items-end gap-1">
                                 <span className={cn(
                                     "px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2.5 transition-all border shadow-lg backdrop-blur-sm",
                                     patient.is_high_risk 
                                         ? "bg-red-500 text-white border-red-400 scale-105" 
-                                        : "bg-white/10 text-white border-white/20 hover:bg-white/20"
+                                        : "bg-white/40 dark:bg-white/80 text-[#0B0B0F] border-white/20 hover:bg-white/60"
                                 )}>
-                                    <ShieldAlert className={cn("w-4.5 h-4.5", patient.is_high_risk ? "text-white" : "text-red-400")} /> 
+                                    <ShieldAlert className={cn("w-4.5 h-4.5", patient.is_high_risk ? "text-white" : "text-red-600")} /> 
                                     <span>Alertas médicas</span>
                                 </span>
-                            </div>
                             <div className="group flex flex-col items-end gap-1">
-                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 hover:bg-white/20 flex items-center gap-2.5 transition-all shadow-lg backdrop-blur-sm">
-                                    <Activity className="w-4.5 h-4.5 text-emerald-400" /> 
+                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white/40 dark:bg-white/80 text-[#0B0B0F] border border-white/20 hover:bg-white/60 flex items-center gap-2.5 transition-all shadow-lg backdrop-blur-sm">
+                                    <Activity className="w-4.5 h-4.5 text-emerald-600" /> 
                                     <span>Enfermedades</span>
                                 </span>
                             </div>
                             <div className="group flex flex-col items-end gap-1">
-                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 hover:bg-white/20 flex items-center gap-2.5 transition-all shadow-lg backdrop-blur-sm">
-                                    <Pill className="w-4.5 h-4.5 text-indigo-400" /> 
+                                <span className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white/40 dark:bg-white/80 text-[#0B0B0F] border border-white/20 hover:bg-white/60 flex items-center gap-2.5 transition-all shadow-lg backdrop-blur-sm">
+                                    <Pill className="w-4.5 h-4.5 text-indigo-600" /> 
                                     <span>Medicamentos</span>
                                 </span>
                             </div>
@@ -299,7 +297,7 @@ export function PatientSecurityHeader({
                             </div>
                             <div className="flex flex-col text-left">
                                 <span className="text-[9px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">Sucursal</span>
-                                <span className="text-xs font-black text-charcoal truncate max-w-[100px]">{clinicName}</span>
+                                <span className="text-xs font-black text-primary-theme truncate max-w-[100px]">{clinicName}</span>
                             </div>
                         </div>
                     </div>
@@ -330,7 +328,7 @@ export function PatientSecurityHeader({
                 
                 <button
                     onClick={() => setShowTagSelector?.(!showTagSelector)}
-                    className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed border-silk-beige text-charcoal/40 hover:bg-white hover:text-primary-600 flex items-center gap-2 transition-all"
+                    className="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-dashed border-theme text-secondary-theme hover:bg-primary-theme/5 hover:text-primary-theme flex items-center gap-2 transition-all"
                 >
                     <Plus className="w-4 h-4" />
                     Etiquetar Paciente
