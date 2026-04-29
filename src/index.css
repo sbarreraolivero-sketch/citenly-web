@@ -268,7 +268,8 @@
   --accent-primary: #FF2E88;
   --accent-secondary: #FF4DA6;
   --text-primary: #FFFFFF;
-  --text-secondary: #A1A1AA;
+  --text-secondary: #D1D1D6;
+  --text-muted: #A1A1AA;
   --border-subtle: rgba(255,255,255,0.08);
   --glow: rgba(255, 46, 136, 0.25);
   --gradient-primary: linear-gradient(135deg, #FF2E88, #FF4DA6, #FF7AC3);
@@ -281,7 +282,8 @@
   --accent-primary: #FF2E88;
   --accent-secondary: #FF4DA6;
   --text-primary: #0B0B0F;
-  --text-secondary: #6B7280;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
   --border-subtle: rgba(0,0,0,0.08);
   --glow: rgba(255, 46, 136, 0.15);
   --gradient-primary: linear-gradient(135deg, #FF2E88, #FF4DA6, #FF7AC3);
@@ -414,6 +416,7 @@ body {
 /* Theme Utilities */
 .text-primary-theme { color: var(--text-primary) !important; }
 .text-secondary-theme { color: var(--text-secondary) !important; }
+.text-muted-theme { color: var(--text-muted) !important; }
 .bg-primary-theme { background-color: var(--bg-primary) !important; }
 .bg-secondary-theme { background-color: var(--bg-secondary) !important; }
 .border-theme { border-color: var(--border-subtle) !important; }

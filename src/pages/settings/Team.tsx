@@ -167,10 +167,10 @@ export default function Team() {
         <div className="p-6 max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Gestión de Equipo</h1>
-                    <p className="text-gray-500">Administra los miembros de tu clínica y sus permisos.</p>
+                    <h1 className="text-2xl font-bold text-primary-theme">Gestión de Equipo</h1>
+                    <p className="text-secondary-theme">Administra los miembros de tu clínica y sus permisos.</p>
                     {!loading && (
-                        <p className="text-sm mt-2 font-medium text-purple-600 bg-purple-50 inline-block px-3 py-1 rounded-full">
+                        <p className="text-xs mt-2 font-bold text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 inline-block px-3 py-1 rounded-full border border-[var(--accent-primary)]/20 uppercase tracking-widest">
                             {members.filter(m => m.status !== 'disabled').length} / {maxUsers > 100 ? 'Ilimitados' : maxUsers} usuarios activos
                         </p>
                     )}
@@ -182,64 +182,64 @@ export default function Team() {
                                 navigator.clipboard.writeText(`${window.location.origin}/register?mode=join&clinic=${clinicId}`)
                                 toast.success('Enlace de registro copiado al portapapeles')
                             }}
-                            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                            className="px-4 py-2 bg-secondary-theme border border-theme text-primary-theme rounded-lg hover:bg-primary-theme/5 flex items-center gap-2 transition-colors font-semibold text-sm"
                             title="Copiar enlace para que los miembros se registren ellos mismos"
                         >
-                            <Copy size={20} />
+                            <Copy size={18} />
                             Copiar Enlace
                         </button>
                         <button
                             onClick={() => setIsInviteModalOpen(true)}
                             disabled={!canInvite}
-                            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${canInvite
-                                ? 'bg-purple-600 text-white hover:bg-purple-700'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all font-bold text-sm ${canInvite
+                                ? 'bg-premium-gradient text-white shadow-lg hover:scale-105 active:scale-95'
+                                : 'bg-secondary-theme text-secondary-theme/40 border border-theme cursor-not-allowed'
                                 }`}
                             title={!canInvite ? 'Límite de usuarios alcanzado' : ''}
                         >
-                            <Plus size={20} />
+                            <Plus size={18} />
                             Invitar Miembro
                         </button>
                     </div>
                 )}
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+            <div className="card-premium overflow-hidden">
                 <table className="w-full min-w-[600px]">
-                    <thead className="bg-gray-50 border-b border-gray-100">
+                    <thead className="bg-secondary-theme border-b border-theme">
                         <tr>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Miembro</th>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Rol</th>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Estado</th>
-                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Fecha Ingreso</th>
-                            {isOwner && <th className="text-right py-4 px-6 text-sm font-medium text-gray-500">Acciones</th>}
+                            <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Miembro</th>
+                            <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Rol</th>
+                            <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Estado</th>
+                            <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Fecha Ingreso</th>
+                            {isOwner && <th className="text-right py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Acciones</th>}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-theme">
                         {loading ? (
-                            <tr><td colSpan={5} className="text-center py-8">Cargando...</td></tr>
+                            <tr><td colSpan={5} className="text-center py-8 text-secondary-theme">Cargando...</td></tr>
                         ) : members.length === 0 ? (
-                            <tr><td colSpan={5} className="text-center py-8 text-gray-500">No hay miembros en el equipo.</td></tr>
+                            <tr><td colSpan={5} className="text-center py-8 text-secondary-theme">No hay miembros en el equipo.</td></tr>
                         ) : (
                             members.map((m) => (
-                                <tr key={m.id} className="hover:bg-gray-50/50 transition-colors">
+                                <tr key={m.id} className="hover:bg-primary-theme/5 transition-colors">
                                     <td className="py-4 px-6">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-medium">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary)] font-bold">
                                                 {(m.first_name?.[0] || m.email[0]).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-gray-900">{m.first_name || 'Sin nombre'}</p>
-                                                <p className="text-sm text-gray-500">{m.email}</p>
+                                                <p className="font-bold text-primary-theme">{m.first_name || 'Sin nombre'}</p>
+                                                <p className="text-xs text-secondary-theme">{m.email}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="py-4 px-6">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                                            ${m.role === 'owner' ? 'bg-indigo-100 text-indigo-700' :
-                                                m.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                                                    m.role === 'professional' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-green-100 text-green-700'}`}>
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                                            ${m.role === 'owner' ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' :
+                                                m.role === 'admin' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' :
+                                                    m.role === 'professional' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
+                                                        'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
                                             {(m.role === 'owner' || m.role === 'admin') && <Shield size={12} />}
                                             {m.role === 'professional' && <User size={12} />}
                                             {m.role === 'receptionist' && <Clock size={12} />}
@@ -247,14 +247,14 @@ export default function Team() {
                                         </span>
                                     </td>
                                     <td className="py-4 px-6">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                                            ${m.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                                m.status === 'invited' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-gray-100 text-gray-700'}`}>
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                                            ${m.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                                                m.status === 'invited' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                                                    'bg-secondary-theme text-secondary-theme/60 border border-theme'}`}>
                                             {m.status === 'active' ? 'Activo' : m.status === 'invited' ? 'Invitado' : 'Desactivado'}
                                         </span>
                                     </td>
-                                    <td className="py-4 px-6 text-sm text-gray-500">
+                                    <td className="py-4 px-6 text-xs text-secondary-theme font-medium">
                                         {new Date(m.created_at).toLocaleDateString()}
                                     </td>
                                     {isOwner && (
@@ -262,10 +262,10 @@ export default function Team() {
                                             {m.role !== 'owner' && (
                                                 <button
                                                     onClick={(e) => handleDelete(e, m.id)}
-                                                    className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+                                                    className="text-secondary-theme hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
                                                     title="Eliminar miembro"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             )}
                                         </td>
@@ -279,77 +279,77 @@ export default function Team() {
 
             {/* Invite Modal */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Invitar Nuevo Miembro</h2>
-                        <form onSubmit={handleInvite} className="space-y-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-primary-theme border border-theme rounded-2xl shadow-2xl w-full max-w-md p-8 animate-slide-up">
+                        <h2 className="text-xl font-bold text-primary-theme mb-6">Invitar Nuevo Miembro</h2>
+                        <form onSubmit={handleInvite} className="space-y-5">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                                <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">Correo Electrónico</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-theme" size={16} />
                                     <input
                                         type="email"
                                         required
                                         value={inviteEmail}
                                         onChange={(e) => setInviteEmail(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                                        className="input-premium w-full pl-11"
                                         placeholder="correo@ejemplo.com"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre (Opcional)</label>
+                                <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">Nombre (Opcional)</label>
                                 <input
                                     type="text"
                                     value={inviteName}
                                     onChange={(e) => setInviteName(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                                    className="input-premium w-full"
                                     placeholder="Nombre del doctor/a"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                                <div className="grid grid-cols-3 gap-3">
+                                <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">Rol</label>
+                                <div className="grid grid-cols-1 gap-3">
                                     {isOwner && (
                                         <button
                                             type="button"
                                             onClick={() => setInviteRole('admin')}
-                                            className={`p-3 rounded-lg border text-left transition-all ${inviteRole === 'admin' ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : 'border-gray-200 hover:border-gray-300'}`}
+                                            className={`p-3.5 rounded-xl border text-left transition-all ${inviteRole === 'admin' ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/5 ring-1 ring-[var(--accent-primary)]' : 'border-theme bg-secondary-theme/50 hover:border-secondary-theme'}`}
                                         >
-                                            <div className="font-medium text-gray-900 mb-1">Admin</div>
-                                            <div className="text-xs text-gray-500">Gestiona equipo y calendarios. Máx 2.</div>
+                                            <div className="font-bold text-primary-theme text-sm mb-0.5">Admin</div>
+                                            <div className="text-[11px] text-secondary-theme leading-tight">Gestiona equipo y calendarios de toda la clínica.</div>
                                         </button>
                                     )}
                                     <button
                                         type="button"
                                         onClick={() => setInviteRole('professional')}
-                                        className={`p-3 rounded-lg border text-left transition-all ${inviteRole === 'professional' ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : 'border-gray-200 hover:border-gray-300'}`}
+                                        className={`p-3.5 rounded-xl border text-left transition-all ${inviteRole === 'professional' ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/5 ring-1 ring-[var(--accent-primary)]' : 'border-theme bg-secondary-theme/50 hover:border-secondary-theme'}`}
                                     >
-                                        <div className="font-medium text-gray-900 mb-1">Profesional</div>
-                                        <div className="text-xs text-gray-500">Maneja su agenda y pacientes.</div>
+                                        <div className="font-bold text-primary-theme text-sm mb-0.5">Profesional</div>
+                                        <div className="text-[11px] text-secondary-theme leading-tight">Maneja su propia agenda, citas y pacientes.</div>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setInviteRole('receptionist')}
-                                        className={`p-3 rounded-lg border text-left transition-all ${inviteRole === 'receptionist' ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : 'border-gray-200 hover:border-gray-300'}`}
+                                        className={`p-3.5 rounded-xl border text-left transition-all ${inviteRole === 'receptionist' ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/5 ring-1 ring-[var(--accent-primary)]' : 'border-theme bg-secondary-theme/50 hover:border-secondary-theme'}`}
                                     >
-                                        <div className="font-medium text-gray-900 mb-1">Recepción</div>
-                                        <div className="text-xs text-gray-500">Gestiona citas de todo el equipo.</div>
+                                        <div className="font-bold text-primary-theme text-sm mb-0.5">Recepción</div>
+                                        <div className="text-[11px] text-secondary-theme leading-tight">Gestiona citas de todo el equipo clínico.</div>
                                     </button>
                                 </div>
                             </div>
-
+ 
                             <div className="pt-4 flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setIsInviteModalOpen(false)}
-                                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                                    className="flex-1 px-4 py-2.5 text-secondary-theme bg-secondary-theme rounded-xl hover:bg-secondary-theme/80 transition-colors font-bold text-sm border border-theme"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                                    className="flex-1 px-4 py-2.5 text-white bg-premium-gradient rounded-xl hover:shadow-lg transition-all font-bold text-sm"
                                 >
                                     Enviar Invitación
                                 </button>
@@ -358,7 +358,6 @@ export default function Team() {
                     </div>
                 </div>
             )}
-
         </div>
     )
 }

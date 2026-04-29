@@ -334,7 +334,7 @@ export default function Dashboard() {
                             </div>
                             <div className={cn(
                                 "flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-full shadow-sm",
-                                stat.isUp ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                                stat.isUp ? "bg-emerald-500/15 text-emerald-500" : "bg-red-500/15 text-red-500"
                             )}>
                                 {stat.isUp ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                                 {stat.trend}
@@ -345,7 +345,7 @@ export default function Dashboard() {
                             <div className="flex items-baseline gap-1">
                                 <p className="text-3xl font-bold text-primary-theme leading-none">{stat.value}</p>
                             </div>
-                            <p className="text-xs font-black uppercase tracking-widest text-secondary-theme mt-2">{stat.name}</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-primary-theme mt-2 opacity-70">{stat.name}</p>
                         </div>
 
                         {/* Mobile optimizations (sparkline placeholder look) */}
@@ -369,7 +369,7 @@ export default function Dashboard() {
 
                     <div className="space-y-3">
                         {upcomingAppointments.length === 0 ? (
-                            <p className="text-charcoal/50 text-center py-4">No hay próximas citas agendadas.</p>
+                            <p className="text-secondary-theme text-center py-4">No hay próximas citas agendadas.</p>
                         ) : (
                             upcomingAppointments.map((appointment) => (
                                 <div
@@ -384,13 +384,13 @@ export default function Dashboard() {
                                         <p className="text-sm text-secondary-theme">{appointment.service}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-medium text-charcoal">
+                                        <p className="font-medium text-primary-theme">
                                             {new Date(appointment.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </p>
                                         <span
                                             className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full ${appointment.status === 'confirmed'
-                                                ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-amber-100 text-amber-700'
+                                                ? 'bg-emerald-500/10 text-emerald-500'
+                                                : 'bg-amber-500/10 text-amber-500'
                                                 }`}
                                         >
                                             {appointment.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
@@ -413,7 +413,7 @@ export default function Dashboard() {
 
                     <div className="space-y-4">
                         {recentMessages.length === 0 ? (
-                            <p className="text-charcoal/50 text-center py-4">No hay mensajes recientes.</p>
+                            <p className="text-secondary-theme text-center py-4">No hay mensajes recientes.</p>
                         ) : (
                             recentMessages.map((message) => (
                                 <div

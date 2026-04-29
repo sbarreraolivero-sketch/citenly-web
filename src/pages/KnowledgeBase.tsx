@@ -403,18 +403,18 @@ export default function KnowledgeBase() {
                                     summary="Define el tono, voz y alma de tu clínica."
                                 >
                                     <p>La <b>personalidad</b> determina cómo se siente hablar con tu clínica. Una buena personalidad genera confianza y cercanía inmediata.</p>
-                                    <div className="bg-white/50 p-3 rounded-soft border border-silk-beige/30">
-                                        <p className="font-bold mb-1.5 flex items-center gap-1.5 text-primary-700 text-[11px]">
+                                    <div className="bg-primary-theme/50 p-3 rounded-soft border border-theme">
+                                        <p className="font-bold mb-1.5 flex items-center gap-1.5 text-[var(--accent-primary)] text-[11px]">
                                             <Check className="w-3.5 h-3.5" /> EJEMPLO RECOMENDADO:
                                         </p>
-                                        <p className="italic text-[11.5px] leading-relaxed text-charcoal/80">"Eres un asesor experto en estética médica. Habla de manera empática pero profesional. Usa 'nosotros' para referirte a la clínica y enfócate siempre en resolver dudas sobre bienestar."</p>
+                                        <p className="italic text-[11.5px] leading-relaxed text-secondary-theme">"Eres un asesor experto en estética médica. Habla de manera empática pero profesional. Usa 'nosotros' para referirte a la clínica y enfócate siempre en resolver dudas sobre bienestar."</p>
                                     </div>
                                     <div className="mt-3 grid grid-cols-2 gap-2 text-[10.5px]">
-                                        <div className="p-2 bg-silk-beige/20 rounded border border-silk-beige/30">
-                                            <b>🎩 Formal:</b> Ideal para clínicas quirúrgicas o de alta complejidad.
+                                        <div className="p-2 bg-secondary-theme rounded border border-theme text-primary-theme">
+                                            <b className="text-[var(--accent-primary)]">🎩 Formal:</b> Ideal para clínicas quirúrgicas o de alta complejidad.
                                         </div>
-                                        <div className="p-2 bg-silk-beige/20 rounded border border-silk-beige/30">
-                                            <b>✨ Cercana:</b> Ideal para centros de estética, spas o kinesiología.
+                                        <div className="p-2 bg-secondary-theme rounded border border-theme text-primary-theme">
+                                            <b className="text-[var(--accent-primary)]">✨ Cercana:</b> Ideal para centros de estética, spas o kinesiología.
                                         </div>
                                     </div>
                                 </GuideBox>
@@ -438,18 +438,18 @@ export default function KnowledgeBase() {
                                 >
                                     <p>Las <b>reglas de comportamiento</b> dictan qué debe (y qué no) hacer el bot en situaciones críticas de atención al cliente.</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                                        <div className="bg-emerald-50/50 p-2.5 rounded-soft border border-emerald-100">
-                                            <p className="font-bold text-emerald-700 text-[10px] uppercase tracking-wider mb-1.5">✅ LO QUE SÍ DEBE HACER:</p>
-                                            <ul className="text-[10.5px] space-y-1 text-emerald-800/80">
+                                        <div className="bg-emerald-500/10 p-2.5 rounded-soft border border-emerald-500/20">
+                                            <p className="font-bold text-emerald-500 text-[10px] uppercase tracking-wider mb-1.5">✅ LO QUE SÍ DEBE HACER:</p>
+                                            <ul className="text-[10.5px] space-y-1 text-emerald-500/80">
                                                 <li>• Saludar preguntando el nombre.</li>
                                                 <li>• Sugerir cita ante cualquier interés.</li>
                                                 <li>• Usar emojis de bienestar (✨💆‍♀️).</li>
                                                 <li>• Confirmar disponibilidad antes de citar.</li>
                                             </ul>
                                         </div>
-                                        <div className="bg-red-50/50 p-2.5 rounded-soft border border-red-100">
-                                            <p className="font-bold text-red-700 text-[10px] uppercase tracking-wider mb-1.5">❌ LO QUE NO DEBE HACER:</p>
-                                            <ul className="text-[10.5px] space-y-1 text-red-800/80">
+                                        <div className="bg-red-500/10 p-2.5 rounded-soft border border-red-500/20">
+                                            <p className="font-bold text-red-500 text-[10px] uppercase tracking-wider mb-1.5">❌ LO QUE NO DEBE HACER:</p>
+                                            <ul className="text-[10.5px] space-y-1 text-red-500/80">
                                                 <li>• No dar precios sin explicar el valor.</li>
                                                 <li>• No discutir ni usar lenguaje técnico.</li>
                                                 <li>• No prometer resultados médicos finales.</li>

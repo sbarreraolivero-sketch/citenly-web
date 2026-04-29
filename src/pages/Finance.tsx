@@ -497,23 +497,23 @@ const Finance = () => {
                         </p>
                     </div>
                     <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
-                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                        <p className="font-bold text-[var(--accent-primary)] text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <CreditCard className="w-3.5 h-3.5" /> Pagos por Cobrar:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                        <p className="text-[11px] leading-relaxed text-secondary-theme">
                             Las transacciones que aparecen como "Pendientes" son citas realizadas que aún no han sido marcadas como pagadas. Hazles seguimiento para mantener un flujo de caja positivo.
                         </p>
                     </div>
                 </div>
-                <p className="text-[11px] text-charcoal/70 mt-3 italic flex items-center gap-1.5 bg-ivory/50 p-2 rounded-soft border border-silk-beige/20">
-                    <Lightbulb className="w-3.5 h-3.5 text-accent-600" /> <b>Tip:</b> Registra cada ingreso manual (ej: venta de cremas o productos) para que tus reportes de exportación sean 100% precisos al final del mes.
+                <p className="text-[11px] text-secondary-theme mt-3 italic flex items-center gap-1.5 bg-secondary-theme p-2 rounded-soft border border-theme">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> <b className="text-primary-theme">Tip:</b> Registra cada ingreso manual (ej: venta de cremas o productos) para que tus reportes de exportación sean 100% precisos al final del mes.
                 </p>
             </GuideBox>
 
             {/* Date filter pills & Date display */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="text-sm text-charcoal/50 capitalize font-medium flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-silk-beige w-fit">
-                    <Calendar className="w-4 h-4 text-primary-500" />
+                <div className="text-sm text-secondary-theme capitalize font-medium flex items-center gap-2 bg-secondary-theme px-3 py-1.5 rounded-full border border-theme w-fit">
+                    <Calendar className="w-4 h-4 text-[var(--accent-primary)]" />
                     {getDateRangeLabel(filterType)}
                 </div>
                 

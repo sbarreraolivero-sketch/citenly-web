@@ -198,23 +198,23 @@ export default function Loyalty() {
                             <Star className="w-5 h-5 text-amber-200 fill-amber-300" />
                             <h1 className="text-2xl font-bold tracking-tight">Fidelización & Referidos</h1>
                         </div>
-                        <p className="text-amber-100/90 text-sm max-w-md leading-relaxed">
+                        <p className="text-white text-sm max-w-md leading-relaxed opacity-90">
                             Gestiona el programa de lealtad de tu clínica. Premia a tus mejores pacientes y fomenta el crecimiento orgánico.
                         </p>
                     </div>
 
                     <div className="flex gap-4 w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0">
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/20 shadow-inner">
-                            <p className="text-amber-200 text-[10px] font-black uppercase tracking-widest mb-1">{settings?.loyalty_points_name || 'Saldo'} Total</p>
-                            <p className="text-2xl font-black">{stats.totalPointsDist.toLocaleString()}</p>
+                            <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">{settings?.loyalty_points_name || 'Saldo'} Total</p>
+                            <p className="text-2xl font-black text-white">{stats.totalPointsDist.toLocaleString()}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/20 shadow-inner">
-                            <p className="text-amber-200 text-[10px] font-black uppercase tracking-widest mb-1">Referidores</p>
-                            <p className="text-2xl font-black">{stats.totalReferrals}</p>
+                            <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Referidores</p>
+                            <p className="text-2xl font-black text-white">{stats.totalReferrals}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/20 shadow-inner">
-                            <p className="text-amber-200 text-[10px] font-black uppercase tracking-widest mb-1">Recompensas</p>
-                            <p className="text-2xl font-black">{stats.activeAlerts}</p>
+                            <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Recompensas</p>
+                            <p className="text-2xl font-black text-white">{stats.activeAlerts}</p>
                         </div>
                     </div>
                 </div>

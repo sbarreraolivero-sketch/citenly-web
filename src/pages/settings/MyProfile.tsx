@@ -110,8 +110,8 @@ export default function MyProfile() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold text-charcoal">Mi Perfil Profesional</h1>
-                    <p className="text-charcoal/50 mt-1">Configura tu información y horarios de atención</p>
+                    <h1 className="text-2xl font-bold text-primary-theme">Mi Perfil Profesional</h1>
+                    <p className="text-secondary-theme mt-1">Configura tu información y horarios de atención</p>
                 </div>
                 <button
                     onClick={handleSave}
@@ -127,34 +127,34 @@ export default function MyProfile() {
             </div>
 
             {/* Información Personal */}
-            <div className="card-soft p-6">
-                <h2 className="text-base font-semibold text-charcoal mb-4 flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-primary-500" />
+            <div className="card-premium p-6">
+                <h2 className="text-base font-bold text-primary-theme mb-4 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-[var(--accent-primary)]" />
                     Información Profesional
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/70 mb-1.5">Nombre</label>
+                        <label className="block text-sm font-bold text-secondary-theme mb-1.5 uppercase tracking-wider text-[10px]">Nombre</label>
                         <input
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            className="input-soft w-full"
+                            className="input-premium w-full"
                             placeholder="Tu nombre"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/70 mb-1.5">Apellido</label>
+                        <label className="block text-sm font-bold text-secondary-theme mb-1.5 uppercase tracking-wider text-[10px]">Apellido</label>
                         <input
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            className="input-soft w-full"
+                            className="input-premium w-full"
                             placeholder="Tu apellido"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/70 mb-1.5">Cargo</label>
+                        <label className="block text-sm font-bold text-secondary-theme mb-1.5 uppercase tracking-wider text-[10px]">Cargo</label>
                         <input
                             type="text"
                             value={
@@ -163,17 +163,17 @@ export default function MyProfile() {
                                 member?.role === 'receptionist' ? 'Recepción' : ''
                             }
                             readOnly
-                            className="input-soft w-full bg-charcoal/5 cursor-not-allowed border-transparent"
+                            className="input-premium w-full opacity-60 cursor-not-allowed"
                             placeholder="Cargo asignado"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-charcoal/70 mb-1.5">Especialidad</label>
+                        <label className="block text-sm font-bold text-secondary-theme mb-1.5 uppercase tracking-wider text-[10px]">Especialidad</label>
                         <input
                             type="text"
                             value={specialty}
                             onChange={(e) => setSpecialty(e.target.value)}
-                            className="input-soft w-full"
+                            className="input-premium w-full"
                             placeholder="Ej: Ortodoncia, Rehabilitación"
                         />
                     </div>
@@ -181,12 +181,12 @@ export default function MyProfile() {
             </div>
 
             {/* Color del Calendario */}
-            <div className="card-soft p-6">
-                <h2 className="text-base font-semibold text-charcoal mb-4 flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-primary-500" />
+            <div className="card-premium p-6">
+                <h2 className="text-base font-bold text-primary-theme mb-4 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-[var(--accent-primary)]" />
                     Color del Calendario
                 </h2>
-                <p className="text-sm text-charcoal/50 mb-4">
+                <p className="text-sm text-secondary-theme mb-4">
                     Este color se usará para identificar tus citas en el calendario compartido.
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
@@ -206,28 +206,27 @@ export default function MyProfile() {
                             type="color"
                             value={color}
                             onChange={(e) => setColor(e.target.value)}
-                            className="w-9 h-9 rounded-full cursor-pointer border-2 border-silk-beige flex-shrink-0"
+                            className="w-9 h-9 rounded-full cursor-pointer border-2 border-theme flex-shrink-0"
                         />
-                        <span className="text-xs text-charcoal/40 font-mono">{color}</span>
+                        <span className="text-xs text-secondary-theme font-mono">{color}</span>
                     </div>
                 </div>
                 {/* Preview */}
-                <div className="mt-4 p-3 rounded-lg border-l-4 text-sm" style={{
-                    borderLeftColor: color,
-                    backgroundColor: color + '15'
+                <div className="mt-4 p-4 rounded-soft border-l-4 text-sm bg-primary-theme/5 border border-theme" style={{
+                    borderLeftColor: color
                 }}>
-                    <div className="font-medium text-charcoal">Paciente Ejemplo - Servicio de prueba</div>
-                    <div className="text-xs text-charcoal/60 mt-0.5">10:00 AM - 11:00 AM</div>
+                    <div className="font-bold text-primary-theme">Paciente Ejemplo - Servicio de prueba</div>
+                    <div className="text-xs text-secondary-theme mt-1 font-medium">10:00 AM - 11:00 AM</div>
                 </div>
             </div>
 
             {/* Horarios de Atención */}
-            <div className="card-soft p-6">
-                <h2 className="text-base font-semibold text-charcoal mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-primary-500" />
+            <div className="card-premium p-6">
+                <h2 className="text-base font-bold text-primary-theme mb-4 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[var(--accent-primary)]" />
                     Horarios de Atención
                 </h2>
-                <p className="text-sm text-charcoal/50 mb-4">
+                <p className="text-sm text-secondary-theme mb-4">
                     Configura los días y horas en los que atiendes pacientes. El agente IA respetará estos horarios al agendar citas.
                 </p>
                 <div className="space-y-3">
@@ -237,8 +236,8 @@ export default function MyProfile() {
                             <div
                                 key={day.key}
                                 className={cn(
-                                    "flex flex-wrap items-center gap-3 sm:gap-4 p-3 rounded-lg transition-colors",
-                                    dayHours.enabled ? "bg-ivory" : "bg-gray-50/70"
+                                    "flex flex-wrap items-center gap-3 sm:gap-4 p-3 rounded-lg transition-colors border border-transparent",
+                                    dayHours.enabled ? "bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/10" : "bg-secondary-theme/50"
                                 )}
                             >
                                 <label className="flex items-center gap-3 w-28 sm:w-32 cursor-pointer flex-shrink-0">
@@ -246,11 +245,11 @@ export default function MyProfile() {
                                         type="checkbox"
                                         checked={dayHours.enabled}
                                         onChange={(e) => updateDay(day.key, 'enabled', e.target.checked)}
-                                        className="accent-primary-500 w-4 h-4"
+                                        className="accent-[var(--accent-primary)] w-4 h-4"
                                     />
                                     <span className={cn(
-                                        "text-sm font-medium",
-                                        dayHours.enabled ? "text-charcoal" : "text-charcoal/40"
+                                        "text-sm font-bold uppercase tracking-widest text-[11px]",
+                                        dayHours.enabled ? "text-primary-theme" : "text-secondary-theme opacity-40"
                                     )}>
                                         {day.label}
                                     </span>
@@ -262,19 +261,19 @@ export default function MyProfile() {
                                                 type="time"
                                                 value={dayHours.start}
                                                 onChange={(e) => updateDay(day.key, 'start', e.target.value)}
-                                                className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
+                                                className="input-premium text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
                                             />
-                                            <span className="text-charcoal/40 text-sm">a</span>
+                                            <span className="text-secondary-theme text-sm font-bold mx-1">a</span>
                                             <input
                                                 type="time"
                                                 value={dayHours.end}
                                                 onChange={(e) => updateDay(day.key, 'end', e.target.value)}
-                                                className="input-soft text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
+                                                className="input-premium text-sm py-1.5 px-2 sm:px-3 w-full flex-1"
                                             />
                                         </div>
 
                                         {/* Colación UI */}
-                                        <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-silk-beige/30 ml-1">
+                                        <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-theme ml-1">
                                             <label className="flex items-center gap-2 cursor-pointer group">
                                                 <div className="relative inline-flex items-center">
                                                     <input
@@ -295,9 +294,9 @@ export default function MyProfile() {
                                                         }}
                                                         className="sr-only peer"
                                                     />
-                                                    <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500"></div>
+                                                    <div className="w-8 h-4 bg-secondary-theme border border-theme rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[var(--accent-primary)]"></div>
                                                 </div>
-                                                <span className="text-[11px] font-medium text-charcoal/40 group-hover:text-charcoal/60 transition-colors">Colación</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-secondary-theme group-hover:text-primary-theme transition-colors">Colación</span>
                                             </label>
 
                                             {dayHours.lunch_break?.enabled && (
@@ -315,9 +314,9 @@ export default function MyProfile() {
                                                                 }
                                                             }))
                                                         }}
-                                                        className="px-2 py-0.5 bg-white border border-silk-beige rounded-soft text-[11px] w-20"
+                                                        className="px-2 py-1 bg-primary-theme/5 border border-theme rounded-soft text-[11px] w-20 text-primary-theme font-medium"
                                                     />
-                                                    <span className="text-charcoal/30 text-[10px] font-bold">a</span>
+                                                    <span className="text-secondary-theme text-[10px] font-bold">a</span>
                                                     <input
                                                         type="time"
                                                         value={dayHours.lunch_break.end}
@@ -331,7 +330,7 @@ export default function MyProfile() {
                                                                 }
                                                             }))
                                                         }}
-                                                        className="px-2 py-0.5 bg-white border border-silk-beige rounded-soft text-[11px] w-20"
+                                                        className="px-2 py-1 bg-primary-theme/5 border border-theme rounded-soft text-[11px] w-20 text-primary-theme font-medium"
                                                     />
                                                 </div>
                                             )}
