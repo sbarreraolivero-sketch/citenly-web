@@ -576,11 +576,14 @@ export default function DashboardLayout() {
                 </main>
             </div>
 
-            {/* Click outside to close menu */}
-            {showUserMenu && (
+            {/* Click outside to close menus */}
+            {(showUserMenu || showNotifications) && (
                 <div
                     className="fixed inset-0 z-40"
-                    onClick={() => setShowUserMenu(false)}
+                    onClick={() => {
+                        setShowUserMenu(false)
+                        setShowNotifications(false)
+                    }}
                 />
             )}
 
