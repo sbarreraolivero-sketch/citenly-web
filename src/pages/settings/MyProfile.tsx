@@ -294,7 +294,7 @@ export default function MyProfile() {
                                                         }}
                                                         className="sr-only peer"
                                                     />
-                                                    <div className="w-8 h-4 bg-secondary-theme border border-theme rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[var(--accent-primary)]"></div>
+                                                    <div className="w-8 h-4 bg-charcoal/15 dark:bg-white/15 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#FF2E88] shadow-inner"></div>
                                                 </div>
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-secondary-theme group-hover:text-primary-theme transition-colors">Colación</span>
                                             </label>

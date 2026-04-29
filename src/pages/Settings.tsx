@@ -1518,25 +1518,6 @@ export default function Settings() {
                                     </div>
                                 </div>
 
-                                {/* Clinic Templates */}
-                                <div className="mt-8 space-y-6">
-                                    <h3 className="text-sm font-semibold text-primary-theme mb-4">💬 Plantillas de la Clínica</h3>
-
-                                    <TemplateSelector
-                                        label="Plantilla: Encuesta de Satisfacción"
-                                        description="Se envía automáticamente horas después de que finaliza la cita."
-                                        value={templateSurvey}
-                                        onChange={setTemplateSurvey}
-                                    />
-
-                                    <TemplateSelector
-                                        label="Plantilla: Reactivación de Pacientes"
-                                        description="Se envía a pacientes que no han visitado en meses para ofrecer un nuevo servicio y recuperar la relación."
-                                        value={templateReactivation}
-                                        onChange={setTemplateReactivation}
-                                    />
-                                </div>
-
                                 <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
                                     <button
                                         onClick={handleSaveClinic}
@@ -1555,6 +1536,39 @@ export default function Settings() {
                                             ¡Cambios guardados!
                                         </div>
                                     )}
+                                </div>
+                            </div>
+
+                            {/* Clinic Templates - Independent Card */}
+                            <div className="card-premium p-6">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-[#FF2E88] to-[#FF4DA6] rounded-soft flex items-center justify-center shadow-lg shadow-[#FF2E88]/20">
+                                        <MessageSquare className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-primary-theme">Plantillas de la Clínica</h2>
+                                        <p className="text-sm text-primary-theme/50">Configura los mensajes automáticos que se envían a tus pacientes</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-5">
+                                    <div className="p-4 bg-secondary-theme/50 rounded-soft border border-theme">
+                                        <TemplateSelector
+                                            label="Plantilla: Encuesta de Satisfacción"
+                                            description="Se envía automáticamente horas después de que finaliza la cita."
+                                            value={templateSurvey}
+                                            onChange={setTemplateSurvey}
+                                        />
+                                    </div>
+
+                                    <div className="p-4 bg-secondary-theme/50 rounded-soft border border-theme">
+                                        <TemplateSelector
+                                            label="Plantilla: Reactivación de Pacientes"
+                                            description="Se envía a pacientes que no han visitado en meses para ofrecer un nuevo servicio y recuperar la relación."
+                                            value={templateReactivation}
+                                            onChange={setTemplateReactivation}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -2519,7 +2533,7 @@ export default function Settings() {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-primary-theme">🆕 Nuevas Citas</p>
+                                        <p className="font-medium text-primary-theme">Nuevas Citas</p>
                                         <p className="text-sm text-primary-theme/50">Cuando se agenda una nueva cita</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2535,7 +2549,7 @@ export default function Settings() {
 
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-primary-theme">✅ Citas Confirmadas</p>
+                                        <p className="font-medium text-primary-theme">Citas Confirmadas</p>
                                         <p className="text-sm text-primary-theme/50">Cuando un paciente confirma su cita</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2551,7 +2565,7 @@ export default function Settings() {
 
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-primary-theme">❌ Citas Canceladas</p>
+                                        <p className="font-medium text-primary-theme">Citas Canceladas</p>
                                         <p className="text-sm text-primary-theme/50">Cuando se cancela una cita</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2567,7 +2581,7 @@ export default function Settings() {
 
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-primary-theme">⏰ Recordatorios Pendientes</p>
+                                        <p className="font-medium text-primary-theme">Recordatorios Pendientes</p>
                                         <p className="text-sm text-primary-theme/50">Citas que necesitan confirmación</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2583,7 +2597,7 @@ export default function Settings() {
 
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-primary-theme">💬 Nuevos Mensajes</p>
+                                        <p className="font-medium text-primary-theme">Nuevos Mensajes</p>
                                         <p className="text-sm text-primary-theme/50">Mensajes que requieren atención</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2599,7 +2613,7 @@ export default function Settings() {
 
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-primary-theme">⭐ Encuestas Respondidas</p>
+                                        <p className="font-medium text-primary-theme">Encuestas Respondidas</p>
                                         <p className="text-sm text-primary-theme/50">Cuando un paciente responde una encuesta</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -2616,7 +2630,7 @@ export default function Settings() {
                                 <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft border border-orange-200">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-medium text-primary-theme">🤖 Derivación a Humano</p>
+                                            <p className="font-medium text-primary-theme">Derivación a Humano</p>
                                             <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-medium">IA Agent</span>
                                         </div>
                                         <p className="text-sm text-primary-theme/50">Cuando el Asistente de IA requiere de un humano para continuar el chat</p>
@@ -2671,7 +2685,7 @@ export default function Settings() {
 
                             {/* Timing Section */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">⏰ Tiempo de recordatorios</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Tiempo de recordatorios</h3>
                                 <div className="space-y-3">
                                     <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
                                         <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
@@ -2761,7 +2775,7 @@ export default function Settings() {
 
                             {/* Preferred Hour */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">🕐 Hora preferida de envío</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Hora preferida de envío</h3>
                                 <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
                                     <div>
                                         <p className="font-semibold text-primary-theme">Hora de recordatorios</p>
@@ -2778,7 +2792,7 @@ export default function Settings() {
 
                             {/* Confirmation Section */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">✅ Solicitar confirmación</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Solicitar confirmación</h3>
                                 <div className="space-y-3">
                                     <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
                                         <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
@@ -2813,7 +2827,7 @@ export default function Settings() {
 
                             {/* Follow-up Section */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">📅 Seguimiento post-cita</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Seguimiento post-cita</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
                                         <div>
