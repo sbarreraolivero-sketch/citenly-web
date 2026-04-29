@@ -174,8 +174,8 @@ export default function Patients() {
                                     </div>
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-bold tracking-tight text-primary-theme dark:text-white">Contactos</h1>
-                                    <p className="text-primary-theme dark:text-white dark:opacity-80 text-sm mt-1.5 max-w-2xl font-bold leading-relaxed">
+                                    <h1 className="text-3xl font-bold tracking-tight text-[#0B0B0F]">Contactos</h1>
+                                    <p className="text-[#0B0B0F] text-sm mt-1.5 max-w-2xl font-bold leading-relaxed">
                                         👥 Gestiona tu base de datos de pacientes y prospectos de forma inteligente.
                                     </p>
                                 </div>
