@@ -64,7 +64,7 @@ const getNotificationIcon = (type: string) => {
         case 'new_appointment':
             return <CalendarPlus className="w-4 h-4 text-blue-500" />
         case 'confirmed':
-            return <CalendarCheck className="w-4 h-4 text-emerald-500" />
+            return <Bell className="w-4 h-4 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]" />
         case 'cancelled':
             return <CalendarX className="w-4 h-4 text-red-500" />
         case 'pending_reminder':
