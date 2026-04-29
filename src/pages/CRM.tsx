@@ -104,9 +104,16 @@ export default function CRM() {
     // Tag form
     const [tagForm, setTagForm] = useState({ name: '', color: '#f59e0b' })
 
-    // Drag state
     const draggedProspect = useRef<string | null>(null)
     const [dragOverStage, setDragOverStage] = useState<string | null>(null)
+
+    const resetForm = () => {
+        setProspectForm({
+            name: '', phone: '', email: '', address: '',
+            service_interest: '', source: 'whatsapp', notes: '', stage_id: stages[0]?.id || '', score: 0,
+        })
+        setSelectedFormTags([])
+    }
 
     // Services for dropdown
     const [services, setServices] = useState<{ id: string; name: string }[]>([])
