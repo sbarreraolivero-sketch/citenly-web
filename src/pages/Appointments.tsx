@@ -776,9 +776,12 @@ export default function Appointments() {
                         </p>
                     </div>
                 </div>
-                <p className="text-[10px] text-secondary-theme mt-2 italic flex items-center gap-1.5 font-medium">
-                    <Lightbulb className="w-3 h-3" /> Tip: Si sincronizas tu Google Calendar, evita mover citas manualmente en Google; hazlo siempre desde Elistic para mantener la integridad de tus reportes.
-                </p>
+                <div className="bg-white p-3 rounded-soft border border-theme flex items-center gap-2 mt-4">
+                    <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                    <p className="text-[10px] text-[#0B0B0F] italic font-medium leading-relaxed">
+                        Tip: Si sincronizas tu Google Calendar, evita mover citas manualmente en Google; hazlo siempre desde Elistic para mantener la integridad de tus reportes.
+                    </p>
+                </div>
             </GuideBox>
 
 

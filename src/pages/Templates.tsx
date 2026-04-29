@@ -284,9 +284,12 @@ export default function Templates() {
                                 </p>
                             </div>
                         </div>
-                        <p className="text-[10px] text-charcoal/50 mt-2 italic flex items-center gap-1.5">
-                            <Lightbulb className="w-3 h-3" /> Tip: Meta suele aprobar rápido (minutos) si el mensaje es claro y profesional. Evita usar demasiadas mayúsculas o signos de exclamación.
-                        </p>
+                        <div className="bg-white p-3 rounded-soft border border-silk-beige/20 flex items-center gap-2 mt-4">
+                            <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                            <p className="text-[10px] text-[#0B0B0F] italic font-medium leading-relaxed">
+                                Tip: Meta suele aprobar rápido (minutos) si el mensaje es claro y profesional. Evita usar demasiadas mayúsculas o signos de exclamación.
+                            </p>
+                        </div>
                     </GuideBox>
 
                     {/* Pre-built Templates Library */}

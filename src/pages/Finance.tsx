@@ -496,7 +496,7 @@ const Finance = () => {
                         <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <TrendingUp className="w-3.5 h-3.5" /> Ingresos vs Gastos:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                        <p className="text-[11.5px] text-[#0B0B0F] leading-relaxed font-medium">
                             Mantén tus gastos generales (nómina, alquiler, insumos) controlados. Una ganancia neta saludable suele estar por encima del 20-30% tras cubrir todos los costos operativos.
                         </p>
                     </div>
@@ -504,14 +504,17 @@ const Finance = () => {
                         <p className="font-bold text-[var(--accent-primary)] text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <CreditCard className="w-3.5 h-3.5" /> Pagos por Cobrar:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-secondary-theme">
+                        <p className="text-[11.5px] text-[#0B0B0F] leading-relaxed font-medium">
                             Las transacciones que aparecen como "Pendientes" son citas realizadas que aún no han sido marcadas como pagadas. Hazles seguimiento para mantener un flujo de caja positivo.
                         </p>
                     </div>
                 </div>
-                <p className="text-[11px] text-secondary-theme mt-3 italic flex items-center gap-1.5 bg-secondary-theme p-2 rounded-soft border border-theme">
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> <b className="text-primary-theme">Tip:</b> Registra cada ingreso manual (ej: venta de cremas o productos) para que tus reportes de exportación sean 100% precisos al final del mes.
-                </p>
+                <div className="bg-white p-3 rounded-soft border border-silk-beige/20 flex items-center gap-2 mt-4">
+                    <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                    <p className="text-[11px] text-[#0B0B0F] font-medium leading-relaxed">
+                        <b>Tip:</b> Registra cada ingreso manual (ej: venta de cremas o productos) para que tus reportes de exportación sean 100% precisos al final del mes.
+                    </p>
+                </div>
             </GuideBox>
 
             {/* Date filter pills & Date display */}
