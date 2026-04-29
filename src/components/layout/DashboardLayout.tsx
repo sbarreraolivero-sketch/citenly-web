@@ -419,7 +419,7 @@ export default function DashboardLayout() {
                             className="p-2 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft transition-colors"
                             title="Alternar Tema"
                         >
-                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.5)]" /> : <Moon className="w-5 h-5" />}
                         </button>
 
                         {/* Notifications */}
