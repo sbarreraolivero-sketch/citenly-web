@@ -455,42 +455,49 @@ export default function CRM() {
 
     return (
         <div className="space-y-6 animate-fade-in pb-20">
-            {/* Header Banner */}
-            <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_20px_var(--glow)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+            {/* Header Banner: Premium Glow Style */}
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
-                            <Target className="w-7 h-7 text-white" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
+                            <Target className="w-8 h-8 text-[#FF2E88]" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">CRM & Pipeline</h1>
-                            <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
-                                📈 Gestiona tus prospectos y pipeline de ventas. Visualiza el embudo de conversión y optimiza la atención.
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">CRM & Pipeline</h1>
+                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20">Sales Funnel</span>
+                            </div>
+                            <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
+                                Gestiona tus prospectos y pipeline de ventas. Visualiza el embudo de conversión y optimiza la atención de forma inteligente.
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-3">
                         <button 
                             onClick={() => setShowTagManager(true)} 
-                            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-soft text-sm font-medium text-white px-4 py-2 transition-all backdrop-blur-sm flex items-center gap-2"
+                            className="bg-white/80 dark:bg-black/80 text-[#0B0B0F] dark:text-white border border-[#FF2E88]/30 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-white dark:hover:bg-black flex items-center gap-2"
                         >
                             <Tag className="w-4 h-4" /> Etiquetas
                         </button>
                         <button 
                             onClick={() => setShowStageConfig(true)} 
-                            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-soft text-sm font-medium text-white px-4 py-2 transition-all backdrop-blur-sm flex items-center gap-2"
+                            className="bg-white/80 dark:bg-black/80 text-[#0B0B0F] dark:text-white border border-[#FF2E88]/30 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-white dark:hover:bg-black flex items-center gap-2"
                         >
-                            <Settings2 className="w-4 h-4" /> Etapas
+                            <Settings2 className="w-4 h-4" /> Pipeline
                         </button>
                         <button 
-                            onClick={() => openProspectModal()} 
-                            className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-5 py-2.5 rounded-soft text-sm font-bold transition-all shadow-lg flex items-center gap-2 border border-white/30"
+                            onClick={() => {
+                                setEditingProspect(null)
+                                resetForm()
+                                setShowProspectModal(true)
+                            }} 
+                            className="bg-[#FF2E88] text-white px-8 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(255,46,136,0.3)] hover:shadow-[0_15px_30px_rgba(255,46,136,0.4)] hover:-translate-y-1 active:translate-y-0.5 flex items-center gap-3"
                         >
-                            <Plus className="w-4 h-4" />
-                            Nuevo Prospecto
+                            <Plus className="w-5 h-5 stroke-[3]" /> Nuevo Prospecto
                         </button>
                     </div>
                 </div>

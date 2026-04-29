@@ -273,28 +273,39 @@ export default function Dashboard() {
     return (
         <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
             <div className="flex flex-col gap-6">
-                <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
-                    {/* Visual Decor */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.1),transparent)] dark:bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.15),transparent)]" />
-                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF2E88]/50 to-transparent opacity-50" />
-                    
-                    <div className="flex items-center justify-between relative z-10">
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
-                                ¡Hola, {profile?.full_name?.split(' ')[0]}! 
-                                <span className="animate-bounce-slow">👋</span>
-                            </h1>
-                            <p className="text-sm text-primary-theme dark:text-white font-bold mt-1.5"> Tu asistente IA está activo y listo para gestionar tus citas.</p>
+            {/* Header Banner: Premium Glow Style */}
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
+                            <Sparkles className="w-8 h-8 text-[#FF2E88]" />
                         </div>
-                        <div className="relative">
-                            {/* Outer Glow Ring */}
-                            <div className="absolute -inset-4 bg-[#FF2E88] rounded-full blur-2xl opacity-20 animate-pulse" />
-                            <div className="w-14 h-14 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-[#FF2E88] shadow-[0_0_20px_rgba(255,46,136,0.6)] relative z-10">
-                                <Sparkles className="w-7 h-7 text-[#FF2E88] drop-shadow-[0_0_8px_rgba(255,46,136,0.8)]" />
+                        <div>
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">
+                                    ¡Hola, {profile?.full_name?.split(' ')[0]}! 
+                                    <span className="ml-2">👋</span>
+                                </h1>
+                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20">Centro de Control</span>
                             </div>
+                            <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
+                                Tu asistente IA está activo y listo para gestionar tus citas. Aquí tienes el resumen de hoy.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="hidden lg:block bg-white/50 dark:bg-white/5 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/50 dark:border-white/10">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme mb-1">Estado del Sistema</p>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+                            <span className="text-xs font-bold text-primary-theme">IA Operativa</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">

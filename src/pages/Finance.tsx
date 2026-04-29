@@ -407,19 +407,23 @@ const Finance = () => {
     // ── Render ──
     return (
         <div className="space-y-6">
-            {/* Header Banner */}
-            <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_20px_var(--glow)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+            {/* Header Banner: Premium Glow Style */}
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
-                            <DollarSign className="w-7 h-7 text-white" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
+                            <DollarSign className="w-8 h-8 text-[#FF2E88]" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">Finanzas</h1>
-                            <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
-                                📊 Gestiona los ingresos y gastos de tu clínica. Revisa la rentabilidad, los pagos por cobrar y el historial financiero detallado.
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">Finanzas</h1>
+                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20">Centro de Ingresos</span>
+                            </div>
+                            <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
+                                Gestiona los ingresos y gastos de tu clínica. Revisa la rentabilidad, los pagos por cobrar y el historial financiero detallado.
                             </p>
                         </div>
                     </div>
@@ -429,11 +433,11 @@ const Finance = () => {
                         <div className="relative" ref={exportMenuRef}>
                             <button
                                 onClick={() => setShowExportMenu(!showExportMenu)}
-                                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-soft text-sm font-medium transition-all backdrop-blur-sm border border-white/20 flex items-center gap-2"
+                                className="bg-white/80 dark:bg-black/80 text-[#0B0B0F] dark:text-white border border-[#FF2E88]/30 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-white dark:hover:bg-black flex items-center gap-3"
                             >
                                 <Download className="w-4 h-4" />
-                                <span className="hidden sm:inline">Exportar</span>
-                                <ChevronDown className={cn("w-3 h-3 transition-transform", showExportMenu && "rotate-180")} />
+                                Exportar
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showExportMenu && "rotate-180")} />
                             </button>
 
                             {showExportMenu && (
@@ -465,18 +469,18 @@ const Finance = () => {
 
                         <button
                             onClick={() => setShowIncomeModal(true)}
-                            className="bg-[var(--accent-primary)] text-white px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-[0_0_15px_var(--glow)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 border-none"
+                            className="bg-[#FF2E88] text-white px-8 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(255,46,136,0.3)] hover:shadow-[0_15px_30px_rgba(255,46,136,0.4)] hover:-translate-y-1 active:translate-y-0.5 flex items-center gap-3"
                         >
-                            <Plus className="w-5 h-5" />
-                            Ingreso
+                            <Plus className="w-5 h-5 stroke-[3]" />
+                            Nuevo Ingreso
                         </button>
 
                         <button
                             onClick={() => setShowExpenseModal(true)}
-                            className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-4 py-2 rounded-soft text-sm font-bold transition-all shadow-lg flex items-center gap-2 border border-white/30"
+                            className="bg-white/80 dark:bg-black/80 text-[#0B0B0F] dark:text-white border border-[#FF2E88]/30 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-white dark:hover:bg-black flex items-center gap-3"
                         >
-                            <Plus className="w-4 h-4" />
-                            <span>Gasto</span>
+                            <Plus className="w-5 h-5" />
+                            Nuevo Gasto
                         </button>
                     </div>
                 </div>
@@ -511,22 +515,22 @@ const Finance = () => {
             </GuideBox>
 
             {/* Date filter pills & Date display */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="text-sm text-secondary-theme capitalize font-medium flex items-center gap-2 bg-secondary-theme px-3 py-1.5 rounded-full border border-theme w-fit">
-                    <Calendar className="w-4 h-4 text-[var(--accent-primary)]" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="text-xs text-[#FF2E88] font-black uppercase tracking-widest flex items-center gap-3 bg-[#FF2E88]/5 px-5 py-2.5 rounded-xl border border-[#FF2E88]/20 w-fit">
+                    <Calendar className="w-4 h-4" />
                     {getDateRangeLabel(filterType)}
                 </div>
                 
-                <div className="flex bg-secondary-theme rounded-lg border border-theme p-1 w-fit">
+                <div className="flex bg-white/50 dark:bg-black/50 backdrop-blur-sm rounded-2xl border border-[#FF2E88]/20 p-1.5 w-fit shadow-sm">
                     {(['day', 'week', 'month', 'year'] as const).map(f => (
                         <button
                             key={f}
                             onClick={() => setFilterType(f)}
                             className={cn(
-                                "px-4 py-1.5 text-xs font-bold rounded-md transition-all",
+                                "px-6 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all",
                                 filterType === f
-                                    ? "bg-primary-theme text-primary-theme shadow-sm border border-theme"
-                                    : "text-secondary-theme hover:text-primary-theme"
+                                    ? "bg-[#FF2E88] text-white shadow-[0_5px_15px_rgba(255,46,136,0.3)]"
+                                    : "text-secondary-theme hover:text-[#FF2E88] hover:bg-[#FF2E88]/5"
                             )}
                         >
                             {f === 'day' ? 'Día' : f === 'week' ? 'Semana' : f === 'month' ? 'Mes' : 'Año'}
@@ -535,61 +539,61 @@ const Finance = () => {
                 </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="card-premium p-4 flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            {/* KPI Cards: Premium Redesign */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white dark:bg-black rounded-[24px] p-6 border border-[#FF2E88]/10 shadow-[0_10px_30px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] group hover:border-[#FF2E88]/30 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <TrendingUp className="w-6 h-6 text-emerald-500" />
                         </div>
+                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-500/5 px-2.5 py-1 rounded-full border border-emerald-500/10 uppercase tracking-tighter">Ingresos</span>
                     </div>
-                    <p className="text-sm text-secondary-theme">Ingresos ({getFilterLabel()})</p>
-                    <p className="text-2xl font-bold text-primary-theme mt-1">
+                    <p className="text-[11px] font-black text-secondary-theme uppercase tracking-widest mb-1">Total {getFilterLabel()}</p>
+                    <p className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tighter">
                         {loading ? '...' : formatCurrency(stats?.total_income || 0)}
                     </p>
                 </div>
 
-                <div className="card-premium p-4 flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                            <TrendingDown className="w-5 h-5 text-red-500" />
+                <div className="bg-white dark:bg-black rounded-[24px] p-6 border border-[#FF2E88]/10 shadow-[0_10px_30px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] group hover:border-[#FF2E88]/30 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <TrendingDown className="w-6 h-6 text-red-500" />
                         </div>
+                        <span className="text-[10px] font-black text-red-600 bg-red-500/5 px-2.5 py-1 rounded-full border border-red-500/10 uppercase tracking-tighter">Gastos</span>
                     </div>
-                    <p className="text-sm text-secondary-theme">Gastos ({getFilterLabel()})</p>
-                    <p className="text-2xl font-bold text-primary-theme mt-1">
+                    <p className="text-[11px] font-black text-secondary-theme uppercase tracking-widest mb-1">Total {getFilterLabel()}</p>
+                    <p className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tighter">
                         {loading ? '...' : formatCurrency(stats?.total_expenses || 0)}
                     </p>
                 </div>
 
-                <div className="card-premium p-4 flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-blue-500" />
+                <div className="bg-white dark:bg-black rounded-[24px] p-6 border border-[#FF2E88]/10 shadow-[0_10px_30px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] group hover:border-[#FF2E88]/30 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl" />
+                    <div className="flex items-center justify-between mb-6 relative z-10">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <DollarSign className="w-6 h-6 text-blue-500" />
                         </div>
-                        <span className="text-xs font-medium text-secondary-theme bg-secondary-theme px-2 py-1 rounded-full border border-theme">
-                            Neto
-                        </span>
+                        <span className="text-[10px] font-black text-blue-600 bg-blue-500/5 px-2.5 py-1 rounded-full border border-blue-500/10 uppercase tracking-tighter">Neto</span>
                     </div>
-                    <p className="text-sm text-secondary-theme">Ganancia Neta</p>
+                    <p className="text-[11px] font-black text-secondary-theme uppercase tracking-widest mb-1">Rentabilidad</p>
                     <p className={cn(
-                        "text-2xl font-bold mt-1",
+                        "text-3xl font-black tracking-tighter relative z-10",
                         (stats?.net_profit || 0) >= 0 ? "text-emerald-500" : "text-red-500"
                     )}>
                         {loading ? '...' : formatCurrency(stats?.net_profit || 0)}
                     </p>
                 </div>
 
-                <div className="card-premium p-4 flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                            <CreditCard className="w-5 h-5 text-amber-500" />
+                <div className="bg-white dark:bg-black rounded-[24px] p-6 border border-[#FF2E88]/10 shadow-[0_10px_30px_rgba(0,0,0,0.02)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.2)] group hover:border-[#FF2E88]/30 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-12 -mt-12 blur-2xl" />
+                    <div className="flex items-center justify-between mb-6 relative z-10">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <CreditCard className="w-6 h-6 text-amber-500" />
                         </div>
-                        <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
-                            {stats?.appointments_count || 0} Citas
-                        </span>
+                        <span className="text-[10px] font-black text-amber-600 bg-amber-500/5 px-2.5 py-1 rounded-full border border-amber-500/10 uppercase tracking-tighter">Pendiente</span>
                     </div>
-                    <p className="text-sm text-secondary-theme">Por Cobrar</p>
-                    <p className="text-2xl font-bold text-primary-theme mt-1">
+                    <p className="text-[11px] font-black text-secondary-theme uppercase tracking-widest mb-1">Cuentas por Cobrar</p>
+                    <p className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tighter relative z-10">
                         {loading ? '...' : formatCurrency(stats?.pending_payments || 0)}
                     </p>
                 </div>

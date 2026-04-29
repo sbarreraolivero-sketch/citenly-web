@@ -185,40 +185,43 @@ export default function Loyalty() {
     )
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            {/* Premium Gold Header */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-amber-700 rounded-softer p-6 text-white shadow-[0_0_30px_rgba(245,158,11,0.2)]">
-                <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-amber-900/20 rounded-full blur-3xl" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0%,transparent_70%)]" />
-
-                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <Star className="w-5 h-5 text-amber-200 fill-amber-300" />
-                            <h1 className="text-2xl font-bold tracking-tight">Fidelización & Referidos</h1>
+        <div className="space-y-6 animate-fade            {/* Header Banner: Premium Glow Style */}
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
+                            <Star className="w-8 h-8 text-[#FF2E88]" />
                         </div>
-                        <p className="text-white text-sm max-w-md leading-relaxed opacity-90">
-                            Gestiona el programa de lealtad de tu clínica. Premia a tus mejores pacientes y fomenta el crecimiento orgánico.
-                        </p>
+                        <div>
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">Fidelización</h1>
+                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20">Customer Loyalty</span>
+                            </div>
+                            <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
+                                Gestiona el programa de lealtad de tu clínica. Premia a tus mejores pacientes y fomenta el crecimiento orgánico de forma automática.
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex gap-4 w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0">
-                        <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/20 shadow-inner">
-                            <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">{settings?.loyalty_points_name || 'Saldo'} Total</p>
-                            <p className="text-2xl font-black text-white">{stats.totalPointsDist.toLocaleString()}</p>
+                    <div className="flex gap-4 w-full md:w-auto overflow-x-auto no-scrollbar">
+                        <div className="bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl p-4 min-w-[140px] border border-[#FF2E88]/20 shadow-lg">
+                            <p className="text-secondary-theme text-[10px] font-black uppercase tracking-widest mb-1">{settings?.loyalty_points_name || 'Saldo'} Total</p>
+                            <p className="text-2xl font-black text-[#0B0B0F] dark:text-white">{stats.totalPointsDist.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/20 shadow-inner">
-                            <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Referidores</p>
-                            <p className="text-2xl font-black text-white">{stats.totalReferrals}</p>
+                        <div className="bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl p-4 min-w-[140px] border border-[#FF2E88]/20 shadow-lg">
+                            <p className="text-secondary-theme text-[10px] font-black uppercase tracking-widest mb-1">Referidores</p>
+                            <p className="text-2xl font-black text-[#0B0B0F] dark:text-white">{stats.totalReferrals}</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-md rounded-soft p-4 min-w-[140px] border border-white/20 shadow-inner">
-                            <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Recompensas</p>
-                            <p className="text-2xl font-black text-white">{stats.activeAlerts}</p>
+                        <div className="bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl p-4 min-w-[140px] border border-[#FF2E88]/20 shadow-lg">
+                            <p className="text-secondary-theme text-[10px] font-black uppercase tracking-widest mb-1">Recompensas</p>
+                            <p className="text-2xl font-black text-[#0B0B0F] dark:text-white">{stats.activeAlerts}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>   </div>
 
             {/* Main Tabs */}
             <div className="flex items-center gap-1 p-1 bg-secondary-theme rounded-full border border-theme w-full md:w-fit overflow-x-auto no-scrollbar">
