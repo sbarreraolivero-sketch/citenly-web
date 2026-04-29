@@ -160,17 +160,10 @@ export default function Patients() {
             ) : (
                 <div className="space-y-6 animate-fade-in relative min-h-screen pb-20">
                     {/* Header Banner */}
-                    <div 
-                        className="rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]"
-                        style={{ background: 'var(--bg-primary)' }}
-                    >
-                        {/* Premium Gradient Background Overlay */}
-                        <div 
-                            className="absolute inset-0 opacity-100" 
-                            style={{ background: 'var(--gradient-primary)', opacity: 0.15 }}
-                        />
+                    <div className="bg-[#FFF0F7] dark:bg-[#0B0B0F] rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
+                        {/* Visual Decor */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/10 dark:from-[#FF2E88]/5 to-transparent opacity-50" />
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.1),transparent)] dark:bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.15),transparent)]" />
-                        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF2E88]/50 to-transparent opacity-50" />
                         
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                             <div className="flex items-center gap-5">
@@ -182,7 +175,7 @@ export default function Patients() {
                                 </div>
                                 <div>
                                     <h1 className="text-3xl font-bold tracking-tight text-primary-theme dark:text-white">Contactos</h1>
-                                    <p className="text-primary-theme dark:text-white dark:opacity-80 text-sm mt-1.5 max-w-2xl font-medium leading-relaxed">
+                                    <p className="text-primary-theme dark:text-white dark:opacity-80 text-sm mt-1.5 max-w-2xl font-bold leading-relaxed">
                                         👥 Gestiona tu base de datos de pacientes y prospectos de forma inteligente.
                                     </p>
                                 </div>
