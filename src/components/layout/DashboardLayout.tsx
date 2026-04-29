@@ -272,7 +272,7 @@ export default function DashboardLayout() {
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
                         <div className={cn("transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                            <h1 className="text-xl font-bold text-white tracking-tight">Citenly</h1>
+                            <h1 className="text-xl font-bold text-primary-theme tracking-tight">Citenly</h1>
                             <p className="text-[10px] text-secondary-theme font-black uppercase tracking-widest -mt-1 opacity-60">AI System</p>
                         </div>
                     </div>
@@ -317,7 +317,7 @@ export default function DashboardLayout() {
                                 <Sparkles className="w-5 h-5 text-[#FF2E88]" />
                             </div>
                             <div className={cn("min-w-0 transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                                <p className="text-sm font-bold text-white truncate">IA Activa</p>
+                                <p className="text-sm font-bold text-primary-theme tracking-tight">IA Activa</p>
                                 <p className="text-[10px] text-secondary-theme font-black uppercase tracking-widest">Respondiendo 24/7</p>
                             </div>
                         </div>

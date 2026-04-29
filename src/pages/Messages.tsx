@@ -639,9 +639,10 @@ export default function Messages() {
                                                         className={cn(
                                                             'max-w-[70%] rounded-softer px-4 py-3',
                                                             message.direction === 'outbound'
-                                                                ? 'bg-[var(--gradient-primary)] text-white shadow-[0_0_15px_var(--glow)]'
+                                                                ? 'text-white shadow-[0_0_15px_var(--glow)]'
                                                                 : 'bg-secondary-theme border border-theme text-primary-theme'
                                                         )}
+                                                        style={message.direction === 'outbound' ? { background: 'var(--gradient-primary)' } : {}}
                                                     >
                                                         <p className="text-sm whitespace-pre-line">{message.content}</p>
                                                         <p

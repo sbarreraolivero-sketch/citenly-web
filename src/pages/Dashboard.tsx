@@ -352,7 +352,7 @@ export default function Dashboard() {
                 {/* Upcoming Appointments */}
                 <div className="lg:col-span-2 card-premium p-8">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-bold text-white tracking-tight">Próximas Citas</h3>
+                        <h3 className="text-lg font-bold text-primary-theme tracking-tight">Próximas Citas</h3>
                         <Link to="/app/appointments" className="text-[11px] font-black uppercase tracking-widest text-[#FF2E88] hover:opacity-80 transition-opacity">
                             Ver todas
                         </Link>
@@ -396,7 +396,7 @@ export default function Dashboard() {
                 {/* Recent Messages */}
                 <div className="card-premium p-8">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-bold text-white tracking-tight">Mensajes Recientes</h3>
+                        <h3 className="text-lg font-bold text-primary-theme tracking-tight">Mensajes Recientes</h3>
                         <Link to="/app/messages" className="text-[11px] font-black uppercase tracking-widest text-[#FF2E88] hover:opacity-80 transition-opacity">
                             Ver todos
                         </Link>
@@ -443,7 +443,7 @@ export default function Dashboard() {
                             <Crown className="w-6 h-6 text-[#FF2E88]" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-white tracking-tight">Ranking de Servicios (Este Mes)</h3>
+                            <h3 className="text-lg font-bold text-primary-theme tracking-tight">Ranking de Servicios (Este Mes)</h3>
                             <p className="text-xs text-secondary-theme font-medium">Servicios más solicitados</p>
                         </div>
                     </div>
@@ -498,14 +498,14 @@ export default function Dashboard() {
                                 <Target className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-white tracking-tight">Tasa de Conversión (Mes)</h3>
+                                <h3 className="text-lg font-bold text-primary-theme tracking-tight">Tasa de Conversión (Mes)</h3>
                                 <p className="text-xs text-secondary-theme font-medium">Consultas vs Citas Agendadas</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="relative py-10 flex flex-col items-center justify-center">
-                        <p className="text-5xl font-black text-white tracking-tighter relative z-10">{conversionStats.rate}%</p>
+                        <p className="text-5xl font-black text-primary-theme tracking-tighter relative z-10">{conversionStats.rate}%</p>
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-theme mt-3 relative z-10">De efectividad este mes</p>
                         
                         {/* Wave decoration placeholder */}
@@ -524,15 +524,15 @@ export default function Dashboard() {
 
                     <div className="grid grid-cols-3 gap-4 pt-8 border-t border-theme/50">
                         <div className="text-center">
-                            <p className="text-xl font-bold text-white">{conversionStats.consultations}</p>
+                            <p className="text-xl font-bold text-primary-theme">{conversionStats.consultations}</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Contactos</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-xl font-bold text-white">{conversionStats.converted}</p>
+                            <p className="text-xl font-bold text-primary-theme">{conversionStats.converted}</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Citas</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-xl font-bold text-white">{conversionStats.lost}</p>
+                            <p className="text-xl font-bold text-primary-theme">{conversionStats.lost}</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Sin Cita</p>
                         </div>
                     </div>
@@ -546,7 +546,7 @@ export default function Dashboard() {
                                 <Star className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-white tracking-tight">Satisfacción (NPS)</h3>
+                                <h3 className="text-lg font-bold text-primary-theme tracking-tight">Satisfacción (NPS)</h3>
                                 <p className="text-xs text-secondary-theme font-medium">Calidad de servicio</p>
                             </div>
                         </div>
@@ -561,23 +561,23 @@ export default function Dashboard() {
                                 />
                             ))}
                         </div>
-                        <p className="text-4xl font-black text-white tracking-tighter">{satisfactionStats.average.toFixed(1)} / 5.0</p>
+                        <p className="text-4xl font-black text-primary-theme tracking-tighter">{satisfactionStats.average.toFixed(1)} / 5.0</p>
                         <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme mt-2">Basado en {satisfactionStats.responded} respuestas</p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 pt-8 border-t border-theme/50">
                         <div className="text-center">
-                            <p className="text-xl font-bold text-white">{satisfactionStats.sent}</p>
+                            <p className="text-xl font-bold text-primary-theme">{satisfactionStats.sent}</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Enviadas</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-xl font-bold text-white">{satisfactionStats.responded}</p>
+                            <p className="text-xl font-bold text-primary-theme">{satisfactionStats.responded}</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Respondidas</p>
                         </div>
                         <div className="text-center">
                             <p className={cn(
                                 "text-xl font-bold",
-                                satisfactionStats.nps > 0 ? 'text-emerald-500' : 'text-white'
+                                satisfactionStats.nps > 0 ? 'text-emerald-500' : 'text-primary-theme'
                             )}>
                                 {satisfactionStats.nps > 0 ? '+' : ''}{satisfactionStats.nps}
                             </p>
