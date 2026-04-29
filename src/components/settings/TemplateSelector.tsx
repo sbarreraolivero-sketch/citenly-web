@@ -45,17 +45,17 @@ export function TemplateSelector({ value, onChange, label, description, placehol
 
     return (
         <div className="space-y-2">
-            <label className="block text-sm font-medium text-charcoal">{label}</label>
-            {description && <p className="text-xs text-charcoal/50 leading-relaxed">{description}</p>}
+            <label className="block text-[10px] font-black uppercase tracking-widest text-secondary-theme">{label}</label>
+            {description && <p className="text-xs text-secondary-theme/60 leading-relaxed">{description}</p>}
             <select
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-4 py-2 bg-white border border-charcoal/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-charcoal disabled:opacity-50"
+                className="w-full px-4 py-2.5 bg-secondary-theme border border-theme rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 text-primary-theme font-medium disabled:opacity-50 transition-all hover:border-[#FF2E88]/30"
             >
-                <option value="">{isLoading ? 'Cargando plantillas...' : placeholder}</option>
+                <option value="" className="bg-primary-theme text-primary-theme">{isLoading ? 'Cargando plantillas...' : placeholder}</option>
                 {templates.map((tpl) => (
-                    <option key={tpl.name} value={tpl.name}>
+                    <option key={tpl.name} value={tpl.name} className="bg-primary-theme text-primary-theme">
                         {tpl.name}
                     </option>
                 ))}

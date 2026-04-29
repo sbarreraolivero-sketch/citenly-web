@@ -116,7 +116,7 @@ export default function MyProfile() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="btn-primary flex items-center gap-2"
+                    className="btn-premium-primary flex items-center gap-2"
                 >
                     {saving ? (
                         <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -236,8 +236,8 @@ export default function MyProfile() {
                             <div
                                 key={day.key}
                                 className={cn(
-                                    "flex flex-wrap items-center gap-3 sm:gap-4 p-3 rounded-lg transition-colors border border-transparent",
-                                    dayHours.enabled ? "bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/10" : "bg-secondary-theme/50"
+                                    "flex flex-wrap items-center gap-3 sm:gap-4 p-3 rounded-lg transition-colors border",
+                                    dayHours.enabled ? "bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/20 shadow-[0_0_15px_rgba(255,46,136,0.05)]" : "bg-secondary-theme/30 border-theme"
                                 )}
                             >
                                 <label className="flex items-center gap-3 w-28 sm:w-32 cursor-pointer flex-shrink-0">
@@ -314,7 +314,7 @@ export default function MyProfile() {
                                                                 }
                                                             }))
                                                         }}
-                                                        className="px-2 py-1 bg-primary-theme/5 border border-theme rounded-soft text-[11px] w-20 text-primary-theme font-medium"
+                                                        className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-[11px] w-20 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                     />
                                                     <span className="text-secondary-theme text-[10px] font-bold">a</span>
                                                     <input
@@ -330,7 +330,7 @@ export default function MyProfile() {
                                                                 }
                                                             }))
                                                         }}
-                                                        className="px-2 py-1 bg-primary-theme/5 border border-theme rounded-soft text-[11px] w-20 text-primary-theme font-medium"
+                                                        className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-[11px] w-20 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                     />
                                                 </div>
                                             )}

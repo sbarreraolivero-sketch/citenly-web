@@ -1251,15 +1251,15 @@ export default function Settings() {
                                             className={cn(
                                                 "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
                                                 businessModel === 'physical' 
-                                                    ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
-                                                    : "bg-white/40 border-theme hover:border-primary-200"
+                                                    ? "bg-primary-theme border-[#FF2E88] shadow-sm ring-1 ring-[#FF2E88]" 
+                                                    : "bg-secondary-theme border-theme hover:border-[#FF2E88]/30"
                                             )}
                                         >
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'physical' ? "bg-primary-500 text-white" : "bg-secondary-theme/40 text-primary-theme/40")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'physical' ? "bg-[#FF2E88] text-white" : "bg-secondary-theme text-primary-theme/40")}>
                                                 <Building2 className="w-4 h-4" />
                                             </div>
                                             <div className="text-center">
-                                                <p className={cn("text-[11px] font-bold", businessModel === 'physical' ? "text-primary-700" : "text-primary-theme")}>Físico</p>
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'physical' ? "text-[#FF2E88]" : "text-primary-theme")}>Físico</p>
                                                 <p className="text-[9px] text-primary-theme/40">Local Fijo</p>
                                             </div>
                                         </button>
@@ -1269,15 +1269,15 @@ export default function Settings() {
                                             className={cn(
                                                 "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
                                                 businessModel === 'mobile' 
-                                                    ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
-                                                    : "bg-white/40 border-theme hover:border-primary-200"
+                                                    ? "bg-primary-theme border-[#FF2E88] shadow-sm ring-1 ring-[#FF2E88]" 
+                                                    : "bg-secondary-theme border-theme hover:border-[#FF2E88]/30"
                                             )}
                                         >
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'mobile' ? "bg-primary-500 text-white" : "bg-secondary-theme/40 text-primary-theme/40")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'mobile' ? "bg-[#FF2E88] text-white" : "bg-secondary-theme text-primary-theme/40")}>
                                                 <Zap className="w-4 h-4" />
                                             </div>
                                             <div className="text-center">
-                                                <p className={cn("text-[11px] font-bold", businessModel === 'mobile' ? "text-primary-700" : "text-primary-theme")}>Móvil</p>
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'mobile' ? "text-[#FF2E88]" : "text-primary-theme")}>Móvil</p>
                                                 <p className="text-[9px] text-primary-theme/40">A Domicilio</p>
                                             </div>
                                         </button>
@@ -1287,15 +1287,15 @@ export default function Settings() {
                                             className={cn(
                                                 "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
                                                 businessModel === 'hybrid' 
-                                                    ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
-                                                    : "bg-white/40 border-theme hover:border-primary-200"
+                                                    ? "bg-primary-theme border-[#FF2E88] shadow-sm ring-1 ring-[#FF2E88]" 
+                                                    : "bg-secondary-theme border-theme hover:border-[#FF2E88]/30"
                                             )}
                                         >
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'hybrid' ? "bg-primary-500 text-white" : "bg-secondary-theme/40 text-primary-theme/40")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'hybrid' ? "bg-[#FF2E88] text-white" : "bg-secondary-theme text-primary-theme/40")}>
                                                 <RefreshCw className="w-4 h-4" />
                                             </div>
                                             <div className="text-center">
-                                                <p className={cn("text-[11px] font-bold", businessModel === 'hybrid' ? "text-primary-700" : "text-primary-theme")}>Híbrido</p>
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'hybrid' ? "text-[#FF2E88]" : "text-primary-theme")}>Híbrido</p>
                                                 <p className="text-[9px] text-primary-theme/40">Ambos</p>
                                             </div>
                                         </button>
@@ -1550,7 +1550,7 @@ export default function Settings() {
                                         )}
                                     </button>
                                     {clinicSaved && (
-                                        <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft">
+                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
                                             <CheckCircle2 className="w-4 h-4" />
                                             ¡Cambios guardados!
                                         </div>
@@ -1977,8 +1977,8 @@ export default function Settings() {
                                                 key={planId}
                                                 className={cn(
                                                     "relative flex flex-col p-6 rounded-soft border-2 transition-all duration-300",
-                                                    isCurrentPlan ? "border-primary-500 bg-primary-500/5 ring-4 ring-primary-500/10" : "border-theme bg-white hover:border-primary-300 hover:shadow-xl",
-                                                    isRadiance && !isCurrentPlan && "md:scale-105 shadow-premium-lg border-primary-500 z-10"
+                                                    isCurrentPlan ? "border-[#FF2E88] bg-[#FF2E88]/5 ring-4 ring-[#FF2E88]/10" : "border-theme bg-secondary-theme hover:border-[#FF2E88]/30 hover:shadow-xl",
+                                                    isRadiance && !isCurrentPlan && "md:scale-105 shadow-premium-lg border-[#FF2E88] z-10"
                                                 )}
                                             >
                                                 {isRadiance && (
@@ -2018,7 +2018,7 @@ export default function Settings() {
                                                             ? "bg-charcoal/10 text-primary-theme/40 cursor-not-allowed" 
                                                             : isRadiance 
                                                                 ? "bg-hero-gradient text-white shadow-lg hover:shadow-xl hover:scale-[1.02]" 
-                                                                : "bg-charcoal text-white hover:bg-primary-500"
+                                                                : "bg-primary-theme text-primary-theme border border-theme hover:bg-secondary-theme"
                                                     )}
                                                 >
                                                     {isCurrentPlan ? 'Plan Actual' : 'Seleccionar Plan'}
@@ -2082,9 +2082,9 @@ export default function Settings() {
                                                                     [day]: { ...prev[day], open: val }
                                                                 }))
                                                             }}
-                                                            className="px-2 sm:px-3 py-2 bg-white border border-theme rounded-soft text-sm flex-1"
+                                                            className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                         />
-                                                        <span className="text-primary-theme/40">a</span>
+                                                        <span className="text-primary-theme/40 font-bold mx-1">a</span>
                                                         <input
                                                             type="time"
                                                             value={(hours as any).close}
@@ -2095,7 +2095,7 @@ export default function Settings() {
                                                                     [day]: { ...prev[day], close: val }
                                                                 }))
                                                             }}
-                                                            className="px-2 sm:px-3 py-2 bg-white border border-theme rounded-soft text-sm flex-1"
+                                                            className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                         />
                                                     </div>
 
@@ -2141,9 +2141,9 @@ export default function Settings() {
                                                                             }
                                                                         }))
                                                                     }}
-                                                                    className="px-2 py-1 bg-white border border-theme rounded-soft text-xs w-24"
+                                                                    className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                                 />
-                                                                <span className="text-primary-theme/40 text-xs font-bold font-bold">a</span>
+                                                                <span className="text-primary-theme/40 text-xs font-bold">a</span>
                                                                 <input
                                                                     type="time"
                                                                     value={(hours as any).lunch_break.end}
@@ -2157,7 +2157,7 @@ export default function Settings() {
                                                                             }
                                                                         }))
                                                                     }}
-                                                                    className="px-2 py-1 bg-white border border-theme rounded-soft text-xs w-24"
+                                                                    className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                                 />
                                                             </div>
                                                         )}
@@ -2184,7 +2184,7 @@ export default function Settings() {
                                     )}
                                 </button>
                                 {scheduleSaved && (
-                                    <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft">
+                                    <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
                                         <CheckCircle2 className="w-4 h-4" />
                                         ¡Horarios guardados!
                                     </div>
@@ -2999,7 +2999,7 @@ export default function Settings() {
                     {activeTab === 'ai' && (
                         <div className="space-y-6">
                             {/* Hybrid Router Header */}
-                            <div className="card-premium p-6 bg-gradient-to-br from-violet-50 to-white border-violet-100">
+                            <div className="card-premium p-6 bg-secondary-theme/30 border-theme">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-violet-600 rounded-soft flex items-center justify-center shadow-lg shadow-violet-200">
@@ -3019,7 +3019,7 @@ export default function Settings() {
                                                 checked={aiAutoRespond}
                                                 onChange={(e) => setAiAutoRespond(e.target.checked)}
                                             />
-                                            <div className="w-11 h-6 bg-charcoal/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-charcoal/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                            <div className="w-11 h-6 bg-charcoal/20 dark:bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                         </label>
                                     </div>
                                 </div>
@@ -3036,8 +3036,8 @@ export default function Settings() {
                                             className={cn(
                                                 "p-4 rounded-soft border-2 text-left transition-all relative group",
                                                 aiStrategy === strat.id 
-                                                    ? `bg-${strat.color}-50 border-${strat.color}-500 shadow-md`
-                                                    : "bg-white border-theme hover:border-charcoal/20"
+                                                    ? `bg-primary-theme border-[#FF2E88] shadow-md ring-1 ring-[#FF2E88]/50`
+                                                    : "bg-secondary-theme border-theme hover:border-[#FF2E88]/30"
                                             )}
                                         >
                                             {strat.badge && (
@@ -3052,7 +3052,7 @@ export default function Settings() {
                                                 )}>
                                                     <strat.icon className="w-4 h-4" />
                                                 </div>
-                                                <h3 className={cn("font-bold text-sm", aiStrategy === strat.id ? `text-${strat.color}-700` : "text-primary-theme")}>
+                                                <h3 className={cn("font-bold text-sm", aiStrategy === strat.id ? `text-[#FF2E88]` : "text-primary-theme")}>
                                                     {strat.title}
                                                 </h3>
                                             </div>
@@ -3074,7 +3074,7 @@ export default function Settings() {
                                         )}
                                     </button>
                                     {aiSaved && (
-                                        <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft border border-emerald-100">
+                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
                                             <CheckCircle2 className="w-4 h-4" />
                                             ¡Configuración guardada!
                                         </div>
@@ -3084,7 +3084,7 @@ export default function Settings() {
 
                             {/* Unified Credits Dashboard */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="card-premium p-6 border-l-4 border-l-primary-500 bg-white">
+                                <div className="card-premium p-6 border-l-4 border-l-[#FF2E88] bg-secondary-theme/50">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-primary-50 rounded-soft flex items-center justify-center">
@@ -3128,7 +3128,7 @@ export default function Settings() {
                                     </div>
                                 </div>
 
-                                <div className="card-premium p-6 bg-white flex flex-col justify-center">
+                                <div className="card-premium p-6 bg-secondary-theme/50 flex flex-col justify-center">
                                     <h3 className="text-sm font-bold text-primary-theme mb-4 uppercase tracking-wider text-primary-theme/40">Tabla de Costos Híbridos</h3>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-soft border border-emerald-100">
@@ -3176,7 +3176,7 @@ export default function Settings() {
                                         const currencySymbol = paymentRegion === 'international' ? 'US$' : '$';
                                         
                                         return Object.entries(currentPacks).map(([packId, pack]: [string, any]) => (
-                                            <div key={packId} className="group p-6 bg-white border border-theme rounded-soft hover:shadow-premium-lg hover:border-violet-300 transition-all flex flex-col relative overflow-hidden">
+                                            <div key={packId} className="group p-6 bg-secondary-theme border border-theme rounded-soft hover:shadow-premium-lg hover:border-[#FF2E88]/30 transition-all flex flex-col relative overflow-hidden">
                                                 <div className="mb-6">
                                                     <h3 className="text-lg font-bold text-primary-theme">{pack.name}</h3>
                                                     <div className="flex items-baseline gap-1 mt-2">
