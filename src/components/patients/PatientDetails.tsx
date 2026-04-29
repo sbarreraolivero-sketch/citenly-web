@@ -583,7 +583,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Nombre Completo</label>
+                                            <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">Nombre Completo</label>
                                             {isEditingInfo ? (
                                                 <input 
                                                     type="text" 
@@ -592,11 +592,11 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     className="input-soft w-full text-sm py-1 px-2"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold">{localPatient.name || '---'}</p>
+                                                <p className="text-primary-theme font-bold">{localPatient.name || '---'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">RUT</label>
+                                            <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">RUT</label>
                                             {isEditingInfo ? (
                                                 <input 
                                                     type="text" 
@@ -605,14 +605,14 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     className="input-soft w-full text-sm py-1 px-2"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold">{localPatient.rut || '---'}</p>
+                                                <p className="text-primary-theme font-bold">{localPatient.rut || '---'}</p>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Email</label>
+                                            <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">Email</label>
                                             {isEditingInfo ? (
                                                 <input 
                                                     type="email" 
@@ -621,11 +621,11 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     className="input-soft w-full text-sm py-1 px-2"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold truncate">{localPatient.email || '---'}</p>
+                                                <p className="text-primary-theme font-bold truncate">{localPatient.email || '---'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Teléfono (No editable)</label>
+                                            <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">Teléfono (No editable)</label>
                                             <div className="flex items-center gap-2 text-charcoal/40 font-bold">
                                                 <Phone className="w-3.5 h-3.5" />
                                                 <span>{formatPhoneNumber(localPatient.phone_number)}</span>
@@ -634,7 +634,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                     </div>
 
                                     <div>
-                                        <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Dirección</label>
+                                        <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">Dirección</label>
                                         {isEditingInfo ? (
                                             <input 
                                                 type="text" 
@@ -645,14 +645,14 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                         ) : (
                                             <div className="flex items-start gap-2">
                                                 <MapPin className="w-4 h-4 text-charcoal/30 mt-0.5" />
-                                                <p className="text-charcoal font-bold">{localPatient.address || 'No especificada'}</p>
+                                                <p className="text-primary-theme font-bold">{localPatient.address || 'No especificada'}</p>
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">Género</label>
+                                            <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">Género</label>
                                             {isEditingInfo ? (
                                                 <select 
                                                     value={infoForm.gender}
@@ -665,11 +665,11 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     <option value="Otro">Otro</option>
                                                 </select>
                                             ) : (
-                                                <p className="text-charcoal font-bold">{localPatient.gender || '---'}</p>
+                                                <p className="text-primary-theme font-bold">{localPatient.gender || '---'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="text-[11px] text-charcoal/50 uppercase font-black tracking-widest block mb-1">ID Clínico / Convenio</label>
+                                            <label className="text-[11px] text-secondary-theme uppercase font-black tracking-widest block mb-1">ID Clínico / Convenio</label>
                                             {isEditingInfo ? (
                                                 <input 
                                                     type="text" 
@@ -679,7 +679,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                                                     placeholder="Ej: Particular / Isapre"
                                                 />
                                             ) : (
-                                                <p className="text-charcoal font-bold">{localPatient.insurance_provider || '---'}</p>
+                                                <p className="text-primary-theme font-bold">{localPatient.insurance_provider || '---'}</p>
                                             )}
                                         </div>
                                     </div>

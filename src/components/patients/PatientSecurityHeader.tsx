@@ -144,7 +144,7 @@ export function PatientSecurityHeader({
                         
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-3xl font-black tracking-tight leading-none text-primary-theme dark:text-white">
+                                <h2 className="text-3xl font-black tracking-tight leading-none text-[#0B0B0F]">
                                      {patient.name}
                                  </h2>
                                 <div className="px-2 py-0.5 bg-blue-400/20 rounded-soft border border-white/10 flex items-center gap-1.5">
@@ -155,18 +155,18 @@ export function PatientSecurityHeader({
                             
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 font-bold text-sm">
                                 <div className="flex items-center gap-2">
-                                     <span className="uppercase text-[10px] font-black tracking-widest opacity-50">RUT</span>
-                                     <span className="text-primary-theme dark:text-white">{patient.rut || 'No definido'}</span>
+                                     <span className="uppercase text-[10px] font-black tracking-widest text-[#0B0B0F]/50">RUT</span>
+                                     <span className="text-[#0B0B0F]">{patient.rut || 'No definido'}</span>
                                  </div>
-                                 <div className="h-3 w-px bg-theme/10" />
+                                 <div className="h-3 w-px bg-[#0B0B0F]/10" />
                                  <div className="flex items-center gap-2">
-                                     <span className="uppercase text-[10px] font-black tracking-widest opacity-50">Sexo</span>
-                                     <span className="text-primary-theme dark:text-white">{patient.gender || 'Femenino'}</span>
+                                     <span className="uppercase text-[10px] font-black tracking-widest text-[#0B0B0F]/50">Sexo</span>
+                                     <span className="text-[#0B0B0F]">{patient.gender || 'Femenino'}</span>
                                  </div>
-                                 <div className="h-3 w-px bg-theme/10" />
+                                 <div className="h-3 w-px bg-[#0B0B0F]/10" />
                                  <div className="flex items-center gap-2">
-                                     <span className="uppercase text-[10px] font-black tracking-widest opacity-50">Edad</span>
-                                     <span className="text-primary-theme dark:text-white">{getAge(patient.birth_date)}</span>
+                                     <span className="uppercase text-[10px] font-black tracking-widest text-[#0B0B0F]/50">Edad</span>
+                                     <span className="text-[#0B0B0F]">{getAge(patient.birth_date)}</span>
                                  </div>
                             </div>
                         </div>
@@ -210,7 +210,7 @@ export function PatientSecurityHeader({
                                 <User className="w-4.5 h-4.5" />
                             </div>
                             <div className="flex flex-col relative text-left">
-                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Profesional</span>
+                                <span className="text-[9px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">Profesional</span>
                                 <div 
                                     className="flex items-center gap-1 cursor-pointer hover:bg-theme/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
                                     onClick={() => { setShowProfDropdown(!showProfDropdown); setShowBoxDropdown(false); }}
@@ -250,7 +250,7 @@ export function PatientSecurityHeader({
                                 <Monitor className="w-4.5 h-4.5" />
                             </div>
                             <div className="flex flex-col relative text-left">
-                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">BOX / SILLÓN</span>
+                                <span className="text-[9px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">BOX / SILLÓN</span>
                                 <div 
                                     className="flex items-center gap-1 cursor-pointer hover:bg-theme/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
                                     onClick={() => { setShowBoxDropdown(!showBoxDropdown); setShowProfDropdown(false); }}
@@ -287,7 +287,7 @@ export function PatientSecurityHeader({
                                 <FileText className="w-4.5 h-4.5" />
                             </div>
                             <div className="flex flex-col text-left">
-                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Convenio</span>
+                                <span className="text-[9px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">Convenio</span>
                                 <span className="text-xs font-black text-emerald-700">{patient.insurance_provider || 'Part.'}</span>
                             </div>
                         </div>
@@ -298,7 +298,7 @@ export function PatientSecurityHeader({
                                 <Building2 className="w-4.5 h-4.5" />
                             </div>
                             <div className="flex flex-col text-left">
-                                <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Sucursal</span>
+                                <span className="text-[9px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">Sucursal</span>
                                 <span className="text-xs font-black text-charcoal truncate max-w-[100px]">{clinicName}</span>
                             </div>
                         </div>
