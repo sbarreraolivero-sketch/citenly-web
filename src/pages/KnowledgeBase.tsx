@@ -482,11 +482,11 @@ export default function KnowledgeBase() {
                                 summary="Configura la información bancaria oficial para reservas."
                             >
                                 <p>Esta información es <b>crítica</b> para cerrar procesos de reserva. El bot solo la entrega cuando el paciente ya está listo para pagar o confirmar una cita.</p>
-                                <div className="bg-white/50 p-3 rounded-soft border border-silk-beige/30 mt-2">
+                                <div className="bg-white p-3 rounded-soft border border-silk-beige/30 mt-2">
                                     <p className="font-bold mb-2 flex items-center gap-1.5 text-amber-700 text-[11px] uppercase tracking-wider">
                                         <Info className="w-3.5 h-3.5" /> Datos recomendados:
                                     </p>
-                                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px] text-charcoal/80">
+                                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px] text-[#0B0B0F] font-medium">
                                         <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Nombre del Titular</li>
                                         <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> RUT de la Empresa/Persona</li>
                                         <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Banco y Tipo de Cuenta</li>
@@ -495,9 +495,12 @@ export default function KnowledgeBase() {
                                         <li className="flex items-center gap-1.5"><div className="w-1 h-1 bg-amber-400 rounded-full" /> Política de Devoluciones</li>
                                     </ul>
                                 </div>
-                                <p className="text-[10px] text-charcoal/50 mt-3 italic flex items-center gap-1.5">
-                                    <Lightbulb className="w-3 h-3" /> Tip: Incluir un email para comprobantes acelera la validación manual por parte de tu equipo.
-                                </p>
+                                <div className="bg-white p-3 rounded-soft border border-silk-beige/20 flex items-center gap-2 mt-4">
+                                    <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                                    <p className="text-[10px] text-[#0B0B0F] italic font-medium leading-relaxed">
+                                        Tip: Incluir un email para comprobantes acelera la validación manual por parte de tu equipo.
+                                    </p>
+                                </div>
                             </GuideBox>
                         </div>
                         <div className="flex items-center gap-3">
@@ -575,13 +578,13 @@ export default function KnowledgeBase() {
                         summary="Usa esto como el cerebro estático de la IA."
                     >
                         <p>Aquí vive toda la información técnica que no cambia seguido. El Agente IA la consultará como una enciclopedia antes de responder.</p>
-                        <div className="bg-white/50 p-4 rounded-soft border border-silk-beige/30 flex gap-4 mt-2">
+                        <div className="bg-white p-4 rounded-soft border border-silk-beige/30 flex gap-4 mt-2">
                             <div className="bg-violet-100 w-12 h-12 rounded-full flex items-center justify-center shrink-0">
                                 <FileText className="w-6 h-6 text-violet-600" />
                             </div>
                             <div className="space-y-1">
-                                <p className="font-bold text-[13px] text-charcoal">¿Qué es ideal subir aquí?</p>
-                                <p className="text-[11px] text-charcoal/70 leading-relaxed">
+                                <p className="font-bold text-[13px] text-[#0B0B0F]">¿Qué es ideal subir aquí?</p>
+                                <p className="text-[11px] text-[#0B0B0F] leading-relaxed font-medium">
                                     Listas de precios detalladas, descripción de cada tratamiento, horarios de todas las sucursales, ubicación exacta con links a Google Maps y una lista de preguntas frecuentes (FAQ) con sus respuestas ideales.
                                 </p>
                             </div>
@@ -675,12 +678,12 @@ export default function KnowledgeBase() {
                                 </div>
 
                                 {/* Title */}
-                                <h3 className="font-semibold text-charcoal text-base mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
+                                <h3 className="font-bold text-primary-theme text-base mb-2 line-clamp-1 group-hover:text-[#FF2E88] transition-colors">
                                     {doc.title}
                                 </h3>
 
                                 {/* Content Preview */}
-                                <p className="text-sm text-charcoal/60 line-clamp-3 mb-4 leading-relaxed">
+                                <p className="text-sm text-secondary-theme line-clamp-3 mb-4 leading-relaxed font-medium">
                                     {doc.content}
                                 </p>
 
