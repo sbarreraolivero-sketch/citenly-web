@@ -273,15 +273,15 @@ export default function Dashboard() {
     return (
         <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
             <div className="flex flex-col gap-6">
-                <div className="bg-[#0B0B0F] rounded-[24px] p-8 text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/5 to-transparent opacity-50" />
+                <div className="bg-[#FFF0F7] dark:bg-[#0B0B0F] rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/10 dark:from-[#FF2E88]/5 to-transparent opacity-50" />
                     <div className="flex items-center justify-between relative z-10">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
                                 ¡Hola, {profile?.full_name?.split(' ')[0]}! 
                                 <span className="animate-bounce-slow">👋</span>
                             </h1>
-                            <p className="text-sm text-secondary-theme font-medium mt-1.5 opacity-80"> Tu asistente IA está activo y listo para gestionar tus citas.</p>
+                            <p className="text-sm text-secondary-theme font-bold mt-1.5 opacity-80"> Tu asistente IA está activo y listo para gestionar tus citas.</p>
                         </div>
                         <div className="relative">
                             {/* Outer Glow Ring */}
@@ -320,7 +320,7 @@ export default function Dashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {statCards.map((stat) => (
-                    <div key={stat.name} className="card-premium p-6 hover:border-[#FF2E88]/30 transition-all group relative overflow-hidden">
+                    <div key={stat.name} className="card-premium p-6 hover:border-[#FF2E88]/30 transition-all group relative overflow-hidden shadow-md">
                         <div className="flex items-start justify-between relative z-10">
                             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#FF2E88]/10 border border-[#FF2E88]/20 shadow-[0_0_15px_rgba(255,46,136,0.1)] group-hover:bg-[#FF2E88]/20 transition-colors">
                                 <stat.icon className="w-6 h-6 text-[#FF2E88]" />
@@ -335,7 +335,7 @@ export default function Dashboard() {
                         </div>
                         
                         <div className="mt-6 relative z-10">
-                            <p className="text-4xl font-bold text-white tracking-tight leading-none">{stat.value}</p>
+                            <p className="text-4xl font-bold text-primary-theme dark:text-white tracking-tight leading-none">{stat.value}</p>
                             <p className="text-[10px] font-black uppercase tracking-[0.15em] text-secondary-theme mt-3">{stat.name}</p>
                         </div>
 

@@ -303,7 +303,7 @@ export default function DashboardLayout() {
                                 )}
                             >
                                 <item.icon className={cn("shrink-0", isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-[#FF2E88]" : "text-secondary-theme")} />
-                                <span className={cn("text-sm font-medium transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100", isActive ? "text-white" : "text-secondary-theme")}>{item.name}</span>
+                                <span className={cn("text-sm font-bold transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100", isActive ? "text-primary-theme" : "text-secondary-theme")}>{item.name}</span>
                             </NavLink>
                         )
                     })}
@@ -445,12 +445,12 @@ export default function DashboardLayout() {
                                     <div className="max-h-80 overflow-auto">
                                         {notifications.length === 0 ? (
                                             <div className="py-8 text-center">
-                                                <Bell className="w-10 h-10 text-charcoal/20 mx-auto mb-3" />
-                                                <p className="text-sm text-charcoal/50">No tienes notificaciones</p>
-                                                <p className="text-xs text-charcoal/40 mt-1">Las notificaciones aparecerán aquí</p>
+                                                <Bell className="w-10 h-10 text-secondary-theme/20 mx-auto mb-3" />
+                                                <p className="text-sm text-secondary-theme">No tienes notificaciones</p>
+                                                <p className="text-xs text-secondary-theme opacity-50 mt-1">Las notificaciones aparecerán aquí</p>
                                             </div>
                                         ) : (
-                                            <div className="divide-y divide-silk-beige">
+                                            <div className="divide-y divide-theme">
                                                 {notifications.map((notification) => (
                                                     <div
                                                         key={notification.id}
@@ -466,15 +466,15 @@ export default function DashboardLayout() {
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className={cn(
-                                                                    "text-sm text-charcoal",
-                                                                    !notification.is_read && "font-medium"
+                                                                    "text-sm text-primary-theme",
+                                                                    !notification.is_read && "font-bold"
                                                                 )}>
                                                                     {notification.title}
                                                                 </p>
-                                                                <p className="text-xs text-charcoal/50 mt-0.5 truncate">
+                                                                <p className="text-xs text-secondary-theme mt-0.5 truncate opacity-80">
                                                                     {notification.message}
                                                                 </p>
-                                                                <p className="text-xs text-charcoal/40 mt-1">
+                                                                <p className="text-[10px] text-secondary-theme mt-1 font-bold opacity-50">
                                                                     {formatTimeAgo(notification.created_at)}
                                                                 </p>
                                                             </div>
@@ -487,13 +487,13 @@ export default function DashboardLayout() {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="px-4 py-2 border-t border-silk-beige">
+                                    <div className="px-4 py-2 border-t border-theme">
                                         <button
                                             onClick={() => {
                                                 setShowNotifications(false)
                                                 navigate('/app/settings?tab=notifications')
                                             }}
-                                            className="text-xs text-primary-600 hover:underline"
+                                            className="text-xs text-[#FF2E88] font-bold hover:underline"
                                         >
                                             Configurar notificaciones
                                         </button>
