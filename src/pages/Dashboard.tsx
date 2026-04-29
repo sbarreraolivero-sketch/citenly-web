@@ -273,8 +273,11 @@ export default function Dashboard() {
     return (
         <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
             <div className="flex flex-col gap-6">
-                <div className="bg-[#FFF0F7] dark:bg-[#0B0B0F] rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/10 dark:from-[#FF2E88]/5 to-transparent opacity-50" />
+                <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
+                    {/* Visual Decor */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.1),transparent)] dark:bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.15),transparent)]" />
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF2E88]/50 to-transparent opacity-50" />
+                    
                     <div className="flex items-center justify-between relative z-10">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
@@ -285,8 +288,8 @@ export default function Dashboard() {
                         </div>
                         <div className="relative">
                             {/* Outer Glow Ring */}
-                            <div className="absolute inset-0 bg-[#FF2E88] rounded-full blur-xl opacity-30 animate-pulse" />
-                            <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center border-2 border-[#FF2E88] shadow-[0_0_20px_rgba(255,46,136,0.6)] relative z-10">
+                            <div className="absolute -inset-4 bg-[#FF2E88] rounded-full blur-2xl opacity-20 animate-pulse" />
+                            <div className="w-14 h-14 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-[#FF2E88] shadow-[0_0_20px_rgba(255,46,136,0.6)] relative z-10">
                                 <Sparkles className="w-7 h-7 text-[#FF2E88] drop-shadow-[0_0_8px_rgba(255,46,136,0.8)]" />
                             </div>
                         </div>

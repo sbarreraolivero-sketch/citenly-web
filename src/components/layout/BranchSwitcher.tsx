@@ -41,7 +41,7 @@ export default function BranchSwitcher() {
                         <Building2 className="w-5 h-5 text-[#FF2E88]" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate leading-tight">
+                        <p className="text-sm font-bold text-primary-theme truncate leading-tight">
                             {currentClinic?.clinic_name || 'Mi Clínica'}
                         </p>
                         <p className="text-[10px] text-secondary-theme font-black uppercase tracking-widest leading-tight mt-0.5">
