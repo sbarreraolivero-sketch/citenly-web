@@ -273,15 +273,22 @@ export default function Dashboard() {
     return (
         <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
             <div className="flex flex-col gap-6">
-                <div className="bg-secondary-theme/40 rounded-[24px] p-6 text-white border border-white/5 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/10 to-transparent opacity-50" />
+                <div className="bg-[#0B0B0F] rounded-[24px] p-8 text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/5 to-transparent opacity-50" />
                     <div className="flex items-center justify-between relative z-10">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">¡Hola, {profile?.full_name?.split(' ')[0]}! 👋</h1>
-                            <p className="text-sm text-secondary-theme font-medium mt-1">Tu asistente IA está activo y listo para gestionar tus citas.</p>
+                            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                                ¡Hola, {profile?.full_name?.split(' ')[0]}! 
+                                <span className="animate-bounce-slow">👋</span>
+                            </h1>
+                            <p className="text-sm text-secondary-theme font-medium mt-1.5 opacity-80"> Tu asistente IA está activo y listo para gestionar tus citas.</p>
                         </div>
-                        <div className="w-14 h-14 bg-gradient-to-br from-[#FF2E88] to-[#FF4DA6] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(255,46,136,0.4)] animate-pulse-slow">
-                            <Sparkles className="w-7 h-7 text-white" />
+                        <div className="relative">
+                            {/* Outer Glow Ring */}
+                            <div className="absolute inset-0 bg-[#FF2E88] rounded-full blur-xl opacity-30 animate-pulse" />
+                            <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center border-2 border-[#FF2E88] shadow-[0_0_20px_rgba(255,46,136,0.6)] relative z-10">
+                                <Sparkles className="w-7 h-7 text-[#FF2E88] drop-shadow-[0_0_8px_rgba(255,46,136,0.8)]" />
+                            </div>
                         </div>
                     </div>
                 </div>
