@@ -160,32 +160,44 @@ export default function Patients() {
             ) : (
                 <div className="space-y-6 animate-fade-in relative min-h-screen pb-20">
                     {/* Header Banner */}
-                    <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_20px_var(--glow)] relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                    <div 
+                        className="rounded-[24px] p-8 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]"
+                        style={{ background: 'var(--bg-primary)' }}
+                    >
+                        {/* Premium Gradient Background Overlay */}
+                        <div 
+                            className="absolute inset-0 opacity-100" 
+                            style={{ background: 'var(--gradient-primary)', opacity: 0.15 }}
+                        />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.1),transparent)] dark:bg-[radial-gradient(circle_at_70%_50%,rgba(255,46,136,0.15),transparent)]" />
+                        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF2E88]/50 to-transparent opacity-50" />
                         
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
-                                    <UserIcon className="w-7 h-7 text-white" />
+                            <div className="flex items-center gap-5">
+                                <div className="relative">
+                                    <div className="absolute -inset-2 bg-[#FF2E88] rounded-full blur-xl opacity-20 animate-pulse" />
+                                    <div className="w-16 h-16 bg-black/80 backdrop-blur-md rounded-2xl flex items-center justify-center border-2 border-[#FF2E88] shadow-[0_0_20px_rgba(255,46,136,0.4)] relative z-10">
+                                        <UserIcon className="w-8 h-8 text-[#FF2E88] drop-shadow-[0_0_8px_rgba(255,46,136,0.8)]" />
+                                    </div>
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-white tracking-tight">Contactos</h1>
-                                    <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
-                                        👥 Gestiona tu base de datos de pacientes y prospectos. Organiza información, etiquetas y potencia tus campañas y recordatorios.
+                                    <h1 className="text-3xl font-bold tracking-tight text-primary-theme dark:text-white">Contactos</h1>
+                                    <p className="text-primary-theme dark:text-white dark:opacity-80 text-sm mt-1.5 max-w-2xl font-medium leading-relaxed">
+                                        👥 Gestiona tu base de datos de pacientes y prospectos de forma inteligente.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                            <div className="flex items-center gap-3">
                                 <CSVUploader onSuccess={fetchContacts} />
                                 <button
                                     onClick={() => {
                                         setEditingPatient(null)
                                         setIsFormOpen(true)
                                     }}
-                                    className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-4 py-2 rounded-soft text-xs font-bold transition-all shadow-lg flex items-center gap-2 whitespace-nowrap border border-white/30"
+                                    className="bg-[#FF2E88] hover:bg-[#FF4DA6] text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,46,136,0.3)] hover:shadow-[0_0_30px_rgba(255,46,136,0.5)] flex items-center gap-2 whitespace-nowrap active:scale-95"
                                 >
-                                    <Plus className="w-3.5 h-3.5" />
+                                    <Plus className="w-5 h-5" />
                                     Nuevo Contacto
                                 </button>
                             </div>
