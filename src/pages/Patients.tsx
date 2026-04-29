@@ -202,20 +202,20 @@ export default function Patients() {
                     >
                         <p>Mantener tu base de datos organizada es vital para que la Inteligencia Artificial pueda realizar seguimientos efectivos y automáticos.</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                            <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                            <div className="bg-white p-3.5 rounded-soft border border-silk-beige/30">
                                 <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                                     <Check className="w-3.5 h-3.5" /> Pacientes vs Prospectos:
                                 </p>
-                                <p className="text-[11px] leading-relaxed text-charcoal/70">
+                                <p className="text-[11px] leading-relaxed text-[#0B0B0F]">
                                     <b>Pacientes:</b> Son tus clientes actuales que ya se han atendido en la clínica.
                                     <br/><b>Prospectos:</b> Son personas interesadas (leads) que han preguntado pero aún no agendan su primera cita.
                                 </p>
                             </div>
-                            <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                            <div className="bg-white p-3.5 rounded-soft border border-silk-beige/30">
                                 <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                                     <Info className="w-3.5 h-3.5" /> Carga Masiva (CSV):
                                 </p>
-                                <p className="text-[11px] leading-relaxed text-charcoal/70">
+                                <p className="text-[11px] leading-relaxed text-[#0B0B0F]">
                                     ¿Tienes una base de datos en Excel? Usa el botón <b>"Importar CSV"</b>.
                                     Asegúrate de que los teléfonos incluyan el código de país (ej: 569...) para que WhatsApp funcione correctamente.
                                 </p>

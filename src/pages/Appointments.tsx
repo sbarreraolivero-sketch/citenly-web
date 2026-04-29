@@ -759,19 +759,19 @@ export default function Appointments() {
                 summary="Aprende a reducir las inasistencias y a vincular las citas con el historial clínico de tus pacientes."
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div className="bg-secondary-theme/50 p-3.5 rounded-soft border border-theme">
+                    <div className="bg-white p-3.5 rounded-soft border border-theme">
                         <p className="font-black text-[var(--accent-primary)] text-[10px] mb-1.5 flex items-center gap-1.5 uppercase tracking-widest">
                             <MessageCircle className="w-3.5 h-3.5" /> Recordatorios de WhatsApp:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-secondary-theme font-medium">
+                        <p className="text-[11px] leading-relaxed text-[#0B0B0F] font-medium">
                             Usa el botón de WhatsApp en cada cita para enviar recordatorios manuales o encuestas. El sistema también envía notificaciones automáticas 24h antes para confirmar la asistencia.
                         </p>
                     </div>
-                    <div className="bg-secondary-theme/50 p-3.5 rounded-soft border border-theme">
+                    <div className="bg-white p-3.5 rounded-soft border border-theme">
                         <p className="font-black text-[var(--accent-primary)] text-[10px] mb-1.5 flex items-center gap-1.5 uppercase tracking-widest">
                             <User className="w-3.5 h-3.5" /> Ficha Clínica Integrada:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-secondary-theme font-medium">
+                        <p className="text-[11px] leading-relaxed text-[#0B0B0F] font-medium">
                             Al marcar una cita como "Completada", el sistema te sugerirá abrir la ficha clínica. Esto centraliza la información y facilita el seguimiento evolutivo del paciente.
                         </p>
                     </div>

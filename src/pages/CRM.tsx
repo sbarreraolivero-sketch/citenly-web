@@ -516,20 +516,20 @@ export default function CRM() {
             >
                 <p className="text-primary-theme">El <b>Pipeline</b> es el reflejo visual de tu proceso de venta. Cada tarjeta representa un prospecto que la IA está gestiónando o que requiere tu atención.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div className="bg-primary-theme/50 p-3.5 rounded-soft border border-theme">
+                    <div className="bg-white p-3.5 rounded-soft border border-theme">
                         <p className="font-bold text-[var(--accent-primary)] text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <Check className="w-3.5 h-3.5" /> Movimiento de Tarjetas:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-secondary-theme">
+                        <p className="text-[11px] leading-relaxed text-[#0B0B0F]">
                             Arrastra y suelta los prospectos de izquierda a derecha a medida que avanzan en su decisión. 
                             El objetivo final es moverlos todos a la etapa de <b>"Cita Agendada"</b> o <b>"Venta Exitosa"</b>.
                         </p>
                     </div>
-                    <div className="bg-primary-theme/50 p-3.5 rounded-soft border border-theme">
+                    <div className="bg-white p-3.5 rounded-soft border border-theme">
                         <p className="font-bold text-[var(--accent-primary)] text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <Target className="w-3.5 h-3.5" /> Segmentación con Etiquetas:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-secondary-theme">
+                        <p className="text-[11px] leading-relaxed text-[#0B0B0F]">
                             Usa las etiquetas para diferenciar el interés del cliente (ej: <b>#TratamientoCapilar</b>, <b>#EvaluacionGratis</b>). 
                             Esto te permitirá hacer campañas de marketing mucho más efectivas después.
                         </p>

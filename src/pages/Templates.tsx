@@ -264,20 +264,20 @@ export default function Templates() {
                     >
                         <p>Las plantillas de WhatsApp deben ser aprobadas por <b>Meta</b> antes de ser enviadas. Sigue estos consejos para evitar rechazos:</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                            <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                            <div className="bg-white p-3.5 rounded-soft border border-silk-beige/30">
                                 <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                                     <Check className="w-3.5 h-3.5" /> Uso de Variables {'{{n}}'}:
                                 </p>
-                                <p className="text-[11px] leading-relaxed text-charcoal/70">
+                                <p className="text-[11px] leading-relaxed text-[#0B0B0F]">
                                     Usa llaves dobles con números correlativos para datos dinámicos. 
                                     Ej: <b>{'{{1}}'}</b> para el nombre del paciente, <b>{'{{2}}'}</b> para el nombre del doctor, <b>{'{{3}}'}</b> para la fecha/hora.
                                 </p>
                             </div>
-                            <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                            <div className="bg-white p-3.5 rounded-soft border border-silk-beige/30">
                                 <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                                     <Info className="w-3.5 h-3.5" /> Categorías de Meta:
                                 </p>
-                                <p className="text-[11px] leading-relaxed text-charcoal/70 list-disc">
+                                <p className="text-[11px] leading-relaxed text-[#0B0B0F] list-disc">
                                     <b>• Marketing:</b> Promociones, ofertas y reactivación.<br/>
                                     <b>• Utility:</b> Recordatorios de cita y seguimientos.<br/>
                                     <b>• Authentication:</b> Solo para códigos de seguridad (OTP).

@@ -407,17 +407,17 @@ export default function KnowledgeBase() {
                                     summary="Define el tono, voz y alma de tu clínica."
                                 >
                                     <p>La <b>personalidad</b> determina cómo se siente hablar con tu clínica. Una buena personalidad genera confianza y cercanía inmediata.</p>
-                                    <div className="bg-primary-theme/50 p-3 rounded-soft border border-theme">
+                                    <div className="bg-white p-3 rounded-soft border border-theme">
                                         <p className="font-bold mb-1.5 flex items-center gap-1.5 text-[var(--accent-primary)] text-[11px]">
                                             <Check className="w-3.5 h-3.5" /> EJEMPLO RECOMENDADO:
                                         </p>
-                                        <p className="italic text-[11.5px] leading-relaxed text-secondary-theme">"Eres un asesor experto en estética médica. Habla de manera empática pero profesional. Usa 'nosotros' para referirte a la clínica y enfócate siempre en resolver dudas sobre bienestar."</p>
+                                        <p className="italic text-[11.5px] leading-relaxed text-[#0B0B0F]">"Eres un asesor experto en estética médica. Habla de manera empática pero profesional. Usa 'nosotros' para referirte a la clínica y enfócate siempre en resolver dudas sobre bienestar."</p>
                                     </div>
                                     <div className="mt-3 grid grid-cols-2 gap-2 text-[10.5px]">
-                                        <div className="p-2 bg-secondary-theme rounded border border-theme text-primary-theme">
+                                        <div className="p-2 bg-white rounded border border-theme text-[#0B0B0F]">
                                             <b className="text-[var(--accent-primary)]">🎩 Formal:</b> Ideal para clínicas quirúrgicas o de alta complejidad.
                                         </div>
-                                        <div className="p-2 bg-secondary-theme rounded border border-theme text-primary-theme">
+                                        <div className="p-2 bg-white rounded border border-theme text-[#0B0B0F]">
                                             <b className="text-[var(--accent-primary)]">✨ Cercana:</b> Ideal para centros de estética, spas o kinesiología.
                                         </div>
                                     </div>

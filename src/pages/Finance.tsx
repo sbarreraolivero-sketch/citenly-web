@@ -492,7 +492,7 @@ const Finance = () => {
             >
                 <p>El control financiero es el corazón de tu negocio. Aquí puedes ver cómo interactúan tus egresos con las ventas generadas por el equipo.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                    <div className="bg-white p-3.5 rounded-soft border border-silk-beige/30">
                         <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <TrendingUp className="w-3.5 h-3.5" /> Ingresos vs Gastos:
                         </p>
@@ -500,7 +500,7 @@ const Finance = () => {
                             Mantén tus gastos generales (nómina, alquiler, insumos) controlados. Una ganancia neta saludable suele estar por encima del 20-30% tras cubrir todos los costos operativos.
                         </p>
                     </div>
-                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
+                    <div className="bg-white p-3.5 rounded-soft border border-silk-beige/30">
                         <p className="font-bold text-[var(--accent-primary)] text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
                             <CreditCard className="w-3.5 h-3.5" /> Pagos por Cobrar:
                         </p>
