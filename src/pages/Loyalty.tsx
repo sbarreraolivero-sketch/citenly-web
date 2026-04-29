@@ -573,7 +573,8 @@ export default function Loyalty() {
                                             { id: 'points', icon: Coins, label: 'Puntos Clásicos', desc: 'Acumula puntos para canjear en el catálogo.' },
                                             { id: 'money', icon: DollarSign, label: 'Dinero (Cashback)', desc: 'Acumula saldo en dinero real para el monedero.' },
                                             { id: 'percentage', icon: Percent, label: '% Descuento', desc: 'Acumula porcentaje de descuento para la próxima cita.' },
-                                                                             <button
+                                        ].map(mode => (
+                                            <button
                                                 key={mode.id}
                                                 onClick={() => setSettings(s => {
                                                     if (!s) return null;
@@ -598,7 +599,7 @@ export default function Loyalty() {
                                                         ? "border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 shadow-inner"
                                                         : "border-theme bg-secondary-theme/50 hover:bg-secondary-theme"
                                                 )}
-                                            >                        >
+                                            >
                                                 <mode.icon className={cn("w-8 h-8 mb-4", settings?.loyalty_program_mode === mode.id ? "text-[var(--accent-primary)]" : "text-secondary-theme")} />
                                                 <p className="font-bold text-sm mb-1 text-primary-theme">{mode.label}</p>
                                                 <p className="text-xs text-secondary-theme font-bold leading-tight">{mode.desc}</p>

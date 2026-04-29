@@ -996,7 +996,7 @@ export default function Appointments() {
                             {prof.first_name || prof.email}
                         </button>
                     ))}
-                </div>
+                    </div>
             )}
 
             {viewMode === 'calendar' ? (
@@ -1303,7 +1303,10 @@ export default function Appointments() {
                                                 {formatTime(appointment.appointment_date)}
                                             </span>
                                         </div>
-                                    </div                                {/* Footer: Actions */}
+                                    </div>
+                                </div>
+
+                                {/* Footer: Actions */}
                                 <div className="flex gap-2 pt-1 border-t border-theme mt-1 pb-1">
                                     {appointment.status === 'pending' && (
                                         <>
@@ -1347,7 +1350,6 @@ export default function Appointments() {
                                         >
                                             <MessageCircle className="w-4 h-4" />
                                         </button>
-                                    )}on>
                                     )}
 
                                     <button
@@ -1921,6 +1923,6 @@ export default function Appointments() {
                 )
             }
             <Toaster position="top-right" />
-        </div >
+        </div>
     )
 }

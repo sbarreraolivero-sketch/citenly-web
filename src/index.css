@@ -111,7 +111,11 @@
   }
 
   .badge-completed {
-    @apply badge bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 shadow-[0_0_10px_var(--glow)];
+    @apply badge;
+    background-color: rgba(255, 46, 136, 0.1);
+    color: var(--accent-primary);
+    border: 1px solid rgba(255, 46, 136, 0.2);
+    box-shadow: 0 0 10px var(--glow);
   }
 
   /* Chat Bubble Styles */
@@ -144,7 +148,9 @@
   }
 
   .rbc-header {
-    @apply py-4 text-[10px] font-black uppercase tracking-widest text-secondary-theme border-b border-theme;
+    @apply py-4 text-[10px] font-black uppercase tracking-widest;
+    color: var(--text-secondary) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
     background-color: var(--bg-secondary);
   }
 
@@ -163,15 +169,16 @@
   }
 
   .rbc-month-view, .rbc-time-view, .rbc-agenda-view {
-    @apply border-theme rounded-xl overflow-hidden;
+    @apply rounded-xl overflow-hidden;
+    border: 1px solid var(--border-subtle) !important;
   }
 
   .rbc-day-bg + .rbc-day-bg, .rbc-month-row, .rbc-time-header-content {
-    @apply border-theme;
+    border-color: var(--border-subtle) !important;
   }
 
   .rbc-time-content {
-    @apply border-t border-theme;
+    border-top: 1px solid var(--border-subtle) !important;
   }
 
   .rbc-time-view,
@@ -180,7 +187,8 @@
   }
 
   .rbc-day-slot .rbc-time-slot {
-    @apply border-t-theme/30;
+    border-top: 1px solid var(--border-subtle) !important;
+    opacity: 0.3;
   }
 
   .rbc-current-time-indicator {
@@ -241,7 +249,6 @@
   .glass-dark {
     @apply bg-charcoal/80 backdrop-blur-md;
   }
-}
 }
 
 @keyframes slide-down {

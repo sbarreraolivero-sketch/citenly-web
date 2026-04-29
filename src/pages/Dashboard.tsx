@@ -11,7 +11,6 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Bell,
-    CheckCircle2,
     Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -330,7 +329,7 @@ export default function Dashboard() {
                         <div className={cn("absolute -top-12 -right-12 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-110", stat.color)} />
                         
                         <div className="flex items-start justify-between relative z-10">
-                            <div className={cn("w-10 h-10 rounded-soft flex items-center justify-center", theme === 'dark' ? "bg-white/5" : stat.bgLight)}>
+                            <div className="w-10 h-10 rounded-soft flex items-center justify-center bg-secondary-theme border border-theme shadow-sm">
                                 <stat.icon className={cn("w-5 h-5", stat.textColor)} />
                             </div>
                             <div className={cn(

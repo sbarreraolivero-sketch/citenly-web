@@ -743,7 +743,7 @@ export default function CRM() {
                     <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-silk-beige">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-soft flex items-center justify-center bg-secondary-theme border border-theme shadow-sm">
                                     <Target className="w-5 h-5 text-primary-500" />
                                 </div>
                                 <h2 className="text-lg font-bold text-charcoal">
