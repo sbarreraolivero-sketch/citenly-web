@@ -185,7 +185,8 @@ export default function Loyalty() {
     )
 
     return (
-        <div className="space-y-6 animate-fade            {/* Header Banner: Premium Glow Style */}
+        <div className="space-y-6 animate-fade-in pb-20">
+            {/* Header Banner: Premium Glow Style */}
             <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
@@ -221,7 +222,7 @@ export default function Loyalty() {
                         </div>
                     </div>
                 </div>
-            </div>   </div>
+            </div>
 
             {/* Main Tabs */}
             <div className="flex items-center gap-1 p-1 bg-secondary-theme rounded-full border border-theme w-full md:w-fit overflow-x-auto no-scrollbar">
