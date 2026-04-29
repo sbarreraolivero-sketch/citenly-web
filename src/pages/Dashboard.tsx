@@ -284,7 +284,7 @@ export default function Dashboard() {
                                 ¡Hola, {profile?.full_name?.split(' ')[0]}! 
                                 <span className="animate-bounce-slow">👋</span>
                             </h1>
-                            <p className="text-sm text-primary-theme font-bold mt-1.5"> Tu asistente IA está activo y listo para gestionar tus citas.</p>
+                            <p className="text-sm text-primary-theme dark:text-white font-bold mt-1.5"> Tu asistente IA está activo y listo para gestionar tus citas.</p>
                         </div>
                         <div className="relative">
                             {/* Outer Glow Ring */}
