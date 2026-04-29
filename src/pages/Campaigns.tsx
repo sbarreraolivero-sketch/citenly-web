@@ -362,43 +362,43 @@ export default function Campaigns() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
             <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <MessageSquare className="w-6 h-6 text-indigo-600" />
+                <h1 className="text-2xl font-bold text-primary-theme flex items-center gap-2">
+                    <MessageSquare className="w-6 h-6 text-[var(--accent-primary)]" />
                     Campañas de WhatsApp
                 </h1>
             </div>
 
             {/* Overlay de Próximamente */}
-            <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-white/80 p-8 text-center shadow-xl backdrop-blur-sm">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            <div className="relative overflow-hidden rounded-softer border border-theme bg-primary-theme p-8 text-center shadow-[0_0_30px_var(--glow)] backdrop-blur-sm">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[var(--gradient-primary)]" />
                 
                 <div className="max-w-2xl mx-auto py-12 space-y-6">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-50 mb-4 animate-bounce">
-                        <Zap className="w-10 h-10 text-indigo-600" />
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--accent-primary)]/10 mb-4 animate-bounce">
+                        <Zap className="w-10 h-10 text-[var(--accent-primary)]" />
                     </div>
                     
-                    <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                    <h2 className="text-4xl font-extrabold text-primary-theme tracking-tight">
                         Motor de Campañas 2.0
                     </h2>
                     
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                        Estamos migrando a una nueva infraestructura inteligente de <span className="font-bold text-indigo-600 italic">Créditos de Envío</span>. 
+                    <p className="text-lg text-secondary-theme leading-relaxed">
+                        Estamos migrando a una nueva infraestructura inteligente de <span className="font-bold text-[var(--accent-primary)] italic">Créditos de Envío</span>. 
                         Pronto podrás recargar saldo directamente en Citenly y disfrutar de envíos masivos verificados por Meta.
                     </p>
                     
-                    <div className="flex justify-center gap-4 text-sm font-semibold text-indigo-700">
-                        <span className="flex items-center gap-1 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                    <div className="flex justify-center gap-4 text-sm font-semibold text-[var(--accent-primary)]">
+                        <span className="flex items-center gap-1 bg-secondary-theme px-3 py-1 rounded-full border border-theme">
                             ✓ Sin límites de 250 mgs
                         </span>
-                        <span className="flex items-center gap-1 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                        <span className="flex items-center gap-1 bg-secondary-theme px-3 py-1 rounded-full border border-theme">
                             ✓ 100% Desatendido
                         </span>
                     </div>
 
                     <div className="pt-6">
-                        <div className="inline-flex items-center px-6 py-3 rounded-xl bg-gray-900 text-white font-medium shadow-lg">
+                        <div className="inline-flex items-center px-6 py-3 rounded-xl bg-[var(--gradient-primary)] text-white font-medium shadow-lg">
                             Lanzamiento exclusivo para Clínicas Fundadoras 🚀
                         </div>
                     </div>

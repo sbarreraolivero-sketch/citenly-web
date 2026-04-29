@@ -24,7 +24,9 @@ import {
     Menu,
     X,
     FileText,
-    BellOff
+    BellOff,
+    Moon,
+    Sun
 } from 'lucide-react'
 import { AIChatWidget } from '../AIChatWidget'
 import { CreditWarningBanner } from './CreditWarningBanner'
@@ -86,6 +88,14 @@ export default function DashboardLayout() {
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark')
+
+    const toggleTheme = () => {
+        const next = theme === 'dark' ? 'light' : 'dark'
+        document.body.dataset.theme = next
+        localStorage.setItem('theme', next)
+        setTheme(next)
+    }
 
     // Check activation status and redirect
     useEffect(() => {
@@ -242,7 +252,7 @@ export default function DashboardLayout() {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
     return (
-        <div className="flex h-screen bg-ivory overflow-hidden">
+        <div className="flex h-screen bg-primary-theme text-primary-theme overflow-hidden transition-colors duration-200">
             {/* Mobile Sidebar Overlay */}
             {showMobileMenu && (
                 <div
@@ -252,11 +262,11 @@ export default function DashboardLayout() {
             )}
 
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 bg-gray-900 border-r border-gray-800 flex flex-col transition-all duration-300 ease-in-out md:relative md:translate-x-0 hidden md:flex",
+                "fixed inset-y-0 left-0 z-50 sidebar-premium flex flex-col md:relative md:translate-x-0 hidden md:flex",
                 isSidebarCollapsed ? "w-20" : "w-64"
             )}>
                 {/* Logo */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800 relative group cursor-pointer transition-colors hover:bg-gray-800/50" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+                <div className="h-16 flex items-center justify-between px-6 border-b border-theme relative group cursor-pointer transition-colors hover:bg-secondary-theme" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-gray-800 rounded-soft flex items-center justify-center">
                             <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary-400" />
@@ -287,10 +297,8 @@ export default function DashboardLayout() {
                                 onClick={() => setShowMobileMenu(false)}
                                 title={isSidebarCollapsed ? item.name : undefined}
                                 className={cn(
-                                    'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
-                                    isActive
-                                        ? 'bg-accent-500/15 text-accent-400 font-medium border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]'
-                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                                    'sidebar-item-premium',
+                                    isActive && 'active',
                                     isSidebarCollapsed && 'justify-center px-0'
                                 )}
                             >
@@ -302,10 +310,10 @@ export default function DashboardLayout() {
                 </nav>
 
                 {/* Footer - AI Status */}
-                <div className="p-4 border-t border-gray-800">
-                    <div className={cn("card-soft bg-gray-800 border-none transition-all duration-300", isSidebarCollapsed ? "p-2 flex justify-center" : "p-4")}>
+                <div className="p-4 border-t border-theme">
+                    <div className={cn("card-premium border-none transition-all duration-300", isSidebarCollapsed ? "p-2 flex justify-center" : "p-4")}>
                         <div className="flex items-center gap-3">
-                            <div className={cn("shrink-0 bg-gray-700 rounded-full flex items-center justify-center", isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10")}>
+                            <div className={cn("shrink-0 bg-secondary-theme rounded-full flex items-center justify-center", isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10")}>
                                 <Sparkles className="w-5 h-5 text-primary-400" />
                             </div>
                             <div className={cn("min-w-0 transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
@@ -319,11 +327,11 @@ export default function DashboardLayout() {
 
             {/* Mobile Sidebar */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:hidden",
+                "fixed inset-y-0 left-0 z-50 w-64 sidebar-premium flex flex-col transition-transform duration-300 ease-in-out md:hidden",
                 showMobileMenu ? "translate-x-0" : "-translate-x-full"
             )}>
                 {/* Logo */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-800">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-theme">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gray-800 rounded-soft flex items-center justify-center">
                             <Sparkles className="w-5 h-5 text-primary-400" />
@@ -358,10 +366,8 @@ export default function DashboardLayout() {
                                 to={item.href}
                                 onClick={() => setShowMobileMenu(false)}
                                 className={cn(
-                                    'flex items-center gap-3 px-4 py-3 rounded-soft transition-all duration-200',
-                                    isActive
-                                        ? 'bg-accent-500/15 text-accent-400 font-medium border border-accent-500/20 shadow-[inset_0_0_8px_rgba(200,169,106,0.1)]'
-                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                    'sidebar-item-premium',
+                                    isActive && 'active'
                                 )}
                             >
                                 <item.icon className={cn("w-5 h-5 shrink-0", isActive ? "text-accent-400" : "text-gray-500")} />
@@ -372,8 +378,8 @@ export default function DashboardLayout() {
                 </nav>
 
                 {/* Footer - AI Status */}
-                <div className="p-4 border-t border-gray-800">
-                    <div className="card-soft p-4 bg-gray-800 border-none">
+                <div className="p-4 border-t border-theme">
+                    <div className="card-premium p-4 border-none">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center shrink-0">
                                 <Sparkles className="w-5 h-5 text-primary-400" />
@@ -391,27 +397,36 @@ export default function DashboardLayout() {
             <div className="flex-1 flex flex-col w-full min-w-0 relative">
                 <CreditWarningBanner />
                 {/* Header */}
-                <header className="h-16 border-b border-silk-beige flex items-center justify-between px-4 md:px-6 bg-ivory">
+                <header className="h-16 border-b border-theme flex items-center justify-between px-4 md:px-6 bg-primary-theme transition-colors duration-200">
                     <div className="flex items-center gap-3">
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setShowMobileMenu(true)}
-                            className="p-2 -ml-2 text-charcoal/60 hover:text-charcoal hover:bg-silk-beige/50 rounded-soft md:hidden"
+                            className="p-2 -ml-2 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft md:hidden"
                         >
                             <Menu className="w-6 h-6" />
                         </button>
 
-                        <h2 className="text-lg font-semibold text-charcoal truncate">
+                        <h2 className="text-lg font-semibold text-primary-theme truncate">
                             {navigation.find((n) => n.href === location.pathname)?.name || 'Dashboard'}
                         </h2>
                     </div>
 
                     <div className="flex items-center gap-4">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft transition-colors"
+                            title="Alternar Tema"
+                        >
+                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        </button>
+
                         {/* Notifications */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowNotifications(!showNotifications)}
-                                className="relative p-2 text-charcoal/60 hover:text-charcoal hover:bg-silk-beige/50 rounded-soft transition-colors"
+                                className="relative p-2 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft transition-colors"
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
@@ -422,10 +437,10 @@ export default function DashboardLayout() {
                             </button>
 
                             {showNotifications && (
-                                <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-96 bg-white rounded-soft shadow-soft-lg border border-silk-beige z-[100]">
-                                    <div className="px-4 py-3 border-b border-silk-beige flex items-center justify-between">
-                                        <h3 className="font-medium text-charcoal">Notificaciones</h3>
-                                        <span className="text-xs text-charcoal/50">{unreadCount} nuevas</span>
+                                <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-96 bg-secondary-theme rounded-soft shadow-soft-lg border border-theme z-[100]">
+                                    <div className="px-4 py-3 border-b border-theme flex items-center justify-between">
+                                        <h3 className="font-medium text-primary-theme">Notificaciones</h3>
+                                        <span className="text-xs text-secondary-theme">{unreadCount} nuevas</span>
                                     </div>
                                     <div className="max-h-80 overflow-auto">
                                         {notifications.length === 0 ? (
@@ -496,38 +511,38 @@ export default function DashboardLayout() {
 
                             <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-3 pl-4 border-l border-silk-beige hover:bg-silk-beige/30 rounded-soft p-2 transition-colors"
+                                className="flex items-center gap-3 pl-4 border-l border-theme hover:bg-secondary-theme rounded-soft p-2 transition-colors"
                             >
                                 <div className="text-right hidden md:block">
-                                    <p className="text-sm font-medium text-charcoal">{userName}</p>
-                                    <p className="text-xs text-charcoal/50">{userRole}</p>
+                                    <p className="text-sm font-medium text-primary-theme">{userName}</p>
+                                    <p className="text-xs text-secondary-theme">{userRole}</p>
                                 </div>
-                                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white font-medium">
+                                <div className="w-10 h-10 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full flex items-center justify-center text-white font-medium shadow-[0_0_15px_rgba(255,46,136,0.25)]">
                                     {getInitials(userName)}
                                 </div>
                                 <ChevronDown className={cn(
-                                    "w-4 h-4 text-charcoal/40 transition-transform",
+                                    "w-4 h-4 text-secondary-theme transition-transform",
                                     showUserMenu && "rotate-180"
                                 )} />
                             </button>
 
                             {/* Dropdown Menu */}
                             {showUserMenu && (
-                                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-soft shadow-soft-lg border border-silk-beige py-1 z-50">
-                                    <div className="px-4 py-3 border-b border-silk-beige md:hidden">
-                                        <p className="text-sm font-medium text-charcoal">{userName}</p>
-                                        <p className="text-xs text-charcoal/50">{profile?.email}</p>
+                                <div className="absolute right-0 top-full mt-2 w-56 bg-secondary-theme rounded-soft shadow-soft-lg border border-theme py-1 z-50">
+                                    <div className="px-4 py-3 border-b border-theme md:hidden">
+                                        <p className="text-sm font-medium text-primary-theme">{userName}</p>
+                                        <p className="text-xs text-secondary-theme">{profile?.email}</p>
                                     </div>
 
                                     {/* Mobile Branch Switcher */}
-                                    <div className="md:hidden px-2 py-2 border-b border-silk-beige">
+                                    <div className="md:hidden px-2 py-2 border-b border-theme">
                                         <BranchSwitcher />
                                     </div>
 
                                     <Link
                                         to="/app/settings?tab=profile"
                                         onClick={() => setShowUserMenu(false)}
-                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-charcoal/70 hover:bg-silk-beige/50 transition-colors"
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-secondary-theme hover:bg-[rgba(255,255,255,0.05)] transition-colors hover:text-primary-theme"
                                     >
                                         <User className="w-4 h-4" />
                                         Mi Perfil
@@ -535,15 +550,15 @@ export default function DashboardLayout() {
                                     <Link
                                         to="/app/settings"
                                         onClick={() => setShowUserMenu(false)}
-                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-charcoal/70 hover:bg-silk-beige/50 transition-colors"
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-secondary-theme hover:bg-[rgba(255,255,255,0.05)] transition-colors hover:text-primary-theme"
                                     >
                                         <Settings className="w-4 h-4" />
                                         Configuración
                                     </Link>
-                                    <div className="border-t border-silk-beige mt-1 pt-1">
+                                    <div className="border-t border-theme mt-1 pt-1">
                                         <button
                                             onClick={handleSignOut}
-                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                                         >
                                             <LogOut className="w-4 h-4" />
                                             Cerrar Sesión

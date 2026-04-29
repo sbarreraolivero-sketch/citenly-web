@@ -435,33 +435,33 @@ export default function Messages() {
         <div className="h-[calc(100vh-7rem)] flex flex-col md:flex-row gap-6 animate-fade-in">
             {/* Conversations List */}
             <div className={cn(
-                "w-full md:w-80 flex-shrink-0 card-soft flex-col h-full",
+                "w-full md:w-80 flex-shrink-0 card-premium flex-col h-full",
                 selectedPhone ? "hidden md:flex" : "flex"
             )}>
                 {/* Search Header */}
-                <div className="p-4 border-b border-silk-beige">
+                <div className="p-4 border-b border-theme">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="font-semibold text-charcoal">Mensajes</h2>
+                        <h2 className="font-semibold text-primary-theme">Mensajes</h2>
                         <button
                             onClick={() => {
                                 setLoading(true);
                                 fetchConversations();
                                 if (selectedPhone) fetchMessages();
                             }}
-                            className="p-1.5 text-charcoal/40 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors"
+                            className="p-1.5 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft transition-colors"
                             title="Actualizar"
                         >
                             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
                         </button>
                     </div>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme" />
                         <input
                             type="text"
                             placeholder="Buscar conversación..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-ivory border border-silk-beige rounded-soft text-sm placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                            className="w-full pl-10 pr-4 py-2.5 bg-secondary-theme border border-theme rounded-soft text-sm placeholder:text-secondary-theme focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/20 focus:border-[var(--accent-primary)]"
                         />
                     </div>
                 </div>
@@ -478,27 +478,27 @@ export default function Messages() {
                                 key={conversation.phone_number}
                                 onClick={() => setSelectedPhone(conversation.phone_number)}
                                 className={cn(
-                                    'w-full p-4 flex items-start gap-3 text-left transition-colors border-b border-silk-beige/50',
+                                    'w-full p-4 flex items-start gap-3 text-left transition-colors border-b border-theme',
                                     selectedPhone === conversation.phone_number
-                                        ? 'bg-primary-500/5'
-                                        : 'hover:bg-ivory'
+                                        ? 'bg-[var(--accent-primary)]/10'
+                                        : 'hover:bg-secondary-theme'
                                 )}
                             >
                                 <div className="relative flex-shrink-0">
-                                    <div className="w-12 h-12 bg-silk-beige rounded-full flex items-center justify-center">
-                                        <span className="text-sm font-medium text-charcoal">
+                                    <div className="w-12 h-12 bg-secondary-theme rounded-full flex items-center justify-center border border-theme">
+                                        <span className="text-sm font-medium text-primary-theme">
                                             {getInitials(conversation.patient_name || conversation.phone_number.slice(-4))}
                                         </span>
                                     </div>
                                     {conversation.unread_count > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--accent-primary)] text-white text-xs font-medium rounded-full flex items-center justify-center shadow-[0_0_10px_var(--glow)]">
                                             {conversation.unread_count}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
-                                        <p className="font-medium text-charcoal truncate">
+                                        <p className="font-medium text-primary-theme truncate">
                                             {conversation.patient_name || formatPhoneNumber(conversation.phone_number)}
                                         </p>
                                         <div className="flex items-center gap-2">
@@ -517,12 +517,12 @@ export default function Messages() {
                                                     <BellOff className="w-3.5 h-3.5 text-red-500" />
                                                 </span>
                                             )}
-                                            <span className="text-xs text-charcoal/40 flex-shrink-0">
+                                            <span className="text-xs text-secondary-theme flex-shrink-0">
                                                 {formatTime(conversation.last_message_at)}
                                             </span>
                                         </div>
                                     </div>
-                                    <p className="text-sm text-charcoal/50 mt-0.5 truncate">
+                                    <p className="text-sm text-secondary-theme mt-0.5 truncate">
                                         {conversation.last_message}
                                     </p>
                                 </div>
@@ -534,30 +534,30 @@ export default function Messages() {
 
             {/* Chat Area */}
             <div className={cn(
-                "flex-1 card-soft flex-col h-full relative overflow-hidden",
+                "flex-1 card-premium flex-col h-full relative overflow-hidden",
                 selectedPhone ? "flex" : "hidden md:flex"
             )}>
                 {selectedConversation ? (
                     <>
                         {/* Chat Header */}
-                        <div className="p-4 border-b border-silk-beige flex flex-wrap items-center justify-between gap-2">
+                        <div className="p-4 border-b border-theme flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => setSelectedPhone(null)}
-                                    className="p-1.5 -ml-1 text-charcoal/60 hover:text-charcoal md:hidden"
+                                    className="p-1.5 -ml-1 text-secondary-theme hover:text-primary-theme md:hidden"
                                 >
                                     <ArrowLeft className="w-6 h-6" />
                                 </button>
-                                <div className="w-10 h-10 bg-silk-beige rounded-full flex items-center justify-center">
-                                    <span className="text-sm font-medium text-charcoal">
+                                <div className="w-10 h-10 bg-secondary-theme rounded-full flex items-center justify-center border border-theme">
+                                    <span className="text-sm font-medium text-primary-theme">
                                         {getInitials(selectedConversation.patient_name || selectedConversation.phone_number.slice(-4))}
                                     </span>
                                 </div>
                                 <div>
-                                    <p className="font-medium text-charcoal">
+                                    <p className="font-medium text-primary-theme">
                                         {selectedConversation.patient_name || formatPhoneNumber(selectedConversation.phone_number)}
                                     </p>
-                                    <p className="text-sm text-charcoal/50 flex items-center gap-1">
+                                    <p className="text-sm text-secondary-theme flex items-center gap-1">
                                         <Phone className="w-3 h-3" />
                                         {formatPhoneNumber(selectedConversation.phone_number)}
                                     </p>
@@ -587,13 +587,13 @@ export default function Messages() {
                                         </>
                                     )}
                                 </button>
-                                <span className="text-xs text-charcoal/40">{selectedConversation.message_count} msgs</span>
+                                <span className="text-xs text-secondary-theme">{selectedConversation.message_count} msgs</span>
                                 <button
                                     onClick={() => {
                                         setSidebarPhone(selectedPhone)
                                         setShowSidebar(true)
                                     }}
-                                    className="p-2 text-charcoal/50 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors"
+                                    className="p-2 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft transition-colors"
                                 >
                                     <MoreVertical className="w-5 h-5" />
                                 </button>
@@ -607,7 +607,7 @@ export default function Messages() {
                                     <RefreshCw className="w-5 h-5 text-primary-500 animate-spin" />
                                 </div>
                             ) : messages.length === 0 ? (
-                                <div className="flex items-center justify-center h-full text-charcoal/40 text-sm">
+                                <div className="flex items-center justify-center h-full text-secondary-theme text-sm">
                                     No hay mensajes en esta conversación
                                 </div>
                             ) : (
@@ -615,7 +615,7 @@ export default function Messages() {
                                     <div key={dateKey}>
                                         {/* Date separator */}
                                         <div className="flex items-center justify-center my-4">
-                                            <span className="px-3 py-1 bg-ivory rounded-full text-xs text-charcoal/50 font-medium">
+                                            <span className="px-3 py-1 bg-secondary-theme border border-theme rounded-full text-xs text-secondary-theme font-medium">
                                                 {formatMessageDate(dayMessages[0].created_at)}
                                             </span>
                                         </div>
@@ -631,25 +631,23 @@ export default function Messages() {
                                                 >
                                                     {/* Inbound avatar */}
                                                     {message.direction === 'inbound' && (
-                                                        <div className="w-7 h-7 bg-silk-beige rounded-full flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                                                            <User className="w-3.5 h-3.5 text-charcoal/60" />
+                                                        <div className="w-7 h-7 bg-secondary-theme border border-theme rounded-full flex items-center justify-center mr-2 mt-1 flex-shrink-0">
+                                                            <User className="w-3.5 h-3.5 text-secondary-theme" />
                                                         </div>
                                                     )}
                                                     <div
                                                         className={cn(
                                                             'max-w-[70%] rounded-softer px-4 py-3',
                                                             message.direction === 'outbound'
-                                                                ? message.ai_generated
-                                                                    ? 'bg-primary-500 text-white'
-                                                                    : 'bg-primary-600 text-white'
-                                                                : 'bg-white border border-silk-beige text-charcoal'
+                                                                ? 'bg-[var(--gradient-primary)] text-white shadow-[0_0_15px_var(--glow)]'
+                                                                : 'bg-secondary-theme border border-theme text-primary-theme'
                                                         )}
                                                     >
                                                         <p className="text-sm whitespace-pre-line">{message.content}</p>
                                                         <p
                                                             className={cn(
                                                                 'text-xs mt-2 flex items-center gap-1',
-                                                                message.direction === 'outbound' ? 'text-white/60' : 'text-charcoal/40'
+                                                                message.direction === 'outbound' ? 'text-white/70' : 'text-secondary-theme'
                                                             )}
                                                         >
                                                             {new Date(message.created_at).toLocaleTimeString('es-MX', {
@@ -675,8 +673,8 @@ export default function Messages() {
                                                     </div>
                                                     {/* Outbound bot avatar */}
                                                     {message.direction === 'outbound' && message.ai_generated && (
-                                                        <div className="w-7 h-7 bg-primary-500/20 rounded-full flex items-center justify-center ml-2 mt-1 flex-shrink-0">
-                                                            <Bot className="w-3.5 h-3.5 text-primary-600" />
+                                                        <div className="w-7 h-7 bg-[var(--accent-primary)]/20 border border-[var(--accent-primary)]/30 rounded-full flex items-center justify-center ml-2 mt-1 flex-shrink-0">
+                                                            <Bot className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
                                                         </div>
                                                     )}
                                                 </div>
@@ -689,7 +687,7 @@ export default function Messages() {
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 border-t border-silk-beige">
+                        <div className="p-4 border-t border-theme">
                             <div className="flex items-end gap-3">
                                 <div className="flex-1 relative">
                                     <textarea
@@ -698,7 +696,7 @@ export default function Messages() {
                                         onKeyDown={handleKeyDown}
                                         placeholder="Escribe un mensaje..."
                                         rows={1}
-                                        className="w-full px-4 py-3 bg-ivory border border-silk-beige rounded-soft text-sm placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
+                                        className="w-full px-4 py-3 bg-secondary-theme border border-theme rounded-soft text-sm placeholder:text-secondary-theme focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/20 focus:border-[var(--accent-primary)] resize-none"
                                     />
                                 </div>
                                 <button
@@ -716,7 +714,7 @@ export default function Messages() {
                                 {selectedConversation.requires_human ? (
                                     <span className="text-red-500 font-medium">La IA está pausada. Reactívala arriba si deseas que el bot vuelva a responderle al paciente automáticamente.</span>
                                 ) : (
-                                    <span className="text-charcoal/40">El asistente IA responderá automáticamente cuando no escribas manualmente</span>
+                                    <span className="text-secondary-theme">El asistente IA responderá automáticamente cuando no escribas manualmente</span>
                                 )}
                             </p>
                         </div>

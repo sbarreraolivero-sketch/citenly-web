@@ -314,8 +314,8 @@ export default function KnowledgeBase() {
         return (
             <div className="flex items-center justify-center h-96">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-                    <p className="text-charcoal/50">Cargando base de conocimiento...</p>
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
+                    <p className="text-secondary-theme">Cargando base de conocimiento...</p>
                 </div>
             </div>
         )
@@ -324,17 +324,17 @@ export default function KnowledgeBase() {
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header Banner */}
-            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+            <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_30px_var(--glow)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
-                            <BookOpen className="w-7 h-7 text-charcoal" />
+                        <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg shrink-0">
+                            <BookOpen className="w-7 h-7 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Base de Conocimiento</h1>
-                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                            <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
                                 🧠 Entrena a tu Agente IA con datos sobre tu clínica, servicios y procedimientos para que atienda a tus pacientes, maneje recordatorios y resuelva dudas sin errores.
                             </p>
                         </div>
@@ -353,7 +353,7 @@ export default function KnowledgeBase() {
                         </label>
                         <button
                             onClick={openNewModal}
-                            className="bg-white text-primary-700 hover:bg-ivory px-5 py-2 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                            className="bg-white text-primary-theme hover:opacity-90 px-5 py-2 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
                         >
                             <Plus className="w-4 h-4" />
                             Nuevo Registro
@@ -363,40 +363,40 @@ export default function KnowledgeBase() {
             </div>
 
             {/* AI Agent Master Prompt Section */}
-            <div className="card-soft overflow-hidden">
+            <div className="card-premium overflow-hidden">
                 <button
                     onClick={() => setShowPromptSection(!showPromptSection)}
-                    className="w-full p-5 flex items-center justify-between hover:bg-ivory/50 transition-colors"
+                    className="w-full p-5 flex items-center justify-between hover:bg-secondary-theme transition-colors"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 bg-premium-gradient rounded-soft flex items-center justify-center shadow-md">
-                            <Bot className="w-5.5 h-5.5 text-charcoal" />
+                        <div className="w-11 h-11 bg-[var(--gradient-primary)] rounded-soft flex items-center justify-center shadow-lg">
+                            <Bot className="w-5.5 h-5.5 text-white" />
                         </div>
                         <div className="text-left">
-                            <h2 className="text-lg font-semibold text-charcoal flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-primary-theme flex items-center gap-2">
                                 Agente IA
                                 <Sparkles className="w-4 h-4 text-violet-500" />
                             </h2>
-                            <p className="text-sm text-charcoal/50">Master Prompt — Define la personalidad y comportamiento de tu asistente</p>
+                            <p className="text-sm text-secondary-theme">Master Prompt — Define la personalidad y comportamiento de tu asistente</p>
                         </div>
                     </div>
-                    <svg className={`w-5 h-5 text-charcoal/40 transition-transform ${showPromptSection ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    <svg className={`w-5 h-5 text-secondary-theme transition-transform ${showPromptSection ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
 
                 {showPromptSection && (
-                    <div className="px-5 pb-5 space-y-4 border-t border-silk-beige/50">
+                    <div className="px-5 pb-5 space-y-4 border-t border-theme">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-charcoal">Master Prompt (Personalidad)</label>
-                                    <span className="text-xs text-charcoal/40">{masterPrompt.length} caracteres</span>
+                                    <label className="text-sm font-medium text-primary-theme">Master Prompt (Personalidad)</label>
+                                    <span className="text-xs text-secondary-theme">{masterPrompt.length} caracteres</span>
                                 </div>
                                 <textarea
                                     value={masterPrompt}
                                     onChange={(e) => setMasterPrompt(e.target.value)}
                                     placeholder={`Ej: Eres un asistente amable y profesional para una clínica estética.\n\nReglas:\n- Responde de manera cordial, breve y clara\n- Nunca inventes horarios o servicios que no existan\n- Usa emojis con moderación para dar calidez\n- Siempre sugiere agendar una cita cuando el paciente muestre interés\n- Si no sabes algo, ofrece comunicar al paciente con el equipo humano`}
                                     rows={8}
-                                    className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                                    className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
                                 />
                                 <GuideBox 
                                     title="Guía: Personalidad de la IA" 
@@ -422,15 +422,15 @@ export default function KnowledgeBase() {
 
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-charcoal">Instrucciones de Comportamiento</label>
-                                    <span className="text-xs text-charcoal/60">{behaviorRules.length} caracteres</span>
+                                    <label className="text-sm font-medium text-primary-theme">Instrucciones de Comportamiento</label>
+                                    <span className="text-xs text-secondary-theme">{behaviorRules.length} caracteres</span>
                                 </div>
                                 <textarea
                                     value={behaviorRules}
                                     onChange={(e) => setBehaviorRules(e.target.value)}
                                     placeholder={`Instrucciones específicas de atención:\n- Saluda siempre preguntando el nombre si no lo sabes.\n- Si te preguntan por precios, redirige a la tabla de servicios.\n- Si el cliente está molesto, escala a un humano inmediatamente.`}
                                     rows={8}
-                                    className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                                    className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
                                 />
                                 <GuideBox 
                                     title="Guía: Reglas de Atención" 
@@ -463,15 +463,15 @@ export default function KnowledgeBase() {
 
                         <div className="mt-4">
                             <div className="flex items-center justify-between mb-2">
-                                <label className="text-sm font-medium text-charcoal">Datos Oficiales (Transferencia / Pagos)</label>
-                                <span className="text-xs text-charcoal/40">{transferDetails.length} caracteres</span>
+                                <label className="text-sm font-medium text-primary-theme">Datos Oficiales (Transferencia / Pagos)</label>
+                                <span className="text-xs text-secondary-theme">{transferDetails.length} caracteres</span>
                             </div>
                             <textarea
                                 value={transferDetails}
                                 onChange={(e) => setTransferDetails(e.target.value)}
                                 placeholder={`Ej: Datos para el abono de reserva ($15.000):\n- Nombre: [Nombre del Titular]\n- RUT: [12.345.678-9]\n- Banco: [Nombre del Banco]\n- Tipo de Cuenta: [Corriente/Vista]\n- Número de Cuenta: [1234567890]\n- Email: pagos@tuclínica.com`}
                                 rows={6}
-                                className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                                className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
                             />
                             <GuideBox 
                                 title="Guía: Pagos y Datos de Transferencia" 
@@ -500,7 +500,7 @@ export default function KnowledgeBase() {
                             <button
                                 onClick={handleSaveMasterPrompt}
                                 disabled={savingPrompt}
-                                className="btn-primary flex items-center gap-2"
+                                className="btn-premium-primary flex items-center gap-2"
                             >
                                 {savingPrompt ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -521,39 +521,39 @@ export default function KnowledgeBase() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="card-soft p-5 flex items-center justify-between group hover:shadow-premium transition-shadow">
+                <div className="card-premium p-5 flex items-center justify-between group hover:shadow-[0_0_20px_var(--glow)] transition-all">
                     <div>
-                        <p className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Total Documentos</p>
-                        <p className="text-3xl font-bold text-charcoal mt-1">{totalDocs}</p>
+                        <p className="text-xs font-medium text-secondary-theme uppercase tracking-wider">Total Documentos</p>
+                        <p className="text-3xl font-bold text-primary-theme mt-1">{totalDocs}</p>
                     </div>
-                    <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
                         <FileText className="w-5 h-5" />
                     </div>
                 </div>
-                <div className="card-soft p-5 flex items-center justify-between group hover:shadow-premium transition-shadow">
+                <div className="card-premium p-5 flex items-center justify-between group hover:shadow-[0_0_20px_var(--glow)] transition-all">
                     <div>
-                        <p className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Sincronizados</p>
-                        <p className="text-3xl font-bold text-emerald-600 mt-1">{syncedDocs}</p>
+                        <p className="text-xs font-medium text-secondary-theme uppercase tracking-wider">Sincronizados</p>
+                        <p className="text-3xl font-bold text-emerald-500 mt-1">{syncedDocs}</p>
                     </div>
-                    <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
                 </div>
-                <div className="card-soft p-5 flex items-center justify-between group hover:shadow-premium transition-shadow">
+                <div className="card-premium p-5 flex items-center justify-between group hover:shadow-[0_0_20px_var(--glow)] transition-all">
                     <div>
-                        <p className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Pendientes</p>
-                        <p className="text-3xl font-bold text-amber-600 mt-1">{pendingDocs}</p>
+                        <p className="text-xs font-medium text-secondary-theme uppercase tracking-wider">Pendientes</p>
+                        <p className="text-3xl font-bold text-amber-500 mt-1">{pendingDocs}</p>
                     </div>
-                    <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
                         <Clock className="w-5 h-5" />
                     </div>
                 </div>
-                <div className="card-soft p-5 flex items-center justify-between group hover:shadow-premium transition-shadow">
+                <div className="card-premium p-5 flex items-center justify-between group hover:shadow-[0_0_20px_var(--glow)] transition-all">
                     <div>
-                        <p className="text-xs font-medium text-charcoal/50 uppercase tracking-wider">Categorías</p>
-                        <p className="text-3xl font-bold text-violet-600 mt-1">{uniqueCategories}</p>
+                        <p className="text-xs font-medium text-secondary-theme uppercase tracking-wider">Categorías</p>
+                        <p className="text-3xl font-bold text-violet-500 mt-1">{uniqueCategories}</p>
                     </div>
-                    <div className="w-10 h-10 bg-violet-50 rounded-full flex items-center justify-center text-violet-500 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-violet-500/10 rounded-full flex items-center justify-center text-violet-500 group-hover:scale-110 transition-transform">
                         <Tag className="w-5 h-5" />
                     </div>
                 </div>
@@ -561,11 +561,11 @@ export default function KnowledgeBase() {
 
             {/* Search & Filters */}
             <div className="mt-8 mb-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-premium-gradient rounded-soft flex items-center justify-center shadow-sm shrink-0">
-                    <BookOpen className="w-5 h-5 text-charcoal" />
+                <div className="w-10 h-10 bg-[var(--gradient-primary)] rounded-soft flex items-center justify-center shadow-lg shrink-0">
+                    <BookOpen className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-bold text-charcoal">Documentos de Conocimiento</h2>
+                    <h2 className="text-lg font-bold text-primary-theme">Documentos de Conocimiento</h2>
                     <GuideBox 
                         title="Guía: Tu Biblioteca Técnica" 
                         summary="Usa esto como el cerebro estático de la IA."
@@ -586,22 +586,22 @@ export default function KnowledgeBase() {
                 </div>
             </div>
 
-            <div className="card-soft p-4">
+            <div className="card-premium p-4">
                 <div className="flex flex-col md:flex-row gap-3">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme" />
                         <input
                             type="text"
                             placeholder="Buscar por título o contenido..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input-soft w-full pl-10"
+                            className="input-premium w-full pl-10 placeholder:text-secondary-theme"
                         />
                     </div>
                     <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                        className="input-soft min-w-[180px]"
+                        className="input-premium min-w-[180px]"
                     >
                         <option value="all">Todas las categorías</option>
                         {CATEGORY_OPTIONS.map(opt => (
@@ -611,7 +611,7 @@ export default function KnowledgeBase() {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="input-soft min-w-[120px]"
+                        className="input-premium min-w-[120px]"
                     >
                         <option value="all">Todos</option>
                         <option value="active">Activos</option>
@@ -622,23 +622,23 @@ export default function KnowledgeBase() {
 
             {/* Documents Grid */}
             {filteredDocuments.length === 0 ? (
-                <div className="card-soft p-12 text-center">
+                <div className="card-premium p-12 text-center">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 bg-silk-beige/30 rounded-full flex items-center justify-center">
-                            <BookOpen className="w-8 h-8 text-charcoal/30" />
+                        <div className="w-16 h-16 bg-secondary-theme rounded-full flex items-center justify-center">
+                            <BookOpen className="w-8 h-8 text-secondary-theme" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-medium text-charcoal mb-1">
+                            <h3 className="text-lg font-medium text-primary-theme mb-1">
                                 {documents.length === 0 ? 'Sin documentos aún' : 'Sin resultados'}
                             </h3>
-                            <p className="text-charcoal/50 text-sm max-w-sm mx-auto">
+                            <p className="text-secondary-theme text-sm max-w-sm mx-auto">
                                 {documents.length === 0
                                     ? 'Crea tu primer documento de conocimiento para que tu agente IA pueda responder mejor a tus clientes.'
                                     : 'No se encontraron documentos con los filtros seleccionados.'}
                             </p>
                         </div>
                         {documents.length === 0 && (
-                            <button onClick={openNewModal} className="btn-primary flex items-center gap-2 mt-2">
+                            <button onClick={openNewModal} className="btn-premium-primary flex items-center gap-2 mt-2">
                                 <Plus className="w-4 h-4" />
                                 Crear primer documento
                             </button>
@@ -655,7 +655,7 @@ export default function KnowledgeBase() {
                             <div
                                 key={doc.id}
                                 className={cn(
-                                    'card-soft p-5 hover:shadow-premium transition-all duration-200 cursor-pointer group relative',
+                                    'card-premium p-5 hover:shadow-[0_0_20px_var(--glow)] transition-all duration-200 cursor-pointer group relative',
                                     doc.status === 'inactive' && 'opacity-60'
                                 )}
                                 onClick={() => openEditModal(doc)}
@@ -681,7 +681,7 @@ export default function KnowledgeBase() {
                                 </p>
 
                                 {/* Footer */}
-                                <div className="flex items-center justify-between pt-3 border-t border-silk-beige/50">
+                                <div className="flex items-center justify-between pt-3 border-t border-theme">
                                     <div className="flex items-center gap-1.5">
                                         {doc.sync_status === 'synced' ? (
                                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -690,7 +690,7 @@ export default function KnowledgeBase() {
                                         )}
                                         <span className={cn(
                                             'text-xs font-medium',
-                                            doc.sync_status === 'synced' ? 'text-emerald-600' : 'text-amber-600'
+                                            doc.sync_status === 'synced' ? 'text-emerald-500' : 'text-amber-500'
                                         )}>
                                             {doc.sync_status === 'synced' ? 'Sincronizado' : 'Pendiente'}
                                         </span>
@@ -698,8 +698,8 @@ export default function KnowledgeBase() {
                                     <span className={cn(
                                         'text-xs font-medium px-2 py-0.5 rounded-full',
                                         doc.status === 'active'
-                                            ? 'bg-emerald-50 text-emerald-600'
-                                            : 'bg-gray-100 text-gray-500'
+                                            ? 'bg-emerald-500/10 text-emerald-500'
+                                            : 'bg-secondary-theme text-secondary-theme'
                                     )}>
                                         {doc.status === 'active' ? 'Activo' : 'Inactivo'}
                                     </span>
@@ -712,7 +712,7 @@ export default function KnowledgeBase() {
                                             e.stopPropagation()
                                             handleToggleStatus(doc)
                                         }}
-                                        className="p-1.5 rounded-soft hover:bg-ivory transition-colors"
+                                        className="p-1.5 rounded-soft hover:bg-secondary-theme transition-colors"
                                         title={doc.status === 'active' ? 'Desactivar' : 'Activar'}
                                     >
                                         {doc.status === 'active' ? (
@@ -726,10 +726,10 @@ export default function KnowledgeBase() {
                                             e.stopPropagation()
                                             setDeleteConfirm(doc.id)
                                         }}
-                                        className="p-1.5 rounded-soft hover:bg-red-50 transition-colors"
+                                        className="p-1.5 rounded-soft hover:bg-red-500/10 transition-colors"
                                         title="Eliminar"
                                     >
-                                        <Trash2 className="w-4 h-4 text-red-400 hover:text-red-600" />
+                                        <Trash2 className="w-4 h-4 text-red-400 hover:text-red-500" />
                                     </button>
                                 </div>
                             </div>
@@ -740,24 +740,24 @@ export default function KnowledgeBase() {
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-sm animate-scale-in p-6">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                    <div className="bg-primary-theme rounded-softer border border-theme shadow-[0_0_50px_rgba(0,0,0,0.3)] w-full max-w-sm animate-scale-in p-6">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
+                            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center shadow-inner">
+                                <AlertCircle className="w-6 h-6 text-red-500" />
                             </div>
-                            <h3 className="text-lg font-semibold text-charcoal">¿Eliminar documento?</h3>
+                            <h3 className="text-xl font-bold text-primary-theme">¿Eliminar documento?</h3>
                         </div>
-                        <p className="text-sm text-charcoal/60 mb-6">
+                        <p className="text-sm text-secondary-theme mb-6 leading-relaxed">
                             Esta acción no se puede deshacer. El documento será eliminado permanentemente de la base de conocimiento.
                         </p>
                         <div className="flex justify-end gap-3">
-                            <button onClick={() => setDeleteConfirm(null)} className="btn-ghost">
+                            <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 text-secondary-theme hover:text-primary-theme transition-colors font-medium">
                                 Cancelar
                             </button>
                             <button
                                 onClick={() => handleDelete(deleteConfirm)}
-                                className="px-4 py-2 bg-red-500 text-white rounded-soft text-sm font-medium hover:bg-red-600 transition-colors"
+                                className="px-6 py-2 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-95"
                             >
                                 Eliminar
                             </button>
@@ -768,34 +768,34 @@ export default function KnowledgeBase() {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-2xl animate-scale-in max-h-[90vh] flex flex-col">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                    <div className="bg-primary-theme rounded-softer border border-theme shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-2xl animate-scale-in max-h-[90vh] flex flex-col">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-silk-beige">
+                        <div className="flex items-center justify-between p-6 border-b border-theme">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center">
+                                <div className="w-12 h-12 bg-[var(--gradient-primary)] rounded-full flex items-center justify-center shadow-lg">
                                     {editingDoc ? (
-                                        <Edit3 className="w-5 h-5 text-primary-500" />
+                                        <Edit3 className="w-6 h-6 text-white" />
                                     ) : (
-                                        <Plus className="w-5 h-5 text-primary-500" />
+                                        <Plus className="w-6 h-6 text-white" />
                                     )}
                                 </div>
-                                <h2 className="text-xl font-bold text-charcoal">
+                                <h2 className="text-2xl font-bold text-primary-theme">
                                     {editingDoc ? 'Editar Documento' : 'Nuevo Documento'}
                                 </h2>
                             </div>
                             <button
                                 onClick={closeModal}
-                                className="p-2 hover:bg-ivory rounded-soft transition-colors"
+                                className="p-2 hover:bg-secondary-theme rounded-full transition-colors text-secondary-theme"
                             >
-                                <X className="w-5 h-5 text-charcoal/50" />
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+                        <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-2">
+                                <label className="block text-sm font-black uppercase tracking-widest text-secondary-theme mb-2">
                                     Título *
                                 </label>
                                 <input
@@ -803,19 +803,19 @@ export default function KnowledgeBase() {
                                     value={formTitle}
                                     onChange={(e) => setFormTitle(e.target.value)}
                                     placeholder="Ej: Precios y Planes"
-                                    className="input-soft w-full"
+                                    className="input-premium w-full"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-sm font-black uppercase tracking-widest text-secondary-theme mb-2">
                                         Categoría
                                     </label>
                                     <select
                                         value={formCategory}
                                         onChange={(e) => setFormCategory(e.target.value)}
-                                        className="input-soft w-full"
+                                        className="input-premium w-full"
                                     >
                                         {CATEGORY_OPTIONS.map(opt => (
                                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -823,13 +823,13 @@ export default function KnowledgeBase() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-sm font-black uppercase tracking-widest text-secondary-theme mb-2">
                                         Estado
                                     </label>
                                     <select
                                         value={formStatus}
                                         onChange={(e) => setFormStatus(e.target.value as 'active' | 'inactive')}
-                                        className="input-soft w-full"
+                                        className="input-premium w-full"
                                     >
                                         <option value="active">Activo</option>
                                         <option value="inactive">Inactivo</option>
@@ -838,7 +838,7 @@ export default function KnowledgeBase() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-2">
+                                <label className="block text-sm font-black uppercase tracking-widest text-secondary-theme mb-2">
                                     Contenido *
                                 </label>
                                 <textarea
@@ -846,18 +846,18 @@ export default function KnowledgeBase() {
                                     onChange={(e) => setFormContent(e.target.value)}
                                     placeholder="Escribe aquí la información que el agente IA utilizará para responder a los clientes...&#10;&#10;Ejemplo:&#10;- Plan Básico: $99/mes — Incluye 100 conversaciones&#10;- Plan Pro: $199/mes — Incluye 500 conversaciones&#10;- Plan Enterprise: Contactar para precio"
                                     rows={12}
-                                    className="input-soft w-full resize-none font-mono text-sm leading-relaxed"
+                                    className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
                                 />
-                                <p className="text-xs text-charcoal/40 mt-2">
+                                <p className="text-xs text-secondary-theme/60 mt-2">
                                     💡 Escribe la información de forma clara y estructurada. El agente IA usará este texto como referencia para responder consultas.
                                 </p>
                             </div>
 
                             {/* File upload inside modal */}
-                            <div className="p-4 border-2 border-dashed border-silk-beige rounded-soft bg-ivory/30 hover:bg-ivory/60 transition-colors">
+                            <div className="p-4 border-2 border-dashed border-theme rounded-softer bg-secondary-theme/30 hover:bg-secondary-theme/50 transition-colors">
                                 <label className="flex flex-col items-center gap-2 cursor-pointer">
-                                    <Upload className="w-6 h-6 text-charcoal/40" />
-                                    <span className="text-sm text-charcoal/60">
+                                    <Upload className="w-6 h-6 text-secondary-theme" />
+                                    <span className="text-sm text-secondary-theme">
                                         O arrastra un archivo de texto (.txt, .md, .csv, .json)
                                     </span>
                                     <input
@@ -871,7 +871,7 @@ export default function KnowledgeBase() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex justify-between items-center p-6 border-t border-silk-beige">
+                        <div className="flex justify-between items-center p-6 border-t border-theme">
                             <div>
                                 {editingDoc && (
                                     <button
@@ -879,20 +879,20 @@ export default function KnowledgeBase() {
                                             setDeleteConfirm(editingDoc.id)
                                             closeModal()
                                         }}
-                                        className="text-sm text-red-500 hover:text-red-700 font-medium underline decoration-red-200 hover:decoration-red-500 underline-offset-4 transition-all"
+                                        className="text-sm text-red-500 hover:text-red-600 font-bold underline decoration-red-200 hover:decoration-red-500 underline-offset-4 transition-all"
                                     >
                                         Eliminar documento
                                     </button>
                                 )}
                             </div>
                             <div className="flex gap-3">
-                                <button onClick={closeModal} className="btn-ghost">
+                                <button onClick={closeModal} className="px-4 py-2 text-secondary-theme hover:text-primary-theme transition-colors font-medium">
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={saving || !formTitle.trim() || !formContent.trim()}
-                                    className="btn-primary flex items-center gap-2"
+                                    className="btn-premium-primary flex items-center gap-2"
                                 >
                                     {saving ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>

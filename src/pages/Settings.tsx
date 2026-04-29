@@ -1112,19 +1112,19 @@ export default function Settings() {
     }
 
     return (
-        <div className="animate-fade-in relative min-h-[calc(100vh-7rem)] bg-gradient-to-br from-accent-200 to-accent-100 p-4 md:p-8 rounded-[2rem] shadow-soft-xl border border-white/60">
+        <div className="animate-fade-in relative min-h-[calc(100vh-7rem)] p-4 md:p-8">
             <div className="flex flex-col md:flex-row gap-6 md:gap-8">
 
                 {/* Mobile Content Header (Back Button) */}
                 {!showMobileList && (
-                    <div className="md:hidden flex items-center gap-3 p-4 bg-white rounded-soft shadow-premium">
+                    <div className="md:hidden flex items-center gap-3 p-4 bg-primary-theme rounded-soft border border-theme">
                         <button
                             onClick={() => setShowMobileList(true)}
-                            className="p-1.5 -ml-1 text-charcoal/60 hover:text-charcoal hover:bg-ivory rounded-full transition-colors"
+                            className="p-1.5 -ml-1 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-full transition-colors"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <h2 className="font-semibold text-charcoal">
+                        <h2 className="font-semibold text-primary-theme">
                             {availableTabs.find(t => t.id === activeTab)?.label}
                         </h2>
                     </div>
@@ -1135,7 +1135,7 @@ export default function Settings() {
                     "w-full md:w-64 flex-shrink-0",
                     !showMobileList && "hidden md:block" // hide on mobile if viewing content
                 )}>
-                    <div className="card-soft p-2">
+                    <div className="card-premium p-2">
                         {availableTabs.map((tab) => (
                             <button
                                 key={tab.id}
@@ -1146,8 +1146,8 @@ export default function Settings() {
                                 className={cn(
                                     'w-full flex items-center gap-3 px-4 py-3 rounded-soft text-left transition-colors',
                                     activeTab === tab.id && !showMobileList
-                                        ? 'bg-primary-500/10 text-primary-600 font-medium'
-                                        : 'text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal'
+                                        ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold border border-[var(--accent-primary)]/20'
+                                        : 'text-secondary-theme hover:bg-secondary-theme hover:text-primary-theme'
                                 )}
                             >
                                 <tab.icon className="w-5 h-5" />
@@ -1173,26 +1173,26 @@ export default function Settings() {
                         <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
                             <MyProfile />
 
-                            <div className="card-soft p-6 space-y-4 max-w-3xl w-full">
-                                <h3 className="font-medium text-charcoal">Seguridad</h3>
+                            <div className="card-premium p-6 space-y-4 max-w-3xl w-full">
+                                <h3 className="font-medium text-primary-theme">Seguridad</h3>
                                 <div className="space-y-4 w-full">
                                     <div className="w-full">
-                                        <label className="block text-sm font-medium text-charcoal mb-2">Nueva Contraseña</label>
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">Nueva Contraseña</label>
                                         <input
                                             type="password"
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
-                                            className="input-soft w-full max-w-md"
+                                            className="input-premium w-full max-w-md"
                                             placeholder="Ingresa tu nueva contraseña"
                                         />
                                     </div>
                                     <div className="w-full">
-                                        <label className="block text-sm font-medium text-charcoal mb-2">Confirmar Contraseña</label>
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">Confirmar Contraseña</label>
                                         <input
                                             type="password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="input-soft w-full max-w-md"
+                                            className="input-premium w-full max-w-md"
                                             placeholder="Repite tu nueva contraseña"
                                         />
                                     </div>
@@ -1208,7 +1208,7 @@ export default function Settings() {
                                         <button
                                             onClick={handleUpdatePassword}
                                             disabled={savingPassword || !newPassword}
-                                            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="btn-premium-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {savingPassword ? (
                                                 <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -1231,17 +1231,17 @@ export default function Settings() {
                     {/* Clinic Settings */}
                     {activeTab === 'clinic' && (
                         <div className="space-y-6">
-                            <div className="card-soft p-6">
-                                <h2 className="text-lg font-semibold text-charcoal mb-6">Información de la Clínica</h2>
+                            <div className="card-premium p-6">
+                                <h2 className="text-lg font-semibold text-primary-theme mb-6">Información de la Clínica</h2>
 
-                                <div className="bg-silk-beige/20 p-4 rounded-soft border border-silk-beige/30 mb-8">
+                                <div className="bg-secondary-theme p-4 rounded-soft border border-theme mb-8">
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="w-10 h-10 bg-primary-500/10 rounded-full flex items-center justify-center">
                                             {businessModel === 'physical' ? <Building2 className="w-5 h-5 text-primary-600" /> : businessModel === 'mobile' ? <Zap className="w-5 h-5 text-primary-600" /> : <RefreshCw className="w-5 h-5 text-primary-600" />}
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-bold text-charcoal leading-none mb-1">Modelo de Atención</h3>
-                                            <p className="text-xs text-charcoal/50">Define cómo opera tu clínica para optimizar al asistente IA</p>
+                                            <h3 className="text-sm font-bold text-primary-theme leading-none mb-1">Modelo de Atención</h3>
+                                            <p className="text-xs text-primary-theme/50">Define cómo opera tu clínica para optimizar al asistente IA</p>
                                         </div>
                                     </div>
                                     
@@ -1252,15 +1252,15 @@ export default function Settings() {
                                                 "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
                                                 businessModel === 'physical' 
                                                     ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
-                                                    : "bg-white/40 border-silk-beige hover:border-primary-200"
+                                                    : "bg-white/40 border-theme hover:border-primary-200"
                                             )}
                                         >
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'physical' ? "bg-primary-500 text-white" : "bg-silk-beige/40 text-charcoal/40")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'physical' ? "bg-primary-500 text-white" : "bg-secondary-theme/40 text-primary-theme/40")}>
                                                 <Building2 className="w-4 h-4" />
                                             </div>
                                             <div className="text-center">
-                                                <p className={cn("text-[11px] font-bold", businessModel === 'physical' ? "text-primary-700" : "text-charcoal")}>Físico</p>
-                                                <p className="text-[9px] text-charcoal/40">Local Fijo</p>
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'physical' ? "text-primary-700" : "text-primary-theme")}>Físico</p>
+                                                <p className="text-[9px] text-primary-theme/40">Local Fijo</p>
                                             </div>
                                         </button>
 
@@ -1270,15 +1270,15 @@ export default function Settings() {
                                                 "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
                                                 businessModel === 'mobile' 
                                                     ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
-                                                    : "bg-white/40 border-silk-beige hover:border-primary-200"
+                                                    : "bg-white/40 border-theme hover:border-primary-200"
                                             )}
                                         >
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'mobile' ? "bg-primary-500 text-white" : "bg-silk-beige/40 text-charcoal/40")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'mobile' ? "bg-primary-500 text-white" : "bg-secondary-theme/40 text-primary-theme/40")}>
                                                 <Zap className="w-4 h-4" />
                                             </div>
                                             <div className="text-center">
-                                                <p className={cn("text-[11px] font-bold", businessModel === 'mobile' ? "text-primary-700" : "text-charcoal")}>Móvil</p>
-                                                <p className="text-[9px] text-charcoal/40">A Domicilio</p>
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'mobile' ? "text-primary-700" : "text-primary-theme")}>Móvil</p>
+                                                <p className="text-[9px] text-primary-theme/40">A Domicilio</p>
                                             </div>
                                         </button>
 
@@ -1288,15 +1288,15 @@ export default function Settings() {
                                                 "flex flex-col items-center gap-2 p-3 rounded-soft border transition-all",
                                                 businessModel === 'hybrid' 
                                                     ? "bg-white border-primary-500 shadow-sm ring-1 ring-primary-500" 
-                                                    : "bg-white/40 border-silk-beige hover:border-primary-200"
+                                                    : "bg-white/40 border-theme hover:border-primary-200"
                                             )}
                                         >
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'hybrid' ? "bg-primary-500 text-white" : "bg-silk-beige/40 text-charcoal/40")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", businessModel === 'hybrid' ? "bg-primary-500 text-white" : "bg-secondary-theme/40 text-primary-theme/40")}>
                                                 <RefreshCw className="w-4 h-4" />
                                             </div>
                                             <div className="text-center">
-                                                <p className={cn("text-[11px] font-bold", businessModel === 'hybrid' ? "text-primary-700" : "text-charcoal")}>Híbrido</p>
-                                                <p className="text-[9px] text-charcoal/40">Ambos</p>
+                                                <p className={cn("text-[11px] font-bold", businessModel === 'hybrid' ? "text-primary-700" : "text-primary-theme")}>Híbrido</p>
+                                                <p className="text-[9px] text-primary-theme/40">Ambos</p>
                                             </div>
                                         </button>
                                     </div>
@@ -1304,37 +1304,37 @@ export default function Settings() {
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Especialidad de la Clínica
                                         </label>
                                         <select
                                             value={specialty}
                                             onChange={(e) => setSpecialty(e.target.value as any)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         >
                                             <option value="aesthetic">🎀 Estética y Bienestar</option>
                                             <option value="dental">🦷 Odontología / Dental</option>
                                             <option value="general">🏥 Medicina General / Otros</option>
                                         </select>
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             Ajusta la interfaz y las herramientas según tu rubro
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Nombre de la Clínica
                                         </label>
                                         <input
                                             type="text"
                                             value={clinicName}
                                             onChange={(e) => setClinicName(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Dirección del Establecimiento
                                         </label>
                                         <input
@@ -1342,15 +1342,15 @@ export default function Settings() {
                                             placeholder="Ej: Av. Principal 123, Col. Centro, Ciudad"
                                             value={clinicAddress}
                                             onChange={(e) => setClinicAddress(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         />
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             Esta dirección será utilizada por el asistente IA para informar a los clientes
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Referencias de la Dirección
                                         </label>
                                         <input
@@ -1358,15 +1358,15 @@ export default function Settings() {
                                             placeholder="Ej: A un costado de la farmacia, frente al parque..."
                                             value={addressReferences}
                                             onChange={(e) => setAddressReferences(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         />
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             Ayuda a tus clientes a llegar más fácilmente
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Enlace de Google Maps
                                         </label>
                                         <input
@@ -1374,16 +1374,16 @@ export default function Settings() {
                                             placeholder="https://goo.gl/maps/..."
                                             value={googleMapsUrl}
                                             onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         />
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             El enlace directo para que abran el mapa en su celular
                                         </p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
+                                            <label className="flex items-center gap-2 text-sm font-medium text-primary-theme mb-2">
                                                 <Instagram className="w-4 h-4 text-pink-600" />
                                                 Instagram
                                             </label>
@@ -1392,11 +1392,11 @@ export default function Settings() {
                                                 placeholder="https://instagram.com/..."
                                                 value={instagramUrl}
                                                 onChange={(e) => setInstagramUrl(e.target.value)}
-                                                className="input-soft"
+                                                className="input-premium"
                                             />
                                         </div>
                                         <div>
-                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
+                                            <label className="flex items-center gap-2 text-sm font-medium text-primary-theme mb-2">
                                                 <Facebook className="w-4 h-4 text-blue-600" />
                                                 Facebook
                                             </label>
@@ -1405,12 +1405,12 @@ export default function Settings() {
                                                 placeholder="https://facebook.com/..."
                                                 value={facebookUrl}
                                                 onChange={(e) => setFacebookUrl(e.target.value)}
-                                                className="input-soft"
+                                                className="input-premium"
                                             />
                                         </div>
                                         <div>
-                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
-                                                <Music className="w-4 h-4 text-charcoal/60" />
+                                            <label className="flex items-center gap-2 text-sm font-medium text-primary-theme mb-2">
+                                                <Music className="w-4 h-4 text-primary-theme/60" />
                                                 TikTok
                                             </label>
                                             <input
@@ -1418,12 +1418,12 @@ export default function Settings() {
                                                 placeholder="https://tiktok.com/@..."
                                                 value={tiktokUrl}
                                                 onChange={(e) => setTiktokUrl(e.target.value)}
-                                                className="input-soft"
+                                                className="input-premium"
                                             />
                                         </div>
                                         <div>
-                                            <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-2">
-                                                <Globe className="w-4 h-4 text-charcoal/60" />
+                                            <label className="flex items-center gap-2 text-sm font-medium text-primary-theme mb-2">
+                                                <Globe className="w-4 h-4 text-primary-theme/60" />
                                                 Sitio Web
                                             </label>
                                             <input
@@ -1431,19 +1431,19 @@ export default function Settings() {
                                                 placeholder="https://www.tuclinica.com"
                                                 value={websiteUrl}
                                                 onChange={(e) => setWebsiteUrl(e.target.value)}
-                                                className="input-soft"
+                                                className="input-premium"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Zona Horaria
                                         </label>
                                         <select
                                             value={timezone}
                                             onChange={(e) => setTimezone(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         >
                                             <optgroup label="🌎 América">
                                                 <option value="America/New_York">Nueva York (GMT-5)</option>
@@ -1493,13 +1493,13 @@ export default function Settings() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">
                                             Moneda
                                         </label>
                                         <select
                                             value={currency}
                                             onChange={(e) => setCurrency(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         >
                                             <optgroup label="🌎 América">
                                                 <option value="USD">🇺🇸 USD - Dólar estadounidense</option>
@@ -1520,7 +1520,7 @@ export default function Settings() {
 
                                 {/* Clinic Templates */}
                                 <div className="mt-8 space-y-6">
-                                    <h3 className="text-sm font-semibold text-charcoal mb-4">💬 Plantillas de la Clínica</h3>
+                                    <h3 className="text-sm font-semibold text-primary-theme mb-4">💬 Plantillas de la Clínica</h3>
 
                                     <TemplateSelector
                                         label="Plantilla: Encuesta de Satisfacción"
@@ -1537,11 +1537,11 @@ export default function Settings() {
                                     />
                                 </div>
 
-                                <div className="mt-6 pt-6 border-t border-silk-beige flex items-center gap-4">
+                                <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
                                     <button
                                         onClick={handleSaveClinic}
                                         disabled={savingClinic}
-                                        className="btn-primary flex items-center gap-2"
+                                        className="btn-premium-primary flex items-center gap-2"
                                     >
                                         {savingClinic ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -1559,16 +1559,16 @@ export default function Settings() {
                             </div>
 
                             {/* Services */}
-                            <div className="card-soft p-6">
+                            <div className="card-premium p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-lg font-semibold text-charcoal">Servicios</h2>
+                                    <h2 className="text-lg font-semibold text-primary-theme">Servicios</h2>
                                     <button
                                         onClick={() => {
                                             setAssignedProfessionals({})
                                             setPrimaryProfessional('')
                                             setShowServiceModal(true)
                                         }}
-                                        className="btn-ghost flex items-center gap-2 text-primary-500"
+                                        className="btn-premium-secondary flex items-center gap-2 text-primary-500"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Agregar Servicio
@@ -1579,11 +1579,11 @@ export default function Settings() {
                                     {services.map((service) => (
                                         <div
                                             key={service.id}
-                                            className="flex items-center gap-4 p-4 bg-ivory rounded-soft"
+                                            className="flex items-center gap-4 p-4 bg-secondary-theme rounded-soft"
                                         >
                                             <div className="flex-1">
-                                                <p className="font-medium text-charcoal">{service.name}</p>
-                                                <p className="text-sm text-charcoal/50">
+                                                <p className="font-medium text-primary-theme">{service.name}</p>
+                                                <p className="text-sm text-primary-theme/50">
                                                     {service.duration} minutos · {currencySymbols[currency]}{service.price.toLocaleString()} {currency}
                                                 </p>
                                                 {service.upselling?.enabled && (
@@ -1596,14 +1596,14 @@ export default function Settings() {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => handleEditService(service)}
-                                                    className="p-2 text-charcoal/40 hover:text-primary-500 hover:bg-primary-50 rounded-soft transition-colors"
+                                                    className="p-2 text-primary-theme/40 hover:text-primary-500 hover:bg-primary-50 rounded-soft transition-colors"
                                                     title="Editar servicio"
                                                 >
                                                     <CreditCard className="w-4 h-4" /> {/* Using generic icon, maybe Edit/Pencil is better but relying on import */}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteService(service.id)}
-                                                    className="p-2 text-charcoal/40 hover:text-red-500 hover:bg-red-50 rounded-soft transition-colors"
+                                                    className="p-2 text-primary-theme/40 hover:text-red-500 hover:bg-red-50 rounded-soft transition-colors"
                                                     title="Eliminar servicio"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -1612,7 +1612,7 @@ export default function Settings() {
                                         </div>
                                     ))}
                                     {services.length === 0 && (
-                                        <p className="text-center text-charcoal/50 py-8">No hay servicios configurados. Agrega tu primer servicio.</p>
+                                        <p className="text-center text-primary-theme/50 py-8">No hay servicios configurados. Agrega tu primer servicio.</p>
                                     )}
                                 </div>
                             </div>
@@ -1622,7 +1622,7 @@ export default function Settings() {
                                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
                                     <div className="bg-white rounded-soft p-6 w-full max-w-md shadow-xl">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-semibold text-charcoal">{editingServiceId ? 'Editar Servicio' : 'Nuevo Servicio'}</h3>
+                                            <h3 className="text-lg font-semibold text-primary-theme">{editingServiceId ? 'Editar Servicio' : 'Nuevo Servicio'}</h3>
                                             <button
                                                 onClick={() => {
                                                     setShowServiceModal(false);
@@ -1634,43 +1634,43 @@ export default function Settings() {
                                                     setNewUpsellDays('7');
                                                     setNewUpsellMessage('');
                                                 }}
-                                                className="p-2 hover:bg-silk-beige rounded-soft transition-colors"
+                                                className="p-2 hover:bg-secondary-theme rounded-soft transition-colors"
                                             >
-                                                <X className="w-5 h-5 text-charcoal/60" />
+                                                <X className="w-5 h-5 text-primary-theme/60" />
                                             </button>
                                         </div>
 
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-charcoal mb-2">Nombre del Servicio</label>
+                                                <label className="block text-sm font-medium text-primary-theme mb-2">Nombre del Servicio</label>
                                                 <input
                                                     type="text"
                                                     placeholder="Ej: Limpieza Facial Profunda"
                                                     value={newServiceName}
                                                     onChange={(e) => setNewServiceName(e.target.value)}
-                                                    className="input-soft"
+                                                    className="input-premium"
                                                 />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-2">Duración (min)</label>
+                                                    <label className="block text-sm font-medium text-primary-theme mb-2">Duración (min)</label>
                                                     <input
                                                         type="number"
                                                         min="5"
                                                         step="5"
                                                         value={newServiceDuration}
                                                         onChange={(e) => setNewServiceDuration(e.target.value)}
-                                                        className="input-soft"
+                                                        className="input-premium"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-charcoal mb-2">Precio ({currency})</label>
+                                                    <label className="block text-sm font-medium text-primary-theme mb-2">Precio ({currency})</label>
                                                     <input
                                                         type="number"
                                                         min="0"
                                                         value={newServicePrice}
                                                         onChange={(e) => setNewServicePrice(e.target.value)}
-                                                        className="input-soft"
+                                                        className="input-premium"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -1678,14 +1678,14 @@ export default function Settings() {
                                         </div>
 
                                         {/* Upselling Section */}
-                                        <div className="border-t border-silk-beige pt-4 mt-4">
+                                        <div className="border-t border-theme pt-4 mt-4">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <p className="text-sm font-medium text-charcoal flex items-center gap-2">
+                                                    <p className="text-sm font-medium text-primary-theme flex items-center gap-2">
                                                         <Zap className="w-4 h-4 text-primary-500" />
                                                         Upselling Automático
                                                     </p>
-                                                    <p className="text-xs text-charcoal/50">Mensaje de seguimiento post-tratamiento</p>
+                                                    <p className="text-xs text-primary-theme/50">Mensaje de seguimiento post-tratamiento</p>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -1699,24 +1699,24 @@ export default function Settings() {
                                             {newUpsellEnabled && (
                                                 <div className="space-y-3 animate-fade-in">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-charcoal mb-2">Días después del tratamiento</label>
+                                                        <label className="block text-sm font-medium text-primary-theme mb-2">Días después del tratamiento</label>
                                                         <input
                                                             type="number"
                                                             min="1"
                                                             max="365"
                                                             value={newUpsellDays}
                                                             onChange={(e) => setNewUpsellDays(e.target.value)}
-                                                            className="input-soft"
+                                                            className="input-premium"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-charcoal mb-2">Mensaje de seguimiento</label>
+                                                        <label className="block text-sm font-medium text-primary-theme mb-2">Mensaje de seguimiento</label>
                                                         <textarea
                                                             placeholder="Ej: ¿Te gustaría agendar tu próxima sesión? Los mejores resultados se obtienen con tratamientos periódicos."
                                                             value={newUpsellMessage}
                                                             onChange={(e) => setNewUpsellMessage(e.target.value)}
                                                             rows={3}
-                                                            className="input-soft resize-none"
+                                                            className="input-premium resize-none"
                                                         />
                                                     </div>
                                                 </div>
@@ -1725,12 +1725,12 @@ export default function Settings() {
 
                                         {/* Professional Assignment Section */}
                                         {clinicProfessionals.length > 0 && (
-                                            <div className="border-t border-silk-beige pt-4 mt-4">
-                                                <p className="text-sm font-medium text-charcoal flex items-center gap-2 mb-3">
+                                            <div className="border-t border-theme pt-4 mt-4">
+                                                <p className="text-sm font-medium text-primary-theme flex items-center gap-2 mb-3">
                                                     <Users className="w-4 h-4 text-primary-500" />
                                                     Profesionales Asignados
                                                 </p>
-                                                <p className="text-xs text-charcoal/50 mb-3">Selecciona quién realiza este servicio. Marca ⭐ al profesional principal.</p>
+                                                <p className="text-xs text-primary-theme/50 mb-3">Selecciona quién realiza este servicio. Marca ⭐ al profesional principal.</p>
                                                 <div className="space-y-2">
                                                     {clinicProfessionals.map((prof: any) => {
                                                         const isAssigned = assignedProfessionals[prof.member_id] || false
@@ -1763,7 +1763,7 @@ export default function Settings() {
                                                                     className="w-3 h-3 rounded-full flex-shrink-0"
                                                                     style={{ backgroundColor: prof.color || '#8B5CF6' }}
                                                                 />
-                                                                <span className={cn("text-sm flex-1", isAssigned ? "text-charcoal font-medium" : "text-charcoal/60")}>
+                                                                <span className={cn("text-sm flex-1", isAssigned ? "text-primary-theme font-medium" : "text-primary-theme/60")}>
                                                                     {prof.first_name || ''} {prof.last_name || ''}
                                                                     {prof.job_title ? ` · ${prof.job_title}` : ''}
                                                                 </span>
@@ -1776,7 +1776,7 @@ export default function Settings() {
                                                                         }}
                                                                         className={cn(
                                                                             "text-sm transition-colors",
-                                                                            isPrimary ? "text-amber-500" : "text-charcoal/20 hover:text-amber-400"
+                                                                            isPrimary ? "text-amber-500" : "text-primary-theme/20 hover:text-amber-400"
                                                                         )}
                                                                         title={isPrimary ? 'Profesional principal' : 'Marcar como principal'}
                                                                     >
@@ -1797,14 +1797,14 @@ export default function Settings() {
                                                     setEditingServiceId(null);
                                                     setNewServiceName(''); // Reset form
                                                 }}
-                                                className="btn-ghost flex-1"
+                                                className="btn-premium-secondary flex-1"
                                             >
                                                 Cancelar
                                             </button>
                                             <button
                                                 onClick={handleSaveService}
                                                 disabled={!newServiceName.trim()}
-                                                className="btn-primary flex-1"
+                                                className="btn-premium-primary flex-1"
                                             >
                                                 {editingServiceId ? 'Guardar Cambios' : 'Agregar'}
                                             </button>
@@ -1832,38 +1832,38 @@ export default function Settings() {
                                 </div>
                             )}
 
-                            <div className="card-soft p-6">
+                            <div className="card-premium p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-primary-100 rounded-soft flex items-center justify-center">
                                             <CreditCard className="w-6 h-6 text-primary-600" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-bold text-charcoal">Tu Suscripción</h2>
-                                            <p className="text-sm text-charcoal/50">Gestiona tu plan y facturación</p>
+                                            <h2 className="text-lg font-bold text-primary-theme">Tu Suscripción</h2>
+                                            <p className="text-sm text-primary-theme/50">Gestiona tu plan y facturación</p>
                                         </div>
                                     </div>
                                     <div className={cn(
                                         "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider",
                                         subscription?.status === 'trial' ? 'bg-amber-100 text-amber-700' :
                                         subscription?.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                        'bg-charcoal/10 text-charcoal/60'
+                                        'bg-charcoal/10 text-primary-theme/60'
                                     )}>
                                         {subscription?.status === 'trial' ? 'En Prueba' :
                                          subscription?.status === 'active' ? 'Plan Activo' : 'Inactivo'}
                                     </div>
                                 </div>
 
-                                <div className="bg-ivory border border-silk-beige rounded-soft p-6 mb-8">
+                                <div className="bg-secondary-theme border border-theme rounded-soft p-6 mb-8">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                         <div>
-                                            <p className="text-xs font-bold text-charcoal/40 uppercase tracking-widest mb-1">Plan Actual</p>
-                                            <h3 className="text-3xl font-black text-charcoal capitalize tracking-tight">
+                                            <p className="text-xs font-bold text-primary-theme/40 uppercase tracking-widest mb-1">Plan Actual</p>
+                                            <h3 className="text-3xl font-black text-primary-theme capitalize tracking-tight">
                                                 Plan {subscription?.plan || 'Essence (Trial)'}
                                             </h3>
                                             <div className="flex items-center gap-2 mt-2">
                                                 <Sparkles className="w-4 h-4 text-primary-500" />
-                                                <p className="text-sm font-medium text-charcoal/70">
+                                                <p className="text-sm font-medium text-primary-theme/70">
                                                     {subscription?.plan === 'essence' ? 'Control Esencial y Automatización' :
                                                      subscription?.plan === 'radiance' ? 'Escalamiento Profesional y Retención' :
                                                      subscription?.plan === 'prestige' ? 'Potencia Empresarial Multi-Sede' :
@@ -1872,14 +1872,14 @@ export default function Settings() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-3xl font-black text-charcoal">
+                                            <p className="text-3xl font-black text-primary-theme">
                                                 {paymentRegion === 'international' ? 'US$' : '$'}
                                                 {subscription?.plan && subscription.plan !== 'trial' 
                                                     ? (paymentRegion === 'international' 
                                                         ? LS_PLANS[subscription.plan as LSPlanId]?.price
                                                         : PLANS[subscription.plan as PlanId]?.price)
                                                     : '0'}
-                                                <span className="text-sm font-medium text-charcoal/40 ml-1">
+                                                <span className="text-sm font-medium text-primary-theme/40 ml-1">
                                                     {paymentRegion === 'international' ? 'USD' : 'CLP'} / mes
                                                 </span>
                                             </p>
@@ -1899,7 +1899,7 @@ export default function Settings() {
                                     {subscription?.status === 'trial' && (
                                         <button 
                                             onClick={() => document.getElementById('compare-plans')?.scrollIntoView({ behavior: 'smooth' })}
-                                            className="btn-primary"
+                                            className="btn-premium-primary"
                                         >
                                             Activar Plan Premium
                                         </button>
@@ -1908,7 +1908,7 @@ export default function Settings() {
                                         href="https://www.mercadopago.com.mx/subscriptions" 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="btn-ghost"
+                                        className="btn-premium-secondary"
                                     >
                                         Gestionar en Mercado Pago
                                     </a>
@@ -1919,13 +1919,13 @@ export default function Settings() {
                             <div id="compare-plans" className="space-y-4">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
                                     <div className="flex flex-col">
-                                        <h2 className="text-xl font-black text-charcoal tracking-tight">Compara nuestros planes</h2>
+                                        <h2 className="text-xl font-black text-primary-theme tracking-tight">Compara nuestros planes</h2>
                                         <div className="bg-primary-500/10 text-primary-600 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mt-1">
                                             Garantía de Satisfacción
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 bg-silk-beige p-1.5 rounded-soft border border-silk-beige shadow-sm">
+                                    <div className="flex items-center gap-3 bg-secondary-theme p-1.5 rounded-soft border border-theme shadow-sm">
                                         <button
                                             onClick={async () => {
                                                 setPaymentRegion('chile');
@@ -1936,8 +1936,8 @@ export default function Settings() {
                                             className={cn(
                                                 "px-4 py-2 rounded-soft text-xs font-bold transition-all flex items-center gap-2",
                                                 paymentRegion === 'chile'
-                                                    ? "bg-white text-charcoal shadow-sm"
-                                                    : "text-charcoal/40 hover:text-charcoal/60"
+                                                    ? "bg-white text-primary-theme shadow-sm"
+                                                    : "text-primary-theme/40 hover:text-primary-theme/60"
                                             )}
                                         >
                                             🇨🇱 Chile (CLP)
@@ -1952,8 +1952,8 @@ export default function Settings() {
                                             className={cn(
                                                 "px-4 py-2 rounded-soft text-xs font-bold transition-all flex items-center gap-2",
                                                 paymentRegion === 'international'
-                                                    ? "bg-white text-charcoal shadow-sm"
-                                                    : "text-charcoal/40 hover:text-charcoal/60"
+                                                    ? "bg-white text-primary-theme shadow-sm"
+                                                    : "text-primary-theme/40 hover:text-primary-theme/60"
                                             )}
                                         >
                                             🌎 Internacional (USD)
@@ -1977,7 +1977,7 @@ export default function Settings() {
                                                 key={planId}
                                                 className={cn(
                                                     "relative flex flex-col p-6 rounded-soft border-2 transition-all duration-300",
-                                                    isCurrentPlan ? "border-primary-500 bg-primary-500/5 ring-4 ring-primary-500/10" : "border-silk-beige bg-white hover:border-primary-300 hover:shadow-xl",
+                                                    isCurrentPlan ? "border-primary-500 bg-primary-500/5 ring-4 ring-primary-500/10" : "border-theme bg-white hover:border-primary-300 hover:shadow-xl",
                                                     isRadiance && !isCurrentPlan && "md:scale-105 shadow-premium-lg border-primary-500 z-10"
                                                 )}
                                             >
@@ -1988,13 +1988,13 @@ export default function Settings() {
                                                 )}
 
                                                 <div className="mb-6">
-                                                    <h3 className="text-xl font-black text-charcoal uppercase tracking-tighter">{plan.name}</h3>
-                                                    <p className="text-xs font-bold text-charcoal/40 mt-1 h-8 leading-tight">{plan.tagline}</p>
-                                                    <div className="mt-4 flex items-baseline gap-1 border-b border-silk-beige pb-4">
-                                                        <span className="text-4xl font-black text-charcoal">
+                                                    <h3 className="text-xl font-black text-primary-theme uppercase tracking-tighter">{plan.name}</h3>
+                                                    <p className="text-xs font-bold text-primary-theme/40 mt-1 h-8 leading-tight">{plan.tagline}</p>
+                                                    <div className="mt-4 flex items-baseline gap-1 border-b border-theme pb-4">
+                                                        <span className="text-4xl font-black text-primary-theme">
                                                             {currencySymbol}{price.toLocaleString()}
                                                         </span>
-                                                        <span className="text-sm font-bold text-charcoal/30 uppercase">{currencyCode}/mes</span>
+                                                        <span className="text-sm font-bold text-primary-theme/30 uppercase">{currencyCode}/mes</span>
                                                     </div>
                                                 </div>
 
@@ -2004,7 +2004,7 @@ export default function Settings() {
                                                             <div className="mt-1 w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
                                                                 <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                                             </div>
-                                                            <span className="text-sm font-medium text-charcoal/70 leading-snug">{feature}</span>
+                                                            <span className="text-sm font-medium text-primary-theme/70 leading-snug">{feature}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -2015,7 +2015,7 @@ export default function Settings() {
                                                     className={cn(
                                                         "w-full py-3 rounded-soft font-black text-sm uppercase tracking-widest transition-all",
                                                         isCurrentPlan 
-                                                            ? "bg-charcoal/10 text-charcoal/40 cursor-not-allowed" 
+                                                            ? "bg-charcoal/10 text-primary-theme/40 cursor-not-allowed" 
                                                             : isRadiance 
                                                                 ? "bg-hero-gradient text-white shadow-lg hover:shadow-xl hover:scale-[1.02]" 
                                                                 : "bg-charcoal text-white hover:bg-primary-500"
@@ -2038,8 +2038,8 @@ export default function Settings() {
 
                     {/* Schedule Settings */}
                     {activeTab === 'schedule' && (
-                        <div className="card-soft p-6">
-                            <h2 className="text-lg font-semibold text-charcoal mb-6">Horarios de Atención</h2>
+                        <div className="card-premium p-6">
+                            <h2 className="text-lg font-semibold text-primary-theme mb-6">Horarios de Atención</h2>
 
                             <div className="space-y-3">
                                 {dayOrder.map((day) => {
@@ -2047,10 +2047,10 @@ export default function Settings() {
                                     return (
                                         <div
                                             key={day}
-                                            className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-ivory rounded-soft"
+                                            className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-secondary-theme rounded-soft"
                                         >
                                             <div className="w-24 sm:w-28 flex-shrink-0">
-                                                <p className="font-medium text-charcoal">{dayNames[day]}</p>
+                                                <p className="font-medium text-primary-theme">{dayNames[day]}</p>
                                             </div>
 
                                             <label className="flex items-center gap-2 mr-2">
@@ -2064,9 +2064,9 @@ export default function Settings() {
                                                             [day]: checked ? { open: '09:00', close: '18:00' } : null
                                                         }))
                                                     }}
-                                                    className="w-4 h-4 rounded border-silk-beige text-primary-500 focus:ring-primary-500"
+                                                    className="w-4 h-4 rounded border-theme text-primary-500 focus:ring-primary-500"
                                                 />
-                                                <span className="text-sm text-charcoal/60">Abierto</span>
+                                                <span className="text-sm text-primary-theme/60">Abierto</span>
                                             </label>
 
                                             {hours ? (
@@ -2082,9 +2082,9 @@ export default function Settings() {
                                                                     [day]: { ...prev[day], open: val }
                                                                 }))
                                                             }}
-                                                            className="px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
+                                                            className="px-2 sm:px-3 py-2 bg-white border border-theme rounded-soft text-sm flex-1"
                                                         />
-                                                        <span className="text-charcoal/40">a</span>
+                                                        <span className="text-primary-theme/40">a</span>
                                                         <input
                                                             type="time"
                                                             value={(hours as any).close}
@@ -2095,12 +2095,12 @@ export default function Settings() {
                                                                     [day]: { ...prev[day], close: val }
                                                                 }))
                                                             }}
-                                                            className="px-2 sm:px-3 py-2 bg-white border border-silk-beige rounded-soft text-sm flex-1"
+                                                            className="px-2 sm:px-3 py-2 bg-white border border-theme rounded-soft text-sm flex-1"
                                                         />
                                                     </div>
 
                                                     {/* Colación UI */}
-                                                    <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-silk-beige/30 ml-1">
+                                                    <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-theme/30 ml-1">
                                                         <label className="flex items-center gap-2 cursor-pointer">
                                                             <div className="relative inline-flex items-center">
                                                                 <input
@@ -2123,7 +2123,7 @@ export default function Settings() {
                                                                 />
                                                                 <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500"></div>
                                                             </div>
-                                                            <span className="text-xs font-medium text-charcoal/50">Colación</span>
+                                                            <span className="text-xs font-medium text-primary-theme/50">Colación</span>
                                                         </label>
 
                                                         {(hours as any).lunch_break?.enabled && (
@@ -2141,9 +2141,9 @@ export default function Settings() {
                                                                             }
                                                                         }))
                                                                     }}
-                                                                    className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
+                                                                    className="px-2 py-1 bg-white border border-theme rounded-soft text-xs w-24"
                                                                 />
-                                                                <span className="text-charcoal/40 text-xs font-bold font-bold">a</span>
+                                                                <span className="text-primary-theme/40 text-xs font-bold font-bold">a</span>
                                                                 <input
                                                                     type="time"
                                                                     value={(hours as any).lunch_break.end}
@@ -2157,25 +2157,25 @@ export default function Settings() {
                                                                             }
                                                                         }))
                                                                     }}
-                                                                    className="px-2 py-1 bg-white border border-silk-beige rounded-soft text-xs w-24"
+                                                                    className="px-2 py-1 bg-white border border-theme rounded-soft text-xs w-24"
                                                                 />
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <span className="text-sm text-charcoal/40 ml-2">Cerrado</span>
+                                                <span className="text-sm text-primary-theme/40 ml-2">Cerrado</span>
                                             )}
                                         </div>
                                     )
                                 })}
                             </div>
 
-                            <div className="mt-6 pt-6 border-t border-silk-beige flex items-center gap-4">
+                            <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
                                 <button
                                     onClick={handleSaveSchedule}
                                     disabled={savingSchedule}
-                                    className="btn-primary flex items-center gap-2"
+                                    className="btn-premium-primary flex items-center gap-2"
                                 >
                                     {savingSchedule ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -2197,62 +2197,62 @@ export default function Settings() {
                     {activeTab === 'integrations' && (
                         <div className="space-y-6">
                             {/* YCloud */}
-                            <div className="card-soft p-6">
+                            <div className="card-premium p-6">
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="w-12 h-12 bg-emerald-100 rounded-soft flex items-center justify-center">
                                         <MessageSquare className="w-6 h-6 text-emerald-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-semibold text-charcoal">YCloud WhatsApp API</h2>
-                                        <p className="text-sm text-charcoal/50">Conecta tu número de WhatsApp Business</p>
+                                        <h2 className="text-lg font-semibold text-primary-theme">YCloud WhatsApp API</h2>
+                                        <p className="text-sm text-primary-theme/50">Conecta tu número de WhatsApp Business</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">API Key</label>
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">API Key</label>
                                         <input
                                             type="password"
                                             placeholder="yc_xxxxxxxxxxxxxxxxxxxxxx"
                                             value={yCloudApiKey}
                                             onChange={(e) => setYCloudApiKey(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         />
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             Obtén tu API Key desde <a href="https://www.ycloud.com" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">ycloud.com</a>
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">Número de WhatsApp</label>
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">Número de WhatsApp</label>
                                         <input
                                             type="text"
                                             placeholder="+521234567890"
                                             value={yCloudPhoneNumber}
                                             onChange={(e) => setYCloudPhoneNumber(e.target.value)}
-                                            className="input-soft"
+                                            className="input-premium"
                                         />
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             El número de WhatsApp Business registrado en YCloud (con código de país)
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">Webhook URL</label>
+                                        <label className="block text-sm font-medium text-primary-theme mb-2">Webhook URL</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 value={webhookUrl}
                                                 disabled
-                                                className="input-soft bg-ivory text-charcoal/60 font-mono text-sm"
+                                                className="input-premium bg-secondary-theme text-primary-theme/60 font-mono text-sm"
                                             />
                                             <button
                                                 onClick={copyWebhookUrl}
-                                                className="btn-ghost text-primary-500 flex items-center gap-1"
+                                                className="btn-premium-secondary text-primary-500 flex items-center gap-1"
                                             >
                                                 {copiedWebhook ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                                 {copiedWebhook ? 'Copiado' : 'Copiar'}
                                             </button>
                                         </div>
-                                        <p className="text-xs text-charcoal/40 mt-1">
+                                        <p className="text-xs text-primary-theme/40 mt-1">
                                             Configura esta URL como webhook en tu panel de YCloud (Developer → Webhooks)
                                         </p>
                                     </div>
@@ -2260,20 +2260,20 @@ export default function Settings() {
                             </div>
 
                             {/* Webhooks / n8n */}
-                            <div className="card-soft p-6">
+                            <div className="card-premium p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-orange-100 rounded-soft flex items-center justify-center">
                                             <Webhook className="w-6 h-6 text-orange-600" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-semibold text-charcoal">Webhooks</h2>
-                                            <p className="text-sm text-charcoal/50">Conecta con n8n, Make, Zapier y otras automatizaciones</p>
+                                            <h2 className="text-lg font-semibold text-primary-theme">Webhooks</h2>
+                                            <p className="text-sm text-primary-theme/50">Conecta con n8n, Make, Zapier y otras automatizaciones</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => openWebhookModal()}
-                                        className="btn-primary flex items-center gap-2 text-sm"
+                                        className="btn-premium-primary flex items-center gap-2 text-sm"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Añadir Webhook
@@ -2281,10 +2281,10 @@ export default function Settings() {
                                 </div>
 
                                 {webhooks.length === 0 ? (
-                                    <div className="text-center py-8 border-2 border-dashed border-silk-beige rounded-soft">
-                                        <Globe className="w-10 h-10 text-charcoal/20 mx-auto mb-3" />
-                                        <p className="text-charcoal/50 text-sm mb-1">No hay webhooks configurados</p>
-                                        <p className="text-charcoal/40 text-xs">Añade un webhook para enviar eventos a herramientas externas como n8n</p>
+                                    <div className="text-center py-8 border-2 border-dashed border-theme rounded-soft">
+                                        <Globe className="w-10 h-10 text-primary-theme/20 mx-auto mb-3" />
+                                        <p className="text-primary-theme/50 text-sm mb-1">No hay webhooks configurados</p>
+                                        <p className="text-primary-theme/40 text-xs">Añade un webhook para enviar eventos a herramientas externas como n8n</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
@@ -2294,7 +2294,7 @@ export default function Settings() {
                                                 className={cn(
                                                     'border rounded-soft p-4 transition-all',
                                                     wh.is_active
-                                                        ? 'border-silk-beige bg-white hover:shadow-sm'
+                                                        ? 'border-theme bg-white hover:shadow-sm'
                                                         : 'border-gray-200 bg-gray-50/50 opacity-60'
                                                 )}
                                             >
@@ -2304,7 +2304,7 @@ export default function Settings() {
                                                             'w-2.5 h-2.5 rounded-full',
                                                             wh.is_active ? 'bg-emerald-400' : 'bg-gray-300'
                                                         )} />
-                                                        <h3 className="font-medium text-charcoal text-sm">{wh.name}</h3>
+                                                        <h3 className="font-medium text-primary-theme text-sm">{wh.name}</h3>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <button
@@ -2321,7 +2321,7 @@ export default function Settings() {
                                                         </button>
                                                         <button
                                                             onClick={() => handleToggleWebhook(wh.id!, wh.is_active)}
-                                                            className="p-1.5 rounded-soft hover:bg-ivory transition-colors"
+                                                            className="p-1.5 rounded-soft hover:bg-secondary-theme transition-colors"
                                                             title={wh.is_active ? 'Desactivar' : 'Activar'}
                                                         >
                                                             {wh.is_active ? (
@@ -2332,10 +2332,10 @@ export default function Settings() {
                                                         </button>
                                                         <button
                                                             onClick={() => openWebhookModal(wh)}
-                                                            className="p-1.5 rounded-soft hover:bg-ivory transition-colors"
+                                                            className="p-1.5 rounded-soft hover:bg-secondary-theme transition-colors"
                                                             title="Editar"
                                                         >
-                                                            <ChevronRight className="w-4 h-4 text-charcoal/50" />
+                                                            <ChevronRight className="w-4 h-4 text-primary-theme/50" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteWebhook(wh.id!)}
@@ -2346,17 +2346,17 @@ export default function Settings() {
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <p className="text-xs text-charcoal/40 font-mono truncate mb-2 pl-5">{wh.url}</p>
+                                                <p className="text-xs text-primary-theme/40 font-mono truncate mb-2 pl-5">{wh.url}</p>
                                                 <div className="flex items-center gap-2 flex-wrap pl-5">
                                                     {wh.events.length > 0 ? wh.events.map(ev => (
                                                         <span key={ev} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200">
                                                             {ev}
                                                         </span>
                                                     )) : (
-                                                        <span className="text-xs text-charcoal/30">Sin eventos seleccionados</span>
+                                                        <span className="text-xs text-primary-theme/30">Sin eventos seleccionados</span>
                                                     )}
                                                     {wh.last_triggered_at && (
-                                                        <span className="text-xs text-charcoal/30 ml-auto">
+                                                        <span className="text-xs text-primary-theme/30 ml-auto">
                                                             Último envío: {new Date(wh.last_triggered_at).toLocaleString()}
                                                         </span>
                                                     )}
@@ -2377,54 +2377,54 @@ export default function Settings() {
                             {showWebhookModal && (
                                 <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                                     <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in">
-                                        <div className="flex items-center justify-between p-6 border-b border-silk-beige">
+                                        <div className="flex items-center justify-between p-6 border-b border-theme">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
                                                     <Webhook className="w-5 h-5 text-orange-500" />
                                                 </div>
-                                                <h2 className="text-lg font-bold text-charcoal">
+                                                <h2 className="text-lg font-bold text-primary-theme">
                                                     {editingWebhook ? 'Editar Webhook' : 'Nuevo Webhook'}
                                                 </h2>
                                             </div>
-                                            <button onClick={closeWebhookModal} className="p-2 hover:bg-ivory rounded-soft transition-colors">
-                                                <X className="w-5 h-5 text-charcoal/50" />
+                                            <button onClick={closeWebhookModal} className="p-2 hover:bg-secondary-theme rounded-soft transition-colors">
+                                                <X className="w-5 h-5 text-primary-theme/50" />
                                             </button>
                                         </div>
 
                                         <div className="p-6 space-y-5">
                                             <div>
-                                                <label className="block text-sm font-medium text-charcoal mb-2">Nombre</label>
+                                                <label className="block text-sm font-medium text-primary-theme mb-2">Nombre</label>
                                                 <input
                                                     type="text"
                                                     value={webhookForm.name}
                                                     onChange={(e) => setWebhookForm(prev => ({ ...prev, name: e.target.value }))}
                                                     placeholder="Ej: n8n - Notificaciones"
-                                                    className="input-soft w-full"
+                                                    className="input-premium w-full"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-charcoal mb-2">URL del Webhook</label>
+                                                <label className="block text-sm font-medium text-primary-theme mb-2">URL del Webhook</label>
                                                 <input
                                                     type="url"
                                                     value={webhookForm.url}
                                                     onChange={(e) => setWebhookForm(prev => ({ ...prev, url: e.target.value }))}
                                                     placeholder="https://tu-n8n-instance.com/webhook/..."
-                                                    className="input-soft w-full font-mono text-sm"
+                                                    className="input-premium w-full font-mono text-sm"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-charcoal mb-2">Secret (opcional)</label>
+                                                <label className="block text-sm font-medium text-primary-theme mb-2">Secret (opcional)</label>
                                                 <input
                                                     type="password"
                                                     value={webhookForm.secret}
                                                     onChange={(e) => setWebhookForm(prev => ({ ...prev, secret: e.target.value }))}
                                                     placeholder="Tu clave secreta para verificar webhooks"
-                                                    className="input-soft w-full"
+                                                    className="input-premium w-full"
                                                 />
-                                                <p className="text-xs text-charcoal/40 mt-1">Se envía como header <code className="bg-ivory px-1 rounded text-xs">X-Webhook-Secret</code></p>
+                                                <p className="text-xs text-primary-theme/40 mt-1">Se envía como header <code className="bg-secondary-theme px-1 rounded text-xs">X-Webhook-Secret</code></p>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-charcoal mb-2">Eventos a escuchar</label>
+                                                <label className="block text-sm font-medium text-primary-theme mb-2">Eventos a escuchar</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {WEBHOOK_EVENTS.map(ev => (
                                                         <label
@@ -2433,7 +2433,7 @@ export default function Settings() {
                                                                 'flex items-center gap-2 p-2.5 rounded-soft border cursor-pointer transition-all text-sm',
                                                                 webhookForm.events.includes(ev.value)
                                                                     ? 'bg-orange-50 border-orange-300 text-orange-700'
-                                                                    : 'bg-white border-silk-beige text-charcoal/60 hover:bg-ivory'
+                                                                    : 'bg-white border-theme text-primary-theme/60 hover:bg-secondary-theme'
                                                             )}
                                                         >
                                                             <input
@@ -2459,12 +2459,12 @@ export default function Settings() {
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-end gap-3 p-6 border-t border-silk-beige">
-                                            <button onClick={closeWebhookModal} className="btn-ghost">Cancelar</button>
+                                        <div className="flex justify-end gap-3 p-6 border-t border-theme">
+                                            <button onClick={closeWebhookModal} className="btn-premium-secondary">Cancelar</button>
                                             <button
                                                 onClick={handleSaveWebhook}
                                                 disabled={savingWebhook || !webhookForm.name.trim() || !webhookForm.url.trim()}
-                                                className="btn-primary flex items-center gap-2"
+                                                className="btn-premium-primary flex items-center gap-2"
                                             >
                                                 {savingWebhook ? (
                                                     <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -2480,7 +2480,7 @@ export default function Settings() {
                                 <button
                                     onClick={saveIntegrations}
                                     disabled={isSavingIntegrations}
-                                    className="btn-primary flex items-center gap-2"
+                                    className="btn-premium-primary flex items-center gap-2"
                                 >
                                     <Save className="w-4 h-4" />
                                     {isSavingIntegrations ? 'Guardando...' : 'Guardar Integraciones'}
@@ -2505,9 +2505,9 @@ export default function Settings() {
 
                     {/* Notifications Settings */}
                     {activeTab === 'notifications' && (
-                        <div className="card-soft p-6">
-                            <h2 className="text-lg font-semibold text-charcoal mb-2">Configuración de Notificaciones</h2>
-                            <p className="text-sm text-charcoal/50 mb-6">Elige qué notificaciones recibir en tu panel</p>
+                        <div className="card-premium p-6">
+                            <h2 className="text-lg font-semibold text-primary-theme mb-2">Configuración de Notificaciones</h2>
+                            <p className="text-sm text-primary-theme/50 mb-6">Elige qué notificaciones recibir en tu panel</p>
 
                             {notificationsSaved && (
                                 <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-soft flex items-center gap-3">
@@ -2517,10 +2517,10 @@ export default function Settings() {
                             )}
 
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-charcoal">🆕 Nuevas Citas</p>
-                                        <p className="text-sm text-charcoal/50">Cuando se agenda una nueva cita</p>
+                                        <p className="font-medium text-primary-theme">🆕 Nuevas Citas</p>
+                                        <p className="text-sm text-primary-theme/50">Cuando se agenda una nueva cita</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2529,14 +2529,14 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, new_appointment: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-charcoal">✅ Citas Confirmadas</p>
-                                        <p className="text-sm text-charcoal/50">Cuando un paciente confirma su cita</p>
+                                        <p className="font-medium text-primary-theme">✅ Citas Confirmadas</p>
+                                        <p className="text-sm text-primary-theme/50">Cuando un paciente confirma su cita</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2545,14 +2545,14 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, confirmed: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-charcoal">❌ Citas Canceladas</p>
-                                        <p className="text-sm text-charcoal/50">Cuando se cancela una cita</p>
+                                        <p className="font-medium text-primary-theme">❌ Citas Canceladas</p>
+                                        <p className="text-sm text-primary-theme/50">Cuando se cancela una cita</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2561,14 +2561,14 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, cancelled: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-charcoal">⏰ Recordatorios Pendientes</p>
-                                        <p className="text-sm text-charcoal/50">Citas que necesitan confirmación</p>
+                                        <p className="font-medium text-primary-theme">⏰ Recordatorios Pendientes</p>
+                                        <p className="text-sm text-primary-theme/50">Citas que necesitan confirmación</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2577,14 +2577,14 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, pending_reminder: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-charcoal">💬 Nuevos Mensajes</p>
-                                        <p className="text-sm text-charcoal/50">Mensajes que requieren atención</p>
+                                        <p className="font-medium text-primary-theme">💬 Nuevos Mensajes</p>
+                                        <p className="text-sm text-primary-theme/50">Mensajes que requieren atención</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2593,14 +2593,14 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, new_message: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
                                     <div>
-                                        <p className="font-medium text-charcoal">⭐ Encuestas Respondidas</p>
-                                        <p className="text-sm text-charcoal/50">Cuando un paciente responde una encuesta</p>
+                                        <p className="font-medium text-primary-theme">⭐ Encuestas Respondidas</p>
+                                        <p className="text-sm text-primary-theme/50">Cuando un paciente responde una encuesta</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2609,17 +2609,17 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, survey_response: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-ivory rounded-soft border border-orange-200">
+                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft border border-orange-200">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-medium text-charcoal">🤖 Derivación a Humano</p>
+                                            <p className="font-medium text-primary-theme">🤖 Derivación a Humano</p>
                                             <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-medium">IA Agent</span>
                                         </div>
-                                        <p className="text-sm text-charcoal/50">Cuando el Asistente de IA requiere de un humano para continuar el chat</p>
+                                        <p className="text-sm text-primary-theme/50">Cuando el Asistente de IA requiere de un humano para continuar el chat</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -2628,16 +2628,16 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, ai_handoff: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                     </label>
                                 </div>
                             </div>
 
-                            <div className="mt-6 pt-6 border-t border-silk-beige">
+                            <div className="mt-6 pt-6 border-t border-theme">
                                 <button
                                     onClick={handleSaveNotifications}
                                     disabled={savingNotifications}
-                                    className="btn-primary flex items-center gap-2"
+                                    className="btn-premium-primary flex items-center gap-2"
                                 >
                                     {savingNotifications ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -2651,14 +2651,14 @@ export default function Settings() {
 
                     {/* Reminders Settings */}
                     {activeTab === 'reminders' && (
-                        <div className="card-soft p-6">
+                        <div className="card-premium p-6">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-soft flex items-center justify-center">
                                     <AlarmClock className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-charcoal">Configuración de Recordatorios</h2>
-                                    <p className="text-sm text-charcoal/50">Personaliza cuándo y cómo enviar recordatorios</p>
+                                    <h2 className="text-lg font-semibold text-primary-theme">Configuración de Recordatorios</h2>
+                                    <p className="text-sm text-primary-theme/50">Personaliza cuándo y cómo enviar recordatorios</p>
                                 </div>
                             </div>
 
@@ -2671,13 +2671,13 @@ export default function Settings() {
 
                             {/* Timing Section */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-charcoal mb-4">⏰ Tiempo de recordatorios</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">⏰ Tiempo de recordatorios</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
-                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
-                                                <p className="font-semibold text-charcoal">24 horas antes</p>
-                                                <p className="text-sm text-charcoal/60">Enviar recordatorio un día antes</p>
+                                                <p className="font-semibold text-primary-theme">24 horas antes</p>
+                                                <p className="text-sm text-primary-theme/60">Enviar recordatorio un día antes</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2686,7 +2686,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_24h_before: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                             </label>
                                         </div>
                                         {reminderSettings.reminder_24h_before && (
@@ -2701,11 +2701,11 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
-                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
-                                                <p className="font-semibold text-charcoal">2 horas antes</p>
-                                                <p className="text-sm text-charcoal/60">Recordatorio cercano a la cita</p>
+                                                <p className="font-semibold text-primary-theme">2 horas antes</p>
+                                                <p className="text-sm text-primary-theme/60">Recordatorio cercano a la cita</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2714,7 +2714,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_2h_before: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                             </label>
                                         </div>
                                         {reminderSettings.reminder_2h_before && (
@@ -2729,11 +2729,11 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
-                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
-                                                <p className="font-semibold text-charcoal">1 hora antes</p>
-                                                <p className="text-sm text-charcoal/60">Último recordatorio antes de la cita</p>
+                                                <p className="font-semibold text-primary-theme">1 hora antes</p>
+                                                <p className="text-sm text-primary-theme/60">Último recordatorio antes de la cita</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2742,7 +2742,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_1h_before: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                             </label>
                                         </div>
                                         {reminderSettings.reminder_1h_before && (
@@ -2761,30 +2761,30 @@ export default function Settings() {
 
                             {/* Preferred Hour */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-charcoal mb-4">🕐 Hora preferida de envío</h3>
-                                <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-silk-beige">
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">🕐 Hora preferida de envío</h3>
+                                <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-theme">
                                     <div>
-                                        <p className="font-semibold text-charcoal">Hora de recordatorios</p>
-                                        <p className="text-sm text-charcoal/60">Para recordatorios de 24h, enviar a esta hora</p>
+                                        <p className="font-semibold text-primary-theme">Hora de recordatorios</p>
+                                        <p className="text-sm text-primary-theme/60">Para recordatorios de 24h, enviar a esta hora</p>
                                     </div>
                                     <input
                                         type="time"
                                         value={reminderSettings.preferred_hour}
                                         onChange={(e) => setReminderSettings({ ...reminderSettings, preferred_hour: e.target.value })}
-                                        className="px-3 py-2 bg-ivory text-charcoal border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                        className="px-3 py-2 bg-secondary-theme text-primary-theme border border-theme rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                                     />
                                 </div>
                             </div>
 
                             {/* Confirmation Section */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-charcoal mb-4">✅ Solicitar confirmación</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">✅ Solicitar confirmación</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-silk-beige">
-                                        <div className="flex items-center justify-between p-5 bg-ivory/50">
+                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
-                                                <p className="font-semibold text-charcoal">Pedir confirmación</p>
-                                                <p className="text-sm text-charcoal/60">Solicitar al paciente que confirme su asistencia</p>
+                                                <p className="font-semibold text-primary-theme">Pedir confirmación</p>
+                                                <p className="text-sm text-primary-theme/60">Solicitar al paciente que confirme su asistencia</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
@@ -2793,7 +2793,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, request_confirmation: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                             </label>
                                         </div>
                                         {reminderSettings.request_confirmation && (
@@ -2813,12 +2813,12 @@ export default function Settings() {
 
                             {/* Follow-up Section */}
                             <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-charcoal mb-4">📅 Seguimiento post-cita</h3>
+                                <h3 className="text-sm font-semibold text-primary-theme mb-4">📅 Seguimiento post-cita</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-silk-beige">
+                                    <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-theme">
                                         <div>
-                                            <p className="font-semibold text-charcoal">Recordatorio de seguimiento</p>
-                                            <p className="text-sm text-charcoal/60">Enviar mensaje después de la cita para reagendar</p>
+                                            <p className="font-semibold text-primary-theme">Recordatorio de seguimiento</p>
+                                            <p className="text-sm text-primary-theme/60">Enviar mensaje después de la cita para reagendar</p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
@@ -2827,21 +2827,21 @@ export default function Settings() {
                                                 onChange={(e) => setReminderSettings({ ...reminderSettings, followup_enabled: e.target.checked })}
                                                 className="sr-only peer"
                                             />
-                                            <div className="w-11 h-6 bg-silk-beige rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                            <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                                         </label>
                                     </div>
 
                                     {reminderSettings.followup_enabled && (
                                         <>
-                                            <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-silk-beige">
+                                            <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-theme">
                                                 <div>
-                                                    <p className="font-semibold text-charcoal">Días después de la cita</p>
-                                                    <p className="text-sm text-charcoal/60">Cuántos días esperar antes de enviar</p>
+                                                    <p className="font-semibold text-primary-theme">Días después de la cita</p>
+                                                    <p className="text-sm text-primary-theme/60">Cuántos días esperar antes de enviar</p>
                                                 </div>
                                                 <select
                                                     value={reminderSettings.followup_days_after}
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, followup_days_after: parseInt(e.target.value) })}
-                                                    className="px-3 py-2 bg-ivory text-charcoal border border-silk-beige rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                                    className="px-3 py-2 bg-secondary-theme text-primary-theme border border-theme rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                                                 >
                                                     <option value={3}>3 días</option>
                                                     <option value={7}>7 días</option>
@@ -2862,11 +2862,11 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 pt-6 border-t border-silk-beige">
+                            <div className="mt-6 pt-6 border-t border-theme">
                                 <button
                                     onClick={handleSaveReminders}
                                     disabled={savingReminders}
-                                    className="btn-primary flex items-center gap-2"
+                                    className="btn-premium-primary flex items-center gap-2"
                                 >
                                     {savingReminders ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -2884,8 +2884,8 @@ export default function Settings() {
                                             <History className="w-5 h-5 text-indigo-600" />
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold text-charcoal">Registro de Envíos</h3>
-                                            <p className="text-sm text-charcoal/50">Historial reciente de recordatorios enviados</p>
+                                            <h3 className="text-lg font-bold text-primary-theme">Registro de Envíos</h3>
+                                            <p className="text-sm text-primary-theme/50">Historial reciente de recordatorios enviados</p>
                                         </div>
                                     </div>
                                     <button 
@@ -2894,32 +2894,32 @@ export default function Settings() {
                                             setActiveTab('profile');
                                             setTimeout(() => setActiveTab('reminders'), 10);
                                         }}
-                                        className="btn-ghost text-charcoal/50 hover:bg-ivory flex items-center gap-2 text-sm"
+                                        className="btn-premium-secondary text-primary-theme/50 hover:bg-secondary-theme flex items-center gap-2 text-sm"
                                     >
                                         <RefreshCw className={cn("w-4 h-4", isLoadingLogs && "animate-spin")} />
                                         Sincronizar
                                     </button>
                                 </div>
 
-                                <div className="bg-white rounded-soft shadow-soft-md border border-silk-beige overflow-hidden">
+                                <div className="bg-white rounded-soft shadow-soft-md border border-theme overflow-hidden">
                                     {isLoadingLogs ? (
                                         <div className="py-12 flex flex-col items-center justify-center gap-3">
                                             <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-                                            <p className="text-sm text-charcoal/40">Cargando historial...</p>
+                                            <p className="text-sm text-primary-theme/40">Cargando historial...</p>
                                         </div>
                                     ) : reminderLogs.length === 0 ? (
                                         <div className="py-12 text-center">
-                                            <div className="w-16 h-16 bg-silk-beige/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <AlarmClock className="w-8 h-8 text-charcoal/20" />
+                                            <div className="w-16 h-16 bg-secondary-theme/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <AlarmClock className="w-8 h-8 text-primary-theme/20" />
                                             </div>
-                                            <p className="text-charcoal/50 font-medium">Sin actividad reciente</p>
-                                            <p className="text-charcoal/40 text-xs mt-1">Los recordatorios enviados aparecerán aquí.</p>
+                                            <p className="text-primary-theme/50 font-medium">Sin actividad reciente</p>
+                                            <p className="text-primary-theme/40 text-xs mt-1">Los recordatorios enviados aparecerán aquí.</p>
                                         </div>
                                     ) : (
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left border-collapse">
                                                 <thead>
-                                                    <tr className="bg-ivory/50 border-b border-silk-beige text-[11px] uppercase tracking-wider text-charcoal/40 font-bold">
+                                                    <tr className="bg-secondary-theme/50 border-b border-theme text-[11px] uppercase tracking-wider text-primary-theme/40 font-bold">
                                                         <th className="px-6 py-4">Paciente</th>
                                                         <th className="px-6 py-4">Tipo</th>
                                                         <th className="px-6 py-4">Estado</th>
@@ -2929,9 +2929,9 @@ export default function Settings() {
                                                 </thead>
                                                 <tbody className="divide-y divide-silk-beige/50">
                                                     {reminderLogs.map((log) => (
-                                                        <tr key={log.id} className="hover:bg-ivory/30 transition-colors">
+                                                        <tr key={log.id} className="hover:bg-secondary-theme/30 transition-colors">
                                                             <td className="px-6 py-4">
-                                                                <p className="font-semibold text-charcoal text-sm">
+                                                                <p className="font-semibold text-primary-theme text-sm">
                                                                     {log.appointments?.patient_name || 'Paciente'}
                                                                 </p>
                                                             </td>
@@ -2962,7 +2962,7 @@ export default function Settings() {
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                <p className="text-xs text-charcoal/60">
+                                                                <p className="text-xs text-primary-theme/60">
                                                                     {new Date(log.sent_at).toLocaleString()}
                                                                 </p>
                                                             </td>
@@ -2983,7 +2983,7 @@ export default function Settings() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="mt-4 flex items-center justify-between text-[11px] text-charcoal/40 bg-ivory/20 p-3 rounded-soft border border-dashed border-silk-beige">
+                                <div className="mt-4 flex items-center justify-between text-[11px] text-primary-theme/40 bg-secondary-theme/20 p-3 rounded-soft border border-dashed border-theme">
                                     <p><strong>Nota:</strong> Los logs muestran los últimos 20 intentos de envío. Si un recordatorio falla, verifica tu saldo en YCloud o la configuración del número.</p>
                                     <a href="https://www.ycloud.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary-500 font-bold">
                                         Ir a YCloud Console <ExternalLink className="w-3 h-3" />
@@ -2999,19 +2999,19 @@ export default function Settings() {
                     {activeTab === 'ai' && (
                         <div className="space-y-6">
                             {/* Hybrid Router Header */}
-                            <div className="card-soft p-6 bg-gradient-to-br from-violet-50 to-white border-violet-100">
+                            <div className="card-premium p-6 bg-gradient-to-br from-violet-50 to-white border-violet-100">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-violet-600 rounded-soft flex items-center justify-center shadow-lg shadow-violet-200">
                                             <Zap className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-bold text-charcoal">Citenly Hybrid Intelligence</h2>
-                                            <p className="text-sm text-charcoal/50">Motor de ruteo inteligente de modelos AI</p>
+                                            <h2 className="text-xl font-bold text-primary-theme">Citenly Hybrid Intelligence</h2>
+                                            <p className="text-sm text-primary-theme/50">Motor de ruteo inteligente de modelos AI</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xs font-bold text-charcoal/40 uppercase tracking-widest">Atención Automática</span>
+                                        <span className="text-xs font-bold text-primary-theme/40 uppercase tracking-widest">Atención Automática</span>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -3037,7 +3037,7 @@ export default function Settings() {
                                                 "p-4 rounded-soft border-2 text-left transition-all relative group",
                                                 aiStrategy === strat.id 
                                                     ? `bg-${strat.color}-50 border-${strat.color}-500 shadow-md`
-                                                    : "bg-white border-silk-beige hover:border-charcoal/20"
+                                                    : "bg-white border-theme hover:border-charcoal/20"
                                             )}
                                         >
                                             {strat.badge && (
@@ -3048,15 +3048,15 @@ export default function Settings() {
                                             <div className="flex items-center gap-3 mb-2">
                                                 <div className={cn(
                                                     "w-8 h-8 rounded-full flex items-center justify-center",
-                                                    aiStrategy === strat.id ? `bg-${strat.color}-500 text-white` : "bg-silk-beige text-charcoal/40"
+                                                    aiStrategy === strat.id ? `bg-${strat.color}-500 text-white` : "bg-secondary-theme text-primary-theme/40"
                                                 )}>
                                                     <strat.icon className="w-4 h-4" />
                                                 </div>
-                                                <h3 className={cn("font-bold text-sm", aiStrategy === strat.id ? `text-${strat.color}-700` : "text-charcoal")}>
+                                                <h3 className={cn("font-bold text-sm", aiStrategy === strat.id ? `text-${strat.color}-700` : "text-primary-theme")}>
                                                     {strat.title}
                                                 </h3>
                                             </div>
-                                            <p className="text-xs text-charcoal/50 leading-relaxed">{strat.desc}</p>
+                                            <p className="text-xs text-primary-theme/50 leading-relaxed">{strat.desc}</p>
                                         </button>
                                     ))}
                                 </div>
@@ -3065,7 +3065,7 @@ export default function Settings() {
                                     <button
                                         onClick={handleSaveAI}
                                         disabled={savingAI}
-                                        className="btn-primary bg-violet-600 hover:bg-violet-700 flex items-center gap-2 shadow-lg shadow-violet-200"
+                                        className="btn-premium-primary bg-violet-600 hover:bg-violet-700 flex items-center gap-2 shadow-lg shadow-violet-200"
                                     >
                                         {savingAI ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -3084,20 +3084,20 @@ export default function Settings() {
 
                             {/* Unified Credits Dashboard */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="card-soft p-6 border-l-4 border-l-primary-500 bg-white">
+                                <div className="card-premium p-6 border-l-4 border-l-primary-500 bg-white">
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-primary-50 rounded-soft flex items-center justify-center">
                                                 <CreditCard className="w-5 h-5 text-primary-600" />
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-bold text-charcoal">Citenly Credits</h3>
-                                                <p className="text-xs text-charcoal/50">Saldo unificado de inteligencia artificial</p>
+                                                <h3 className="text-lg font-bold text-primary-theme">Citenly Credits</h3>
+                                                <p className="text-xs text-primary-theme/50">Saldo unificado de inteligencia artificial</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-2xl font-bold text-charcoal">{(aiCreditsLimit + aiCreditsExtra) - aiCreditsUsed}</span>
-                                            <p className="text-[10px] text-charcoal/40 font-bold uppercase">Créditos Disponibles</p>
+                                            <span className="text-2xl font-bold text-primary-theme">{(aiCreditsLimit + aiCreditsExtra) - aiCreditsUsed}</span>
+                                            <p className="text-[10px] text-primary-theme/40 font-bold uppercase">Créditos Disponibles</p>
                                         </div>
                                     </div>
 
@@ -3112,24 +3112,24 @@ export default function Settings() {
                                             />
                                         </div>
                                         <div className="grid grid-cols-3 gap-4 text-center">
-                                            <div className="bg-ivory/50 p-3 rounded-soft border border-silk-beige">
-                                                <p className="text-[10px] text-charcoal/40 font-bold uppercase mb-1">Plan</p>
-                                                <p className="text-sm font-bold text-charcoal">{aiCreditsLimit}</p>
+                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
+                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Plan</p>
+                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsLimit}</p>
                                             </div>
-                                            <div className="bg-ivory/50 p-3 rounded-soft border border-silk-beige">
-                                                <p className="text-[10px] text-charcoal/40 font-bold uppercase mb-1">Cargas</p>
-                                                <p className="text-sm font-bold text-charcoal">{aiCreditsExtra}</p>
+                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
+                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Cargas</p>
+                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsExtra}</p>
                                             </div>
-                                            <div className="bg-ivory/50 p-3 rounded-soft border border-silk-beige">
-                                                <p className="text-[10px] text-charcoal/40 font-bold uppercase mb-1">Consumo</p>
-                                                <p className="text-sm font-bold text-charcoal">{aiCreditsUsed}</p>
+                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
+                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Consumo</p>
+                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsUsed}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="card-soft p-6 bg-white flex flex-col justify-center">
-                                    <h3 className="text-sm font-bold text-charcoal mb-4 uppercase tracking-wider text-charcoal/40">Tabla de Costos Híbridos</h3>
+                                <div className="card-premium p-6 bg-white flex flex-col justify-center">
+                                    <h3 className="text-sm font-bold text-primary-theme mb-4 uppercase tracking-wider text-primary-theme/40">Tabla de Costos Híbridos</h3>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-soft border border-emerald-100">
                                             <div className="flex items-center gap-3">
@@ -3157,15 +3157,15 @@ export default function Settings() {
                             </div>
 
                             {/* Credit Recharge */}
-                            <div id="ai-credits-packs" className="card-soft p-6">
+                            <div id="ai-credits-packs" className="card-premium p-6">
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg">
                                             <Plus className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-bold text-charcoal">Recarga de Citenly Credits</h2>
-                                            <p className="text-sm text-charcoal/50">Selecciona el paquete que mejor se adapte a tu clínica</p>
+                                            <h2 className="text-lg font-bold text-primary-theme">Recarga de Citenly Credits</h2>
+                                            <p className="text-sm text-primary-theme/50">Selecciona el paquete que mejor se adapte a tu clínica</p>
                                         </div>
                                     </div>
                                 </div>
@@ -3176,29 +3176,29 @@ export default function Settings() {
                                         const currencySymbol = paymentRegion === 'international' ? 'US$' : '$';
                                         
                                         return Object.entries(currentPacks).map(([packId, pack]: [string, any]) => (
-                                            <div key={packId} className="group p-6 bg-white border border-silk-beige rounded-soft hover:shadow-premium-lg hover:border-violet-300 transition-all flex flex-col relative overflow-hidden">
+                                            <div key={packId} className="group p-6 bg-white border border-theme rounded-soft hover:shadow-premium-lg hover:border-violet-300 transition-all flex flex-col relative overflow-hidden">
                                                 <div className="mb-6">
-                                                    <h3 className="text-lg font-bold text-charcoal">{pack.name}</h3>
+                                                    <h3 className="text-lg font-bold text-primary-theme">{pack.name}</h3>
                                                     <div className="flex items-baseline gap-1 mt-2">
                                                         <span className="text-3xl font-black text-violet-600">
                                                             {currencySymbol}{pack.price.toLocaleString()}
                                                         </span>
-                                                        <span className="text-[10px] text-charcoal/40 font-bold uppercase tracking-widest">{paymentRegion === 'international' ? 'USD' : 'CLP'}</span>
+                                                        <span className="text-[10px] text-primary-theme/40 font-bold uppercase tracking-widest">{paymentRegion === 'international' ? 'USD' : 'CLP'}</span>
                                                     </div>
                                                 </div>
                                                 
                                                 <div className="flex-grow space-y-3 mb-6">
                                                     <div className="flex items-center gap-2">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-charcoal/70"><strong>{pack.credits.toLocaleString()}</strong> Citenly Credits</span>
+                                                        <span className="text-sm text-primary-theme/70"><strong>{pack.credits.toLocaleString()}</strong> Citenly Credits</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-charcoal/70">Uso Híbrido (N1, N2, N3)</span>
+                                                        <span className="text-sm text-primary-theme/70">Uso Híbrido (N1, N2, N3)</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-charcoal/70">Sin fecha de vencimiento</span>
+                                                        <span className="text-sm text-primary-theme/70">Sin fecha de vencimiento</span>
                                                     </div>
                                                 </div>
 
@@ -3214,11 +3214,11 @@ export default function Settings() {
                                 </div>
                             </div>
                             
-                            <div className="flex items-center justify-center gap-4 py-4 border-t border-dashed border-silk-beige">
+                            <div className="flex items-center justify-center gap-4 py-4 border-t border-dashed border-theme">
                                 <button
                                     onClick={saveIntegrations}
                                     disabled={isSavingIntegrations}
-                                    className="btn-primary flex items-center gap-2"
+                                    className="btn-premium-primary flex items-center gap-2"
                                 >
                                     {isSavingIntegrations ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     Guardar Configuración Citenly
@@ -3237,8 +3237,8 @@ export default function Settings() {
                     {activeTab === 'tags' && (
                         <div className="space-y-6 animate-fade-in">
                             <div>
-                                <h2 className="text-lg font-semibold text-charcoal mb-1">Etiquetas de Pacientes</h2>
-                                <p className="text-sm text-charcoal/50">Personaliza las etiquetas para organizar a tus pacientes.</p>
+                                <h2 className="text-lg font-semibold text-primary-theme mb-1">Etiquetas de Pacientes</h2>
+                                <p className="text-sm text-primary-theme/50">Personaliza las etiquetas para organizar a tus pacientes.</p>
                             </div>
                             <TagManager />
                         </div>

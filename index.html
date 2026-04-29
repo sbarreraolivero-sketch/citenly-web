@@ -18,7 +18,13 @@
   <title>Citenly AI - Gestión Inteligente de Citas</title>
 </head>
 
-<body>
+<body data-theme="dark">
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.body.dataset.theme = theme;
+    })();
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

@@ -408,17 +408,17 @@ const Finance = () => {
     return (
         <div className="space-y-6">
             {/* Header Banner */}
-            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+            <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_20px_var(--glow)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
-                            <DollarSign className="w-7 h-7 text-charcoal" />
+                        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
+                            <DollarSign className="w-7 h-7 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Finanzas</h1>
-                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                            <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
                                 📊 Gestiona los ingresos y gastos de tu clínica. Revisa la rentabilidad, los pagos por cobrar y el historial financiero detallado.
                             </p>
                         </div>
@@ -437,26 +437,26 @@ const Finance = () => {
                             </button>
 
                             {showExportMenu && (
-                                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-xl border border-silk-beige py-1 z-50 animate-in fade-in slide-in-from-top-2">
-                                    <p className="px-4 py-2 text-xs font-medium text-charcoal/40 uppercase tracking-wide">Formato de archivo</p>
+                                <div className="absolute right-0 top-full mt-2 w-52 bg-primary-theme rounded-lg shadow-xl border border-theme py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                                    <p className="px-4 py-2 text-xs font-medium text-secondary-theme uppercase tracking-wide">Formato de archivo</p>
                                     <button
                                         onClick={() => handleExport('csv')}
-                                        className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-ivory flex items-center gap-3"
+                                        className="w-full text-left px-4 py-2.5 text-sm text-primary-theme hover:bg-secondary-theme flex items-center gap-3"
                                     >
-                                        <FileText className="w-4 h-4 text-emerald-600" />
+                                        <FileText className="w-4 h-4 text-emerald-500" />
                                         <div>
                                             <p className="font-medium">CSV</p>
-                                            <p className="text-xs text-charcoal/50">Compatible con Excel</p>
+                                            <p className="text-xs text-secondary-theme">Compatible con Excel</p>
                                         </div>
                                     </button>
                                     <button
                                         onClick={() => handleExport('json')}
-                                        className="w-full text-left px-4 py-2.5 text-sm text-charcoal hover:bg-ivory flex items-center gap-3"
+                                        className="w-full text-left px-4 py-2.5 text-sm text-primary-theme hover:bg-secondary-theme flex items-center gap-3"
                                     >
-                                        <FileText className="w-4 h-4 text-amber-600" />
+                                        <FileText className="w-4 h-4 text-amber-500" />
                                         <div>
                                             <p className="font-medium">JSON</p>
-                                            <p className="text-xs text-charcoal/50">Datos para analítica</p>
+                                            <p className="text-xs text-secondary-theme">Datos para analítica</p>
                                         </div>
                                     </button>
                                 </div>
@@ -465,7 +465,7 @@ const Finance = () => {
 
                         <button
                             onClick={() => setShowIncomeModal(true)}
-                            className="bg-premium-gradient text-charcoal px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 border-none"
+                            className="bg-[var(--accent-primary)] text-white px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-[0_0_15px_var(--glow)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 border-none"
                         >
                             <Plus className="w-5 h-5" />
                             Ingreso
@@ -473,7 +473,7 @@ const Finance = () => {
 
                         <button
                             onClick={() => setShowExpenseModal(true)}
-                            className="bg-white text-primary-700 hover:bg-ivory px-4 py-2 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                            className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-4 py-2 rounded-soft text-sm font-bold transition-all shadow-lg flex items-center gap-2 border border-white/30"
                         >
                             <Plus className="w-4 h-4" />
                             <span>Gasto</span>
@@ -517,7 +517,7 @@ const Finance = () => {
                     {getDateRangeLabel(filterType)}
                 </div>
                 
-                <div className="flex bg-silk-beige/20 rounded-lg border border-silk-beige p-1 w-fit">
+                <div className="flex bg-secondary-theme rounded-lg border border-theme p-1 w-fit">
                     {(['day', 'week', 'month', 'year'] as const).map(f => (
                         <button
                             key={f}
@@ -525,8 +525,8 @@ const Finance = () => {
                             className={cn(
                                 "px-4 py-1.5 text-xs font-bold rounded-md transition-all",
                                 filterType === f
-                                    ? "bg-white text-primary-600 shadow-sm border border-silk-beige/50"
-                                    : "text-charcoal/40 hover:text-charcoal"
+                                    ? "bg-primary-theme text-primary-theme shadow-sm border border-theme"
+                                    : "text-secondary-theme hover:text-primary-theme"
                             )}
                         >
                             {f === 'day' ? 'Día' : f === 'week' ? 'Semana' : f === 'month' ? 'Mes' : 'Año'}
@@ -537,74 +537,74 @@ const Finance = () => {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="card-soft p-4 flex flex-col">
+                <div className="card-premium p-4 flex flex-col">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-emerald-600" />
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-emerald-500" />
                         </div>
                     </div>
-                    <p className="text-sm text-charcoal/60">Ingresos ({getFilterLabel()})</p>
-                    <p className="text-2xl font-bold text-charcoal mt-1">
+                    <p className="text-sm text-secondary-theme">Ingresos ({getFilterLabel()})</p>
+                    <p className="text-2xl font-bold text-primary-theme mt-1">
                         {loading ? '...' : formatCurrency(stats?.total_income || 0)}
                     </p>
                 </div>
 
-                <div className="card-soft p-4 flex flex-col">
+                <div className="card-premium p-4 flex flex-col">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                            <TrendingDown className="w-5 h-5 text-red-600" />
+                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <TrendingDown className="w-5 h-5 text-red-500" />
                         </div>
                     </div>
-                    <p className="text-sm text-charcoal/60">Gastos ({getFilterLabel()})</p>
-                    <p className="text-2xl font-bold text-charcoal mt-1">
+                    <p className="text-sm text-secondary-theme">Gastos ({getFilterLabel()})</p>
+                    <p className="text-2xl font-bold text-primary-theme mt-1">
                         {loading ? '...' : formatCurrency(stats?.total_expenses || 0)}
                     </p>
                 </div>
 
-                <div className="card-soft p-4 flex flex-col">
+                <div className="card-premium p-4 flex flex-col">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-blue-600" />
+                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-blue-500" />
                         </div>
-                        <span className="text-xs font-medium text-charcoal/40 bg-gray-100 px-2 py-1 rounded-full">
+                        <span className="text-xs font-medium text-secondary-theme bg-secondary-theme px-2 py-1 rounded-full border border-theme">
                             Neto
                         </span>
                     </div>
-                    <p className="text-sm text-charcoal/60">Ganancia Neta</p>
+                    <p className="text-sm text-secondary-theme">Ganancia Neta</p>
                     <p className={cn(
                         "text-2xl font-bold mt-1",
-                        (stats?.net_profit || 0) >= 0 ? "text-emerald-600" : "text-red-600"
+                        (stats?.net_profit || 0) >= 0 ? "text-emerald-500" : "text-red-500"
                     )}>
                         {loading ? '...' : formatCurrency(stats?.net_profit || 0)}
                     </p>
                 </div>
 
-                <div className="card-soft p-4 flex flex-col">
+                <div className="card-premium p-4 flex flex-col">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                            <CreditCard className="w-5 h-5 text-amber-600" />
+                        <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                            <CreditCard className="w-5 h-5 text-amber-500" />
                         </div>
-                        <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+                        <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
                             {stats?.appointments_count || 0} Citas
                         </span>
                     </div>
-                    <p className="text-sm text-charcoal/60">Por Cobrar</p>
-                    <p className="text-2xl font-bold text-charcoal mt-1">
+                    <p className="text-sm text-secondary-theme">Por Cobrar</p>
+                    <p className="text-2xl font-bold text-primary-theme mt-1">
                         {loading ? '...' : formatCurrency(stats?.pending_payments || 0)}
                     </p>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="bg-white rounded-soft border-b border-silk-beige px-6 sticky top-0 z-10">
+            <div className="bg-primary-theme rounded-soft border-b border-theme px-6 sticky top-0 z-10">
                 <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
                     <button
                         onClick={() => setActiveTab('dashboard')}
                         className={cn(
                             "py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                             activeTab === 'dashboard'
-                                ? "border-primary-500 text-primary-600"
-                                : "border-transparent text-charcoal/60 hover:text-charcoal"
+                                ? "border-[var(--accent-primary)] text-[var(--accent-primary)]"
+                                : "border-transparent text-secondary-theme hover:text-primary-theme"
                         )}
                     >
                         Resumen
@@ -614,8 +614,8 @@ const Finance = () => {
                         className={cn(
                             "py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                             activeTab === 'transactions'
-                                ? "border-primary-500 text-primary-600"
-                                : "border-transparent text-charcoal/60 hover:text-charcoal"
+                                ? "border-[var(--accent-primary)] text-[var(--accent-primary)]"
+                                : "border-transparent text-secondary-theme hover:text-primary-theme"
                         )}
                     >
                         Transacciones
@@ -625,8 +625,8 @@ const Finance = () => {
                         className={cn(
                             "py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                             activeTab === 'expenses'
-                                ? "border-primary-500 text-primary-600"
-                                : "border-transparent text-charcoal/60 hover:text-charcoal"
+                                ? "border-[var(--accent-primary)] text-[var(--accent-primary)]"
+                                : "border-transparent text-secondary-theme hover:text-primary-theme"
                         )}
                     >
                         Gastos
@@ -636,8 +636,8 @@ const Finance = () => {
                         className={cn(
                             "py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                             activeTab === 'incomes'
-                                ? "border-primary-500 text-primary-600"
-                                : "border-transparent text-charcoal/60 hover:text-charcoal"
+                                ? "border-[var(--accent-primary)] text-[var(--accent-primary)]"
+                                : "border-transparent text-secondary-theme hover:text-primary-theme"
                         )}
                     >
                         Otros Ingresos

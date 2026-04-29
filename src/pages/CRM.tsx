@@ -456,17 +456,17 @@ export default function CRM() {
     return (
         <div className="space-y-6 animate-fade-in pb-20">
             {/* Header Banner */}
-            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+            <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_20px_var(--glow)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
-                            <Target className="w-7 h-7 text-charcoal" />
+                        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
+                            <Target className="w-7 h-7 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">CRM & Pipeline</h1>
-                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                            <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
                                 📈 Gestiona tus prospectos y pipeline de ventas. Visualiza el embudo de conversión y optimiza la atención.
                             </p>
                         </div>
@@ -487,7 +487,7 @@ export default function CRM() {
                         </button>
                         <button 
                             onClick={() => openProspectModal()} 
-                            className="bg-white text-primary-700 hover:bg-ivory px-5 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                            className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-5 py-2.5 rounded-soft text-sm font-bold transition-all shadow-lg flex items-center gap-2 border border-white/30"
                         >
                             <Plus className="w-4 h-4" />
                             Nuevo Prospecto
@@ -527,64 +527,64 @@ export default function CRM() {
             </GuideBox>
 
             {/* Stats */}
-            <div className="rounded-soft p-5" style={{ background: 'linear-gradient(135deg, #f5e6c8 0%, #e8c97a 25%, #d4a84b 50%, #e8c97a 75%, #f5e6c8 100%)' }}>
+            <div className="rounded-soft p-5 bg-secondary-theme border border-theme shadow-[0_0_20px_rgba(0,0,0,0.1)]">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                    <div className="bg-primary-theme rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-theme shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-soft flex items-center justify-center flex-shrink-0">
                             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 truncate sm:whitespace-normal">Conversaciones</p>
-                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{totalConversations}</p>
+                            <p className="text-[11px] sm:text-sm font-black text-secondary-theme truncate sm:whitespace-normal">Conversaciones</p>
+                            <p className="text-xl sm:text-2xl font-bold text-primary-theme leading-tight">{totalConversations}</p>
                         </div>
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                    <div className="bg-primary-theme rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-theme shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500/10 rounded-soft flex items-center justify-center flex-shrink-0">
                             <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 leading-tight">Leads calificados</p>
-                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{qualifiedLeads}</p>
+                            <p className="text-[11px] sm:text-sm font-black text-secondary-theme leading-tight">Leads calificados</p>
+                            <p className="text-xl sm:text-2xl font-bold text-primary-theme leading-tight">{qualifiedLeads}</p>
                         </div>
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                    <div className="bg-primary-theme rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-theme shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500/10 rounded-soft flex items-center justify-center flex-shrink-0">
                             <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 leading-tight">Citas agendadas</p>
-                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{scheduledAppointments}</p>
+                            <p className="text-[11px] sm:text-sm font-black text-secondary-theme leading-tight">Citas agendadas</p>
+                            <p className="text-xl sm:text-2xl font-bold text-primary-theme leading-tight">{scheduledAppointments}</p>
                         </div>
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-white/50 shadow-sm min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-violet-50 rounded-soft flex items-center justify-center flex-shrink-0">
+                    <div className="bg-primary-theme rounded-soft p-3 sm:p-4 flex items-center gap-2 sm:gap-3 border border-theme shadow-sm min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-violet-500/10 rounded-soft flex items-center justify-center flex-shrink-0">
                             <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[11px] sm:text-sm font-black text-charcoal/90 leading-tight">Leads atribuidos</p>
-                            <p className="text-xl sm:text-2xl font-bold text-charcoal leading-tight">{closedLeads}</p>
+                            <p className="text-[11px] sm:text-sm font-black text-secondary-theme leading-tight">Leads atribuidos</p>
+                            <p className="text-xl sm:text-2xl font-bold text-primary-theme leading-tight">{closedLeads}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="card-soft p-4">
+            <div className="card-premium p-4">
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme" />
                         <input
                             type="text"
                             placeholder="Buscar por nombre, teléfono o email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input-soft pl-10 w-full text-sm"
+                            className="input-premium pl-10 w-full text-sm"
                         />
                     </div>
                     <select
                         value={filterTag}
                         onChange={(e) => setFilterTag(e.target.value)}
-                        className="input-soft text-sm w-44"
+                        className="input-premium text-sm w-44"
                     >
                         <option value="">Todas las etiquetas</option>
                         {tags.map(t => (
@@ -603,10 +603,10 @@ export default function CRM() {
                             <div
                                 key={stage.id}
                                 className={cn(
-                                    'w-72 flex-shrink-0 rounded-soft bg-ivory border-2 transition-colors',
+                                    'w-72 flex-shrink-0 rounded-soft bg-secondary-theme border-2 transition-colors',
                                     dragOverStage === stage.id
-                                        ? 'border-primary-400 bg-primary-50/30'
-                                        : 'border-transparent'
+                                        ? 'border-[var(--accent-primary)] bg-[var(--glow)]'
+                                        : 'border-theme'
                                 )}
                                 onDragOver={(e) => onDragOver(e, stage.id)}
                                 onDragLeave={onDragLeave}
@@ -619,8 +619,8 @@ export default function CRM() {
                                             className="w-3 h-3 rounded-full"
                                             style={{ backgroundColor: stage.color }}
                                         />
-                                        <span className="font-semibold text-sm text-charcoal">{stage.name}</span>
-                                        <span className="text-xs text-charcoal/40 bg-white px-2 py-0.5 rounded-full border border-silk-beige">
+                                        <span className="font-semibold text-sm text-primary-theme">{stage.name}</span>
+                                        <span className="text-xs text-secondary-theme bg-primary-theme px-2 py-0.5 rounded-full border border-theme">
                                             {stageProspects.length}
                                         </span>
                                     </div>
@@ -632,9 +632,9 @@ export default function CRM() {
                                             setSelectedFormTags([])
                                             setShowProspectModal(true)
                                         }}
-                                        className="p-1 hover:bg-white rounded transition-colors"
+                                        className="p-1 hover:bg-primary-theme rounded transition-colors"
                                     >
-                                        <Plus className="w-4 h-4 text-charcoal/40" />
+                                        <Plus className="w-4 h-4 text-secondary-theme" />
                                     </button>
                                 </div>
 
@@ -645,21 +645,21 @@ export default function CRM() {
                                             key={prospect.id}
                                             draggable
                                             onDragStart={() => onDragStart(prospect.id)}
-                                            className="bg-white rounded-soft border border-silk-beige p-3 cursor-grab active:cursor-grabbing hover:shadow-sm transition-all group"
+                                            className="bg-primary-theme rounded-soft border border-theme p-3 cursor-grab active:cursor-grabbing hover:shadow-[0_0_15px_var(--glow)] transition-all group"
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <div className="flex items-center gap-2 min-w-0">
-                                                    <GripVertical className="w-3.5 h-3.5 text-charcoal/20 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    <p className="font-medium text-sm text-charcoal truncate">
+                                                    <GripVertical className="w-3.5 h-3.5 text-secondary-theme opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <p className="font-medium text-sm text-primary-theme truncate">
                                                         {prospect.name || 'Sin nombre'}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-0.5 flex-shrink-0">
                                                     <button
                                                         onClick={() => openProspectModal(prospect)}
-                                                        className="p-1 hover:bg-primary-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                        className="p-1 hover:bg-[var(--glow)] rounded transition-colors opacity-0 group-hover:opacity-100"
                                                     >
-                                                        <Edit2 className="w-3 h-3 text-primary-500" />
+                                                        <Edit2 className="w-3 h-3 text-[var(--accent-primary)]" />
                                                     </button>
                                                     {showDeleteConfirm === prospect.id ? (
                                                         <div className="flex items-center gap-1 bg-red-50 px-1 rounded animate-fade-in">
@@ -684,14 +684,14 @@ export default function CRM() {
                                             </div>
 
                                             {prospect.phone && (
-                                                <div className="flex items-center gap-1.5 text-xs text-charcoal/60 mb-1">
+                                                <div className="flex items-center gap-1.5 text-xs text-secondary-theme mb-1">
                                                     <Phone className="w-3 h-3" />
                                                     {prospect.phone}
                                                 </div>
                                             )}
 
                                             {prospect.service_interest && (
-                                                <div className="flex items-center gap-1.5 text-xs text-charcoal/60 mb-1">
+                                                <div className="flex items-center gap-1.5 text-xs text-secondary-theme mb-1">
                                                     <Briefcase className="w-3 h-3" />
                                                     {prospect.service_interest}
                                                 </div>
@@ -712,12 +712,12 @@ export default function CRM() {
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-silk-beige/50">
-                                                <span className="text-xs font-semibold text-charcoal/70">
+                                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-theme">
+                                                <span className="text-xs font-semibold text-secondary-theme">
                                                     {formatDate(prospect.created_at)}
                                                 </span>
                                                 {prospect.source && (
-                                                    <span className="text-xs font-bold text-charcoal/60 bg-ivory px-2 py-0.5 rounded border border-silk-beige">
+                                                    <span className="text-xs font-bold text-secondary-theme bg-secondary-theme px-2 py-0.5 rounded border border-theme">
                                                         {prospect.source}
                                                     </span>
                                                 )}

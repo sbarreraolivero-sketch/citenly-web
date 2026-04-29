@@ -630,13 +630,13 @@ export default function Appointments() {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'confirmed':
-                return <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                return <CheckCircle2 className="w-3.5 h-3.5" />
             case 'pending':
-                return <AlertCircle className="w-4 h-4 text-amber-600" />
+                return <AlertCircle className="w-3.5 h-3.5" />
             case 'cancelled':
-                return <XCircle className="w-4 h-4 text-red-600" />
+                return <XCircle className="w-3.5 h-3.5" />
             case 'completed':
-                return <CheckCircle2 className="w-4 h-4 text-primary-600" />
+                return <CheckCircle2 className="w-3.5 h-3.5" />
             default:
                 return null
         }
@@ -711,17 +711,17 @@ export default function Appointments() {
     return (
         <div className="space-y-6 animate-fade-in pb-20">
             {/* Header Banner */}
-            <div className="bg-hero-gradient rounded-softer p-6 text-white shadow-soft-md relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+            <div className="bg-[var(--gradient-primary)] rounded-softer p-6 text-white shadow-[0_0_20px_var(--glow)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
                 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-premium-gradient rounded-full flex items-center justify-center shadow-lg shrink-0">
-                            <Calendar className="w-7 h-7 text-charcoal" />
+                        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
+                            <Calendar className="w-7 h-7 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Citas</h1>
-                            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+                            <p className="text-white/90 text-sm mt-1 max-w-2xl leading-relaxed">
                                 📅 Gestiona la agenda de tu clínica. Organiza las consultas de tus profesionales y automatiza los recordatorios para reducir el ausentismo.
                             </p>
                         </div>
@@ -742,7 +742,7 @@ export default function Appointments() {
                             })
                             setShowModal(true)
                         }}
-                        className="bg-white text-primary-700 hover:bg-ivory px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-sm flex items-center gap-2"
+                        className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md px-6 py-2.5 rounded-soft text-sm font-bold transition-all shadow-lg flex items-center gap-2 border border-white/30"
                     >
                         <Plus className="w-5 h-5" />
                         Nueva Cita
@@ -755,41 +755,41 @@ export default function Appointments() {
                 summary="Aprende a reducir las inasistencias y a vincular las citas con el historial clínico de tus pacientes."
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
-                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                    <div className="bg-secondary-theme/50 p-3.5 rounded-soft border border-theme">
+                        <p className="font-black text-[var(--accent-primary)] text-[10px] mb-1.5 flex items-center gap-1.5 uppercase tracking-widest">
                             <MessageCircle className="w-3.5 h-3.5" /> Recordatorios de WhatsApp:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                        <p className="text-[11px] leading-relaxed text-secondary-theme font-medium">
                             Usa el botón de WhatsApp en cada cita para enviar recordatorios manuales o encuestas. El sistema también envía notificaciones automáticas 24h antes para confirmar la asistencia.
                         </p>
                     </div>
-                    <div className="bg-white/50 p-3.5 rounded-soft border border-silk-beige/30">
-                        <p className="font-bold text-primary-700 text-[11px] mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                    <div className="bg-secondary-theme/50 p-3.5 rounded-soft border border-theme">
+                        <p className="font-black text-[var(--accent-primary)] text-[10px] mb-1.5 flex items-center gap-1.5 uppercase tracking-widest">
                             <User className="w-3.5 h-3.5" /> Ficha Clínica Integrada:
                         </p>
-                        <p className="text-[11px] leading-relaxed text-charcoal/70">
+                        <p className="text-[11px] leading-relaxed text-secondary-theme font-medium">
                             Al marcar una cita como "Completada", el sistema te sugerirá abrir la ficha clínica. Esto centraliza la información y facilita el seguimiento evolutivo del paciente.
                         </p>
                     </div>
                 </div>
-                <p className="text-[10px] text-charcoal/50 mt-2 italic flex items-center gap-1.5">
+                <p className="text-[10px] text-secondary-theme mt-2 italic flex items-center gap-1.5 font-medium">
                     <Lightbulb className="w-3 h-3" /> Tip: Si sincronizas tu Google Calendar, evita mover citas manualmente en Google; hazlo siempre desde Elistic para mantener la integridad de tus reportes.
                 </p>
             </GuideBox>
 
 
             {/* Filters */}
-            <div className="card-soft p-4">
+            <div className="card-premium p-4">
                 <div className="flex flex-wrap items-center gap-4">
                     {/* Search */}
                     <div className="flex-1 w-full min-w-[200px] sm:min-w-0 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme" />
                         <input
                             type="text"
                             placeholder="Buscar por nombre, servicio o teléfono..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-ivory border border-silk-beige rounded-soft text-sm placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                            className="input-premium pl-10 w-full"
                         />
                     </div>
 
@@ -798,10 +798,10 @@ export default function Appointments() {
                         <button
                             onClick={() => setShowDatePicker(!showDatePicker)}
                             className={cn(
-                                "flex items-center gap-2 px-4 py-2.5 border rounded-soft text-sm transition-colors",
+                                "flex items-center gap-2 px-4 py-2.5 border rounded-soft text-sm transition-colors font-bold",
                                 dateFilter !== 'all'
-                                    ? "bg-primary-50 border-primary-300 text-primary-700"
-                                    : "bg-ivory border-silk-beige text-charcoal/70 hover:bg-silk-beige/50"
+                                    ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--accent-primary)]"
+                                    : "bg-secondary-theme border-theme text-secondary-theme hover:bg-secondary-theme/50"
                             )}
                         >
                             <Calendar className="w-4 h-4" />
@@ -811,12 +811,12 @@ export default function Appointments() {
                         </button>
 
                         {showDatePicker && (
-                            <div className="absolute top-full left-0 mt-2 bg-white rounded-soft shadow-premium-lg border border-silk-beige py-2 min-w-[150px] z-10">
+                            <div className="absolute top-full left-0 mt-2 bg-primary-theme rounded-soft shadow-premium-lg border border-theme py-2 min-w-[150px] z-10">
                                 <button
                                     onClick={() => { setDateFilter('all'); setShowDatePicker(false); }}
                                     className={cn(
-                                        "w-full px-4 py-2 text-left text-sm hover:bg-ivory transition-colors",
-                                        dateFilter === 'all' && "bg-primary-50 text-primary-700"
+                                        "w-full px-4 py-2 text-left text-sm hover:bg-secondary-theme transition-colors font-medium",
+                                        dateFilter === 'all' ? "text-[var(--accent-primary)] bg-[var(--accent-primary)]/5" : "text-secondary-theme"
                                     )}
                                 >
                                     Todas las fechas
@@ -824,8 +824,8 @@ export default function Appointments() {
                                 <button
                                     onClick={() => { setDateFilter('today'); setShowDatePicker(false); }}
                                     className={cn(
-                                        "w-full px-4 py-2 text-left text-sm hover:bg-ivory transition-colors",
-                                        dateFilter === 'today' && "bg-primary-50 text-primary-700"
+                                        "w-full px-4 py-2 text-left text-sm hover:bg-secondary-theme transition-colors font-medium",
+                                        dateFilter === 'today' ? "text-[var(--accent-primary)] bg-[var(--accent-primary)]/5" : "text-secondary-theme"
                                     )}
                                 >
                                     Hoy
@@ -833,8 +833,8 @@ export default function Appointments() {
                                 <button
                                     onClick={() => { setDateFilter('tomorrow'); setShowDatePicker(false); }}
                                     className={cn(
-                                        "w-full px-4 py-2 text-left text-sm hover:bg-ivory transition-colors",
-                                        dateFilter === 'tomorrow' && "bg-primary-50 text-primary-700"
+                                        "w-full px-4 py-2 text-left text-sm hover:bg-secondary-theme transition-colors font-medium",
+                                        dateFilter === 'tomorrow' ? "text-[var(--accent-primary)] bg-[var(--accent-primary)]/5" : "text-secondary-theme"
                                     )}
                                 >
                                     Mañana
@@ -842,8 +842,8 @@ export default function Appointments() {
                                 <button
                                     onClick={() => { setDateFilter('week'); setShowDatePicker(false); }}
                                     className={cn(
-                                        "w-full px-4 py-2 text-left text-sm hover:bg-ivory transition-colors",
-                                        dateFilter === 'week' && "bg-primary-50 text-primary-700"
+                                        "w-full px-4 py-2 text-left text-sm hover:bg-secondary-theme transition-colors font-medium",
+                                        dateFilter === 'week' ? "text-[var(--accent-primary)] bg-[var(--accent-primary)]/5" : "text-secondary-theme"
                                     )}
                                 >
                                     Esta Semana
@@ -857,10 +857,10 @@ export default function Appointments() {
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={cn(
-                                "flex items-center gap-2 px-4 py-2.5 border rounded-soft text-sm transition-colors",
+                                "flex items-center gap-2 px-4 py-2.5 border rounded-soft text-sm transition-colors font-bold",
                                 showFilters
-                                    ? "bg-primary-50 border-primary-300 text-primary-700"
-                                    : "bg-ivory border-silk-beige text-charcoal/70 hover:bg-silk-beige/50"
+                                    ? "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--accent-primary)]"
+                                    : "bg-secondary-theme border-theme text-secondary-theme hover:bg-secondary-theme/50"
                             )}
                         >
                             <Filter className="w-4 h-4" />
@@ -868,19 +868,19 @@ export default function Appointments() {
                         </button>
 
                         {showFilters && (
-                            <div className="absolute top-full right-0 mt-2 bg-white rounded-soft shadow-premium-lg border border-silk-beige p-4 min-w-[200px] z-10">
-                                <p className="text-xs font-medium text-charcoal/50 uppercase mb-3">Ordenar por</p>
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-2 text-sm text-charcoal cursor-pointer">
-                                        <input type="radio" name="sort" defaultChecked className="accent-primary-500" />
+                            <div className="absolute top-full right-0 mt-2 bg-primary-theme rounded-soft shadow-premium-lg border border-theme p-4 min-w-[200px] z-10">
+                                <p className="text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-3">Ordenar por</p>
+                                <div className="space-y-3">
+                                    <label className="flex items-center gap-2 text-sm text-primary-theme cursor-pointer font-bold">
+                                        <input type="radio" name="sort" defaultChecked className="accent-[var(--accent-primary)]" />
                                         Fecha (más reciente)
                                     </label>
-                                    <label className="flex items-center gap-2 text-sm text-charcoal cursor-pointer">
-                                        <input type="radio" name="sort" className="accent-primary-500" />
+                                    <label className="flex items-center gap-2 text-sm text-primary-theme cursor-pointer font-bold">
+                                        <input type="radio" name="sort" className="accent-[var(--accent-primary)]" />
                                         Fecha (más antigua)
                                     </label>
-                                    <label className="flex items-center gap-2 text-sm text-charcoal cursor-pointer">
-                                        <input type="radio" name="sort" className="accent-primary-500" />
+                                    <label className="flex items-center gap-2 text-sm text-primary-theme cursor-pointer font-bold">
+                                        <input type="radio" name="sort" className="accent-[var(--accent-primary)]" />
                                         Nombre (A-Z)
                                     </label>
                                 </div>
@@ -907,14 +907,14 @@ export default function Appointments() {
                     </button> */}
 
                     {/* View Toggle */}
-                    <div className="flex bg-ivory border border-silk-beige rounded-soft p-1">
+                    <div className="flex bg-secondary-theme border border-theme rounded-soft p-1">
                         <button
                             onClick={() => setViewMode('list')}
                             className={cn(
                                 "p-2 rounded-soft transition-all",
                                 viewMode === 'list'
-                                    ? "bg-white shadow-soft text-primary-600"
-                                    : "text-charcoal/40 hover:text-charcoal"
+                                    ? "bg-primary-theme shadow-md text-[var(--accent-primary)]"
+                                    : "text-secondary-theme hover:text-primary-theme"
                             )}
                             title="Vista de Lista"
                         >
@@ -925,8 +925,8 @@ export default function Appointments() {
                             className={cn(
                                 "p-2 rounded-soft transition-all",
                                 viewMode === 'calendar'
-                                    ? "bg-white shadow-soft text-primary-600"
-                                    : "text-charcoal/40 hover:text-charcoal"
+                                    ? "bg-primary-theme shadow-md text-[var(--accent-primary)]"
+                                    : "text-secondary-theme hover:text-primary-theme"
                             )}
                             title="Vista de Calendario"
                         >
@@ -936,23 +936,23 @@ export default function Appointments() {
                 </div>
 
                 {viewMode === 'list' && (
-                    <div className="flex gap-2 mt-4 border-t border-silk-beige pt-4 overflow-x-auto pb-2 scrollbar-none">
+                    <div className="flex gap-2 mt-4 border-t border-theme pt-4 overflow-x-auto pb-2 scrollbar-none">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    'whitespace-nowrap flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-soft text-sm font-medium transition-colors',
+                                    'whitespace-nowrap flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-soft text-sm font-bold transition-all uppercase tracking-widest text-[10px]',
                                     activeTab === tab.id
-                                        ? 'bg-primary-500 text-white'
-                                        : 'text-charcoal/60 hover:bg-silk-beige/50 hover:text-charcoal'
+                                        ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--glow)]'
+                                        : 'text-secondary-theme hover:bg-secondary-theme hover:text-primary-theme'
                                 )}
                             >
                                 {tab.label}
                                 <span
                                     className={cn(
-                                        'w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0',
-                                        activeTab === tab.id ? 'bg-white/20' : 'bg-silk-beige'
+                                        'w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0',
+                                        activeTab === tab.id ? 'bg-white/20' : 'bg-secondary-theme'
                                     )}
                                 >
                                     {getTabCount(tab.id)}
@@ -966,14 +966,14 @@ export default function Appointments() {
             {/* Professional Filter Pills */}
             {!isProfessional && professionals.length > 1 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-medium text-charcoal/50 uppercase tracking-wide mr-1">Profesional:</span>
+                    <span className="text-[10px] font-black text-secondary-theme uppercase tracking-widest mr-1">Profesional:</span>
                     <button
                         onClick={() => setProfessionalFilter('all')}
                         className={cn(
-                            'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                            'px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border',
                             professionalFilter === 'all'
-                                ? 'bg-charcoal text-white border-charcoal'
-                                : 'bg-ivory text-charcoal/60 border-silk-beige hover:border-charcoal/30'
+                                ? 'bg-primary-theme text-[var(--accent-primary)] border-[var(--accent-primary)] shadow-sm'
+                                : 'bg-secondary-theme text-secondary-theme border-theme hover:border-secondary-theme'
                         )}
                     >
                         Todos
@@ -983,14 +983,14 @@ export default function Appointments() {
                             key={prof.member_id}
                             onClick={() => setProfessionalFilter(prof.member_id)}
                             className={cn(
-                                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border',
                                 professionalFilter === prof.member_id
-                                    ? 'bg-charcoal text-white border-charcoal'
-                                    : 'bg-ivory text-charcoal/60 border-silk-beige hover:border-charcoal/30'
+                                    ? 'bg-primary-theme text-[var(--accent-primary)] border-[var(--accent-primary)] shadow-sm'
+                                    : 'bg-secondary-theme text-secondary-theme border-theme hover:border-secondary-theme'
                             )}
                         >
                             <div
-                                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                className="w-2 h-2 rounded-full flex-shrink-0 shadow-sm"
                                 style={{ backgroundColor: prof.color || '#8B5CF6' }}
                             />
                             {prof.first_name || prof.email}
@@ -1103,15 +1103,15 @@ export default function Appointments() {
             ) : (
                 <>
                     {/* Appointments Table (Desktop) */}
-                    <div className="card-soft overflow-x-auto hidden md:block">
+                    <div className="card-premium overflow-x-auto hidden md:block border-theme">
                         <table className="w-full min-w-[800px]">
                             <thead>
-                                <tr className="border-b border-silk-beige bg-ivory/50">
-                                    <th className="text-left py-4 px-6 text-sm font-medium text-charcoal/60">Paciente</th>
-                                    <th className="text-left py-4 px-6 text-sm font-medium text-charcoal/60">Servicio</th>
-                                    <th className="text-left py-4 px-6 text-sm font-medium text-charcoal/60">Fecha y Hora</th>
-                                    <th className="text-left py-4 px-6 text-sm font-medium text-charcoal/60">Estado</th>
-                                    <th className="text-right py-4 px-6 text-sm font-medium text-charcoal/60">Acciones</th>
+                                <tr className="border-b border-theme bg-secondary-theme/50">
+                                    <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Paciente</th>
+                                    <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Servicio</th>
+                                    <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Fecha y Hora</th>
+                                    <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Estado</th>
+                                    <th className="text-right py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1119,18 +1119,18 @@ export default function Appointments() {
                                     <tr
                                         key={appointment.id}
                                         className={cn(
-                                            'border-b border-silk-beige/50 hover:bg-ivory/50 transition-colors',
+                                            'border-b border-theme/30 hover:bg-secondary-theme/30 transition-colors',
                                             index === filteredAppointments.length - 1 && 'border-b-0'
                                         )}
                                     >
                                         <td className="py-4 px-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-silk-beige rounded-full flex items-center justify-center">
-                                                    <User className="w-5 h-5 text-charcoal/50" />
+                                                <div className="w-10 h-10 bg-secondary-theme rounded-full flex items-center justify-center border border-theme">
+                                                    <User className="w-5 h-5 text-secondary-theme" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-charcoal">{appointment.patient_name}</p>
-                                                    <p className="text-sm text-charcoal/50 flex items-center gap-1">
+                                                    <p className="font-bold text-primary-theme">{appointment.patient_name}</p>
+                                                    <p className="text-xs text-secondary-theme flex items-center gap-1 font-medium">
                                                         <Phone className="w-3 h-3" />
                                                         {formatPhoneNumber(appointment.phone_number)}
                                                     </p>
@@ -1138,17 +1138,17 @@ export default function Appointments() {
                                             </div>
                                         </td>
                                         <td className="py-4 px-6">
-                                            <p className="text-charcoal">{appointment.service}</p>
+                                            <p className="text-primary-theme font-bold">{appointment.service}</p>
                                             {appointment.notes && (
-                                                <p className="text-sm text-charcoal/50 mt-0.5">{appointment.notes}</p>
+                                                <p className="text-xs text-secondary-theme mt-0.5 line-clamp-1 font-medium italic">"{appointment.notes}"</p>
                                             )}
                                         </td>
                                         <td className="py-4 px-6">
                                             <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 text-charcoal/40" />
+                                                <Calendar className="w-4 h-4 text-secondary-theme opacity-40" />
                                                 <div>
-                                                    <p className="text-charcoal capitalize">{formatDate(appointment.appointment_date)}</p>
-                                                    <p className="text-sm text-charcoal/50 flex items-center gap-1">
+                                                    <p className="text-primary-theme font-bold capitalize">{formatDate(appointment.appointment_date)}</p>
+                                                    <p className="text-xs text-secondary-theme flex items-center gap-1 font-medium">
                                                         <Clock className="w-3 h-3" />
                                                         {formatTime(appointment.appointment_date)}
                                                     </p>
@@ -1156,7 +1156,7 @@ export default function Appointments() {
                                             </div>
                                         </td>
                                         <td className="py-4 px-6">
-                                            <span className={cn('inline-flex items-center gap-1.5', getStatusColor(appointment.status))}>
+                                            <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm', getStatusColor(appointment.status))}>
                                                 {getStatusIcon(appointment.status)}
                                                 {getStatusLabel(appointment.status)}
                                             </span>
@@ -1167,13 +1167,13 @@ export default function Appointments() {
                                                     <>
                                                         <button
                                                             onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                                                            className="px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-soft transition-colors"
+                                                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-soft transition-all"
                                                         >
                                                             Confirmar
                                                         </button>
                                                         <button
                                                             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                                                            className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-soft transition-colors"
+                                                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-soft transition-all"
                                                         >
                                                             Cancelar
                                                         </button>
@@ -1182,7 +1182,7 @@ export default function Appointments() {
                                                 {appointment.status === 'confirmed' && (
                                                     <button
                                                         onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                                                        className="px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-soft transition-colors"
+                                                        className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 hover:bg-[var(--accent-primary)]/20 rounded-soft transition-all"
                                                     >
                                                         Completar
                                                     </button>
@@ -1190,7 +1190,7 @@ export default function Appointments() {
                                                 {appointment.status === 'completed' && (
                                                     <button
                                                         onClick={() => handleSendSurvey(appointment)}
-                                                        className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-soft transition-colors flex items-center gap-1"
+                                                        className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-soft transition-all flex items-center gap-1"
                                                         title="Enviar Encuesta de Satisfacción"
                                                     >
                                                         <MessageCircle className="w-3 h-3" />
@@ -1200,20 +1200,20 @@ export default function Appointments() {
                                                 {(appointment.status === 'confirmed' || appointment.status === 'pending') && (
                                                     <button
                                                         onClick={() => handleSendReminder(appointment)}
-                                                        className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-soft transition-colors"
+                                                        className="p-2 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10 rounded-soft transition-all"
                                                         title="Enviar Recordatorio WhatsApp"
                                                     >
                                                         <MessageCircle className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 <div className="relative group">
-                                                    <button className="p-2 text-charcoal/50 hover:text-charcoal hover:bg-ivory rounded-soft transition-colors">
+                                                    <button className="p-2 text-secondary-theme hover:text-primary-theme hover:bg-secondary-theme rounded-soft transition-all">
                                                         <MoreVertical className="w-4 h-4" />
                                                     </button>
 
                                                     {/* Dropdown Menu */}
                                                     <div className="absolute right-0 top-full w-48 hidden group-hover:block z-20 pt-1">
-                                                        <div className="bg-white rounded-soft shadow-premium border border-silk-beige overflow-hidden">
+                                                        <div className="bg-primary-theme rounded-soft shadow-premium-lg border border-theme overflow-hidden">
                                                             <button
                                                                 onClick={() => {
                                                                     setEditingId(appointment.id) // Set editing mode
@@ -1229,14 +1229,14 @@ export default function Appointments() {
                                                                     })
                                                                     setShowModal(true) // Open modal
                                                                 }}
-                                                                className="w-full text-left px-4 py-2 text-sm text-charcoal hover:bg-gray-50 flex items-center gap-2"
+                                                                className="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary-theme hover:bg-secondary-theme flex items-center gap-2 transition-colors"
                                                             >
                                                                 <Settings className="w-4 h-4" />
                                                                 Editar Cita
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteAppointment(appointment)}
-                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                                className="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
                                                             >
                                                                 <Trash2 className="w-4 h-4" />
                                                                 Eliminar Cita
@@ -1253,8 +1253,8 @@ export default function Appointments() {
 
                         {filteredAppointments.length === 0 && (
                             <div className="py-12 text-center">
-                                <Calendar className="w-12 h-12 text-charcoal/20 mx-auto mb-4" />
-                                <p className="text-charcoal/50">No se encontraron citas</p>
+                                <Calendar className="w-12 h-12 text-secondary-theme opacity-20 mx-auto mb-4" />
+                                <p className="text-secondary-theme font-medium text-sm">No se encontraron citas</p>
                             </div>
                         )}
                     </div>
@@ -1303,22 +1303,19 @@ export default function Appointments() {
                                                 {formatTime(appointment.appointment_date)}
                                             </span>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {/* Footer: Actions */}
-                                <div className="flex gap-2 pt-1 border-t border-silk-beige/30 mt-1 pb-1">
+                                    </div                                {/* Footer: Actions */}
+                                <div className="flex gap-2 pt-1 border-t border-theme mt-1 pb-1">
                                     {appointment.status === 'pending' && (
                                         <>
                                             <button
                                                 onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                                                className="flex-1 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
+                                                className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-all"
                                             >
                                                 Confirmar
                                             </button>
                                             <button
                                                 onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                                                className="flex-1 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                                                className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all"
                                             >
                                                 Cancelar
                                             </button>
@@ -1327,7 +1324,7 @@ export default function Appointments() {
                                     {appointment.status === 'confirmed' && (
                                         <button
                                             onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                                            className="flex-1 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                                            className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 hover:bg-[var(--accent-primary)]/20 rounded-xl transition-all"
                                         >
                                             Completar
                                         </button>
@@ -1335,21 +1332,22 @@ export default function Appointments() {
                                     {appointment.status === 'completed' && (
                                         <button
                                             onClick={() => handleSendSurvey(appointment)}
-                                            className="flex-1 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors flex justify-center items-center gap-1.5"
+                                            className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-xl transition-all flex justify-center items-center gap-1.5"
                                         >
                                             <MessageCircle className="w-3.5 h-3.5" />
                                             Encuesta
                                         </button>
                                     )}
-
+ 
                                     {(appointment.status === 'confirmed' || appointment.status === 'pending') && (
                                         <button
                                             onClick={() => handleSendReminder(appointment)}
-                                            className="p-2.5 text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 rounded-xl transition-colors flex justify-center items-center"
+                                            className="p-2.5 text-emerald-500 hover:text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-all flex justify-center items-center"
                                             title="WhatsApp"
                                         >
                                             <MessageCircle className="w-4 h-4" />
                                         </button>
+                                    )}on>
                                     )}
 
                                     <button
@@ -1367,7 +1365,7 @@ export default function Appointments() {
                                             })
                                             setShowModal(true)
                                         }}
-                                        className="p-2.5 text-charcoal/60 hover:text-charcoal bg-ivory/50 hover:bg-silk-beige rounded-xl transition-colors flex justify-center items-center"
+                                        className="p-2.5 text-secondary-theme hover:text-primary-theme bg-secondary-theme hover:bg-theme rounded-xl transition-all flex justify-center items-center border border-theme"
                                     >
                                         <Settings className="w-4 h-4" />
                                     </button>
@@ -1383,24 +1381,24 @@ export default function Appointments() {
 
                     {/* Google Calendar Events Section */}
                     {googleEvents.length > 0 && (
-                        <div className="card-soft overflow-hidden mt-4">
-                            <div className="flex items-center justify-between p-4 border-b border-silk-beige bg-blue-50/50">
+                        <div className="card-premium overflow-hidden mt-6 border-blue-500/20 bg-blue-500/[0.02]">
+                            <div className="flex items-center justify-between p-4 border-b border-blue-500/10 bg-blue-500/5">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-blue-500" />
-                                    <h3 className="font-medium text-charcoal text-sm">Google Calendar</h3>
-                                    <span className="text-xs text-charcoal/50 bg-blue-100 px-2 py-0.5 rounded-full">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
+                                    <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Google Calendar Sync</h3>
+                                    <span className="text-[10px] font-black text-blue-400 bg-blue-400/10 px-2.5 py-0.5 rounded-full border border-blue-400/20">
                                         {googleEvents.length} eventos
                                     </span>
                                 </div>
                                 <button
                                     onClick={fetchGoogleEvents}
-                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors"
                                 >
                                     <RefreshCw className={cn("w-3 h-3")} />
-                                    Actualizar
+                                    Sincronizar
                                 </button>
                             </div>
-                            <div className="divide-y divide-silk-beige/50">
+                            <div className="divide-y divide-blue-500/5">
                                 {googleEvents
                                     .filter(event => {
                                         const eventDate = new Date(event.start)
@@ -1409,30 +1407,29 @@ export default function Appointments() {
                                         return eventDate >= now
                                     })
                                     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-                                    .slice(0, 10)
                                     .map((event) => (
                                         <div
                                             key={event.id}
-                                            className="flex items-center gap-4 p-4 hover:bg-ivory/50 transition-colors"
+                                            className="flex items-center gap-4 p-4 hover:bg-blue-500/5 transition-colors"
                                         >
-                                            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-500/20">
                                                 <Calendar className="w-5 h-5 text-blue-500" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-charcoal truncate">{event.title}</p>
+                                                <p className="text-sm font-bold text-primary-theme truncate">{event.title}</p>
                                                 {event.resource?.description && (
-                                                    <p className="text-xs text-charcoal/50 truncate mt-0.5">{event.resource.description}</p>
+                                                    <p className="text-[10px] text-secondary-theme truncate mt-0.5 font-medium italic">"{event.resource.description}"</p>
                                                 )}
                                             </div>
                                             <div className="text-right flex-shrink-0">
-                                                <p className="text-sm text-charcoal capitalize">
+                                                <p className="text-[10px] font-black text-primary-theme uppercase tracking-widest capitalize">
                                                     {new Date(event.start).toLocaleDateString('es-MX', {
                                                         weekday: 'short',
                                                         day: 'numeric',
                                                         month: 'short',
                                                     })}
                                                 </p>
-                                                <p className="text-xs text-charcoal/50 flex items-center gap-1 justify-end">
+                                                <p className="text-[10px] font-bold text-blue-500 flex items-center gap-1 justify-end uppercase tracking-widest mt-1">
                                                     <Clock className="w-3 h-3" />
                                                     {event.resource?.isAllDay ? 'Todo el día' : new Date(event.start).toLocaleTimeString('es-MX', {
                                                         hour: '2-digit',
@@ -1445,7 +1442,7 @@ export default function Appointments() {
                                                     href={event.resource.htmlLink}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-soft transition-colors"
+                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-all border border-blue-500/10"
                                                     title="Abrir en Google Calendar"
                                                 >
                                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1467,36 +1464,36 @@ export default function Appointments() {
             {/* New Appointment Modal */}
             {
                 showModal && createPortal(
-                    <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in max-h-[90vh] flex flex-col">
-                            <div className="flex items-center justify-between p-6 border-b border-silk-beige flex-shrink-0">
-                                <h2 className="text-xl font-bold text-charcoal">
+                    <div className="fixed inset-0 bg-[var(--bg-primary)]/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="bg-primary-theme rounded-soft shadow-[0_0_30px_rgba(0,0,0,0.3)] w-full max-w-lg animate-scale-in max-h-[90vh] flex flex-col border border-theme">
+                            <div className="flex items-center justify-between p-6 border-b border-theme flex-shrink-0">
+                                <h2 className="text-xl font-bold text-primary-theme">
                                     {editingId ? 'Editar Cita' : 'Nueva Cita'}
                                 </h2>
-                                <button
-                                    onClick={() => {
-                                        setShowModal(false)
-                                        setEditingId(null)
-                                        setNewAppointment({
-                                            patient_name: '',
-                                            phone_number: '',
-                                            service: '',
-                                            appointment_date: '',
-                                            appointment_time: '',
-                                            notes: '',
-                                            professional_id: '',
-                                            box_id: ''
-                                        })
-                                    }}
-                                    className="p-2 hover:bg-ivory rounded-soft transition-colors"
-                                >
-                                    <X className="w-5 h-5 text-charcoal/50" />
-                                </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowModal(false)
+                                            setEditingId(null)
+                                            setNewAppointment({
+                                                patient_name: '',
+                                                phone_number: '',
+                                                service: '',
+                                                appointment_date: '',
+                                                appointment_time: '',
+                                                notes: '',
+                                                professional_id: '',
+                                                box_id: ''
+                                            })
+                                        }}
+                                        className="p-2 hover:bg-secondary-theme rounded-soft transition-colors"
+                                    >
+                                        <X className="w-5 h-5 text-secondary-theme" />
+                                    </button>
                             </div>
 
                             <div className="p-6 space-y-4 overflow-y-auto flex-1">
                                 <div className="relative">
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-sm font-medium text-primary-theme mb-2">
                                         Nombre del Paciente *
                                     </label>
                                     <input
@@ -1508,11 +1505,11 @@ export default function Appointments() {
                                             setNewAppointment({ ...newAppointment, patient_name: e.target.value })
                                         }}
                                         placeholder="Ej: María García"
-                                        className="input-soft w-full"
+                                        className="input-premium w-full"
                                         autoComplete="off"
                                     />
                                     {patientSuggestions.length > 0 && (
-                                        <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-white rounded-soft border border-silk-beige shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-primary-theme rounded-soft border border-theme shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                                             {patientSuggestions.map((patient) => (
                                                 <button
                                                     key={patient.id}
@@ -1527,16 +1524,16 @@ export default function Appointments() {
                                                         })
                                                         setPatientSuggestions([])
                                                     }}
-                                                    className="w-full text-left px-4 py-3 hover:bg-ivory transition-colors flex items-center justify-between border-b border-silk-beige/30 last:border-0"
+                                                    className="w-full text-left px-4 py-3 hover:bg-secondary-theme transition-colors flex items-center justify-between border-b border-theme last:border-0"
                                                 >
                                                     <div>
-                                                        <div className="text-sm font-bold text-charcoal">{patient.name}</div>
-                                                        <div className="text-[11px] text-charcoal/50 flex items-center gap-1 mt-0.5">
+                                                        <div className="text-sm font-bold text-primary-theme">{patient.name}</div>
+                                                        <div className="text-[11px] text-secondary-theme flex items-center gap-1 mt-0.5">
                                                             <Phone className="w-3 h-3" />
                                                             {patient.phone_number}
                                                         </div>
                                                     </div>
-                                                    <Plus className="w-4 h-4 text-primary-500" />
+                                                    <Plus className="w-4 h-4 text-[var(--accent-primary)]" />
                                                 </button>
                                             ))}
                                         </div>
@@ -1544,7 +1541,7 @@ export default function Appointments() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-sm font-medium text-primary-theme mb-2">
                                         Teléfono *
                                     </label>
                                     <input
@@ -1552,12 +1549,12 @@ export default function Appointments() {
                                         value={newAppointment.phone_number}
                                         onChange={(e) => setNewAppointment({ ...newAppointment, phone_number: e.target.value })}
                                         placeholder="Ej: 56912345678"
-                                        className="input-soft w-full"
+                                        className="input-premium w-full"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
                                         Servicio *
                                     </label>
                                     <div className="relative">
@@ -1569,7 +1566,7 @@ export default function Appointments() {
                                                     service: e.target.value
                                                 })
                                             }}
-                                            className="input-soft w-full appearance-none"
+                                            className="input-premium w-full appearance-none"
                                         >
                                             <option value="">Selecciona un servicio</option>
                                             {services.map((service) => (
@@ -1578,12 +1575,12 @@ export default function Appointments() {
                                                 </option>
                                             ))}
                                         </select>
-                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40 rotate-90 pointer-events-none" />
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme rotate-90 pointer-events-none" />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
                                         Profesional
                                     </label>
                                     <div className="relative">
@@ -1595,7 +1592,7 @@ export default function Appointments() {
                                                     professional_id: e.target.value
                                                 })
                                             }}
-                                            className="input-soft w-full appearance-none"
+                                            className="input-premium w-full appearance-none"
                                         >
                                             <option value="">Sin asignar</option>
                                             {professionals.map((prof) => (
@@ -1604,7 +1601,7 @@ export default function Appointments() {
                                                 </option>
                                             ))}
                                         </select>
-                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40 rotate-90 pointer-events-none" />
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme rotate-90 pointer-events-none" />
                                     </div>
                                     {newAppointment.professional_id && (
                                         <div className="mt-1.5 flex items-center gap-2">
@@ -1613,7 +1610,7 @@ export default function Appointments() {
                                                 return prof ? (
                                                     <>
                                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: prof.color || '#8B5CF6' }} />
-                                                        <span className="text-xs text-charcoal/60">
+                                                        <span className="text-[10px] font-black text-secondary-theme uppercase tracking-widest">
                                                             {prof.job_title || prof.specialty || prof.role}
                                                         </span>
                                                     </>
@@ -1624,14 +1621,14 @@ export default function Appointments() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-sm font-medium text-primary-theme mb-2">
                                         Box / Consultorio
                                     </label>
                                     <div className="relative">
                                         <select
                                             value={newAppointment.box_id}
                                             onChange={(e) => setNewAppointment({ ...newAppointment, box_id: e.target.value })}
-                                            className="input-soft w-full appearance-none"
+                                            className="input-premium w-full appearance-none"
                                         >
                                             <option value="">Sin asignar</option>
                                             {clinicBoxes.map((box: any) => (
@@ -1640,20 +1637,20 @@ export default function Appointments() {
                                                 </option>
                                             ))}
                                         </select>
-                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/40 rotate-90 pointer-events-none" />
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme rotate-90 pointer-events-none" />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                        <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
                                             Fecha *
                                         </label>
                                         <input
                                             type="date"
                                             value={newAppointment.appointment_date}
                                             onChange={(e) => setNewAppointment({ ...newAppointment, appointment_date: e.target.value })}
-                                            className="input-soft w-full !px-2 sm:!px-4"
+                                            className="input-premium w-full !px-2 sm:!px-4"
                                         />
                                     </div>
                                     <div>
@@ -1739,7 +1736,7 @@ export default function Appointments() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
+                                    <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
                                         Notas (opcional)
                                     </label>
                                     <textarea
@@ -1747,7 +1744,7 @@ export default function Appointments() {
                                         onChange={(e) => setNewAppointment({ ...newAppointment, notes: e.target.value })}
                                         placeholder="Notas adicionales..."
                                         rows={3}
-                                        className="input-soft w-full resize-none"
+                                        className="input-premium w-full resize-none font-medium h-24"
                                     />
                                 </div>
                             </div>
@@ -1755,7 +1752,7 @@ export default function Appointments() {
                             <div className="flex justify-between items-center p-6 border-t border-silk-beige flex-shrink-0 bg-white rounded-b-soft">
                                 <div>
                                     {editingId && (
-                                        <div className="flex gap-4 items-center">
+                                        <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             <button
                                                 onClick={() => {
                                                     const appt = appointments.find(a => a.id === editingId)
@@ -1764,7 +1761,7 @@ export default function Appointments() {
                                                         setShowModal(false)
                                                     }
                                                 }}
-                                                className="text-sm text-red-600 hover:text-red-700 font-bold flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 rounded-soft transition-all ring-1 ring-red-200"
+                                                className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 flex items-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-full transition-all border border-red-500/20"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                                 Eliminar Definitivamente
@@ -1776,7 +1773,7 @@ export default function Appointments() {
                                                         setShowModal(false)
                                                     }
                                                 }}
-                                                className="text-sm text-charcoal/50 hover:text-charcoal font-medium underline underline-offset-4 decoration-charcoal/20"
+                                                className="text-[10px] font-black uppercase tracking-widest text-secondary-theme hover:text-primary-theme transition-colors underline underline-offset-4 decoration-theme"
                                             >
                                                 Sólo Cancelar
                                             </button>
@@ -1799,19 +1796,19 @@ export default function Appointments() {
                                                 box_id: ''
                                             })
                                         }}
-                                        className="btn-ghost"
+                                        className="px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary-theme hover:text-primary-theme transition-colors"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         onClick={handleSaveAppointment}
                                         disabled={saving || !newAppointment.patient_name || !newAppointment.phone_number || !newAppointment.service || !newAppointment.appointment_date || !newAppointment.appointment_time}
-                                        className="btn-primary flex items-center gap-2"
+                                        className="btn-premium-primary px-8"
                                     >
                                         {saving ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
                                         ) : (
-                                            <><Plus className="w-4 h-4" /> {editingId ? 'Guardar Cambios' : 'Crear Cita'}</>
+                                            <>{editingId ? 'Guardar Cambios' : 'Crear Cita'}</>
                                         )}
                                     </button>
                                 </div>
