@@ -266,14 +266,14 @@ export default function DashboardLayout() {
                 isSidebarCollapsed ? "w-20" : "w-64"
             )}>
                 {/* Logo */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-theme relative group cursor-pointer transition-colors hover:bg-secondary-theme" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+                <div className="h-20 flex items-center justify-between px-6 border-b border-theme relative group cursor-pointer transition-colors hover:bg-secondary-theme" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-gray-800 rounded-soft flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary-400" />
+                        <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-[#FF2E88] to-[#FF4DA6] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(255,46,136,0.2)]">
+                            <Sparkles className="w-5 h-5 text-white" />
                         </div>
                         <div className={cn("transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                            <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-primary-600">Citenly</h1>
-                            <p className="text-xs text-gray-400 -mt-0.5">AI System</p>
+                            <h1 className="text-xl font-bold text-white tracking-tight">Citenly</h1>
+                            <p className="text-[10px] text-secondary-theme font-black uppercase tracking-widest -mt-1 opacity-60">AI System</p>
                         </div>
                     </div>
                 </div>
@@ -297,13 +297,13 @@ export default function DashboardLayout() {
                                 onClick={() => setShowMobileMenu(false)}
                                 title={isSidebarCollapsed ? item.name : undefined}
                                 className={cn(
-                                    'sidebar-item-premium',
-                                    isActive && 'active',
+                                    'sidebar-item-premium px-4 py-3',
+                                    isActive && 'active bg-gradient-to-r from-[#FF2E88]/10 to-transparent border-r-2 border-[#FF2E88]',
                                     isSidebarCollapsed && 'justify-center px-0'
                                 )}
                             >
-                                <item.icon className={cn("shrink-0", isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-accent-400" : "text-gray-500")} />
-                                <span className={cn("transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>{item.name}</span>
+                                <item.icon className={cn("shrink-0", isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-[#FF2E88]" : "text-secondary-theme")} />
+                                <span className={cn("text-sm font-medium transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100", isActive ? "text-white" : "text-secondary-theme")}>{item.name}</span>
                             </NavLink>
                         )
                     })}
@@ -311,14 +311,14 @@ export default function DashboardLayout() {
 
                 {/* Footer - AI Status */}
                 <div className="p-4 border-t border-theme">
-                    <div className={cn("card-premium border-none transition-all duration-300", isSidebarCollapsed ? "p-2 flex justify-center" : "p-4")}>
+                    <div className={cn("bg-secondary-theme/50 rounded-2xl border border-theme transition-all duration-300", isSidebarCollapsed ? "p-2 flex justify-center" : "p-4")}>
                         <div className="flex items-center gap-3">
-                            <div className={cn("shrink-0 bg-secondary-theme rounded-full flex items-center justify-center", isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10")}>
-                                <Sparkles className="w-5 h-5 text-primary-400" />
+                            <div className={cn("shrink-0 bg-[#FF2E88]/10 rounded-xl flex items-center justify-center", isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10")}>
+                                <Sparkles className="w-5 h-5 text-[#FF2E88]" />
                             </div>
                             <div className={cn("min-w-0 transition-opacity duration-300", isSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                                <p className="text-sm font-medium text-white truncate">IA Activa</p>
-                                <p className="text-xs text-gray-400">Respondiendo 24/7</p>
+                                <p className="text-sm font-bold text-white truncate">IA Activa</p>
+                                <p className="text-[10px] text-secondary-theme font-black uppercase tracking-widest">Respondiendo 24/7</p>
                             </div>
                         </div>
                     </div>
@@ -517,11 +517,11 @@ export default function DashboardLayout() {
                                     <p className="text-sm font-medium text-primary-theme">{userName}</p>
                                     <p className="text-xs text-secondary-theme">{userRole}</p>
                                 </div>
-                                <div className="w-10 h-10 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full flex items-center justify-center text-white font-medium shadow-[0_0_15px_rgba(255,46,136,0.25)]">
+                                <div className="w-10 h-10 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full flex items-center justify-center text-white font-bold shadow-[0_0_15px_rgba(255,46,136,0.3)] border-2 border-white/10">
                                     {getInitials(userName)}
                                 </div>
                                 <ChevronDown className={cn(
-                                    "w-4 h-4 text-secondary-theme transition-transform",
+                                    "w-4 h-4 text-secondary-theme transition-transform opacity-50",
                                     showUserMenu && "rotate-180"
                                 )} />
                             </button>

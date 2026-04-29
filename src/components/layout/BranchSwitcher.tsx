@@ -4,8 +4,7 @@ import {
     ChevronsUpDown,
     Check,
     Plus,
-    Building2,
-    Store
+    Building2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import CreateBranchModal from './CreateBranchModal'
@@ -35,22 +34,22 @@ export default function BranchSwitcher() {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-2 rounded-soft hover:bg-silk-beige/50 transition-colors border border-transparent hover:border-silk-beige group"
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-secondary-theme transition-all border border-transparent hover:border-theme group"
             >
                 <div className="flex items-center gap-3 min-w-0 text-left">
-                    <div className="w-8 h-8 bg-primary-100 text-primary-600 rounded-soft flex items-center justify-center shrink-0">
-                        <Store className="w-4 h-4" />
+                    <div className="w-10 h-10 bg-secondary-theme rounded-xl flex items-center justify-center shrink-0 border border-theme">
+                        <Building2 className="w-5 h-5 text-[#FF2E88]" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-medium text-charcoal truncate">
+                        <p className="text-sm font-bold text-white truncate leading-tight">
                             {currentClinic?.clinic_name || 'Mi Clínica'}
                         </p>
-                        <p className="text-xs text-charcoal/50 truncate">
-                            {currentClinic?.address || (currentClinic?.role === 'owner' ? 'Dueño' : 'Equipo')}
+                        <p className="text-[10px] text-secondary-theme font-black uppercase tracking-widest leading-tight mt-0.5">
+                            {currentClinic?.role === 'owner' ? 'Dueño' : 'Equipo'}
                         </p>
                     </div>
                 </div>
-                <ChevronsUpDown className="w-4 h-4 text-charcoal/40 group-hover:text-charcoal/60" />
+                <ChevronsUpDown className="w-4 h-4 text-secondary-theme opacity-40 group-hover:opacity-100 transition-opacity" />
             </button>
 
             {isOpen && (
@@ -59,8 +58,8 @@ export default function BranchSwitcher() {
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-soft shadow-soft-lg border border-silk-beige z-50 py-1 max-h-80 overflow-auto">
-                        <div className="px-2 py-1.5 text-xs font-semibold text-charcoal/40 uppercase tracking-wider">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-secondary-theme rounded-xl shadow-2xl border border-theme z-50 py-1 max-h-80 overflow-auto animate-slide-up">
+                        <div className="px-3 py-2 text-[10px] font-black text-secondary-theme uppercase tracking-widest border-b border-theme mb-1">
                             Sucursales
                         </div>
 
@@ -69,35 +68,35 @@ export default function BranchSwitcher() {
                                 key={clinic.clinic_id}
                                 onClick={() => handleSwitch(clinic.clinic_id)}
                                 className={cn(
-                                    "w-full flex items-center justify-between px-3 py-2 text-sm transition-colors hover:bg-silk-beige/30",
-                                    clinic.clinic_id === profile?.clinic_id ? "bg-primary-50/50 text-primary-700" : "text-charcoal/80"
+                                    "w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-white/5",
+                                    clinic.clinic_id === profile?.clinic_id ? "bg-[rgba(255,46,136,0.05)] text-[#FF2E88]" : "text-secondary-theme"
                                 )}
                             >
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 truncate">
-                                        <Building2 className="w-3.5 h-3.5 opacity-70" />
-                                        <span className="truncate font-medium">{clinic.clinic_name}</span>
+                                        <Building2 className="w-3.5 h-3.5 opacity-50" />
+                                        <span className="truncate font-bold">{clinic.clinic_name}</span>
                                     </div>
                                     {clinic.address && (
-                                        <p className="text-xs text-charcoal/50 truncate pl-5.5">
+                                        <p className="text-[10px] opacity-60 truncate pl-5.5 font-medium">
                                             {clinic.address}
                                         </p>
                                     )}
                                 </div>
                                 {clinic.clinic_id === profile?.clinic_id && (
-                                    <Check className="w-3.5 h-3.5 text-primary-600 shrink-0" />
+                                    <Check className="w-3.5 h-3.5 text-[#FF2E88] shrink-0" />
                                 )}
                             </button>
                         ))}
 
                         {canCreateBranch && (
-                            <div className="border-t border-silk-beige mt-1 pt-1 px-1">
+                            <div className="border-t border-theme mt-1 pt-1 px-1">
                                 <button
                                     onClick={() => {
                                         setIsOpen(false)
                                         setShowCreateModal(true)
                                     }}
-                                    className="w-full flex items-center gap-2 px-2 py-2 text-sm text-charcoal/60 hover:text-primary-600 hover:bg-silk-beige/30 rounded-soft transition-colors"
+                                    className="w-full flex items-center gap-2 px-3 py-3 text-[11px] font-black uppercase tracking-widest text-secondary-theme hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Nueva Sucursal

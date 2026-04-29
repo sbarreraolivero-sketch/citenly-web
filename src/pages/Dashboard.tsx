@@ -241,77 +241,66 @@ export default function Dashboard() {
 
     const statCards = [
         {
-            name: 'Citas agendadas',
+            name: 'CITAS AGENDADAS',
             value: stats.scheduledAppointments,
             icon: Calendar,
-            color: 'bg-indigo-500',
-            textColor: 'text-indigo-500',
-            bgLight: 'bg-indigo-50',
-            trend: '+12%', // Static placeholder for premium look
+            trend: '+12%',
             isUp: true
         },
         {
-            name: 'Nuevos Prospectos',
+            name: 'NUEVOS PROSPECTOS',
             value: stats.newProspects,
             icon: Target,
-            color: 'bg-emerald-500',
-            textColor: 'text-emerald-500',
-            bgLight: 'bg-emerald-50',
             trend: '+8%',
             isUp: true
         },
         {
-            name: 'Mensajes de IA',
+            name: 'MENSAJES DE IA',
             value: stats.aiMessagesSent,
             icon: MessageSquare,
-            color: 'bg-amber-500',
-            textColor: 'text-amber-500',
-            bgLight: 'bg-amber-50',
             trend: '+24%',
             isUp: true
         },
         {
-            name: 'Recordatorios',
+            name: 'RECORDATORIOS',
             value: stats.remindersSent,
             icon: Bell,
-            color: 'bg-blue-500',
-            textColor: 'text-blue-500',
-            bgLight: 'bg-blue-50',
             trend: '100%',
             isUp: true
         },
     ]
 
     return (
-        <div className="space-y-6 animate-fade-in">            {/* Welcome Banner and Filter Row */}
-            <div className="flex flex-col gap-4">
-                <div className="bg-[var(--gradient-primary)] rounded-softer p-4 text-white shadow-[0_0_20px_var(--glow)]">
-                    <div className="flex items-center justify-between">
+        <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
+            <div className="flex flex-col gap-6">
+                <div className="bg-secondary-theme/40 rounded-[24px] p-6 text-white border border-white/5 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF2E88]/10 to-transparent opacity-50" />
+                    <div className="flex items-center justify-between relative z-10">
                         <div>
-                            <h1 className="text-xl font-bold text-white">¡Hola, {profile?.full_name?.split(' ')[0]}! 👋</h1>
-                            <p className="text-sm text-white/90">Tu asistente IA está activo y listo para gestionar tus citas.</p>
+                            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">¡Hola, {profile?.full_name?.split(' ')[0]}! 👋</h1>
+                            <p className="text-sm text-secondary-theme font-medium mt-1">Tu asistente IA está activo y listo para gestionar tus citas.</p>
                         </div>
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm hidden sm:flex">
-                            <Sparkles className="w-6 h-6 text-white" />
+                        <div className="w-14 h-14 bg-gradient-to-br from-[#FF2E88] to-[#FF4DA6] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(255,46,136,0.4)] animate-pulse-slow">
+                            <Sparkles className="w-7 h-7 text-white" />
                         </div>
                     </div>
                 </div>
 
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-secondary-theme uppercase tracking-widest">Resumen de Rendimiento</p>
+                        <p className="text-[10px] font-black text-secondary-theme uppercase tracking-[0.2em]">Resumen de Rendimiento</p>
                     </div>
                     
-                    <div className="flex items-center gap-1 p-1 bg-secondary-theme rounded-full border border-theme w-full md:w-auto overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-1 p-1 bg-secondary-theme/50 rounded-xl border border-theme w-full md:w-auto">
                         {filterOptions.map((opt) => (
                             <button
                                 key={opt.id}
                                 onClick={() => setFilterRange(opt.id as any)}
                                 className={cn(
-                                    "px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all",
+                                    "px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all",
                                     filterRange === opt.id 
-                                        ? "bg-[var(--accent-primary)] text-white shadow-[0_0_15px_var(--glow)]"
-                                        : "text-secondary-theme hover:text-primary-theme"
+                                        ? "bg-[#FF2E88] text-white shadow-[0_0_15px_rgba(255,46,136,0.3)]"
+                                        : "text-secondary-theme hover:text-white"
                                 )}
                             >
                                 {opt.label}
@@ -324,33 +313,28 @@ export default function Dashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {statCards.map((stat) => (
-                    <div key={stat.name} className="card-premium p-5 hover:shadow-[0_0_25px_var(--glow)] transition-all group overflow-hidden relative">
-                        {/* Decorative circle */}
-                        <div className={cn("absolute -top-12 -right-12 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-110", stat.color)} />
-                        
+                    <div key={stat.name} className="card-premium p-6 hover:border-[#FF2E88]/30 transition-all group relative overflow-hidden">
                         <div className="flex items-start justify-between relative z-10">
-                            <div className="w-10 h-10 rounded-soft flex items-center justify-center bg-secondary-theme border border-theme shadow-sm">
-                                <stat.icon className={cn("w-5 h-5", stat.textColor)} />
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#FF2E88]/10 border border-[#FF2E88]/20 shadow-[0_0_15px_rgba(255,46,136,0.1)] group-hover:bg-[#FF2E88]/20 transition-colors">
+                                <stat.icon className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                             <div className={cn(
-                                "flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-full shadow-sm",
-                                stat.isUp ? "bg-emerald-500/15 text-emerald-500" : "bg-red-500/15 text-red-500"
+                                "flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg border",
+                                stat.isUp ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"
                             )}>
-                                {stat.isUp ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                                {stat.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                                 {stat.trend}
                             </div>
                         </div>
                         
-                        <div className="mt-4 relative z-10">
-                            <div className="flex items-baseline gap-1">
-                                <p className="text-3xl font-bold text-primary-theme leading-none">{stat.value}</p>
-                            </div>
-                            <p className="text-xs font-black uppercase tracking-widest text-primary-theme mt-2 opacity-70">{stat.name}</p>
+                        <div className="mt-6 relative z-10">
+                            <p className="text-4xl font-bold text-white tracking-tight leading-none">{stat.value}</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-secondary-theme mt-3">{stat.name}</p>
                         </div>
 
-                        {/* Mobile optimizations (sparkline placeholder look) */}
-                        <div className="mt-4 h-1.5 w-full bg-secondary-theme rounded-full overflow-hidden">
-                            <div className={cn("h-full rounded-full transition-all duration-700", stat.color)} style={{ width: '65%' }} />
+                        {/* Bottom indicator bar matching reference image */}
+                        <div className="absolute bottom-0 left-6 right-6 h-1.5 bg-secondary-theme/50 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full shadow-[0_0_10px_rgba(255,46,136,0.5)] transition-all duration-1000" style={{ width: '40%' }} />
                         </div>
                     </div>
                 ))}
@@ -359,10 +343,10 @@ export default function Dashboard() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Upcoming Appointments */}
-                <div className="lg:col-span-2 card-premium p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-primary-theme">Próximas Citas</h3>
-                        <Link to="/app/appointments" className="text-sm text-[var(--accent-primary)] hover:underline font-medium">
+                <div className="lg:col-span-2 card-premium p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-lg font-bold text-white tracking-tight">Próximas Citas</h3>
+                        <Link to="/app/appointments" className="text-[11px] font-black uppercase tracking-widest text-[#FF2E88] hover:opacity-80 transition-opacity">
                             Ver todas
                         </Link>
                     </div>
@@ -403,10 +387,10 @@ export default function Dashboard() {
                 </div>
 
                 {/* Recent Messages */}
-                <div className="card-premium p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-primary-theme">Mensajes Recientes</h3>
-                        <Link to="/app/messages" className="text-sm text-[var(--accent-primary)] hover:underline font-medium">
+                <div className="card-premium p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-lg font-bold text-white tracking-tight">Mensajes Recientes</h3>
+                        <Link to="/app/messages" className="text-[11px] font-black uppercase tracking-widest text-[#FF2E88] hover:opacity-80 transition-opacity">
                             Ver todos
                         </Link>
                     </div>
@@ -445,15 +429,15 @@ export default function Dashboard() {
             </div>
 
             {/* Services Ranking */}
-            <div className="card-premium p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-soft flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                            <Crown className="w-5 h-5 text-white" />
+            <div className="card-premium p-8">
+                <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#FF2E88]/10 rounded-xl flex items-center justify-center border border-[#FF2E88]/20 shadow-[0_0_20px_rgba(255,46,136,0.15)]">
+                            <Crown className="w-6 h-6 text-[#FF2E88]" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-primary-theme">Ranking de Servicios (Este Mes)</h3>
-                            <p className="text-sm text-secondary-theme">Servicios más solicitados</p>
+                            <h3 className="text-lg font-bold text-white tracking-tight">Ranking de Servicios (Este Mes)</h3>
+                            <p className="text-xs text-secondary-theme font-medium">Servicios más solicitados</p>
                         </div>
                     </div>
                 </div>
@@ -484,11 +468,9 @@ export default function Dashboard() {
                                                 }`} />
                                         </div>
                                     </div>
-                                    <div className="h-2 bg-secondary-theme rounded-full overflow-hidden border border-theme">
+                                    <div className="h-2 bg-secondary-theme/30 rounded-full overflow-hidden border border-theme/50">
                                         <div
-                                            className={`h-full rounded-full transition-all duration-500 ${index === 0 ? 'bg-[var(--gradient-primary)] shadow-[0_0_10px_var(--glow)]' :
-                                                'bg-[var(--accent-primary)]/40'
-                                                }`}
+                                            className="h-full bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full shadow-[0_0_10px_rgba(255,46,136,0.4)] transition-all duration-1000"
                                             style={{ width: `${service.percentage}%` }}
                                         />
                                     </div>
@@ -502,81 +484,97 @@ export default function Dashboard() {
             {/* Analytics Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Conversion Rate Card */}
-                <div className="card-premium p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-soft flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                                <Target className="w-5 h-5 text-white" />
+                <div className="card-premium p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#FF2E88]/10 rounded-xl flex items-center justify-center border border-[#FF2E88]/20">
+                                <Target className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-primary-theme">Tasa de Conversión (Mes)</h3>
-                                <p className="text-sm text-secondary-theme">Consultas vs Citas Agendadas</p>
+                                <h3 className="text-lg font-bold text-white tracking-tight">Tasa de Conversión (Mes)</h3>
+                                <p className="text-xs text-secondary-theme font-medium">Consultas vs Citas Agendadas</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="text-center py-6">
-                        <p className="text-4xl font-bold text-primary-theme">{conversionStats.rate}%</p>
-                        <p className="text-sm text-secondary-theme mt-2">De efectividad este mes</p>
+                    <div className="relative py-10 flex flex-col items-center justify-center">
+                        <p className="text-5xl font-black text-white tracking-tighter relative z-10">{conversionStats.rate}%</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-theme mt-3 relative z-10">De efectividad este mes</p>
+                        
+                        {/* Wave decoration placeholder */}
+                        <div className="absolute inset-0 flex items-end justify-center opacity-20 pointer-events-none">
+                            <svg className="w-full h-20" viewBox="0 0 400 100" preserveAspectRatio="none">
+                                <path d="M0,50 C50,20 100,80 150,50 C200,20 250,80 300,50 C350,20 400,80 450,50 L500,50 L500,100 L0,100 Z" fill="url(#wave-grad)" />
+                                <defs>
+                                    <linearGradient id="wave-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="#FF2E88" />
+                                        <stop offset="100%" stopColor="transparent" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-theme">
+                    <div className="grid grid-cols-3 gap-4 pt-8 border-t border-theme/50">
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-primary-theme">{conversionStats.consultations}</p>
-                            <p className="text-xs text-secondary-theme">Contactos</p>
+                            <p className="text-xl font-bold text-white">{conversionStats.consultations}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Contactos</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-primary-theme">{conversionStats.converted}</p>
-                            <p className="text-xs text-secondary-theme">Citas</p>
+                            <p className="text-xl font-bold text-white">{conversionStats.converted}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Citas</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-primary-theme">{conversionStats.lost}</p>
-                            <p className="text-xs text-secondary-theme">Sin Cita</p>
+                            <p className="text-xl font-bold text-white">{conversionStats.lost}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Sin Cita</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Satisfaction Surveys Card */}
-                <div className="card-premium p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-soft flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                <Star className="w-5 h-5 text-white" />
+                <div className="card-premium p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#FF2E88]/10 rounded-xl flex items-center justify-center border border-[#FF2E88]/20">
+                                <Star className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-primary-theme">Satisfacción (NPS)</h3>
-                                <p className="text-sm text-secondary-theme">Calidad de servicio</p>
+                                <h3 className="text-lg font-bold text-white tracking-tight">Satisfacción (NPS)</h3>
+                                <p className="text-xs text-secondary-theme font-medium">Calidad de servicio</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="text-center py-6">
-                        <div className="flex justify-center gap-1 mb-2">
+                    <div className="text-center py-6 flex flex-col items-center">
+                        <div className="flex justify-center gap-1.5 mb-4">
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                     key={star}
-                                    className={`w-6 h-6 ${star <= Math.round(satisfactionStats.average) ? 'text-amber-400 fill-amber-400' : 'text-primary-theme opacity-10'}`}
+                                    className={`w-7 h-7 ${star <= Math.round(satisfactionStats.average) ? 'text-[#FF2E88] fill-[#FF2E88]' : 'text-secondary-theme/20'}`}
                                 />
                             ))}
                         </div>
-                        <p className="text-2xl font-bold text-primary-theme">{satisfactionStats.average.toFixed(1)} / 5.0</p>
-                        <p className="text-xs text-secondary-theme mt-1">Promedio de {satisfactionStats.responded} respuestas</p>
+                        <p className="text-4xl font-black text-white tracking-tighter">{satisfactionStats.average.toFixed(1)} / 5.0</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme mt-2">Basado en {satisfactionStats.responded} respuestas</p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-theme">
+                    <div className="grid grid-cols-3 gap-4 pt-8 border-t border-theme/50">
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-primary-theme">{satisfactionStats.sent}</p>
-                            <p className="text-xs text-secondary-theme">Enviadas</p>
+                            <p className="text-xl font-bold text-white">{satisfactionStats.sent}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Enviadas</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-primary-theme">{satisfactionStats.responded}</p>
-                            <p className="text-xs text-secondary-theme">Respondidas</p>
+                            <p className="text-xl font-bold text-white">{satisfactionStats.responded}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Respondidas</p>
                         </div>
                         <div className="text-center">
-                            <p className={`text-lg font-semibold ${satisfactionStats.nps > 0 ? 'text-emerald-500' : 'text-primary-theme'}`}>
+                            <p className={cn(
+                                "text-xl font-bold",
+                                satisfactionStats.nps > 0 ? 'text-emerald-500' : 'text-white'
+                            )}>
                                 {satisfactionStats.nps > 0 ? '+' : ''}{satisfactionStats.nps}
                             </p>
-                            <p className="text-xs text-secondary-theme">NPS</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">NPS</p>
                         </div>
                     </div>
                 </div>
