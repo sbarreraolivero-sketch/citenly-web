@@ -123,8 +123,8 @@ export function PatientSecurityHeader({
 
     return (
         <div className="mb-6 space-y-4 animate-fade-in relative z-[100]">
-            {/* Main Primary Banner: Dentalink Style */}
-            <div className="bg-primary-700 text-white rounded-softer shadow-2xl p-0 overflow-hidden border border-primary-800/50">
+            {/* Main Primary Banner: Premium Style */}
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-0 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
                 <div className="px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-8 relative">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none" />
                     
@@ -138,15 +138,15 @@ export function PatientSecurityHeader({
                             </button>
                         )}
                         
-                        <div className="w-20 h-20 rounded-full bg-white text-primary-700 flex items-center justify-center text-3xl font-black shadow-xl border-2 border-primary-600/20 shrink-0 transform hover:rotate-3 transition-transform">
+                        <div className="w-20 h-20 rounded-full bg-white dark:bg-black text-[#FF2E88] flex items-center justify-center text-3xl font-black shadow-xl border-2 border-[#FF2E88]/20 shrink-0 transform hover:rotate-3 transition-transform">
                             {initials}
                         </div>
                         
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-3xl font-black tracking-tight leading-none text-white">
-                                    {patient.name}
-                                </h2>
+                                <h2 className="text-3xl font-black tracking-tight leading-none text-primary-theme dark:text-white">
+                                     {patient.name}
+                                 </h2>
                                 <div className="px-2 py-0.5 bg-blue-400/20 rounded-soft border border-white/10 flex items-center gap-1.5">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/50">ID</span>
                                     <span className="text-[11px] font-black text-white">{patient.id.slice(0, 4)}</span>
@@ -155,19 +155,19 @@ export function PatientSecurityHeader({
                             
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 font-bold text-sm">
                                 <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest text-white/50">RUT</span>
-                                    <span className="text-white">{patient.rut || 'No definido'}</span>
-                                </div>
-                                <div className="h-3 w-px bg-white/10" />
-                                <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest text-white/50">Sexo</span>
-                                    <span className="text-white">{patient.gender || 'Femenino'}</span>
-                                </div>
-                                <div className="h-3 w-px bg-white/10" />
-                                <div className="flex items-center gap-2">
-                                    <span className="uppercase text-[10px] font-black tracking-widest text-white/50">Edad</span>
-                                    <span className="text-white">{getAge(patient.birth_date)}</span>
-                                </div>
+                                     <span className="uppercase text-[10px] font-black tracking-widest opacity-50">RUT</span>
+                                     <span className="text-primary-theme dark:text-white">{patient.rut || 'No definido'}</span>
+                                 </div>
+                                 <div className="h-3 w-px bg-theme/10" />
+                                 <div className="flex items-center gap-2">
+                                     <span className="uppercase text-[10px] font-black tracking-widest opacity-50">Sexo</span>
+                                     <span className="text-primary-theme dark:text-white">{patient.gender || 'Femenino'}</span>
+                                 </div>
+                                 <div className="h-3 w-px bg-theme/10" />
+                                 <div className="flex items-center gap-2">
+                                     <span className="uppercase text-[10px] font-black tracking-widest opacity-50">Edad</span>
+                                     <span className="text-primary-theme dark:text-white">{getAge(patient.birth_date)}</span>
+                                 </div>
                             </div>
                         </div>
                     </div>
@@ -202,7 +202,7 @@ export function PatientSecurityHeader({
                 </div>
 
                 {/* Context Bar: Professional, Convenio, Sucursal, BOX */}
-                <div className="bg-[#f8f9fa] px-8 py-3.5 flex items-center justify-between border-t border-black/5 relative overflow-visible">
+                <div className="bg-secondary-theme px-8 py-3.5 flex items-center justify-between border-t border-theme relative overflow-visible">
                     <div className="flex items-center gap-8">
                         {/* Profesional Dropdown */}
                         <div className="flex items-center gap-3 group relative">
@@ -212,10 +212,10 @@ export function PatientSecurityHeader({
                             <div className="flex flex-col relative text-left">
                                 <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">Profesional</span>
                                 <div 
-                                    className="flex items-center gap-1 cursor-pointer hover:bg-black/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
+                                    className="flex items-center gap-1 cursor-pointer hover:bg-theme/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
                                     onClick={() => { setShowProfDropdown(!showProfDropdown); setShowBoxDropdown(false); }}
                                 >
-                                    <span className="text-xs font-black text-primary-700 truncate max-w-[120px]">{currentProfessional}</span>
+                                    <span className="text-xs font-black text-primary-theme truncate max-w-[120px]">{currentProfessional}</span>
                                     <ChevronDown className={cn("w-3.5 h-3.5 text-primary-500 transition-transform", showProfDropdown && "rotate-180")} />
                                 </div>
 
@@ -252,10 +252,10 @@ export function PatientSecurityHeader({
                             <div className="flex flex-col relative text-left">
                                 <span className="text-[9px] font-black text-charcoal/60 uppercase tracking-widest leading-none mb-1">BOX / SILLÓN</span>
                                 <div 
-                                    className="flex items-center gap-1 cursor-pointer hover:bg-black/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
+                                    className="flex items-center gap-1 cursor-pointer hover:bg-theme/5 px-1 py-0.5 -ml-1 rounded transition-colors group"
                                     onClick={() => { setShowBoxDropdown(!showBoxDropdown); setShowProfDropdown(false); }}
                                 >
-                                    <span className="text-xs font-black text-primary-700">{currentBox}</span>
+                                    <span className="text-xs font-black text-primary-theme">{currentBox}</span>
                                     <ChevronDown className={cn("w-3.5 h-3.5 text-primary-500 transition-transform", showBoxDropdown && "rotate-180")} />
                                 </div>
 
@@ -305,10 +305,10 @@ export function PatientSecurityHeader({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="px-5 py-2 bg-white border border-silk-beige text-charcoal text-[10px] font-black uppercase tracking-widest rounded-soft hover:bg-ivory transition-all shadow-sm">
+                        <button className="px-5 py-2 bg-primary-theme border border-theme text-primary-theme text-[10px] font-black uppercase tracking-widest rounded-soft hover:bg-secondary-theme transition-all shadow-sm">
                              Agendar
                         </button>
-                        <button className="px-5 py-2 bg-primary-600 text-white rounded-soft text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all">
+                        <button className="px-5 py-2 bg-[#FF2E88] text-white rounded-soft text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#FF2E88]/20 hover:bg-[#FF4DA6] transition-all">
                              Historia
                         </button>
                     </div>

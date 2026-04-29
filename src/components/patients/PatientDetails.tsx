@@ -438,8 +438,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <button
                         onClick={() => setActiveTab('info')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'info'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         Información Personal
@@ -450,20 +450,20 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <button
                         onClick={() => setActiveTab('history')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'history'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         Historial Clínico
                         {activeTab === 'history' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-theme rounded-t-full shadow-[0_0_8px_var(--glow)]"></div>
                         )}
                     </button>
                     <button
                         onClick={() => setActiveTab('gallery')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'gallery'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         Galería
@@ -475,8 +475,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <button
                         onClick={() => setActiveTab('odontogram')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'odontogram'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         <div className="flex items-center gap-1.5">
@@ -490,8 +490,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <button
                         onClick={() => setActiveTab('periodontogram')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'periodontogram'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         <div className="flex items-center gap-1.5">
@@ -505,8 +505,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <button
                         onClick={() => setActiveTab('prescriptions')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'prescriptions'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         <div className="flex items-center gap-1.5">
@@ -520,8 +520,8 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                     <button
                         onClick={() => setActiveTab('budgets')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'budgets'
-                            ? 'text-primary-600'
-                            : 'text-charcoal/60 hover:text-charcoal'
+                            ? 'text-primary-theme'
+                            : 'text-secondary-theme hover:text-primary-theme'
                             }`}
                     >
                         <div className="flex items-center gap-1.5 justify-center relative">
@@ -788,7 +788,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
                         {/* 3. Notas Generales (Moved below) */}
                         <div className="card-soft p-6 shadow-md border-silk-beige-dark">
                             <div className="flex justify-between items-center mb-6 border-b border-silk-beige pb-2">
-                                <h3 className="font-black text-charcoal uppercase tracking-tight text-sm">Notas Generales de Gestión</h3>
+                                <h3 className="font-black text-primary-theme uppercase tracking-tight text-sm">Notas Generales de Gestión</h3>
                                 {!isEditingNotes ? (
                                     <button
                                         onClick={() => setIsEditingNotes(true)}
