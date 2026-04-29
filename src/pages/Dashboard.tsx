@@ -297,11 +297,11 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="hidden lg:block bg-white/50 dark:bg-black/20 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/50 dark:border-white/10">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme dark:text-[#374151] mb-1">Estado del Sistema</p>
+                    <div className="hidden lg:block bg-white/80 dark:bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl border border-[#FF2E88]/20 shadow-lg">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-black/50 mb-1">Estado del Sistema</p>
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-                            <span className="text-xs font-bold text-primary-theme dark:text-[#0B0B0F]">IA Operativa</span>
+                            <span className="text-xs font-bold text-black">IA Operativa</span>
                         </div>
                     </div>
                 </div>
