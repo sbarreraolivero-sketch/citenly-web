@@ -423,3 +423,23 @@ body {
 .hover-glow:hover {
   box-shadow: 0 0 15px var(--glow);
 }
+
+/* Dark mode overrides for native form controls */
+[data-theme="dark"] input[type="time"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] select {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+[data-theme="dark"] option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}

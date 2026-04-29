@@ -1620,7 +1620,7 @@ export default function Settings() {
                             {/* Add/Edit Service Modal */}
                             {showServiceModal && (
                                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-                                    <div className="bg-white rounded-soft p-6 w-full max-w-md shadow-xl">
+                                    <div className="bg-primary-theme rounded-soft p-6 w-full max-w-md shadow-xl border border-theme">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-semibold text-primary-theme">{editingServiceId ? 'Editar Servicio' : 'Nuevo Servicio'}</h3>
                                             <button
@@ -2121,7 +2121,7 @@ export default function Settings() {
                                                                     }}
                                                                     className="sr-only peer"
                                                                 />
-                                                                <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-500"></div>
+                                                                <div className="w-8 h-4 bg-charcoal/20 dark:bg-white/15 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#FF2E88]"></div>
                                                             </div>
                                                             <span className="text-xs font-medium text-primary-theme/50">Colación</span>
                                                         </label>
@@ -2294,8 +2294,8 @@ export default function Settings() {
                                                 className={cn(
                                                     'border rounded-soft p-4 transition-all',
                                                     wh.is_active
-                                                        ? 'border-theme bg-white hover:shadow-sm'
-                                                        : 'border-gray-200 bg-gray-50/50 opacity-60'
+                                                        ? 'border-theme bg-secondary-theme hover:shadow-sm'
+                                                        : 'border-theme bg-secondary-theme/50 opacity-60'
                                                 )}
                                             >
                                                 <div className="flex items-center justify-between mb-2">
@@ -2376,7 +2376,7 @@ export default function Settings() {
                             {/* Webhook Create/Edit Modal */}
                             {showWebhookModal && (
                                 <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                                    <div className="bg-white rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in">
+                                    <div className="bg-primary-theme rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in">
                                         <div className="flex items-center justify-between p-6 border-b border-theme">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
@@ -2433,7 +2433,7 @@ export default function Settings() {
                                                                 'flex items-center gap-2 p-2.5 rounded-soft border cursor-pointer transition-all text-sm',
                                                                 webhookForm.events.includes(ev.value)
                                                                     ? 'bg-orange-50 border-orange-300 text-orange-700'
-                                                                    : 'bg-white border-theme text-primary-theme/60 hover:bg-secondary-theme'
+                                                                    : 'bg-secondary-theme border-theme text-primary-theme/60 hover:bg-primary-theme/50'
                                                             )}
                                                         >
                                                             <input
@@ -2529,7 +2529,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, new_appointment: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
 
@@ -2545,7 +2545,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, confirmed: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
 
@@ -2561,7 +2561,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, cancelled: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
 
@@ -2577,7 +2577,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, pending_reminder: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
 
@@ -2593,7 +2593,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, new_message: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
 
@@ -2609,7 +2609,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, survey_response: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
 
@@ -2628,7 +2628,7 @@ export default function Settings() {
                                             onChange={(e) => setNotifPrefs({ ...notifPrefs, ai_handoff: e.target.checked })}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                     </label>
                                 </div>
                             </div>
@@ -2663,9 +2663,9 @@ export default function Settings() {
                             </div>
 
                             {remindersSaved && (
-                                <div className="my-6 p-4 bg-emerald-50 border border-emerald-200 rounded-soft flex items-center gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                                    <p className="text-sm text-emerald-700 font-medium">¡Configuración de recordatorios guardada!</p>
+                                <div className="my-6 p-4 bg-[#FF2E88]/10 border border-[#FF2E88]/20 rounded-soft flex items-center gap-3">
+                                    <CheckCircle2 className="w-5 h-5 text-[#FF2E88]" />
+                                    <p className="text-sm text-[#FF2E88] font-medium">¡Configuración de recordatorios guardada!</p>
                                 </div>
                             )}
 
@@ -2673,7 +2673,7 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-primary-theme mb-4">⏰ Tiempo de recordatorios</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
                                         <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
                                                 <p className="font-semibold text-primary-theme">24 horas antes</p>
@@ -2686,7 +2686,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_24h_before: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                             </label>
                                         </div>
                                         {reminderSettings.reminder_24h_before && (
@@ -2701,7 +2701,7 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
                                         <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
                                                 <p className="font-semibold text-primary-theme">2 horas antes</p>
@@ -2714,7 +2714,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_2h_before: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                             </label>
                                         </div>
                                         {reminderSettings.reminder_2h_before && (
@@ -2729,7 +2729,7 @@ export default function Settings() {
                                         )}
                                     </div>
 
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
                                         <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
                                                 <p className="font-semibold text-primary-theme">1 hora antes</p>
@@ -2742,7 +2742,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_1h_before: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                             </label>
                                         </div>
                                         {reminderSettings.reminder_1h_before && (
@@ -2762,7 +2762,7 @@ export default function Settings() {
                             {/* Preferred Hour */}
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-primary-theme mb-4">🕐 Hora preferida de envío</h3>
-                                <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-theme">
+                                <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
                                     <div>
                                         <p className="font-semibold text-primary-theme">Hora de recordatorios</p>
                                         <p className="text-sm text-primary-theme/60">Para recordatorios de 24h, enviar a esta hora</p>
@@ -2780,7 +2780,7 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-primary-theme mb-4">✅ Solicitar confirmación</h3>
                                 <div className="space-y-3">
-                                    <div className="bg-white rounded-soft overflow-hidden shadow-soft-md border border-theme">
+                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
                                         <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
                                             <div>
                                                 <p className="font-semibold text-primary-theme">Pedir confirmación</p>
@@ -2793,7 +2793,7 @@ export default function Settings() {
                                                     onChange={(e) => setReminderSettings({ ...reminderSettings, request_confirmation: e.target.checked })}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                             </label>
                                         </div>
                                         {reminderSettings.request_confirmation && (
@@ -2815,7 +2815,7 @@ export default function Settings() {
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-primary-theme mb-4">📅 Seguimiento post-cita</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-theme">
+                                    <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
                                         <div>
                                             <p className="font-semibold text-primary-theme">Recordatorio de seguimiento</p>
                                             <p className="text-sm text-primary-theme/60">Enviar mensaje después de la cita para reagendar</p>
@@ -2827,13 +2827,13 @@ export default function Settings() {
                                                 onChange={(e) => setReminderSettings({ ...reminderSettings, followup_enabled: e.target.checked })}
                                                 className="sr-only peer"
                                             />
-                                            <div className="w-11 h-6 bg-secondary-theme rounded-full peer peer-checked:bg-primary-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                                            <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
                                         </label>
                                     </div>
 
                                     {reminderSettings.followup_enabled && (
                                         <>
-                                            <div className="flex items-center justify-between p-5 bg-white rounded-soft shadow-soft-md border border-theme">
+                                            <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
                                                 <div>
                                                     <p className="font-semibold text-primary-theme">Días después de la cita</p>
                                                     <p className="text-sm text-primary-theme/60">Cuántos días esperar antes de enviar</p>
@@ -2901,7 +2901,7 @@ export default function Settings() {
                                     </button>
                                 </div>
 
-                                <div className="bg-white rounded-soft shadow-soft-md border border-theme overflow-hidden">
+                                <div className="bg-secondary-theme rounded-soft shadow-soft-md border border-theme overflow-hidden">
                                     {isLoadingLogs ? (
                                         <div className="py-12 flex flex-col items-center justify-center gap-3">
                                             <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
