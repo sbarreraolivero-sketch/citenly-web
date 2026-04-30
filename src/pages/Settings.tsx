@@ -2065,6 +2065,13 @@ export default function Settings() {
                                         const lsPlan = LS_PLANS[planId as LSPlanId]
                                         const plan = paymentRegion === 'international' ? lsPlan : mpPlan
                                         const price = plan.price
+                                        const currencySymbol = paymentRegion === 'international' ? 'US$' : '$'
+                                        const currencyCode = paymentRegion === 'international' ? 'USD' : 'CLP'
+                                        const isCurrentPlan = planId === subscription?.plan
+                                        const isRadiance = planId === 'radiance'
+
+                                        return (
+                                            <div 
                                                 key={planId}
                                                 className={cn(
                                                     "relative flex flex-col p-8 rounded-[2rem] border-2 transition-all duration-500",
@@ -2135,7 +2142,7 @@ export default function Settings() {
                                                     disabled={isCurrentPlan}
                                                     className={cn(
                                                         "w-full py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95",
-                                                        isCurrentPlan 
+                                                        isCurrentPlan
                                                             ? "bg-secondary-theme text-primary-theme/20 cursor-not-allowed border border-theme" 
                                                             : isRadiance 
                                                                 ? "bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white hover:opacity-90" 
@@ -3508,8 +3515,7 @@ export default function Settings() {
                             <TagManager />
                         </div>
                     )}
-                </div>
             </div>
-        </div >
+        </div>
     )
 }
