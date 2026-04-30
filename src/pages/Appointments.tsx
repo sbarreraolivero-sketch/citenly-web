@@ -595,22 +595,6 @@ export default function Appointments() {
         }
     }
 
-    const mappedBlockedDates: CalendarEvent[] = blockedDates.map(item => {
-        const date = new Date(item.blocked_date + 'T00:00:00')
-        return {
-            id: item.id,
-            title: `CERRADO: ${item.reason || 'Día de Cierre'}`,
-            start: new Date(date.setHours(9, 0, 0)),
-            end: new Date(date.setHours(21, 0, 0)),
-            resource: {
-                ...item,
-                isBlock: true,
-                type: 'special_closing'
-            }
-        }
-    })
-
-    const allEvents = [...mappedAppointments, ...mappedBlockedDates]
 
     const handleDeleteAppointment = async (appointment: any) => {
         if (!confirm('¿Estás seguro de que quieres eliminar este elemento?')) return
@@ -784,6 +768,23 @@ export default function Appointments() {
                 }
             }
         }).filter(Boolean) as CalendarEvent[]
+
+    const mappedBlockedDates: CalendarEvent[] = blockedDates.map(item => {
+        const date = new Date(item.blocked_date + 'T00:00:00')
+        return {
+            id: item.id,
+            title: `CERRADO: ${item.reason || 'Día de Cierre'}`,
+            start: new Date(date.setHours(9, 0, 0)),
+            end: new Date(date.setHours(21, 0, 0)),
+            resource: {
+                ...item,
+                isBlock: true,
+                type: 'special_closing'
+            }
+        }
+    })
+
+    const allEvents = [...mappedAppointments, ...mappedBlockedDates]
 
     return (
         <div className="space-y-6 animate-fade-in pb-20">
