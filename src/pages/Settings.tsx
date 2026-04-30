@@ -3515,6 +3515,7 @@ export default function Settings() {
                             <TagManager />
                         </div>
                     )}
+                </div>
             </div>
         </div>
     )
