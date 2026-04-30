@@ -2257,8 +2257,8 @@ export default function Settings() {
 
                                                 {hours ? (
                                                     <div className="flex flex-col gap-4 flex-1 w-full sm:min-w-0">
-                                                        <div className="flex items-center gap-2 w-full">
-                                                            <div className="flex-1 relative">
+                                                        <div className="flex flex-col xs:flex-row items-center gap-2 w-full">
+                                                            <div className="w-full xs:flex-1 relative">
                                                                 <input
                                                                     type="time"
                                                                     value={(hours as any).open}
@@ -2272,8 +2272,8 @@ export default function Settings() {
                                                                     className="w-full px-3 py-2.5 bg-primary-theme/5 border border-theme rounded-xl text-sm text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none appearance-none"
                                                                 />
                                                             </div>
-                                                            <span className="text-primary-theme/40 font-black text-xs uppercase px-1">a</span>
-                                                            <div className="flex-1 relative">
+                                                            <span className="text-primary-theme/40 font-black text-[10px] uppercase px-1 xs:rotate-0 rotate-90">a</span>
+                                                            <div className="w-full xs:flex-1 relative">
                                                                 <input
                                                                     type="time"
                                                                     value={(hours as any).close}
@@ -2317,7 +2317,7 @@ export default function Settings() {
                                                             </label>
 
                                                             {(hours as any).lunch_break?.enabled && (
-                                                                <div className="flex items-center gap-2 animate-fade-in sm:ml-4">
+                                                                <div className="flex flex-col xs:flex-row items-center gap-2 animate-fade-in sm:ml-4 w-full xs:w-auto">
                                                                     <input
                                                                         type="time"
                                                                         value={(hours as any).lunch_break.start}
@@ -2331,9 +2331,9 @@ export default function Settings() {
                                                                                 }
                                                                             }))
                                                                         }}
-                                                                        className="px-2 py-1.5 bg-primary-theme/5 border border-theme rounded-lg text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                                        className="px-2 py-1.5 bg-primary-theme/5 border border-theme rounded-lg text-xs w-full xs:w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                                     />
-                                                                    <span className="text-primary-theme/40 text-[10px] font-black uppercase px-1">a</span>
+                                                                    <span className="text-primary-theme/40 text-[9px] font-black uppercase px-1 xs:rotate-0 rotate-90">a</span>
                                                                     <input
                                                                         type="time"
                                                                         value={(hours as any).lunch_break.end}
@@ -2347,7 +2347,7 @@ export default function Settings() {
                                                                                 }
                                                                             }))
                                                                         }}
-                                                                        className="px-2 py-1.5 bg-primary-theme/5 border border-theme rounded-lg text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                                        className="px-2 py-1.5 bg-primary-theme/5 border border-theme rounded-lg text-xs w-full xs:w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                                     />
                                                                 </div>
                                                             )}

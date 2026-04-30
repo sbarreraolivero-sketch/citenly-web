@@ -256,19 +256,19 @@ export default function MyProfile() {
                                 </label>
                                 {dayHours.enabled && (
                                     <div className="flex flex-col gap-3 flex-1 w-full sm:w-auto">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-col xs:flex-row items-center gap-2">
                                             <input
                                                 type="time"
                                                 value={dayHours.start}
                                                 onChange={(e) => updateDay(day.key, 'start', e.target.value)}
-                                                className="input-premium text-sm py-1.5 px-3 flex-1"
+                                                className="input-premium text-sm py-1.5 px-3 flex-1 w-full xs:w-auto"
                                             />
-                                            <span className="text-secondary-theme text-xs font-black uppercase tracking-widest mx-1 opacity-50 shrink-0">a</span>
+                                            <span className="text-secondary-theme text-[10px] font-black uppercase tracking-widest mx-1 opacity-50 shrink-0 xs:rotate-0 rotate-90">a</span>
                                             <input
                                                 type="time"
                                                 value={dayHours.end}
                                                 onChange={(e) => updateDay(day.key, 'end', e.target.value)}
-                                                className="input-premium text-sm py-1.5 px-3 flex-1"
+                                                className="input-premium text-sm py-1.5 px-3 flex-1 w-full xs:w-auto"
                                             />
                                         </div>
 
@@ -300,7 +300,7 @@ export default function MyProfile() {
                                             </label>
 
                                                 {dayHours.lunch_break?.enabled && (
-                                                    <div className="flex items-center gap-2 animate-fade-in flex-1 w-full sm:w-auto">
+                                                    <div className="flex flex-col xs:flex-row items-center gap-2 animate-fade-in flex-1 w-full xs:w-auto">
                                                         <input
                                                             type="time"
                                                             value={dayHours.lunch_break.start}
@@ -314,9 +314,9 @@ export default function MyProfile() {
                                                                     }
                                                                 }))
                                                             }}
-                                                            className="input-premium text-[11px] py-1 px-2 flex-1"
+                                                            className="input-premium text-[11px] py-1 px-2 flex-1 w-full xs:w-auto"
                                                         />
-                                                        <span className="text-secondary-theme text-[10px] font-black uppercase opacity-40 shrink-0">a</span>
+                                                        <span className="text-secondary-theme text-[9px] font-black uppercase opacity-40 shrink-0 xs:rotate-0 rotate-90">a</span>
                                                         <input
                                                             type="time"
                                                             value={dayHours.lunch_break.end}
@@ -330,7 +330,7 @@ export default function MyProfile() {
                                                                     }
                                                                 }))
                                                             }}
-                                                            className="input-premium text-[11px] py-1 px-2 flex-1"
+                                                            className="input-premium text-[11px] py-1 px-2 flex-1 w-full xs:w-auto"
                                                         />
                                                     </div>
                                                 )}
