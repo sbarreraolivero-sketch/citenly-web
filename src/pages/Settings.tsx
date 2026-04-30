@@ -2218,13 +2218,28 @@ export default function Settings() {
                                         return (
                                             <div
                                                 key={day}
-                                                className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-secondary-theme rounded-soft"
+                                                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-secondary-theme rounded-soft border border-theme/30"
                                             >
-                                                <div className="w-24 sm:w-28 flex-shrink-0">
-                                                    <p className="font-medium text-primary-theme">{dayNames[day]}</p>
+                                                <div className="flex items-center justify-between w-full sm:w-28 flex-shrink-0">
+                                                    <p className="font-bold text-primary-theme uppercase tracking-wider text-xs sm:text-sm">{dayNames[day]}</p>
+                                                    <label className="flex items-center gap-2 sm:hidden">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={hours !== null}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                setWorkingHours((prev: any) => ({
+                                                                    ...prev,
+                                                                    [day]: checked ? { open: '09:00', close: '18:00' } : null
+                                                                }))
+                                                            }}
+                                                            className="w-4 h-4 rounded border-theme text-[#FF2E88] focus:ring-[#FF2E88]"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-primary-theme/60 uppercase">Abierto</span>
+                                                    </label>
                                                 </div>
 
-                                                <label className="flex items-center gap-2 mr-2">
+                                                <label className="hidden sm:flex items-center gap-2 mr-2">
                                                     <input
                                                         type="checkbox"
                                                         checked={hours !== null}
@@ -2235,44 +2250,48 @@ export default function Settings() {
                                                                 [day]: checked ? { open: '09:00', close: '18:00' } : null
                                                             }))
                                                         }}
-                                                        className="w-4 h-4 rounded border-theme text-primary-500 focus:ring-primary-500"
+                                                        className="w-4 h-4 rounded border-theme text-[#FF2E88] focus:ring-[#FF2E88]"
                                                     />
-                                                    <span className="text-sm text-primary-theme/60">Abierto</span>
+                                                    <span className="text-sm font-medium text-primary-theme/60">Abierto</span>
                                                 </label>
 
                                                 {hours ? (
-                                                    <div className="flex flex-col gap-3 flex-1 min-w-[280px]">
-                                                        <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="time"
-                                                                value={(hours as any).open}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    setWorkingHours((prev: any) => ({
-                                                                        ...prev,
-                                                                        [day]: { ...prev[day], open: val }
-                                                                    }))
-                                                                }}
-                                                                className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
-                                                            />
-                                                            <span className="text-primary-theme/40 font-bold mx-1">a</span>
-                                                            <input
-                                                                type="time"
-                                                                value={(hours as any).close}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    setWorkingHours((prev: any) => ({
-                                                                        ...prev,
-                                                                        [day]: { ...prev[day], close: val }
-                                                                    }))
-                                                                }}
-                                                                className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
-                                                            />
+                                                    <div className="flex flex-col gap-4 flex-1 w-full sm:min-w-0">
+                                                        <div className="flex items-center gap-2 w-full">
+                                                            <div className="flex-1 relative">
+                                                                <input
+                                                                    type="time"
+                                                                    value={(hours as any).open}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setWorkingHours((prev: any) => ({
+                                                                            ...prev,
+                                                                            [day]: { ...prev[day], open: val }
+                                                                        }))
+                                                                    }}
+                                                                    className="w-full px-3 py-2.5 bg-primary-theme/5 border border-theme rounded-xl text-sm text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none appearance-none"
+                                                                />
+                                                            </div>
+                                                            <span className="text-primary-theme/40 font-black text-xs uppercase px-1">a</span>
+                                                            <div className="flex-1 relative">
+                                                                <input
+                                                                    type="time"
+                                                                    value={(hours as any).close}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setWorkingHours((prev: any) => ({
+                                                                            ...prev,
+                                                                            [day]: { ...prev[day], close: val }
+                                                                        }))
+                                                                    }}
+                                                                    className="w-full px-3 py-2.5 bg-primary-theme/5 border border-theme rounded-xl text-sm text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none appearance-none"
+                                                                />
+                                                            </div>
                                                         </div>
 
                                                         {/* Colación UI */}
-                                                        <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-theme/30 ml-1">
-                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pl-4 border-l-2 border-[#FF2E88]/30 ml-1">
+                                                            <label className="flex items-center gap-3 cursor-pointer group">
                                                                 <div className="relative inline-flex items-center">
                                                                     <input
                                                                         type="checkbox"
@@ -2292,13 +2311,13 @@ export default function Settings() {
                                                                         }}
                                                                         className="sr-only peer"
                                                                     />
-                                                                    <div className="w-8 h-4 bg-charcoal/20 dark:bg-white/15 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#FF2E88]"></div>
+                                                                    <div className="w-9 h-5 bg-charcoal/20 dark:bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF2E88] shadow-inner"></div>
                                                                 </div>
-                                                                <span className="text-xs font-medium text-primary-theme/50">Colación</span>
+                                                                <span className="text-[11px] font-black uppercase tracking-wider text-primary-theme/50 group-hover:text-primary-theme/80 transition-colors">Colación</span>
                                                             </label>
 
                                                             {(hours as any).lunch_break?.enabled && (
-                                                                <div className="flex items-center gap-2 animate-fade-in">
+                                                                <div className="flex items-center gap-2 animate-fade-in sm:ml-4">
                                                                     <input
                                                                         type="time"
                                                                         value={(hours as any).lunch_break.start}
@@ -2312,9 +2331,9 @@ export default function Settings() {
                                                                                 }
                                                                             }))
                                                                         }}
-                                                                        className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                                        className="px-2 py-1.5 bg-primary-theme/5 border border-theme rounded-lg text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                                     />
-                                                                    <span className="text-primary-theme/40 text-xs font-bold">a</span>
+                                                                    <span className="text-primary-theme/40 text-[10px] font-black uppercase px-1">a</span>
                                                                     <input
                                                                         type="time"
                                                                         value={(hours as any).lunch_break.end}
@@ -2328,14 +2347,16 @@ export default function Settings() {
                                                                                 }
                                                                             }))
                                                                         }}
-                                                                        className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                                        className="px-2 py-1.5 bg-primary-theme/5 border border-theme rounded-lg text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
                                                                     />
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-sm text-primary-theme/40 ml-2">Cerrado</span>
+                                                    <div className="flex-1 py-2">
+                                                        <span className="text-xs font-bold uppercase tracking-widest text-primary-theme/30 bg-primary-theme/5 px-3 py-1 rounded-full border border-theme/20">Cerrado</span>
+                                                    </div>
                                                 )}
                                             </div>
                                         )

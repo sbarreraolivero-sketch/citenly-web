@@ -366,22 +366,22 @@ export default function Dashboard() {
         <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
             <div className="flex flex-col gap-6">
             {/* Header Banner: Premium Glow Style */}
-            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-5 sm:p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
-                    <div className="flex items-center gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-8 relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                         <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
                             <Sparkles className="w-8 h-8 text-[#FF2E88]" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">
+                            <div className="flex flex-wrap items-center gap-3 mb-1">
+                                <h1 className="text-2xl sm:text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">
                                     ¡Hola, {profile?.full_name?.split(' ')[0]}! 
                                     <span className="ml-2">👋</span>
                                 </h1>
-                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20">Centro de Control</span>
+                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20 whitespace-nowrap">Centro de Control</span>
                             </div>
                             <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
                                 Tu asistente IA está activo y listo para gestionar tus citas. Aquí tienes el resumen de hoy.
