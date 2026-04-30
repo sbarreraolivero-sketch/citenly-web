@@ -15,6 +15,7 @@ import {
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { CalendarEvent } from './CalendarView';
+import { cn } from '@/lib/utils';
 
 interface MobileCalendarViewProps {
     events: CalendarEvent[];
@@ -146,18 +147,22 @@ export function MobileCalendarView({ events, onSelectEvent, onSelectSlot }: Mobi
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {selectedDayEvents.length > 0 ? (
                         selectedDayEvents.map(event => {
+                            const isBlock = event.resource?.isBlock || event.resource?.type === 'special_closing';
                             const startTime = format(new Date(event.start), 'HH:mm');
                             const endTime = format(new Date(event.end), 'HH:mm');
-                            const professionalColor = event.resource?.professionalColor || '#8B5CF6';
-                            const professionalName = event.resource?.professionalName || 'Sin asignar';
+                            const professionalColor = isBlock ? '#0B0B0F' : (event.resource?.professionalColor || '#8B5CF6');
+                            const professionalName = isBlock ? 'Cierre de Clínica' : (event.resource?.professionalName || 'Sin asignar');
                             const patientName = event.resource?.patient_name || event.title;
-                            const serviceName = event.resource?.service || '';
+                            const serviceName = isBlock ? (event.resource?.reason || 'Cierre Especial') : (event.resource?.service || '');
 
                             return (
                                 <div
                                     key={event.id}
                                     onClick={() => onSelectEvent(event)}
-                                    className="bg-ivory/30 border border-silk-beige rounded-2xl p-4 cursor-pointer hover:shadow-premium-sm transition-all active:scale-[0.98] flex gap-4"
+                                    className={cn(
+                                        "border border-silk-beige rounded-2xl p-4 cursor-pointer hover:shadow-premium-sm transition-all active:scale-[0.98] flex gap-4",
+                                        isBlock ? "bg-charcoal/5 opacity-80" : "bg-ivory/30"
+                                    )}
                                     style={{ borderLeftColor: professionalColor, borderLeftWidth: '4px' }}
                                 >
                                     {/* Time Column */}

@@ -75,6 +75,7 @@ export default function Appointments() {
     const isProfessional = member?.role === 'professional'
     const navigate = useNavigate()
     const [appointments, setAppointments] = useState<Appointment[]>([])
+    const [blockedDates, setBlockedDates] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
@@ -199,18 +200,30 @@ export default function Appointments() {
         }
 
         try {
-            const { data, error } = await supabase
+            // Fetch appointments
+            const { data: apptsData, error: apptsError } = await supabase
                 .from('appointments')
                 .select('*')
                 .eq('clinic_id', profile.clinic_id)
                 .order('appointment_date', { ascending: false })
 
-            if (error) throw error
-            console.log('Fetched appointments:', data)
+            if (apptsError) throw apptsError
+            setAppointments(apptsData || [])
 
-            setAppointments(data || [])
+            // Fetch blocked dates (Special closing days)
+            const { data: blockedData, error: blockedError } = await supabase
+                .from('blocked_dates')
+                .select('*')
+                .eq('clinic_id', profile.clinic_id)
+
+            if (blockedError) {
+                console.error('Error fetching blocked dates:', blockedError)
+            } else {
+                setBlockedDates(blockedData || [])
+            }
+
         } catch (error) {
-            console.error('Error fetching appointments:', error)
+            console.error('Error fetching data:', error)
         } finally {
             setLoading(false)
         }
@@ -582,37 +595,47 @@ export default function Appointments() {
         }
     }
 
-    const handleDeleteAppointment = async (appointment: Appointment) => {
-        if (!confirm('¿Estás seguro de que quieres eliminar esta cita?')) return
+    const mappedBlockedDates: CalendarEvent[] = blockedDates.map(item => {
+        const date = new Date(item.blocked_date + 'T00:00:00')
+        return {
+            id: item.id,
+            title: `CERRADO: ${item.reason || 'Día de Cierre'}`,
+            start: new Date(date.setHours(9, 0, 0)),
+            end: new Date(date.setHours(21, 0, 0)),
+            resource: {
+                ...item,
+                isBlock: true,
+                type: 'special_closing'
+            }
+        }
+    })
+
+    const allEvents = [...mappedAppointments, ...mappedBlockedDates]
+
+    const handleDeleteAppointment = async (appointment: any) => {
+        if (!confirm('¿Estás seguro de que quieres eliminar este elemento?')) return
 
         try {
-            // 1. Delete from Supabase
+            const table = appointment.type === 'special_closing' ? 'blocked_dates' : 'appointments'
             const { error } = await supabase
-                .from('appointments')
+                .from(table)
                 .delete()
                 .eq('id', appointment.id)
 
             if (error) throw error
-
-            // 2. Remove from local state immediately (functional update)
-            setAppointments(prev => prev.filter(a => a.id !== appointment.id))
-
-            // 3. Delete from Google Calendar if linked
-            if (appointment.google_event_id) {
+            toast.success(appointment.type === 'special_closing' ? 'Día de cierre eliminado' : 'Cita eliminada')
+            
+            // If it was an appointment and has a google event, try to delete it
+            if (appointment.type !== 'special_closing' && appointment.google_event_id) {
                 supabase.functions.invoke('delete-google-event', {
                     body: { google_event_id: appointment.google_event_id }
-                }).then(({ error: gErr }) => {
-                    if (gErr) console.error('Error deleting Google event:', gErr)
-                    else console.log('Google event deleted')
-                }).catch(err => console.error('Error deleting Google event:', err))
+                }).catch(err => console.error('Error calling delete-google-event:', err))
             }
 
-            // 4. Optional: Force refresh from DB just to be 100% sure
-            // fetchAppointments() 
-
-        } catch (error) {
-            console.error('Error deleting appointment:', error)
-            alert('Error al eliminar la cita de la base de datos.')
+            fetchAppointments()
+        } catch (error: any) {
+            console.error('Error deleting:', error)
+            toast.error('Error al eliminar')
         }
     }
 
@@ -1078,9 +1101,9 @@ export default function Appointments() {
                                 setShowActionChoiceModal(true)
                             }}
                             onEditEvent={(event) => {
-                                // Check if it's a blocked slot
-                                if (event.resource?.isBlock) {
-                                    if (confirm('¿Deseas eliminar este bloqueo de horario?')) {
+                                // Check if it's a blocked slot or special closing
+                                if (event.resource?.isBlock || event.resource?.type === 'special_closing') {
+                                    if (confirm(`¿Deseas eliminar este ${event.resource?.type === 'special_closing' ? 'día de cierre' : 'bloqueo de horario'}?`)) {
                                         handleDeleteAppointment(event.resource)
                                     }
                                     return
@@ -1105,17 +1128,14 @@ export default function Appointments() {
                                 })
                                 setShowModal(true)
                             }}
-                            events={[
-                                ...mappedAppointments,
-                                // ...googleEvents // Disabled by user request
-                            ]}
+                            events={allEvents}
                             onSelectEvent={(event) => {
                                 // Debug log 
                                 console.log('Event clicked:', event)
 
-                                // Check if it's a blocked slot
-                                if (event.resource?.isBlock) {
-                                    if (confirm('¿Deseas eliminar este bloqueo de horario?')) {
+                                // Check if it's a blocked slot or special closing
+                                if (event.resource?.isBlock || event.resource?.type === 'special_closing') {
+                                    if (confirm(`¿Deseas eliminar este ${event.resource?.type === 'special_closing' ? 'día de cierre' : 'bloqueo de horario'}?`)) {
                                         handleDeleteAppointment(event.resource)
                                     }
                                     return
@@ -1147,15 +1167,22 @@ export default function Appointments() {
                     {/* Mobile Calendar View (Google Calendar Style) */}
                     <div className="block md:hidden">
                         <MobileCalendarView
-                            events={[
-                                ...mappedAppointments,
-                            ]}
+                            events={allEvents}
                             onSelectEvent={(event) => {
-                                // Re-use the exact same logic
+                                // Check if it's a blocked slot or special closing
+                                if (event.resource?.isBlock || event.resource?.type === 'special_closing') {
+                                    if (confirm(`¿Deseas eliminar este ${event.resource?.type === 'special_closing' ? 'día de cierre' : 'bloqueo de horario'}?`)) {
+                                        handleDeleteAppointment(event.resource)
+                                    }
+                                    return
+                                }
+                                // Check if it's a google event to prevent editing (or show info)
                                 if (event.resource?.type === 'google') {
                                     alert('No se pueden editar eventos de Google directamente desde aquí.')
                                     return
                                 }
+                                
+                                // Populate form for editing
                                 setEditingId(event.id)
                                 setNewAppointment({
                                     patient_name: event.resource.patient_name,
