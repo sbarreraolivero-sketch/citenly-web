@@ -35,6 +35,7 @@ import {
     History,
     ExternalLink,
     RefreshCw,
+    Calendar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, redirectToCreditsCheckout } from '@/lib/mercadopago'
@@ -246,6 +247,13 @@ export default function Settings() {
     // Schedule settings state
     const [savingSchedule, setSavingSchedule] = useState(false)
     const [scheduleSaved, setScheduleSaved] = useState(false)
+
+    // Blocked dates state
+    const [blockedDates, setBlockedDates] = useState<any[]>([])
+    const [loadingBlockedDates, setLoadingBlockedDates] = useState(false)
+    const [newBlockedDate, setNewBlockedDate] = useState('')
+    const [newBlockedReason, setNewBlockedReason] = useState('')
+    const [isAddingBlockedDate, setIsAddingBlockedDate] = useState(false)
 
     // Profile settings state
     const [newPassword, setNewPassword] = useState('')
@@ -499,6 +507,13 @@ export default function Settings() {
 
         fetchSettings()
     }, [profile?.clinic_id])
+
+    // Fetch blocked dates when Schedule tab is active
+    useEffect(() => {
+        if (activeTab === 'schedule' && profile?.clinic_id) {
+            fetchBlockedDates()
+        }
+    }, [activeTab, profile?.clinic_id])
 
     // Load reminder logs
     useEffect(() => {
@@ -903,14 +918,72 @@ export default function Settings() {
             if (error) throw error
             setScheduleSaved(true)
             setTimeout(() => setScheduleSaved(false), 3000)
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving schedule:', error)
-            alert('Error al guardar los horarios')
+            alert('Error al guardar horarios: ' + (error.message || 'Intente nuevamente'))
         } finally {
             setSavingSchedule(false)
         }
     }
 
+    const fetchBlockedDates = async () => {
+        if (!profile?.clinic_id) return
+        setLoadingBlockedDates(true)
+        try {
+            const { data, error } = await supabase
+                .from('clinic_blocked_dates')
+                .select('*')
+                .eq('clinic_id', profile.clinic_id)
+                .gte('blocked_date', new Date().toISOString().split('T')[0])
+                .order('blocked_date', { ascending: true })
+
+            if (error) throw error
+            setBlockedDates(data || [])
+        } catch (error) {
+            console.error('Error fetching blocked dates:', error)
+        } finally {
+            setLoadingBlockedDates(false)
+        }
+    }
+
+    const handleAddBlockedDate = async () => {
+        if (!profile?.clinic_id || !newBlockedDate) return
+        setIsAddingBlockedDate(true)
+        try {
+            const { error } = await supabase
+                .from('clinic_blocked_dates')
+                .insert({
+                    clinic_id: profile.clinic_id,
+                    blocked_date: newBlockedDate,
+                    reason: newBlockedReason
+                })
+
+            if (error) throw error
+            setNewBlockedDate('')
+            setNewBlockedReason('')
+            fetchBlockedDates()
+        } catch (error: any) {
+            console.error('Error adding blocked date:', error)
+            alert('Error al bloquear día: ' + (error.message || 'Intente nuevamente'))
+        } finally {
+            setIsAddingBlockedDate(false)
+        }
+    }
+
+    const handleDeleteBlockedDate = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('clinic_blocked_dates')
+                .delete()
+                .eq('id', id)
+
+            if (error) throw error
+            fetchBlockedDates()
+        } catch (error) {
+            console.error('Error deleting blocked date:', error)
+            alert('Error al eliminar bloqueo')
+        }
+    }
 
     const handlePlanSelection = async (planId: PlanId) => {
         console.log('handlePlanSelection called with:', planId)
@@ -1417,7 +1490,7 @@ export default function Settings() {
                                                 type="url"
                                                 placeholder="https://tiktok.com/@..."
                                                 value={tiktokUrl}
-                                                onChange={(e) => setTiktokUrl(e.target.value)}
+                                                onChange={(e) => setTikTokUrl(e.target.value)}
                                                 className="input-premium"
                                             />
                                         </div>
@@ -2205,6 +2278,110 @@ export default function Settings() {
                                 )}
                             </div>
                         </div>
+
+
+                            {/* Blocked Dates Section */}
+                            <div className="card-premium p-6 mt-8">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-14 h-14 bg-[#FF2E88]/5 rounded-2xl flex items-center justify-center border border-[#FF2E88]/10 shadow-[0_8px_16px_rgba(255,46,136,0.08)]">
+                                        <Calendar className="w-7 h-7 text-[#FF2E88]" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#0B0B0F] tracking-tight">Días de Cierre Especial</h2>
+                                        <p className="text-sm text-[#0B0B0F]/50 font-medium">Bloquea días específicos (feriados o vacaciones) para que la IA no agende citas.</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#FFF5F9] border border-[#FF2E88]/20 rounded-2xl p-6 mb-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-[#FF2E88] uppercase tracking-[0.2em] mb-3">Fecha de Cierre</label>
+                                            <input
+                                                type="date"
+                                                value={newBlockedDate}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                onChange={(e) => setNewBlockedDate(e.target.value)}
+                                                className="input-premium w-full bg-white font-bold"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-[#FF2E88] uppercase tracking-[0.2em] mb-3">Motivo (Opcional)</label>
+                                            <input
+                                                type="text"
+                                                value={newBlockedReason}
+                                                onChange={(e) => setNewBlockedReason(e.target.value)}
+                                                placeholder="Ej: Feriado Nacional"
+                                                className="input-premium w-full bg-white font-bold"
+                                            />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button
+                                                onClick={handleAddBlockedDate}
+                                                disabled={isAddingBlockedDate || !newBlockedDate}
+                                                className={cn(
+                                                    "w-full py-4 flex items-center justify-center gap-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all shadow-[0_8px_16px_rgba(255,46,136,0.2)] hover:-translate-y-0.5 active:translate-y-0",
+                                                    !newBlockedDate ? "bg-charcoal/10 text-charcoal/30 cursor-not-allowed shadow-none" : "bg-[#FF2E88] text-white hover:bg-[#E61E75] hover:shadow-[0_12px_24px_rgba(255,46,136,0.3)]"
+                                                )}
+                                            >
+                                                {isAddingBlockedDate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 stroke-[3]" />}
+                                                Bloquear Día
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <h3 className="text-[10px] font-black text-charcoal uppercase tracking-[0.2em] flex items-center gap-2.5">
+                                        <History className="w-4 h-4 text-[#FF2E88]" />
+                                        Próximos Días Bloqueados
+                                    </h3>
+
+                                    {loadingBlockedDates ? (
+                                        <div className="py-12 text-center">
+                                            <Loader2 className="w-10 h-10 text-[#FF2E88] animate-spin mx-auto" />
+                                        </div>
+                                    ) : blockedDates.length === 0 ? (
+                                        <div className="py-16 bg-white rounded-2xl border-2 border-dashed border-silk-beige flex flex-col items-center justify-center text-center group transition-colors hover:border-[#FF2E88]/30">
+                                            <div className="w-16 h-16 bg-silk-beige/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#FF2E88]/5 transition-colors">
+                                                <Calendar className="w-8 h-8 text-charcoal/20 group-hover:text-[#FF2E88]/30 transition-colors" />
+                                            </div>
+                                            <p className="text-[#0B0B0F]/40 text-sm font-bold italic">No hay días bloqueados próximamente.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                            {blockedDates.map((item) => (
+                                                <div key={item.id} className="flex items-center justify-between p-5 bg-white border border-silk-beige rounded-2xl hover:border-[#FF2E88]/40 hover:shadow-[0_10px_20px_rgba(255,46,136,0.06)] transition-all group relative overflow-hidden">
+                                                    <div className="absolute top-0 left-0 w-1 h-full bg-[#FF2E88]/20 group-hover:bg-[#FF2E88] transition-colors" />
+                                                    <div className="flex items-center gap-5">
+                                                        <div className="w-12 h-12 bg-[#FFF5F9] rounded-xl flex flex-col items-center justify-center border border-[#FF2E88]/10 flex-shrink-0 group-hover:bg-[#FF2E88] transition-colors duration-300">
+                                                            <span className="text-[10px] font-black text-[#FF2E88] uppercase leading-none group-hover:text-white transition-colors">
+                                                                {new Date(item.blocked_date + 'T12:00:00Z').toLocaleString('es-ES', { month: 'short' })}
+                                                            </span>
+                                                            <span className="text-xl font-black text-[#FF2E88] leading-none mt-1 group-hover:text-white transition-colors">
+                                                                {new Date(item.blocked_date + 'T12:00:00Z').getDate()}
+                                                            </span>
+                                                        </div>
+                                                        <div className="overflow-hidden">
+                                                            <p className="text-sm font-black text-[#0B0B0F] capitalize truncate">
+                                                                {new Date(item.blocked_date + 'T12:00:00Z').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                            </p>
+                                                            {item.reason && <p className="text-[11px] text-[#0B0B0F]/50 font-medium italic truncate mt-0.5">{item.reason}</p>}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleDeleteBlockedDate(item.id)}
+                                                        className="p-2.5 text-charcoal/20 hover:text-white hover:bg-[#FF2E88] rounded-xl transition-all flex-shrink-0 border border-transparent hover:border-[#FF2E88] shadow-sm hover:shadow-lg active:scale-95"
+                                                        title="Eliminar bloqueo"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </>
                     )}
 
                     {/* Integrations Settings */}

@@ -109,6 +109,10 @@ export default function Appointments() {
     const [, setIsSelectingPatientState] = useState(false)
     const isSelectingPatientRef = useRef(false)
 
+    // Block Schedule State
+    const [showActionChoiceModal, setShowActionChoiceModal] = useState(false)
+    const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null)
+
     // Fetch services and professionals
     useEffect(() => {
         const fetchServices = async () => {
@@ -530,6 +534,43 @@ export default function Appointments() {
         }
     }
 
+    const handleBlockSchedule = async (slot?: { start: Date, end: Date }) => {
+        const blockStart = slot ? slot.start : selectedSlot?.start;
+        if (!blockStart) {
+            toast.error('Por favor, selecciona un horario en el calendario primero');
+            return;
+        }
+        if (!profile?.clinic_id) return;
+
+        setSaving(true);
+        try {
+            const { error } = await supabase
+                .from('appointments')
+                .insert({
+                    clinic_id: profile.clinic_id,
+                    patient_name: 'Bloqueo de Agenda',
+                    phone_number: '000000000',
+                    service: 'Bloqueo',
+                    status: 'confirmed',
+                    appointment_date: format(blockStart, 'yyyy-MM-dd'),
+                    appointment_time: format(blockStart, 'HH:mm'),
+                    duration: 60, // Default 60 minutes
+                    notes: 'Horario bloqueado manualmente desde el calendario.'
+                });
+
+            if (error) throw error;
+            toast.success('Horario bloqueado correctamente');
+            setShowActionChoiceModal(false);
+            setSelectedSlot(null);
+            fetchAppointments();
+        } catch (error: any) {
+            console.error('Error blocking schedule:', error);
+            toast.error('Error al bloquear horario');
+        } finally {
+            setSaving(false);
+        }
+    }
+
     const handleDeleteAppointment = async (appointment: Appointment) => {
         if (!confirm('¿Estás seguro de que quieres eliminar esta cita?')) return
 
@@ -694,14 +735,16 @@ export default function Appointments() {
 
             // Get professional color
             const prof = apt.professional_id ? professionals.find(p => p.member_id === apt.professional_id) : null
+            const isBlock = apt.patient_name === 'Bloqueo de Agenda'
 
             return {
                 id: apt.id,
-                title: `${apt.patient_name} - ${apt.service}`,
+                title: isBlock ? 'HORARIO BLOQUEADO' : `${apt.patient_name} - ${apt.service}`,
                 start,
                 end,
                 resource: {
                     ...apt,
+                    isBlock,
                     professionalColor: prof?.color || undefined,
                     professionalName: prof ? `${prof.first_name || ''} ${prof.last_name || ''}`.trim() : undefined
                 }
@@ -731,26 +774,35 @@ export default function Appointments() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            const now = new Date()
-                            setNewAppointment({
-                                patient_name: '',
-                                phone_number: '',
-                                service: '',
-                                appointment_date: format(now, 'yyyy-MM-dd'),
-                                appointment_time: '09:00',
-                                notes: '',
-                                professional_id: '',
-                                box_id: ''
-                            })
-                            setShowModal(true)
-                        }}
-                        className="bg-[#FF2E88] text-white px-8 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(255,46,136,0.3)] hover:shadow-[0_15px_30px_rgba(255,46,136,0.4)] hover:-translate-y-1 active:translate-y-0.5 flex items-center gap-3"
-                    >
-                        <Plus className="w-5 h-5 stroke-[3]" />
-                        Nueva Cita
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => handleBlockSchedule()}
+                            className="bg-gray-100 text-gray-700 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-gray-200 flex items-center gap-2"
+                        >
+                            <Clock className="w-4 h-4" />
+                            Bloquear Horario
+                        </button>
+                        <button
+                            onClick={() => {
+                                setEditingId(null)
+                                setNewAppointment({
+                                    patient_name: '',
+                                    phone_number: '',
+                                    service: '',
+                                    appointment_date: format(new Date(), 'yyyy-MM-dd'),
+                                    appointment_time: format(new Date(), 'HH:mm'),
+                                    notes: '',
+                                    professional_id: '',
+                                    box_id: ''
+                                })
+                                setShowModal(true)
+                            }}
+                            className="bg-[#FF2E88] text-white px-8 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(255,46,136,0.3)] hover:shadow-[0_15px_30px_rgba(255,46,136,0.4)] hover:-translate-y-1 active:translate-y-0.5 flex items-center gap-3"
+                        >
+                            <Plus className="w-5 h-5 stroke-[3]" />
+                            Nueva Cita
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1005,13 +1057,23 @@ export default function Appointments() {
                     ))}
                     </div>
             )}
-
             {viewMode === 'calendar' ? (
                 <>
                     {/* Desktop Calendar View */}
                     <div className="hidden md:block">
                         <CalendarView
+                            onSelectSlot={(slotInfo) => {
+                                setSelectedSlot(slotInfo)
+                                setShowActionChoiceModal(true)
+                            }}
                             onEditEvent={(event) => {
+                                // Check if it's a blocked slot
+                                if (event.resource?.isBlock) {
+                                    if (confirm('¿Deseas eliminar este bloqueo de horario?')) {
+                                        handleDeleteAppointment(event.resource)
+                                    }
+                                    return
+                                }
                                 // Check if it's a google event
                                 if (event.resource?.type === 'google') {
                                     // Ideally show a toast
@@ -1040,6 +1102,14 @@ export default function Appointments() {
                                 // Debug log 
                                 console.log('Event clicked:', event)
 
+                                // Check if it's a blocked slot
+                                if (event.resource?.isBlock) {
+                                    if (confirm('¿Deseas eliminar este bloqueo de horario?')) {
+                                        handleDeleteAppointment(event.resource)
+                                    }
+                                    return
+                                }
+
                                 // Check if it's a google event to prevent editing (or show info)
                                 if (event.resource?.type === 'google') {
                                     console.log('Google event selected, cannot edit directly yet')
@@ -1057,14 +1127,6 @@ export default function Appointments() {
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
                                     box_id: event.resource.box_id || ''
-                                })
-                                setShowModal(true)
-                            }}
-                            onSelectSlot={(slotInfo) => {
-                                setNewAppointment({
-                                    ...newAppointment,
-                                    appointment_date: slotInfo.start.toISOString().split('T')[0],
-                                    appointment_time: slotInfo.start.toTimeString().slice(0, 5)
                                 })
                                 setShowModal(true)
                             }}
@@ -1930,6 +1992,66 @@ export default function Appointments() {
                 )
             }
             <Toaster position="top-right" />
+            {/* Action Choice Modal */}
+            {showActionChoiceModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm animate-fade-in"
+                        onClick={() => setShowActionChoiceModal(false)}
+                    />
+                    <div className="bg-white rounded-3xl shadow-premium-2xl w-full max-w-sm overflow-hidden animate-scale-in relative border border-silk-beige/50">
+                        <div className="p-8">
+                            <div className="w-16 h-16 bg-[#FF2E88]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                <CalendarIcon className="w-8 h-8 text-[#FF2E88]" />
+                            </div>
+                            <h3 className="text-xl font-black text-center text-charcoal mb-2">¿Qué deseas hacer?</h3>
+                            <p className="text-sm text-center text-charcoal/50 font-medium mb-8">
+                                Has seleccionado el horario de las <span className="text-[#FF2E88] font-bold">{selectedSlot ? format(selectedSlot.start, 'HH:mm') : ''}</span> el día <span className="text-[#FF2E88] font-bold">{selectedSlot ? format(selectedSlot.start, 'dd/MM') : ''}</span>.
+                            </p>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => {
+                                        if (selectedSlot) {
+                                            setEditingId(null)
+                                            setNewAppointment({
+                                                patient_name: '',
+                                                phone_number: '',
+                                                service: '',
+                                                appointment_date: format(selectedSlot.start, 'yyyy-MM-dd'),
+                                                appointment_time: format(selectedSlot.start, 'HH:mm'),
+                                                notes: '',
+                                                professional_id: '',
+                                                box_id: ''
+                                            })
+                                            setShowActionChoiceModal(false)
+                                            setShowModal(true)
+                                        }
+                                    }}
+                                    className="w-full py-4 bg-[#FF2E88] text-white rounded-xl font-black uppercase tracking-widest text-[11px] shadow-[0_8px_20px_rgba(255,46,136,0.3)] hover:shadow-[0_12px_24px_rgba(255,46,136,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+                                >
+                                    <Plus className="w-4 h-4 stroke-[3]" />
+                                    Agendar Cita
+                                </button>
+                                <button
+                                    onClick={() => handleBlockSchedule()}
+                                    disabled={saving}
+                                    className="w-full py-4 bg-charcoal text-white rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-black transition-all flex items-center justify-center gap-3"
+                                >
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
+                                    Bloquear Horario
+                                </button>
+                                <button
+                                    onClick={() => setShowActionChoiceModal(false)}
+                                    className="w-full py-3 text-charcoal/40 text-[10px] font-black uppercase tracking-widest hover:text-charcoal transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

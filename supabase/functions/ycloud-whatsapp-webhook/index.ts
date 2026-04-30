@@ -312,6 +312,20 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         }
     }
 
+    // 3. Blocked Dates Check (Manual closures/holidays)
+    const { data: blockedDate } = await sb.from("clinic_blocked_dates")
+        .select("reason")
+        .eq("clinic_id", clinicId)
+        .eq("blocked_date", date)
+        .maybeSingle();
+
+    if (blockedDate) {
+        return { 
+            available: false, 
+            message: `Lo sentimos, la clínica se encuentra cerrada el ${date}${blockedDate.reason ? ' por el siguiente motivo: ' + blockedDate.reason : ''}. Por favor consulta disponibilidad para otro día.` 
+        };
+    }
+
     let duration = 60; // Default
     let serviceId: string | null = null;
     let professionalId: string | null = null;

@@ -137,8 +137,22 @@ const eventPropGetter = (event: CalendarEvent) => {
     const isGoogle = event.resource?.type === 'google'
     const status = event.resource?.status || 'pending'
     const professionalColor = event.resource?.professionalColor
+    const isBlock = event.resource?.isBlock
 
     let className = "border-l-4 text-xs rounded transition-all hover:brightness-95"
+
+    if (isBlock) {
+        return {
+            className: className + " bg-charcoal/10 border-charcoal text-charcoal opacity-60",
+            style: {
+                border: 'none',
+                borderLeftWidth: '4px',
+                borderLeftStyle: 'solid' as const,
+                borderLeftColor: '#0B0B0F',
+                backgroundColor: 'rgba(11, 11, 15, 0.1)',
+            }
+        }
+    }
 
     // If professional has a color, use it for the border (except if appointment is cancelled)
     if (professionalColor && !isGoogle && status !== 'cancelled') {

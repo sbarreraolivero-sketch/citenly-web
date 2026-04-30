@@ -565,6 +565,32 @@ export interface Database {
                     tag_id?: string | null
                     created_at?: string
                 }
+            },
+            clinic_blocked_dates: {
+                Row: {
+                    id: string
+                    clinic_id: string | null
+                    blocked_date: string
+                    reason: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    clinic_id?: string | null
+                    blocked_date: string
+                    reason?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    clinic_id?: string | null
+                    blocked_date?: string
+                    reason?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
             }
         }
         Views: {
