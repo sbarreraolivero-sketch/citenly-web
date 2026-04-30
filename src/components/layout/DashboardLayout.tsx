@@ -91,11 +91,27 @@ export default function DashboardLayout() {
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark')
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light')
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme') || 'light'
+        document.body.dataset.theme = savedTheme
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+        if (savedTheme !== theme) setTheme(savedTheme)
+    }, [])
 
     const toggleTheme = () => {
         const next = theme === 'dark' ? 'light' : 'dark'
         document.body.dataset.theme = next
+        if (next === 'dark') {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
         localStorage.setItem('theme', next)
         setTheme(next)
     }

@@ -2125,163 +2125,162 @@ export default function Settings() {
 
                     {/* Schedule Settings */}
                     {activeTab === 'schedule' && (
-                        <div className="card-premium p-6">
-                            <h2 className="text-lg font-semibold text-primary-theme mb-6">Horarios de Atención</h2>
+                        <div className="space-y-8 animate-fade-in">
+                            <div className="card-premium p-6">
+                                <h2 className="text-lg font-semibold text-primary-theme mb-6">Horarios de Atención</h2>
 
-                            <div className="space-y-3">
-                                {dayOrder.map((day) => {
-                                    const hours = workingHours[day];
-                                    return (
-                                        <div
-                                            key={day}
-                                            className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-secondary-theme rounded-soft"
-                                        >
-                                            <div className="w-24 sm:w-28 flex-shrink-0">
-                                                <p className="font-medium text-primary-theme">{dayNames[day]}</p>
-                                            </div>
-
-                                            <label className="flex items-center gap-2 mr-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={hours !== null}
-                                                    onChange={(e) => {
-                                                        const checked = e.target.checked;
-                                                        setWorkingHours((prev: any) => ({
-                                                            ...prev,
-                                                            [day]: checked ? { open: '09:00', close: '18:00' } : null
-                                                        }))
-                                                    }}
-                                                    className="w-4 h-4 rounded border-theme text-primary-500 focus:ring-primary-500"
-                                                />
-                                                <span className="text-sm text-primary-theme/60">Abierto</span>
-                                            </label>
-
-                                            {hours ? (
-                                                <div className="flex flex-col gap-3 flex-1 min-w-[280px]">
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="time"
-                                                            value={(hours as any).open}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                setWorkingHours((prev: any) => ({
-                                                                    ...prev,
-                                                                    [day]: { ...prev[day], open: val }
-                                                                }))
-                                                            }}
-                                                            className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
-                                                        />
-                                                        <span className="text-primary-theme/40 font-bold mx-1">a</span>
-                                                        <input
-                                                            type="time"
-                                                            value={(hours as any).close}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                setWorkingHours((prev: any) => ({
-                                                                    ...prev,
-                                                                    [day]: { ...prev[day], close: val }
-                                                                }))
-                                                            }}
-                                                            className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
-                                                        />
-                                                    </div>
-
-                                                    {/* Colación UI */}
-                                                    <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-theme/30 ml-1">
-                                                        <label className="flex items-center gap-2 cursor-pointer">
-                                                            <div className="relative inline-flex items-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={(hours as any).lunch_break?.enabled || false}
-                                                                    onChange={(e) => {
-                                                                        const checked = e.target.checked;
-                                                                        setWorkingHours((prev: any) => ({
-                                                                            ...prev,
-                                                                            [day]: {
-                                                                                ...prev[day],
-                                                                                lunch_break: {
-                                                                                    ...(prev[day].lunch_break || { start: '14:00', end: '15:00' }),
-                                                                                    enabled: checked
-                                                                                }
-                                                                            }
-                                                                        }))
-                                                                    }}
-                                                                    className="sr-only peer"
-                                                                />
-                                                                <div className="w-8 h-4 bg-charcoal/20 dark:bg-white/15 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#FF2E88]"></div>
-                                                            </div>
-                                                            <span className="text-xs font-medium text-primary-theme/50">Colación</span>
-                                                        </label>
-
-                                                        {(hours as any).lunch_break?.enabled && (
-                                                            <div className="flex items-center gap-2 animate-fade-in">
-                                                                <input
-                                                                    type="time"
-                                                                    value={(hours as any).lunch_break.start}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.value;
-                                                                        setWorkingHours((prev: any) => ({
-                                                                            ...prev,
-                                                                            [day]: {
-                                                                                ...prev[day],
-                                                                                lunch_break: { ...prev[day].lunch_break, start: val }
-                                                                            }
-                                                                        }))
-                                                                    }}
-                                                                    className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
-                                                                />
-                                                                <span className="text-primary-theme/40 text-xs font-bold">a</span>
-                                                                <input
-                                                                    type="time"
-                                                                    value={(hours as any).lunch_break.end}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.value;
-                                                                        setWorkingHours((prev: any) => ({
-                                                                            ...prev,
-                                                                            [day]: {
-                                                                                ...prev[day],
-                                                                                lunch_break: { ...prev[day].lunch_break, end: val }
-                                                                            }
-                                                                        }))
-                                                                    }}
-                                                                    className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                <div className="space-y-3">
+                                    {dayOrder.map((day) => {
+                                        const hours = workingHours[day];
+                                        return (
+                                            <div
+                                                key={day}
+                                                className="flex flex-wrap items-center gap-2 sm:gap-4 p-4 bg-secondary-theme rounded-soft"
+                                            >
+                                                <div className="w-24 sm:w-28 flex-shrink-0">
+                                                    <p className="font-medium text-primary-theme">{dayNames[day]}</p>
                                                 </div>
-                                            ) : (
-                                                <span className="text-sm text-primary-theme/40 ml-2">Cerrado</span>
-                                            )}
+
+                                                <label className="flex items-center gap-2 mr-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={hours !== null}
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked;
+                                                            setWorkingHours((prev: any) => ({
+                                                                ...prev,
+                                                                [day]: checked ? { open: '09:00', close: '18:00' } : null
+                                                            }))
+                                                        }}
+                                                        className="w-4 h-4 rounded border-theme text-primary-500 focus:ring-primary-500"
+                                                    />
+                                                    <span className="text-sm text-primary-theme/60">Abierto</span>
+                                                </label>
+
+                                                {hours ? (
+                                                    <div className="flex flex-col gap-3 flex-1 min-w-[280px]">
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="time"
+                                                                value={(hours as any).open}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setWorkingHours((prev: any) => ({
+                                                                        ...prev,
+                                                                        [day]: { ...prev[day], open: val }
+                                                                    }))
+                                                                }}
+                                                                className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                            />
+                                                            <span className="text-primary-theme/40 font-bold mx-1">a</span>
+                                                            <input
+                                                                type="time"
+                                                                value={(hours as any).close}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setWorkingHours((prev: any) => ({
+                                                                        ...prev,
+                                                                        [day]: { ...prev[day], close: val }
+                                                                    }))
+                                                                }}
+                                                                className="px-2 sm:px-3 py-2 bg-primary-theme/5 border border-theme rounded-soft text-sm flex-1 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                            />
+                                                        </div>
+
+                                                        {/* Colación UI */}
+                                                        <div className="flex flex-wrap items-center gap-4 pl-4 border-l-2 border-theme/30 ml-1">
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <div className="relative inline-flex items-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={(hours as any).lunch_break?.enabled || false}
+                                                                        onChange={(e) => {
+                                                                            const checked = e.target.checked;
+                                                                            setWorkingHours((prev: any) => ({
+                                                                                ...prev,
+                                                                                [day]: {
+                                                                                    ...prev[day],
+                                                                                    lunch_break: {
+                                                                                        ...(prev[day].lunch_break || { start: '14:00', end: '15:00' }),
+                                                                                        enabled: checked
+                                                                                    }
+                                                                                }
+                                                                            }))
+                                                                        }}
+                                                                        className="sr-only peer"
+                                                                    />
+                                                                    <div className="w-8 h-4 bg-charcoal/20 dark:bg-white/15 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#FF2E88]"></div>
+                                                                </div>
+                                                                <span className="text-xs font-medium text-primary-theme/50">Colación</span>
+                                                            </label>
+
+                                                            {(hours as any).lunch_break?.enabled && (
+                                                                <div className="flex items-center gap-2 animate-fade-in">
+                                                                    <input
+                                                                        type="time"
+                                                                        value={(hours as any).lunch_break.start}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            setWorkingHours((prev: any) => ({
+                                                                                ...prev,
+                                                                                [day]: {
+                                                                                    ...prev[day],
+                                                                                    lunch_break: { ...prev[day].lunch_break, start: val }
+                                                                                }
+                                                                            }))
+                                                                        }}
+                                                                        className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                                    />
+                                                                    <span className="text-primary-theme/40 text-xs font-bold">a</span>
+                                                                    <input
+                                                                        type="time"
+                                                                        value={(hours as any).lunch_break.end}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            setWorkingHours((prev: any) => ({
+                                                                                ...prev,
+                                                                                [day]: {
+                                                                                    ...prev[day],
+                                                                                    lunch_break: { ...prev[day].lunch_break, end: val }
+                                                                                }
+                                                                            }))
+                                                                        }}
+                                                                        className="px-2 py-1 bg-secondary-theme border border-theme rounded-soft text-xs w-24 text-primary-theme font-bold focus:ring-2 focus:ring-[#FF2E88]/20 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-primary-theme/40 ml-2">Cerrado</span>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+
+                                <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
+                                    <button
+                                        onClick={handleSaveSchedule}
+                                        disabled={savingSchedule}
+                                        className="btn-premium-primary flex items-center gap-2"
+                                    >
+                                        {savingSchedule ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                        ) : (
+                                            <><Save className="w-4 h-4" /> Guardar Horarios</>
+                                        )}
+                                    </button>
+                                    {scheduleSaved && (
+                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            ¡Horarios guardados!
                                         </div>
-                                    )
-                                })}
-                            </div>
-
-                            <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
-                                <button
-                                    onClick={handleSaveSchedule}
-                                    disabled={savingSchedule}
-                                    className="btn-premium-primary flex items-center gap-2"
-                                >
-                                    {savingSchedule ? (
-                                        <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                                    ) : (
-                                        <><Save className="w-4 h-4" /> Guardar Horarios</>
                                     )}
-                                </button>
-                                {scheduleSaved && (
-                                    <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        ¡Horarios guardados!
-                                    </div>
-                                )}
+                                </div>
                             </div>
-                        </div>
 
-
-                            {/* Blocked Dates Section */}
-                            <div className="card-premium p-6 mt-8">
+                            <div className="card-premium p-6">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="w-14 h-14 bg-[#FF2E88]/5 rounded-2xl flex items-center justify-center border border-[#FF2E88]/10 shadow-[0_8px_16px_rgba(255,46,136,0.08)]">
                                         <Calendar className="w-7 h-7 text-[#FF2E88]" />
@@ -2381,7 +2380,7 @@ export default function Settings() {
                                     )}
                                 </div>
                             </div>
-                        </>
+                        </div>
                     )}
 
                     {/* Integrations Settings */}

@@ -18,11 +18,16 @@
   <title>Citenly AI - Gestión Inteligente de Citas</title>
 </head>
 
-<body data-theme="dark">
+<body data-theme="light">
   <script>
     (function() {
-      const theme = localStorage.getItem('theme') || 'dark';
+      const theme = localStorage.getItem('theme') || 'light';
       document.body.dataset.theme = theme;
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     })();
   </script>
   <div id="root"></div>

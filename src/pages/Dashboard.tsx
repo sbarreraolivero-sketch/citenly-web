@@ -79,6 +79,18 @@ export default function Dashboard() {
         nps: 0,
         average: 0
     })
+    const [trends, setTrends] = useState<Record<string, string>>({
+        appointments: '0%',
+        prospects: '0%',
+        aiMessages: '0%',
+        reminders: '0%'
+    })
+    const [isTrendsUp, setIsTrendsUp] = useState<Record<string, boolean>>({
+        appointments: true,
+        prospects: true,
+        aiMessages: true,
+        reminders: true
+    })
 
     const { getDateRange } = useClinicTimezone()
 
@@ -141,21 +153,79 @@ export default function Dashboard() {
                     const findStat = (type: string) => clinicStats.find((s: any) => s.stat_type === type && s.period === filterRange)?.value || 0
                     const appointmentsCount = findStat('appointments')
                     const uniqueContacts = findStat('unique_contacts')
+                    const prospectsCount = findStat('prospects')
+                    const aiMessagesCount = findStat('ai_messages')
+                    const remindersCount = findStat('reminders')
 
                     setStats({
                         scheduledAppointments: appointmentsCount,
-                        newProspects: findStat('prospects'),
-                        aiMessagesSent: findStat('ai_messages'),
-                        remindersSent: findStat('reminders')
+                        newProspects: prospectsCount,
+                        aiMessagesSent: aiMessagesCount,
+                        remindersSent: remindersCount
                     })
 
-                    // Update conversion stats
+                    // Update conversion stats - Use max of contacts or prospects to be more realistic
+                    const totalLeads = Math.max(uniqueContacts, prospectsCount, appointmentsCount)
                     setConversionStats({
-                        consultations: uniqueContacts,
+                        consultations: totalLeads,
                         converted: appointmentsCount,
-                        lost: Math.max(0, uniqueContacts - appointmentsCount),
-                        rate: uniqueContacts > 0 ? Math.round((appointmentsCount / uniqueContacts) * 100) : 0
+                        lost: Math.max(0, totalLeads - appointmentsCount),
+                        rate: totalLeads > 0 ? Math.round((appointmentsCount / totalLeads) * 100) : 0
                     });
+
+                    // 2.1 Fetch Previous Period for Trends
+                    const prevRange = {
+                        start: new Date(rangeStart),
+                        end: new Date(rangeStart)
+                    }
+                    if (filterRange === 'day') prevRange.start.setDate(prevRange.start.getDate() - 1)
+                    else if (filterRange === 'week') prevRange.start.setDate(prevRange.start.getDate() - 7)
+                    else if (filterRange === 'month') prevRange.start.setMonth(prevRange.start.getMonth() - 1)
+                    else if (filterRange === 'year') prevRange.start.setFullYear(prevRange.start.getFullYear() - 1)
+
+                    const prevStartStr = prevRange.start.toISOString()
+                    const prevEndStr = prevRange.end.toISOString()
+
+                    const [
+                        { count: prevAppts },
+                        { count: prevPros },
+                        { count: prevMsgs },
+                        { count: prevRems }
+                    ] = await Promise.all([
+                        supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).in('status', ['pending', 'confirmed']).gte('appointment_date', prevStartStr).lt('appointment_date', prevEndStr),
+                        supabase.from('crm_prospects').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).gte('created_at', prevStartStr).lt('created_at', prevEndStr),
+                        supabase.from('messages').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('ai_generated', true).eq('direction', 'outbound').gte('created_at', prevStartStr).lt('created_at', prevEndStr),
+                        supabase.from('reminder_logs').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('status', 'sent').gte('sent_at', prevStartStr).lt('sent_at', prevEndStr)
+                    ])
+
+                    const calculateTrend = (curr: number, prev: number | null) => {
+                        const p = prev || 0
+                        if (p === 0) return { label: curr > 0 ? '+100%' : '0%', isUp: curr > 0 }
+                        const diff = ((curr - p) / p) * 100
+                        return { 
+                            label: `${diff >= 0 ? '+' : ''}${Math.round(diff)}%`, 
+                            isUp: diff >= 0 
+                        }
+                    }
+
+                    const tAppts = calculateTrend(appointmentsCount, prevAppts)
+                    const tPros = calculateTrend(prospectsCount, prevPros)
+                    const tMsgs = calculateTrend(aiMessagesCount, prevMsgs)
+                    const tRems = calculateTrend(remindersCount, prevRems)
+
+                    setTrends({
+                        appointments: tAppts.label,
+                        prospects: tPros.label,
+                        aiMessages: tMsgs.label,
+                        reminders: tRems.label
+                    })
+                    setIsTrendsUp({
+                        appointments: tAppts.isUp,
+                        prospects: tPros.isUp,
+                        aiMessages: tMsgs.isUp,
+                        reminders: tRems.isUp
+                    })
+
                 } else {
                     // Fallback to real-time counts if stats table is empty (e.g. initial setup)
                     // @ts-ignore
@@ -239,34 +309,49 @@ export default function Dashboard() {
         { id: 'year', label: 'Este Año' }
     ]
 
+    const getProgress = (val: number, type: 'appointments' | 'prospects' | 'aiMessages' | 'reminders') => {
+        const goals: any = {
+            day: { appointments: 10, prospects: 5, aiMessages: 50, reminders: 10 },
+            week: { appointments: 50, prospects: 25, aiMessages: 250, reminders: 50 },
+            month: { appointments: 200, prospects: 100, aiMessages: 1000, reminders: 200 },
+            year: { appointments: 2000, prospects: 1000, aiMessages: 10000, reminders: 2000 }
+        }
+        const goal = goals[filterRange][type] || 100
+        return Math.min(100, (val / goal) * 100)
+    }
+
     const statCards = [
         {
+            id: 'appointments',
             name: 'CITAS AGENDADAS',
             value: stats.scheduledAppointments,
             icon: Calendar,
-            trend: '+12%',
-            isUp: true
+            trend: trends.appointments,
+            isUp: isTrendsUp.appointments
         },
         {
+            id: 'prospects',
             name: 'NUEVOS PROSPECTOS',
             value: stats.newProspects,
             icon: Target,
-            trend: '+8%',
-            isUp: true
+            trend: trends.prospects,
+            isUp: isTrendsUp.prospects
         },
         {
+            id: 'aiMessages',
             name: 'MENSAJES DE IA',
             value: stats.aiMessagesSent,
             icon: MessageSquare,
-            trend: '+24%',
-            isUp: true
+            trend: trends.aiMessages,
+            isUp: isTrendsUp.aiMessages
         },
         {
+            id: 'reminders',
             name: 'RECORDATORIOS',
             value: stats.remindersSent,
             icon: Bell,
-            trend: '100%',
-            isUp: true
+            trend: trends.reminders,
+            isUp: isTrendsUp.reminders
         },
     ]
 
@@ -355,7 +440,10 @@ export default function Dashboard() {
 
                         {/* Bottom indicator bar matching reference image */}
                         <div className="absolute bottom-0 left-6 right-6 h-1.5 bg-secondary-theme/50 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full shadow-[0_0_10px_rgba(255,46,136,0.5)] transition-all duration-1000" style={{ width: '40%' }} />
+                            <div 
+                                className="h-full bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full shadow-[0_0_10px_rgba(255,46,136,0.5)] transition-all duration-1000" 
+                                style={{ width: `${getProgress(stat.value, stat.id as any)}%` }} 
+                            />
                         </div>
                     </div>
                 ))}
