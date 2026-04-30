@@ -544,7 +544,7 @@ export default function Appointments() {
 
         setSaving(true);
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('appointments')
                 .insert({
                     clinic_id: profile.clinic_id,
@@ -552,8 +552,7 @@ export default function Appointments() {
                     phone_number: '000000000',
                     service: 'Bloqueo',
                     status: 'confirmed',
-                    appointment_date: format(blockStart, 'yyyy-MM-dd'),
-                    appointment_time: format(blockStart, 'HH:mm'),
+                    appointment_date: format(blockStart, "yyyy-MM-dd'T'HH:mm:00xxx"),
                     duration: 60, // Default 60 minutes
                     notes: 'Horario bloqueado manualmente desde el calendario.'
                 });

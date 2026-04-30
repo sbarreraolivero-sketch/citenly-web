@@ -950,7 +950,7 @@ export default function Settings() {
         if (!profile?.clinic_id || !newBlockedDate) return
         setIsAddingBlockedDate(true)
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('clinic_blocked_dates')
                 .insert({
                     clinic_id: profile.clinic_id,
@@ -1490,7 +1490,7 @@ export default function Settings() {
                                                 type="url"
                                                 placeholder="https://tiktok.com/@..."
                                                 value={tiktokUrl}
-                                                onChange={(e) => setTikTokUrl(e.target.value)}
+                                                onChange={(e) => setTiktokUrl(e.target.value)}
                                                 className="input-premium"
                                             />
                                         </div>
