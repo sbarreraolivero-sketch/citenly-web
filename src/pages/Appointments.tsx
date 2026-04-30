@@ -537,9 +537,21 @@ export default function Appointments() {
     const handleBlockSchedule = async (slot?: { start: Date, end: Date }) => {
         const blockStart = slot ? slot.start : selectedSlot?.start;
         if (!blockStart) {
-            toast.error('Por favor, selecciona un horario en el calendario primero');
+            setEditingId(null);
+            setNewAppointment({
+                patient_name: 'Bloqueo de Agenda',
+                phone_number: '000000000',
+                service: 'Bloqueo',
+                appointment_date: format(new Date(), 'yyyy-MM-dd'),
+                appointment_time: format(new Date(), 'HH:mm'),
+                notes: 'Horario bloqueado manualmente.',
+                professional_id: '',
+                box_id: ''
+            });
+            setShowModal(true);
             return;
         }
+
         if (!profile?.clinic_id) return;
 
         setSaving(true);
