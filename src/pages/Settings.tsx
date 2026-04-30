@@ -2003,14 +2003,25 @@ export default function Settings() {
                             </div>
 
                              {/* Plan Cards */}
-                            <div id="compare-plans" className="space-y-4">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-                                    <div className="flex flex-col">
-                                        <h2 className="text-xl font-black text-primary-theme tracking-tight">Compara nuestros planes</h2>
-                                        <div className="bg-primary-500/10 text-primary-600 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mt-1">
-                                            Garantía de Satisfacción
-                                        </div>
+                            <div id="compare-plans" className="space-y-10 py-10">
+                                <div className="text-center space-y-4 mb-12">
+                                    <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/20 shadow-sm animate-bounce">
+                                        <Sparkles className="w-4 h-4" />
+                                        Más de 50 clínicas ya están automatizando sus citas
                                     </div>
+                                    <h2 className="text-4xl md:text-5xl font-black text-primary-theme tracking-tighter leading-none">
+                                        Deja de perder citas todos los días.<br />
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6]">
+                                            Empieza a convertirlas automáticamente.
+                                        </span>
+                                    </h2>
+                                    <p className="text-lg text-primary-theme/60 font-medium max-w-2xl mx-auto">
+                                        Elige el sistema según el nivel de crecimiento de tu clínica.<br />
+                                        Todos incluyen implementación guiada + prueba sin riesgo.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col md:flex-row md:items-center justify-center gap-4 px-2 mb-8">
 
                                     <div className="flex items-center gap-3 bg-secondary-theme p-1.5 rounded-soft border border-theme shadow-sm">
                                         <button
@@ -2054,65 +2065,129 @@ export default function Settings() {
                                         const lsPlan = LS_PLANS[planId as LSPlanId]
                                         const plan = paymentRegion === 'international' ? lsPlan : mpPlan
                                         const price = plan.price
-                                        const currencySymbol = paymentRegion === 'international' ? 'US$' : '$'
-                                        const currencyCode = paymentRegion === 'international' ? 'USD' : 'CLP'
-                                        const isCurrentPlan = planId === subscription?.plan
-                                        const isRadiance = planId === 'radiance'
-
-                                        return (
-                                            <div 
                                                 key={planId}
                                                 className={cn(
-                                                    "relative flex flex-col p-6 rounded-soft border-2 transition-all duration-300",
-                                                    isCurrentPlan ? "border-[#FF2E88] bg-[#FF2E88]/5 ring-4 ring-[#FF2E88]/10" : "border-theme bg-secondary-theme hover:border-[#FF2E88]/30 hover:shadow-xl",
-                                                    isRadiance && !isCurrentPlan && "md:scale-105 shadow-premium-lg border-[#FF2E88] z-10"
+                                                    "relative flex flex-col p-8 rounded-[2rem] border-2 transition-all duration-500",
+                                                    isCurrentPlan ? "border-[#FF2E88] bg-[#FF2E88]/5 ring-8 ring-[#FF2E88]/5" : "border-theme bg-secondary-theme hover:border-[#FF2E88]/30 hover:shadow-2xl hover:-translate-y-1",
+                                                    isRadiance && !isCurrentPlan && "md:scale-105 shadow-[0_20px_50px_rgba(255,46,136,0.15)] border-[#FF2E88] z-10 bg-white dark:bg-charcoal"
                                                 )}
                                             >
                                                 {isRadiance && (
-                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-hero-gradient text-white text-[10px] font-black px-4 py-1 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
+                                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white text-[11px] font-black px-6 py-2 rounded-full shadow-xl uppercase tracking-[0.2em] whitespace-nowrap z-20">
                                                         Más Popular
                                                     </div>
                                                 )}
 
-                                                <div className="mb-6">
-                                                    <h3 className="text-xl font-black text-primary-theme uppercase tracking-tighter">{plan.name}</h3>
-                                                    <p className="text-xs font-bold text-primary-theme/40 mt-1 h-8 leading-tight">{plan.tagline}</p>
-                                                    <div className="mt-4 flex items-baseline gap-1 border-b border-theme pb-4">
-                                                        <span className="text-4xl font-black text-primary-theme">
+                                                <div className="mb-8">
+                                                    <div className={cn(
+                                                        "w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4",
+                                                        planId === 'essence' ? "bg-emerald-100 text-emerald-700" :
+                                                        planId === 'radiance' ? "bg-purple-100 text-purple-700" :
+                                                        "bg-amber-100 text-amber-700"
+                                                    )}>
+                                                        {planId === 'essence' ? 'Para clínicas que quieren dejar de perder clientas' :
+                                                         planId === 'radiance' ? 'Para clínicas que quieren crecer en serio' :
+                                                         'Para clínicas que quieren operar como negocio serio'}
+                                                    </div>
+                                                    <h3 className="text-3xl font-black text-primary-theme uppercase tracking-tighter mb-1">{plan.name}</h3>
+                                                    <p className="text-sm font-bold text-[#FF2E88] leading-tight mb-4">{plan.promise}</p>
+                                                    
+                                                    <div className="flex items-baseline gap-1 pt-4 border-t border-theme">
+                                                        <span className="text-5xl font-black text-primary-theme tracking-tighter">
                                                             {currencySymbol}{price.toLocaleString()}
                                                         </span>
-                                                        <span className="text-sm font-bold text-primary-theme/30 uppercase">{currencyCode}/mes</span>
+                                                        <span className="text-sm font-black text-primary-theme/30 uppercase tracking-widest">/{currencyCode}</span>
                                                     </div>
                                                 </div>
 
-                                                <ul className="space-y-3 mb-8 flex-grow">
-                                                    {plan.features.map((feature, idx) => (
-                                                        <li key={idx} className="flex items-start gap-3">
-                                                            <div className="mt-1 w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                                                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                                            </div>
-                                                            <span className="text-sm font-medium text-primary-theme/70 leading-snug">{feature}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                                <div className="space-y-6 mb-10 flex-grow">
+                                                    {/* Benefits Section */}
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-primary-theme/30 uppercase tracking-[0.2em] mb-4">Beneficios principales</p>
+                                                        <ul className="space-y-3">
+                                                            {(plan as any).benefits?.map((benefit: string, idx: number) => (
+                                                                <li key={idx} className="flex items-start gap-3">
+                                                                    <div className="mt-1 w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                                                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                                    </div>
+                                                                    <span className="text-sm font-bold text-primary-theme leading-snug">{benefit}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+
+                                                    {/* Features Section */}
+                                                    <div className="pt-6 border-t border-dashed border-theme">
+                                                        <p className="text-[10px] font-black text-primary-theme/30 uppercase tracking-[0.2em] mb-4">Lo que incluye</p>
+                                                        <ul className="space-y-2">
+                                                            {plan.features.map((feature, idx) => (
+                                                                <li key={idx} className="flex items-center gap-2 text-xs font-medium text-primary-theme/60">
+                                                                    <div className="w-1 h-1 rounded-full bg-primary-theme/30" />
+                                                                    {feature}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </div>
 
                                                 <button
                                                     onClick={() => handlePlanSelection(planId)}
                                                     disabled={isCurrentPlan}
                                                     className={cn(
-                                                        "w-full py-3 rounded-soft font-black text-sm uppercase tracking-widest transition-all",
+                                                        "w-full py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95",
                                                         isCurrentPlan 
-                                                            ? "bg-charcoal/10 text-primary-theme/40 cursor-not-allowed" 
+                                                            ? "bg-secondary-theme text-primary-theme/20 cursor-not-allowed border border-theme" 
                                                             : isRadiance 
-                                                                ? "bg-hero-gradient text-white shadow-lg hover:shadow-xl hover:scale-[1.02]" 
-                                                                : "bg-primary-theme text-primary-theme border border-theme hover:bg-secondary-theme"
+                                                                ? "bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white hover:opacity-90" 
+                                                                : "bg-primary-theme text-primary-theme border-2 border-theme hover:bg-secondary-theme"
                                                     )}
                                                 >
-                                                    {isCurrentPlan ? 'Plan Actual' : 'Seleccionar Plan'}
+                                                    {isCurrentPlan ? "Sistema Activo" : (plan as any).cta || "Activar sistema"}
                                                 </button>
                                             </div>
                                         )
                                     })}
+                                </div>
+
+                                {/* Guarantee Block */}
+                                <div className="mt-20 max-w-4xl mx-auto">
+                                    <div className="card-premium p-10 border-2 border-emerald-500/20 bg-emerald-500/[0.02] overflow-hidden relative">
+                                        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                                            <ShieldCheck className="w-40 h-40 text-emerald-500" />
+                                        </div>
+                                        <div className="relative z-10">
+                                            <div className="flex flex-col md:flex-row items-center gap-8">
+                                                <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center flex-shrink-0 border-2 border-emerald-500/20 shadow-lg">
+                                                    <ShieldCheck className="w-10 h-10 text-emerald-600" />
+                                                </div>
+                                                <div className="flex-1 text-center md:text-left">
+                                                    <h3 className="text-2xl font-black text-primary-theme uppercase tracking-tight mb-2">🔒 GARANTÍA — Prueba Citenly sin riesgo</h3>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center gap-3 justify-center md:justify-start">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                            <p className="text-sm font-bold text-primary-theme/70">Tienes 7 días para probar el sistema completo</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 justify-center md:justify-start">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                            <p className="text-sm font-bold text-primary-theme/70">Implementación completa por nuestro equipo (llave en mano)</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 justify-center md:justify-start">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                            <p className="text-sm font-bold text-primary-theme/70">Si no te ayuda a gestionar mejor tus citas, puedes cancelar.</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-6 inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/30">
+                                                        0 RIESGO COMPROMETIDO
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Implicit Comparison Text */}
+                                    <p className="text-center mt-12 text-sm font-medium text-primary-theme/40 italic">
+                                        "Si no tomas el sistema Radiance hoy, tu clínica seguirá perdiendo clientas que la competencia está capturando por responder más rápido."
+                                    </p>
                                 </div>
                             </div>
                         </div>

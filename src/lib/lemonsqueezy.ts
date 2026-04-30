@@ -7,60 +7,6 @@ import { supabase } from './supabase'
 /**
  * USD Plan Prices for LemonSqueezy
  */
-export const LS_PLANS = {
-    essence: {
-        id: 'essence',
-        name: 'Essence',
-        tagline: 'Ideal para Independientes y Clínicas Pequeñas',
-        price: 99,
-        currency: 'USD',
-        monthlyAppointments: 50,
-        features: [
-            'Hasta 2 usuarios',
-            'Agente de IA especializado',
-            'Optimización Google Maps',
-            'Hasta 50 citas automatizadas',
-            '1 Agenda disponible',
-            'Fichas clínicas e historial',
-            'Integración oficial WhatsApp (Meta)',
-        ],
-    },
-    radiance: {
-        id: 'radiance',
-        name: 'Radiance',
-        tagline: 'Para clínicas en pleno crecimiento',
-        price: 159,
-        currency: 'USD',
-        monthlyAppointments: -1,
-        popular: true,
-        features: [
-            'Todo lo de Essence, más:',
-            'Hasta 5 usuarios (Adm, Médicos, Rec)',
-            '5 Agendas independientes',
-            'Recordatorios Vacunación/Desparasitación IA',
-            'CRM y Embudo de Ventas',
-            'Campañas de Marketing Masivo',
-            'Módulo de Finanzas y Reportes',
-        ],
-    },
-    prestige: {
-        id: 'prestige',
-        name: 'Prestige',
-        tagline: 'Potencia para Cadenas y Hospitales',
-        price: 297,
-        currency: 'USD',
-        monthlyAppointments: -1,
-        features: [
-            'Todo lo de Radiance, más:',
-            'Usuarios ilimitados',
-            'Gestión Multi-sucursal / Sedes',
-            'Panel de Super Administrador',
-            'Personalización de marca (White-label)',
-            'Soporte Prioritario 24/7',
-            'Capacitación inicial Concierge',
-        ],
-    },
-} as const;
 
 export type LSPlanId = keyof typeof LS_PLANS
 

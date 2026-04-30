@@ -98,69 +98,6 @@ export async function cancelSubscription(subscriptionId: string) {
 /**
  * CLP Plan Prices for Mercado Pago (Chile)
  */
-export const PLANS = {
-    essence: {
-        id: 'essence',
-        name: 'Plan Essence',
-        tagline: 'Ideal para Veterinarios Independientes y Clínicas Pequeñas',
-        price: 93000,
-        currency: 'CLP',
-        monthlyAppointmentsMonthly: 50,
-        maxUsers: 2,
-        maxAgendas: 1,
-        features: [
-            'Hasta 2 Usuarios',
-            'Agente de IA especializado veterinario',
-            'Integración Google Maps (Geolocalización)',
-            'Hasta 50 citas automatizadas mensuales',
-            'Hasta 1 agenda disponible',
-            'Fichas clínicas + historial médico',
-            'Dashboard con Métricas (Ranking, Conversión)',
-            'Integración oficial WhatsApp (Meta)',
-        ],
-    },
-    radiance: {
-        id: 'radiance',
-        name: 'Plan Radiance',
-        tagline: 'Para clínicas en pleno crecimiento (Móviles o físicas)',
-        price: 150000,
-        currency: 'CLP',
-        monthlyAppointmentsMonthly: -1,
-        maxUsers: 5,
-        maxAgendas: 5,
-        popular: true,
-        features: [
-            'Todo lo de Essence, más:',
-            'Hasta 5 usuarios (Adm, Prof, Rec)',
-            '5 agendas independientes disponibles',
-            'Recordatorios de vacunas/desparasitación IA',
-            'Recordatorios confirmación (Hasta 50/mes)',
-            'CRM de ventas para prospectos',
-            'Marketing vía WhatsApp masivo',
-            'Sistema Inteligente de Referidos con IA',
-            'Módulo de Gestión Financiera',
-            'Encuestas de satisfacción personalizadas',
-        ],
-    },
-    prestige: {
-        id: 'prestige',
-        name: 'Prestige',
-        tagline: 'Top de línea para redes veterinarias',
-        price: 280000,
-        currency: 'CLP',
-        monthlyAppointmentsMonthly: -1,
-        maxUsers: 1000,
-        maxAgendas: 1000,
-        features: [
-            'Todo lo de Radiance, más:',
-            'Usuarios ilimitados',
-            'Multi-sucursal / Multi-hospital',
-            'IA personalizada (especialidades)',
-            'Recordatorios confirmación ilimitados',
-            'Benchmark entre sedes. Super Administrador',
-        ],
-    },
-} as const;
 
 export type PlanId = keyof typeof PLANS
 
