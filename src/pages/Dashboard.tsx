@@ -55,7 +55,7 @@ interface ServiceRanking {
 export default function Dashboard() {
     const { user, profile } = useAuth()
     const [loading, setLoading] = useState(true)
-    const [filterRange, setFilterRange] = useState<'day' | 'week' | 'month' | 'year'>('day')
+    const [filterRange, setFilterRange] = useState<'day' | 'week' | 'month' | 'year'>('month')
     const [stats, setStats] = useState<DashboardStats>({
         scheduledAppointments: 0,
         newProspects: 0,
@@ -137,7 +137,7 @@ export default function Dashboard() {
                         supabase.from('appointments')
                             .select('service')
                             .eq('clinic_id', clinicId)
-                            .gte('appointment_date', getDateRange('month').start.toISOString()),
+                            .gte('appointment_date', getDateRange(filterRange).start.toISOString()),
 
                         // E. Satisfaction Surveys (Month to Date)
                         supabase.from('satisfaction_surveys')
@@ -237,11 +237,18 @@ export default function Dashboard() {
                         supabase.from('crm_prospects').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).gte('created_at', startStr).lte('created_at', endStr),
                         supabase.from('reminder_logs').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('status', 'sent').gte('sent_at', startStr).lte('sent_at', endStr)
                     ])
+                    const totalLeads = Math.max(appts || 0, pros || 0)
                     setStats({
                         scheduledAppointments: appts || 0,
                         newProspects: pros || 0,
                         aiMessagesSent: 0, // Fallback for messages is too heavy, skip it
                         remindersSent: rems || 0
+                    })
+                    setConversionStats({
+                        consultations: totalLeads,
+                        converted: appts || 0,
+                        lost: Math.max(0, totalLeads - (appts || 0)),
+                        rate: totalLeads > 0 ? Math.round(((appts || 0) / totalLeads) * 100) : 0
                     })
                 }
 
@@ -545,7 +552,9 @@ export default function Dashboard() {
                             <Crown className="w-6 h-6 text-[#FF2E88]" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-primary-theme tracking-tight">Ranking de Servicios (Este Mes)</h3>
+                            <h3 className="text-lg font-bold text-primary-theme tracking-tight">
+                                Ranking de Servicios ({filterRange === 'day' ? 'Hoy' : filterRange === 'week' ? 'Semana' : filterRange === 'month' ? 'Mes' : 'Año'})
+                            </h3>
                             <p className="text-xs text-secondary-theme font-medium">Servicios más solicitados</p>
                         </div>
                     </div>
@@ -600,7 +609,9 @@ export default function Dashboard() {
                                 <Target className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-primary-theme tracking-tight">Tasa de Conversión (Mes)</h3>
+                                <h3 className="text-lg font-bold text-primary-theme tracking-tight">
+                                    Tasa de Conversión ({filterRange === 'day' ? 'Hoy' : filterRange === 'week' ? 'Semana' : filterRange === 'month' ? 'Mes' : 'Año'})
+                                </h3>
                                 <p className="text-xs text-secondary-theme font-medium">Consultas vs Citas Agendadas</p>
                             </div>
                         </div>
@@ -608,7 +619,9 @@ export default function Dashboard() {
 
                     <div className="relative py-10 flex flex-col items-center justify-center">
                         <p className="text-5xl font-black text-primary-theme tracking-tighter relative z-10">{conversionStats.rate}%</p>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-theme mt-3 relative z-10">De efectividad este mes</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-theme mt-3 relative z-10">
+                            De efectividad este {filterRange === 'day' ? 'día' : filterRange === 'week' ? 'periodo' : filterRange === 'month' ? 'mes' : 'año'}
+                        </p>
                         
                         {/* Wave decoration placeholder */}
                         <div className="absolute inset-0 flex items-end justify-center opacity-20 pointer-events-none">
