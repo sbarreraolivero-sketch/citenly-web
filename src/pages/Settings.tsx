@@ -36,6 +36,7 @@ import {
     ExternalLink,
     RefreshCw,
     Calendar,
+    ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, redirectToCreditsCheckout } from '@/lib/mercadopago'
@@ -2072,7 +2073,7 @@ export default function Settings() {
 
                                         return (
                                             <div 
-                                                key={planId}
+                                                key={planId.toString()}
                                                 className={cn(
                                                     "relative flex flex-col p-8 rounded-[2rem] border-2 transition-all duration-500",
                                                     isCurrentPlan ? "border-[#FF2E88] bg-[#FF2E88]/5 ring-8 ring-[#FF2E88]/5" : "border-theme bg-secondary-theme hover:border-[#FF2E88]/30 hover:shadow-2xl hover:-translate-y-1",
@@ -2127,7 +2128,7 @@ export default function Settings() {
                                                     <div className="pt-6 border-t border-dashed border-theme">
                                                         <p className="text-[10px] font-black text-primary-theme/30 uppercase tracking-[0.2em] mb-4">Lo que incluye</p>
                                                         <ul className="space-y-2">
-                                                            {plan.features.map((feature, idx) => (
+                                                            {plan.features.map((feature: string, idx: number) => (
                                                                 <li key={idx} className="flex items-center gap-2 text-xs font-medium text-primary-theme/60">
                                                                     <div className="w-1 h-1 rounded-full bg-primary-theme/30" />
                                                                     {feature}

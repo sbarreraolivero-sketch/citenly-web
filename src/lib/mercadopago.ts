@@ -98,6 +98,86 @@ export async function cancelSubscription(subscriptionId: string) {
 /**
  * CLP Plan Prices for Mercado Pago (Chile)
  */
+export const PLANS = {
+    essence: {
+        id: 'essence',
+        name: 'Essence',
+        tagline: 'Para clínicas que quieren dejar de perder clientas',
+        promise: 'Recupera las clientas que hoy estás perdiendo por no responder a tiempo.',
+        price: 67000,
+        currency: 'CLP',
+        monthlyAppointmentsMonthly: 50,
+        maxUsers: 2,
+        maxAgendas: 1,
+        benefits: [
+            'Responde automáticamente a cada mensaje',
+            'Agenda citas sin fricción',
+            'Evita perder clientas interesadas',
+            'Centraliza tus conversaciones en un solo lugar'
+        ],
+        features: [
+            '1 agenda inteligente',
+            'Integración WhatsApp oficial',
+            'Hasta 50 citas generadas automáticamente',
+            'Panel básico de rendimiento'
+        ],
+        cta: 'EMPEZAR AHORA'
+    },
+    radiance: {
+        id: 'radiance',
+        name: 'Radiance',
+        tagline: 'Más popular — Para clínicas que quieren crecer en serio',
+        promise: 'Convierte conversaciones en citas todos los días, sin depender de ti.',
+        price: 99000,
+        currency: 'CLP',
+        monthlyAppointmentsMonthly: -1,
+        maxUsers: 5,
+        maxAgendas: 5,
+        popular: true,
+        benefits: [
+            'Seguimiento automático a cada prospecto',
+            'Más citas sin invertir más en publicidad',
+            'Menos “clientes que desaparecen”',
+            'Flujo completo desde mensaje → cita → asistencia'
+        ],
+        features: [
+            'Todo lo de Essence',
+            'Hasta 5 usuarios',
+            'CRM de prospectos y pacientes',
+            'Recordatorios automáticos (reduce inasistencia)',
+            'Campañas por WhatsApp',
+            'Sistema de referidos automático',
+            'Métricas de conversión'
+        ],
+        cta: 'ESCALAR MI CLÍNICA'
+    },
+    prestige: {
+        id: 'prestige',
+        name: 'Prestige',
+        tagline: 'Para clínicas que quieren operar como negocio serio',
+        promise: 'Un sistema completo que gestiona, convierte y optimiza tu clínica sin depender de tu tiempo.',
+        price: 249000,
+        currency: 'CLP',
+        monthlyAppointmentsMonthly: -1,
+        maxUsers: 1000,
+        maxAgendas: 1000,
+        benefits: [
+            'Control total de tu operación',
+            'Automatización avanzada de procesos',
+            'Escala múltiples sucursales sin caos',
+            'Decisiones basadas en datos reales'
+        ],
+        features: [
+            'Todo lo de Radiance',
+            'Usuarios ilimitados',
+            'Multi-sucursal',
+            'IA personalizada por servicio',
+            'Reportes financieros avanzados',
+            'Optimización continua del sistema'
+        ],
+        cta: 'QUIERO ESCALAR MI OPERACIÓN'
+    },
+} as const;
 
 export type PlanId = keyof typeof PLANS
 
