@@ -212,7 +212,7 @@ export default function Appointments() {
 
             // Fetch blocked dates (Special closing days)
             const { data: blockedData, error: blockedError } = await supabase
-                .from('blocked_dates')
+                .from('clinic_blocked_dates')
                 .select('*')
                 .eq('clinic_id', profile.clinic_id)
 
@@ -600,7 +600,7 @@ export default function Appointments() {
         if (!confirm('¿Estás seguro de que quieres eliminar este elemento?')) return
 
         try {
-            const table = appointment.type === 'special_closing' ? 'blocked_dates' : 'appointments'
+            const table = appointment.type === 'special_closing' ? 'clinic_blocked_dates' : 'appointments'
             const { error } = await supabase
                 .from(table)
                 .delete()
