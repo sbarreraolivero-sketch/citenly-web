@@ -21,6 +21,8 @@ import {
     Lightbulb,
     Check,
     Info,
+    Maximize2,
+    Minimize2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -84,6 +86,7 @@ export default function KnowledgeBase() {
     const [savingPrompt, setSavingPrompt] = useState(false)
     const [promptSaved, setPromptSaved] = useState(false)
     const [showPromptSection, setShowPromptSection] = useState(true)
+    const [expandedEditor, setExpandedEditor] = useState<'personality' | 'behavior' | 'transfer' | null>(null)
 
     // Form state
     const [formTitle, setFormTitle] = useState('')
@@ -373,8 +376,8 @@ export default function KnowledgeBase() {
                     className="w-full p-5 flex items-center justify-between hover:bg-secondary-theme transition-colors"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 bg-[var(--gradient-primary)] rounded-soft flex items-center justify-center shadow-lg">
-                            <Bot className="w-5.5 h-5.5 text-white" />
+                        <div className="w-11 h-11 bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728] rounded-soft flex items-center justify-center shadow-lg border border-[#BF953F]/20">
+                            <Bot className="w-5.5 h-5.5 text-black" />
                         </div>
                         <div className="text-left">
                             <h2 className="text-lg font-semibold text-primary-theme flex items-center gap-2">
@@ -393,15 +396,32 @@ export default function KnowledgeBase() {
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-sm font-medium text-primary-theme">Master Prompt (Personalidad)</label>
-                                    <span className="text-xs text-secondary-theme">{masterPrompt.length} caracteres</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-secondary-theme">{masterPrompt.length} caracteres</span>
+                                        <button 
+                                            onClick={() => setExpandedEditor('personality')}
+                                            className="p-1.5 hover:bg-secondary-theme rounded-md transition-colors text-secondary-theme group"
+                                            title="Expandir"
+                                        >
+                                            <Maximize2 className="w-3.5 h-3.5 group-hover:text-[var(--accent-primary)]" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <textarea
-                                    value={masterPrompt}
-                                    onChange={(e) => setMasterPrompt(e.target.value)}
-                                    placeholder={`Ej: Eres un asistente amable y profesional para una clínica estética.\n\nReglas:\n- Responde de manera cordial, breve y clara\n- Nunca inventes horarios o servicios que no existan\n- Usa emojis con moderación para dar calidez\n- Siempre sugiere agendar una cita cuando el paciente muestre interés\n- Si no sabes algo, ofrece comunicar al paciente con el equipo humano`}
-                                    rows={8}
-                                    className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
-                                />
+                                <div className="relative group/textarea">
+                                    <textarea
+                                        value={masterPrompt}
+                                        onChange={(e) => setMasterPrompt(e.target.value)}
+                                        placeholder={`Ej: Eres un asistente amable y profesional para una clínica estética.\n\nReglas:\n- Responde de manera cordial, breve y clara\n- Nunca inventes horarios o servicios que no existan\n- Usa emojis con moderación para dar calidez\n- Siempre sugiere agendar una cita cuando el paciente muestre interés\n- Si no sabes algo, ofrece comunicar al paciente con el equipo humano`}
+                                        rows={8}
+                                        className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
+                                    />
+                                    <button 
+                                        onClick={() => setExpandedEditor('personality')}
+                                        className="absolute bottom-3 right-3 p-2 bg-white/80 dark:bg-black/80 backdrop-blur-sm border border-theme rounded-lg opacity-0 group-hover/textarea:opacity-100 transition-opacity shadow-lg"
+                                    >
+                                        <Maximize2 className="w-4 h-4 text-secondary-theme" />
+                                    </button>
+                                </div>
                                 <GuideBox 
                                     title="Guía: Personalidad de la IA" 
                                     summary="Define el tono, voz y alma de tu clínica."
@@ -427,15 +447,32 @@ export default function KnowledgeBase() {
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-sm font-medium text-primary-theme">Instrucciones de Comportamiento</label>
-                                    <span className="text-xs text-secondary-theme">{behaviorRules.length} caracteres</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-secondary-theme">{behaviorRules.length} caracteres</span>
+                                        <button 
+                                            onClick={() => setExpandedEditor('behavior')}
+                                            className="p-1.5 hover:bg-secondary-theme rounded-md transition-colors text-secondary-theme group"
+                                            title="Expandir"
+                                        >
+                                            <Maximize2 className="w-3.5 h-3.5 group-hover:text-[var(--accent-primary)]" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <textarea
-                                    value={behaviorRules}
-                                    onChange={(e) => setBehaviorRules(e.target.value)}
-                                    placeholder={`Instrucciones específicas de atención:\n- Saluda siempre preguntando el nombre si no lo sabes.\n- Si te preguntan por precios, redirige a la tabla de servicios.\n- Si el cliente está molesto, escala a un humano inmediatamente.`}
-                                    rows={8}
-                                    className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
-                                />
+                                <div className="relative group/textarea">
+                                    <textarea
+                                        value={behaviorRules}
+                                        onChange={(e) => setBehaviorRules(e.target.value)}
+                                        placeholder={`Instrucciones específicas de atención:\n- Saluda siempre preguntando el nombre si no lo sabes.\n- Si te preguntan por precios, redirige a la tabla de servicios.\n- Si el cliente está molesto, escala a un humano inmediatamente.`}
+                                        rows={8}
+                                        className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
+                                    />
+                                    <button 
+                                        onClick={() => setExpandedEditor('behavior')}
+                                        className="absolute bottom-3 right-3 p-2 bg-white/80 dark:bg-black/80 backdrop-blur-sm border border-theme rounded-lg opacity-0 group-hover/textarea:opacity-100 transition-opacity shadow-lg"
+                                    >
+                                        <Maximize2 className="w-4 h-4 text-secondary-theme" />
+                                    </button>
+                                </div>
                                 <GuideBox 
                                     title="Guía: Reglas de Atención" 
                                     summary="Reglas tácticas para manejar conversaciones."
@@ -468,15 +505,32 @@ export default function KnowledgeBase() {
                         <div className="mt-4">
                             <div className="flex items-center justify-between mb-2">
                                 <label className="text-sm font-medium text-primary-theme">Datos Oficiales (Transferencia / Pagos)</label>
-                                <span className="text-xs text-secondary-theme">{transferDetails.length} caracteres</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-secondary-theme">{transferDetails.length} caracteres</span>
+                                    <button 
+                                        onClick={() => setExpandedEditor('transfer')}
+                                        className="p-1.5 hover:bg-secondary-theme rounded-md transition-colors text-secondary-theme group"
+                                        title="Expandir"
+                                    >
+                                        <Maximize2 className="w-3.5 h-3.5 group-hover:text-[var(--accent-primary)]" />
+                                    </button>
+                                </div>
                             </div>
-                            <textarea
-                                value={transferDetails}
-                                onChange={(e) => setTransferDetails(e.target.value)}
-                                placeholder={`Ej: Datos para el abono de reserva ($15.000):\n- Nombre: [Nombre del Titular]\n- RUT: [12.345.678-9]\n- Banco: [Nombre del Banco]\n- Tipo de Cuenta: [Corriente/Vista]\n- Número de Cuenta: [1234567890]\n- Email: pagos@tuclínica.com`}
-                                rows={6}
-                                className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
-                            />
+                            <div className="relative group/textarea">
+                                <textarea
+                                    value={transferDetails}
+                                    onChange={(e) => setTransferDetails(e.target.value)}
+                                    placeholder={`Ej: Datos para el abono de reserva ($15.000):\n- Nombre: [Nombre del Titular]\n- RUT: [12.345.678-9]\n- Banco: [Nombre del Banco]\n- Tipo de Cuenta: [Corriente/Vista]\n- Número de Cuenta: [1234567890]\n- Email: pagos@tuclínica.com`}
+                                    rows={6}
+                                    className="input-premium w-full resize-none font-mono text-sm leading-relaxed"
+                                />
+                                <button 
+                                    onClick={() => setExpandedEditor('transfer')}
+                                    className="absolute bottom-3 right-3 p-2 bg-white/80 dark:bg-black/80 backdrop-blur-sm border border-theme rounded-lg opacity-0 group-hover/textarea:opacity-100 transition-opacity shadow-lg"
+                                >
+                                    <Maximize2 className="w-4 h-4 text-secondary-theme" />
+                                </button>
+                            </div>
                             <GuideBox 
                                 title="Guía: Pagos y Datos de Transferencia" 
                                 summary="Configura la información bancaria oficial para reservas."
@@ -568,8 +622,8 @@ export default function KnowledgeBase() {
 
             {/* Search & Filters */}
             <div className="mt-8 mb-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-[var(--gradient-primary)] rounded-soft flex items-center justify-center shadow-lg shrink-0">
-                    <BookOpen className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728] rounded-soft flex items-center justify-center shadow-lg shrink-0 border border-[#BF953F]/20">
+                    <BookOpen className="w-5 h-5 text-black" />
                 </div>
                 <div>
                     <h2 className="text-lg font-bold text-primary-theme">Documentos de Conocimiento</h2>
@@ -908,6 +962,79 @@ export default function KnowledgeBase() {
                                     )}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Fullscreen Prompt Editor */}
+            {expandedEditor && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex flex-col animate-in fade-in duration-300">
+                    <div className="flex items-center justify-between p-6 border-b border-white/10">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[var(--gradient-primary)] rounded-2xl flex items-center justify-center shadow-2xl">
+                                <Bot className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black text-white tracking-tight">
+                                    {expandedEditor === 'personality' && 'Master Prompt (Personalidad)'}
+                                    {expandedEditor === 'behavior' && 'Instrucciones de Comportamiento'}
+                                    {expandedEditor === 'transfer' && 'Datos de Transferencia'}
+                                </h2>
+                                <p className="text-white/60 text-sm font-medium">
+                                    Editando en modo de alta visibilidad
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleSaveMasterPrompt}
+                                disabled={savingPrompt}
+                                className="bg-white text-black px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-white/90 transition-all flex items-center gap-2 shadow-xl"
+                            >
+                                {savingPrompt ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                Guardar Cambios
+                            </button>
+                            <button
+                                onClick={() => setExpandedEditor(null)}
+                                className="p-3 hover:bg-white/10 rounded-xl transition-colors text-white group"
+                            >
+                                <X className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 p-8 overflow-hidden flex flex-col max-w-6xl mx-auto w-full gap-6">
+                        <div className="flex-1 bg-black/40 rounded-[32px] border border-white/10 p-1 overflow-hidden group focus-within:border-[var(--accent-primary)]/50 transition-colors shadow-2xl">
+                            <textarea
+                                value={
+                                    expandedEditor === 'personality' ? masterPrompt :
+                                    expandedEditor === 'behavior' ? behaviorRules :
+                                    transferDetails
+                                }
+                                onChange={(e) => {
+                                    if (expandedEditor === 'personality') setMasterPrompt(e.target.value)
+                                    else if (expandedEditor === 'behavior') setBehaviorRules(e.target.value)
+                                    else setTransferDetails(e.target.value)
+                                }}
+                                autoFocus
+                                className="w-full h-full bg-transparent text-white p-8 focus:outline-none resize-none font-mono text-lg leading-relaxed custom-scrollbar"
+                                placeholder="Escribe aquí las instrucciones detalladas..."
+                            />
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-white/40 font-medium text-sm px-4">
+                            <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)] animate-pulse" />
+                                    <span>Guardado automático local</span>
+                                </div>
+                                <span>{
+                                    (expandedEditor === 'personality' ? masterPrompt :
+                                     expandedEditor === 'behavior' ? behaviorRules :
+                                     transferDetails).length
+                                } caracteres</span>
+                            </div>
+                            <p className="italic">Presiona Esc para salir del editor</p>
                         </div>
                     </div>
                 </div>
