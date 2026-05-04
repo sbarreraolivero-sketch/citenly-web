@@ -22,7 +22,6 @@ import {
     Check,
     Info,
     Maximize2,
-    Minimize2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
