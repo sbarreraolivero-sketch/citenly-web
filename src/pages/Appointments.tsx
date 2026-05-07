@@ -94,7 +94,8 @@ export default function Appointments() {
         appointment_time: '',
         notes: '',
         professional_id: '',
-        box_id: ''
+        box_id: '',
+        status: 'confirmed' as 'pending' | 'confirmed' | 'cancelled' | 'completed'
     })
     const [services, setServices] = useState<any[]>([])
     const [professionals, setProfessionals] = useState<ClinicProfessional[]>([])
@@ -404,7 +405,7 @@ export default function Appointments() {
                 service: newAppointment.service,
                 duration: durationMinutes,
                 appointment_date: appointmentDate,
-                status: 'confirmed',
+                status: newAppointment.status || 'confirmed',
                 notes: newAppointment.notes,
                 professional_id: newAppointment.professional_id || null,
             }
@@ -532,7 +533,8 @@ export default function Appointments() {
                 appointment_time: '',
                 notes: '',
                 professional_id: '',
-                box_id: ''
+                box_id: '',
+                status: 'confirmed'
             })
             setEditingId(null)
 
@@ -1333,7 +1335,8 @@ export default function Appointments() {
                                                                         appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
                                                                         notes: appointment.notes || '',
                                                                         professional_id: appointment.professional_id || '',
-                                                                        box_id: (appointment as any).box_id || ''
+                                                                        box_id: (appointment as any).box_id || '',
+                                                                        status: appointment.status
                                                                     })
                                                                     setShowModal(true) // Open modal
                                                                 }}
@@ -1471,7 +1474,8 @@ export default function Appointments() {
                                                 appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
                                                 notes: appointment.notes || '',
                                                 professional_id: appointment.professional_id || '',
-                                                box_id: (appointment as any).box_id || ''
+                                                box_id: (appointment as any).box_id || '',
+                                                status: appointment.status
                                             })
                                             setShowModal(true)
                                         }}
@@ -1751,6 +1755,25 @@ export default function Appointments() {
                                     </div>
                                 </div>
 
+                                <div>
+                                    <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
+                                        Estado de la Cita
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={newAppointment.status}
+                                            onChange={(e) => setNewAppointment({ ...newAppointment, status: e.target.value as any })}
+                                            className={cn("input-premium w-full appearance-none font-bold", getStatusColor(newAppointment.status))}
+                                        >
+                                            <option value="pending">Pendiente</option>
+                                            <option value="confirmed">Confirmada</option>
+                                            <option value="cancelled">Cancelada</option>
+                                            <option value="completed">Completada</option>
+                                        </select>
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-theme rotate-90 pointer-events-none" />
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
@@ -1859,8 +1882,8 @@ export default function Appointments() {
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center p-6 border-t border-silk-beige flex-shrink-0 bg-white rounded-b-soft">
-                                <div>
+                            <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-t border-silk-beige flex-shrink-0 bg-white rounded-b-soft gap-4">
+                                <div className="w-full sm:w-auto">
                                     {editingId && (
                                         <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             <button
@@ -1871,26 +1894,15 @@ export default function Appointments() {
                                                         setShowModal(false)
                                                     }
                                                 }}
-                                                className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 flex items-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-full transition-all border border-red-500/20"
+                                                className="w-full sm:w-auto text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 flex items-center justify-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-full transition-all border border-red-500/20"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                                 Eliminar Definitivamente
                                             </button>
-                                            <button
-                                                onClick={() => {
-                                                    if (confirm('¿Quieres marcar esta cita como CANCELADA (la cita se mantendrá en registros pero no en el calendario)?')) {
-                                                        updateAppointmentStatus(editingId, 'cancelled')
-                                                        setShowModal(false)
-                                                    }
-                                                }}
-                                                className="text-[10px] font-black uppercase tracking-widest text-secondary-theme hover:text-primary-theme transition-colors underline underline-offset-4 decoration-theme"
-                                            >
-                                                Sólo Cancelar
-                                            </button>
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
                                     <button
                                         onClick={() => {
                                             setShowModal(false)
@@ -1903,17 +1915,18 @@ export default function Appointments() {
                                                 appointment_time: '',
                                                 notes: '',
                                                 professional_id: '',
-                                                box_id: ''
+                                                box_id: '',
+                                                status: 'confirmed'
                                             })
                                         }}
-                                        className="px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary-theme hover:text-primary-theme transition-colors"
+                                        className="w-full sm:w-auto px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary-theme hover:text-primary-theme transition-colors"
                                     >
-                                        Cancelar
+                                        Cerrar
                                     </button>
                                     <button
                                         onClick={handleSaveAppointment}
                                         disabled={saving || !newAppointment.patient_name || !newAppointment.phone_number || !newAppointment.service || !newAppointment.appointment_date || !newAppointment.appointment_time}
-                                        className="btn-premium-primary px-8"
+                                        className="btn-premium-primary px-8 w-full sm:w-auto"
                                     >
                                         {saving ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>

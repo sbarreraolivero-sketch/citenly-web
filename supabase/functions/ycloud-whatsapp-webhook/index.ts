@@ -88,7 +88,11 @@ const classifyMessage = (body: string, isImage: boolean): number => {
     if (isImage || n3Keywords.some(kw => lowerBody.includes(kw)) || body.length > 500) return 3;
     
     // N2: Standard - GPT-5.4. Gestión de agendamientos y ventas.
-    const n2Keywords = ["agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion"];
+    const n2Keywords = [
+        "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
+        "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
+        "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
     if (n2Keywords.some(kw => lowerBody.includes(kw))) return 2;
     
     // N1: Flash Mini - GPT-5.4. Saludos y confirmaciones simples.
@@ -208,6 +212,12 @@ const debugLog = async (sb: ReturnType<typeof createClient>, msg: string, payloa
     }
 };
 
+const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const dayNamesES: Record<string, string> = {
+    monday: "Lunes", tuesday: "Martes", wednesday: "Miércoles", 
+    thursday: "Jueves", friday: "Viernes", saturday: "Sábado", sunday: "Domingo"
+};
+
 /**
  * Normalizes phone numbers for consistent DB lookups and API calls.
  * Removes '+' and leading zeros, keeping only digits.
@@ -217,6 +227,25 @@ const normalizePhone = (phone: string): string => {
     return phone.replace(/\D/g, '');
 };
 
+/**
+ * Generates a 7-day calendar mapping (Name: ISO Date) for AI reference.
+ */
+const getCalendarContext = (now: Date, tz: string): string => {
+    const daysMapES: Record<number, string> = {
+        0: "DOMINGO", 1: "LUNES", 2: "MARTES", 3: "MIÉRCOLES", 4: "JUEVES", 5: "VIERNES", 6: "SÁBADO"
+    };
+    const calendar = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+        // We use a manual offset to ensure the date is correct for the timezone
+        const localDate = new Date(d.toLocaleString("en-US", { timeZone: tz }));
+        const dayName = daysMapES[localDate.getDay()];
+        const dateISO = d.toLocaleDateString("en-CA", { timeZone: tz });
+        calendar.push(`${dayName}: ${dateISO}`);
+    }
+    return calendar.join("\n");
+};
+
 const getClinic = async (sb: ReturnType<typeof createClient>, phone: string) => {
     console.log(`[getClinic] Looking up clinic for phone: ${phone}`);
     const normalized = normalizePhone(phone);
@@ -224,6 +253,8 @@ const getClinic = async (sb: ReturnType<typeof createClient>, phone: string) => 
     const { data, error } = await sb.from("clinic_settings")
         .select("*")
         .or(`ycloud_phone_number.eq.${phone},ycloud_phone_number.eq.+${normalized},ycloud_phone_number.eq.${normalized}`)
+        .not("ycloud_phone_number", "ilike", "%PENDIENTE%") // Avoid dev/pending accounts
+        .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -249,7 +280,7 @@ const isValidUUID = (uuid: string) => {
     return regex.test(uuid);
 };
 
-const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, content: string, direction: string, extra = {}) => {
+const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, content: string, direction: string, extra: any = {}) => {
     // Prevent crash if campaign_id is not a valid UUID (e.g. numeric Meta Ad ID)
     const extraCopy = { ...extra } as any;
     if (extraCopy.campaign_id && !isValidUUID(extraCopy.campaign_id)) {
@@ -257,13 +288,33 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
         delete extraCopy.campaign_id;
     }
 
-    const { data, error } = await sb.from("messages").insert({ clinic_id: clinicId, phone_number: phone, content, direction, ...extraCopy }).select("id").single();
-    if (error) {
-        console.error(`[saveMsg] Error inserting message (dir: ${direction}):`, error);
-        throw new Error(`saveMsg failed: ${error.message}`);
+    try {
+        const { data, error } = await sb.from("messages").insert({ clinic_id: clinicId, phone_number: phone, content, direction, ...extraCopy }).select("id").single();
+        if (error) {
+            console.error(`[saveMsg] Initial insert failed (dir: ${direction}), trying fallback...`, error);
+            // Fallback: Try saving without the potentially problematic extra columns
+            const { data: fallbackData, error: fallbackError } = await sb.from("messages").insert({
+                clinic_id: clinicId,
+                phone_number: phone,
+                content,
+                direction,
+                ycloud_message_id: extraCopy.ycloud_message_id || null,
+                message_type: extraCopy.message_type || "text",
+                is_read: extraCopy.is_read || false
+            }).select("id").single();
+
+            if (fallbackError) {
+                console.error("[saveMsg] Fallback failed too:", fallbackError);
+                throw new Error(`saveMsg failed: ${fallbackError.message}`);
+            }
+            return fallbackData?.id;
+        }
+        console.log(`[saveMsg] Saved message (dir: ${direction}) id: ${data.id}`);
+        return data.id;
+    } catch (e) {
+        console.error(`[saveMsg] Exception in saveMsg (dir: ${direction}):`, e);
+        throw e;
     }
-    console.log(`[saveMsg] Saved message (dir: ${direction}) id: ${data.id}`);
-    return data.id;
 };
 
 // =============================================
@@ -273,191 +324,98 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
-    const clinicWorkingHours = clinicObj?.working_hours;
-    const isElizabeth = (clinicObj?.clinic_name || "").toLowerCase().includes("elizabeth");
-
-    // 1. Enforce lag policy ONLY for Elizabeth
-    if (isElizabeth) {
-        const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
-        const tomorrowLocal = new Date(nowLocal.getTime() + 24 * 60 * 60 * 1000);
-        
-        const todayStr = nowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
-        const tomorrowStr = tomorrowLocal.toLocaleDateString("en-CA", { timeZone: timezone });
-        const requestedDateStr = date;
-
-        if (requestedDateStr === todayStr || requestedDateStr === tomorrowStr) {
-            return { 
-                available: false, 
-                message: "Lo sentimos, para la sucursal de Elizabeth requerimos al menos 1 día de anticipación para NUEVAS RESERVAS. No es posible agendar citas nuevas para hoy ni para mañana. Esta regla SÓLO aplica a nuevas reservas."
-            };
+    // Internal helper to perform a single-day check without suggestion logic
+    const checkSingleDay = async (targetDate: string) => {
+        const clinicWorkingHours = clinicObj?.working_hours;
+        if (clinicWorkingHours) {
+            const dowIdx = new Date(targetDate + 'T12:00:00').getDay();
+            const dow = dayNames[dowIdx];
+            const dayConfig = clinicWorkingHours[dow];
+            if (!dayConfig || dayConfig.enabled === false) return { available: false, reason: "closed_day", day: dow };
         }
-    }
 
-    // 2. Explicit Closing Check (e.g. Saturdays)
-    if (clinicWorkingHours) {
-        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-        const dowIdx = new Date(date + 'T12:00:00').getDay();
-        const dow = dayNames[dowIdx];
-        const dayConfig = clinicWorkingHours[dow];
-        
-        if (!dayConfig || dayConfig.enabled === false) {
-            const dayNamesES: Record<string, string> = {
-                monday: "Lunes", tuesday: "Martes", wednesday: "Miércoles", 
-                thursday: "Jueves", friday: "Viernes", saturday: "Sábado", sunday: "Domingo"
-            };
-            return { 
-                available: false, 
-                message: `Lo sentimos, la clínica se encuentra cerrada los días ${dayNamesES[dow] || dow}. Por favor consulta disponibilidad para otro día.` 
-            };
+        const { data: blockedDate } = await sb.from("clinic_blocked_dates")
+            .select("reason").eq("clinic_id", clinicId).eq("blocked_date", targetDate).maybeSingle();
+        if (blockedDate) return { available: false, reason: "blocked_date", detail: blockedDate.reason };
+
+        let duration = 60;
+        let serviceId: string | null = null;
+        let professionalId: string | null = null;
+
+        if (serviceName) {
+            const { data: svc } = await sb.from("services").select("id, duration").eq("clinic_id", clinicId).ilike("name", `%${serviceName}%`).limit(1).maybeSingle();
+            if (svc) { duration = svc.duration; serviceId = svc.id; }
         }
-    }
 
-    // 3. Blocked Dates Check (Manual closures/holidays)
-    const { data: blockedDate } = await sb.from("clinic_blocked_dates")
-        .select("reason")
-        .eq("clinic_id", clinicId)
-        .eq("blocked_date", date)
-        .maybeSingle();
-
-    if (blockedDate) {
-        return { 
-            available: false, 
-            message: `Lo sentimos, la clínica se encuentra cerrada el ${date}${blockedDate.reason ? ' por el siguiente motivo: ' + blockedDate.reason : ''}. Por favor consulta disponibilidad para otro día.` 
-        };
-    }
-
-    let duration = 60; // Default
-    let serviceId: string | null = null;
-    let professionalId: string | null = null;
-
-    if (serviceName) {
-        // Try to find service duration and ID with more robust search
-        const { data: svc } = await sb.from("services")
-            .select("id, duration")
-            .eq("clinic_id", clinicId)
-            .ilike("name", `%${serviceName}%`)
-            .limit(1)
-            .maybeSingle();
-
-        if (svc) {
-            duration = svc.duration;
-            serviceId = svc.id;
+        if (profName) {
+            const { data: prof } = await sb.from("clinic_members").select("id").eq("clinic_id", clinicId)
+                .or(`first_name.ilike.%${profName.split(' ')[0]}%,last_name.ilike.%${profName.split(' ').slice(-1)[0]}%`).limit(1).maybeSingle();
+            if (prof) professionalId = prof.id;
         }
-    }
 
-    // 2. Resolve Professional ID if name provided or fallback to service default
-    if (profName) {
-        const { data: prof } = await sb.from("clinic_members")
-            .select("id, member_id:id, first_name")
-            .eq("clinic_id", clinicId)
-            .or(`first_name.ilike.%${profName.split(' ')[0]}%,last_name.ilike.%${profName.split(' ').slice(-1)[0]}%,job_title.ilike.%${profName}%`)
-            .limit(1)
-            .maybeSingle();
-
-        if (prof) {
-            professionalId = prof.id;
-            console.log(`[checkAvail] Resolved professional: ${prof.first_name} (${professionalId})`);
-        }
-    }
-
-    if (!professionalId && serviceId) {
-        const { data: profs } = await sb.from("service_professionals")
-            .select("member_id, is_primary")
-            .eq("service_id", serviceId);
-
-        if (profs && profs.length > 0) {
-            const primary = profs.find((p: { is_primary: boolean }) => p.is_primary);
-            professionalId = primary ? primary.member_id : profs[0].member_id;
-        }
-    }
-
-    console.log(`[checkAvail] Service: '${serviceName}' (ID: ${serviceId}), Duration: ${duration}min, Professional: ${professionalId || 'Global'}`);
-
-    let slots: { slot_time: string, is_available: boolean }[] = [];
-
-    // Strategy: Try professional-specific slots first if we have a professional
-    if (professionalId) {
-        try {
-            const { data, error } = await sb.rpc("get_professional_available_slots", {
-                p_clinic_id: clinicId,
-                p_member_id: professionalId,
-                p_duration: duration,
-                p_interval: Math.min(duration, 60), // More granular intervals (max 60m)
-                p_timezone: timezone
-            });
-
-            if (!error && data) {
-                slots = data;
-            } else {
-                console.warn("[checkAvail] Professional slot check failed/empty, falling back to global:", error);
+        if (!professionalId && serviceId) {
+            const { data: profs } = await sb.from("service_professionals").select("member_id, is_primary").eq("service_id", serviceId);
+            if (profs?.length) {
+                const primary = profs.find((p: any) => p.is_primary);
+                professionalId = primary ? primary.member_id : profs[0].member_id;
             }
-        } catch (e) {
-            console.error("[checkAvail] RPC error:", e);
         }
-    }
 
-    if (slots.length === 0) {
-        // We use 30 as interval. If the RPC doesn't support it, we'll get a DB error.
-        // But we are updating it in the migration.
-        const { data, error } = await sb.rpc("get_available_slots", {
-            p_clinic_id: clinicId,
-            p_date: date,
-            p_duration: duration,
-            p_interval: Math.min(duration, 60)
-        });
-        if (error) {
-            console.error("[checkAvail] get_available_slots failed, trying without interval param:", error);
-            const { data: data2, error: error2 } = await sb.rpc("get_available_slots", {
-                p_clinic_id: clinicId,
-                p_date: date,
-                p_duration: duration
-            });
-            if (error2) return { available: false, error: error2.message };
-            slots = data2 || [];
-        } else {
+        let slots: any[] = [];
+        if (professionalId) {
+            const { data } = await sb.rpc("get_professional_available_slots", { p_clinic_id: clinicId, p_member_id: professionalId, p_duration: duration, p_interval: Math.min(duration, 60), p_timezone: timezone });
+            if (data) slots = data;
+        }
+        if (slots.length === 0) {
+            const { data } = await sb.rpc("get_available_slots", { p_clinic_id: clinicId, p_date: targetDate, p_duration: duration, p_interval: Math.min(duration, 60) });
             slots = data || [];
         }
+
+        const dowIdx = new Date(targetDate + 'T12:00:00').getDay();
+        const dow = dayNames[dowIdx];
+        const dayConfig = clinicWorkingHours?.[dow];
+        const lunch = dayConfig?.lunch_break;
+
+        const availableSlots = slots
+            .filter((s: any) => s.is_available)
+            .filter(s => {
+                if (!lunch || !lunch.enabled) return true;
+                const tStart = s.slot_time.substring(0, 5);
+                const [h, m] = tStart.split(':').map(Number);
+                const tEnd = new Date(2000, 0, 1, h, m + duration).toTimeString().substring(0, 5);
+                return !(tStart < lunch.end && tEnd > lunch.start);
+            })
+            .map((s: any) => {
+                const t = s.slot_time.substring(0, 5);
+                const h = parseInt(t.split(":")[0]);
+                return `${h > 12 ? h - 12 : h}:${t.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
+            });
+
+        return { available: availableSlots.length > 0, slots: availableSlots, duration };
+    };
+
+    // 1. Check requested date
+    const result = await checkSingleDay(date);
+    if (result.available) {
+        const displaySlots = result.slots.slice(0, 15);
+        return { available: true, slots: displaySlots, message: `Disponibilidad el ${date}: ${displaySlots.join(", ")}` };
     }
 
-    // 5. MANUALLY FILTER SLOTS FOR CLINIC LUNCH BREAK (Double-protection)
-    // Use a safer day extraction that doesn't vary by runtime
-    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const dowIdx = new Date(date + 'T12:00:00').getDay();
-    const dow = dayNames[dowIdx];
-    const dayConfig = clinicWorkingHours?.[dow];
-    const lunch = dayConfig?.lunch_break;
+    // 2. Look-ahead for the next 3 days
+    for (let i = 1; i <= 3; i++) {
+        const nextDateObj = new Date(new Date(date + 'T12:00:00').getTime() + i * 24 * 60 * 60 * 1000);
+        const nextDateStr = nextDateObj.toISOString().split('T')[0];
+        const nextRes = await checkSingleDay(nextDateStr);
+        if (nextRes.available) {
+            const displaySlots = nextRes.slots.slice(0, 8);
+            return { 
+                available: false, 
+                message: `Lo sentimos, no hay disponibilidad para el ${date}. Sin embargo, para el próximo día disponible (${nextDateStr}) tenemos estos cupos: ${displaySlots.join(", ")}. ¿Te gustaría agendar alguno?`
+            };
+        }
+    }
 
-    const availableSlots = slots
-        .filter((s: { is_available: boolean, slot_time: string }) => s.is_available)
-        .filter(s => {
-            if (!lunch || !lunch.enabled) return true;
-
-            // Compare times as HH:MM
-            const tStart = s.slot_time.substring(0, 5);
-
-            // Calculate end time
-            const [h, m] = tStart.split(':').map(Number);
-            const endDate = new Date(2000, 0, 1, h, m + duration);
-            const tEnd = endDate.toTimeString().substring(0, 5);
-
-            const lStart = lunch.start;
-            const lEnd = lunch.end;
-
-            // Overlap logic: T_Start < L_End AND T_End > L_Start
-            const isOverlapping = (tStart < lEnd && tEnd > lStart);
-            return !isOverlapping;
-        })
-        .map((s: { slot_time: string }) => {
-            const t = s.slot_time.substring(0, 5);
-            const h = parseInt(t.split(":")[0]);
-            return `${h > 12 ? h - 12 : h}:${t.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
-        });
-
-    const displaySlots = availableSlots.slice(0, 15);
-
-    return availableSlots.length
-        ? { available: true, slots: displaySlots, duration_used: duration, message: `Disponibilidad el ${date} (${duration} min): ${displaySlots.join(", ")}` }
-        : { available: false, message: `No hay disponibilidad para ${date} con duración ${duration} min` };
+    return { available: false, message: `Lo sentimos, la clínica no tiene disponibilidad para el ${date} ni para los días siguientes cercanos. Por favor consulta por otra fecha más adelante.` };
 };
 
 // Helper to get timezone offset (e.g. "-03:00")
@@ -1531,6 +1489,8 @@ Deno.serve(async (req) => {
                 const tomorrowDay = getLocalDayName(tomorrow, clinicTz);
                 const dayAfterDay = getLocalDayName(dayAfter, clinicTz);
 
+                const calendarContext = getCalendarContext(now, clinicTz);
+
                 // Fetch knowledge base summary for system prompt
                 const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
 
@@ -1562,15 +1522,7 @@ Deno.serve(async (req) => {
                         return `${dayName}: ${h.open || h.start || "10:00"} - ${h.close || h.end || "20:00"}${lunch?.enabled ? ` (Colación: ${lunch.start}-${lunch.end})` : ""}`;
                     }).join(", ");
 
-                const isElizabeth = (clinic.clinic_name || "").toLowerCase().includes("elizabeth");
-                const lagRule = isElizabeth 
-                    ? `1. REGLAS DE ANTICIPACIÓN (ESTRICTO): Esta política de "1 día de holgura" SÓLO aplica para AGENDAR CITAS NUEVAS.
-                       - HOY (${todayDay} ${localDateISO}) y MAÑANA (${tomorrowDay} ${tomorrowISO}) están BLOQUEADOS UNICAMENTE para AGENDAR NUEVAS CITAS.
-                       - NUNCA apliques esta restricción si el usuario está CONFIRMANDO, CANCELANDO o GESTIONANDO una cita que ya tiene en la agenda (ej. si dice "Sí, confirmo" a un recordatorio para hoy, DEBES proceder con confirm_appointment).
-                       - Si el usuario pide AGENDAR UNA NUEVA CITA para hoy o mañana, explícale que por política de la clínica requerimos 24h de anticipación para nuevas reservas.
-                       - Ofrece exclusivamente horarios para PASADO MAÑANA (${dayAfterDay} ${dayAfterISO}) o fechas posteriores para NUEVAS reservas.
-                       - NUNCA digas que la clínica está cerrada si el horario general indica que está abierta.`
-                    : "1. ANTICIPACIÓN: Puedes agendar o confirmar para cualquier horario disponible, incluso para el mismo día si hay cupo.";
+                const lagRule = "1. ANTICIPACIÓN: Puedes agendar o confirmar para cualquier horario disponible, incluso para el mismo día si hay cupo, siempre respetando las reglas de holgura definidas en tus instrucciones de comportamiento.";
 
                 const sysPrompt = `### REGLA DE SINCRONIZACIÓN TEMPORAL (CRÍTICO):
 IGNORA cualquier fecha o día de la semana mencionado anteriormente en este chat. Es posible que los mensajes previos hayan tenido errores de fecha. La ÚNICA fuente de verdad es el bloque "FUENTE DE VERDAD ABSOLUTA" que aparece abajo. Si detectas una discrepancia, AJUSTA tu conocimiento inmediatamente a los datos de abajo.
@@ -1601,6 +1553,10 @@ Horario General de la Clínica: ${hoursSummary}
 - HOY ES: **${todayDay.toUpperCase()}**, ${localDateISO}
 - MAÑANA ES: **${tomorrowDay.toUpperCase()}**, ${tomorrowISO}
 - PASADO MAÑANA ES: **${dayAfterDay.toUpperCase()}**, ${dayAfterISO}
+
+### CALENDARIO DE REFERENCIA (PRÓXIMOS 7 DÍAS):
+${calendarContext}
+
 Servicios OFICIALES (SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
 
 ${knowledgeSummary}
