@@ -561,7 +561,8 @@ export default function Appointments() {
                 appointment_time: format(new Date(), 'HH:mm'),
                 notes: 'Horario bloqueado manualmente.',
                 professional_id: '',
-                box_id: ''
+                box_id: '',
+                status: 'confirmed'
             });
             setShowModal(true);
             return;
@@ -830,7 +831,8 @@ export default function Appointments() {
                                     appointment_time: format(new Date(), 'HH:mm'),
                                     notes: '',
                                     professional_id: '',
-                                    box_id: ''
+                                    box_id: '',
+                                    status: 'confirmed'
                                 })
                                 setShowModal(true)
                             }}
@@ -1127,7 +1129,8 @@ export default function Appointments() {
                                     appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
-                                    box_id: event.resource.box_id || ''
+                                    box_id: event.resource.box_id || '',
+                                    status: event.resource.status || 'confirmed'
                                 })
                                 setShowModal(true)
                             }}
@@ -1160,7 +1163,8 @@ export default function Appointments() {
                                     appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
-                                    box_id: event.resource.box_id || ''
+                                    box_id: event.resource.box_id || '',
+                                    status: event.resource.status || 'confirmed'
                                 })
                                 setShowModal(true)
                             }}
@@ -1195,7 +1199,8 @@ export default function Appointments() {
                                     appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
-                                    box_id: event.resource.box_id || ''
+                                    box_id: event.resource.box_id || '',
+                                    status: event.resource.status || 'confirmed'
                                 })
                                 setShowModal(true)
                             }}
@@ -1203,7 +1208,8 @@ export default function Appointments() {
                                 setNewAppointment({
                                     ...newAppointment,
                                     appointment_date: date.toISOString().split('T')[0],
-                                    appointment_time: '09:00'
+                                    appointment_time: '09:00',
+                                    status: 'confirmed'
                                 })
                                 // Removed setShowModal(true) to avoid opening unexpectedly on day touches
                             }}
@@ -1596,7 +1602,8 @@ export default function Appointments() {
                                                 appointment_time: '',
                                                 notes: '',
                                                 professional_id: '',
-                                                box_id: ''
+                                                box_id: '',
+                                                status: 'confirmed'
                                             })
                                         }}
                                         className="p-2 hover:bg-secondary-theme rounded-soft transition-colors"
@@ -2074,7 +2081,8 @@ export default function Appointments() {
                                                 appointment_time: format(selectedSlot.start, 'HH:mm'),
                                                 notes: '',
                                                 professional_id: '',
-                                                box_id: ''
+                                                box_id: '',
+                                                status: 'confirmed'
                                             })
                                             setShowActionChoiceModal(false)
                                             setShowModal(true)
