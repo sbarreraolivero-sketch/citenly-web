@@ -1207,7 +1207,7 @@ export default function Appointments() {
                             onSelectSlot={(date) => {
                                 setNewAppointment({
                                     ...newAppointment,
-                                    appointment_date: date.toISOString().split('T')[0],
+                                    appointment_date: format(date, 'yyyy-MM-dd'),
                                     appointment_time: '09:00',
                                     status: 'confirmed'
                                 })
@@ -1333,12 +1333,13 @@ export default function Appointments() {
                                                             <button
                                                                 onClick={() => {
                                                                     setEditingId(appointment.id) // Set editing mode
+                                                                    const d = new Date(appointment.appointment_date)
                                                                     setNewAppointment({
                                                                         patient_name: appointment.patient_name,
                                                                         phone_number: appointment.phone_number,
                                                                         service: appointment.service,
-                                                                        appointment_date: appointment.appointment_date.split('T')[0],
-                                                                        appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
+                                                                        appointment_date: format(d, 'yyyy-MM-dd'),
+                                                                        appointment_time: format(d, 'HH:mm'),
                                                                         notes: appointment.notes || '',
                                                                         professional_id: appointment.professional_id || '',
                                                                         box_id: (appointment as any).box_id || '',
@@ -1472,12 +1473,13 @@ export default function Appointments() {
                                     <button
                                         onClick={() => {
                                             setEditingId(appointment.id)
+                                            const d = new Date(appointment.appointment_date)
                                             setNewAppointment({
                                                 patient_name: appointment.patient_name,
                                                 phone_number: appointment.phone_number,
                                                 service: appointment.service,
-                                                appointment_date: appointment.appointment_date.split('T')[0],
-                                                appointment_time: appointment.appointment_date.split('T')[1].slice(0, 5),
+                                                appointment_date: format(d, 'yyyy-MM-dd'),
+                                                appointment_time: format(d, 'HH:mm'),
                                                 notes: appointment.notes || '',
                                                 professional_id: appointment.professional_id || '',
                                                 box_id: (appointment as any).box_id || '',
@@ -1957,7 +1959,7 @@ export default function Appointments() {
                             id: '', // New record
                             clinic_id: profile!.clinic_id,
                             patient_id: foundPatient.id,
-                            date: selectedAppointment.appointment_date.split('T')[0],
+                            date: format(new Date(selectedAppointment.appointment_date), 'yyyy-MM-dd'),
                             treatment_name: selectedAppointment.service,
                             description: selectedAppointment.notes || '',
                             notes: '',
