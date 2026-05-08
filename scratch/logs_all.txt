@@ -1,0 +1,2549 @@
+[
+  {
+    "id": "9076e450-6a20-4593-adaa-3bff0849401c",
+    "created_at": "2026-05-07T14:07:33.447246+00:00",
+    "payload": {
+      "id": "evt_69fc9ca51be3513203400557",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:07:33.008Z",
+      "whatsappMessage": {
+        "id": "69fc9ca1a769457cde6e9d34",
+        "to": "+56989215781",
+        "from": "+56983275699",
+        "text": {
+          "body": "Exactamente, el precio normal del delineado de ojos es de **$130.000**, y el retoque se cancela por separado. \n\nEn cuanto al dolor, cada persona tiene una sensibilidad diferente, pero generalmente se utiliza un anestésico tópico para minimizar cualquier molestia durante el procedimiento. La mayoría de las personas lo describe como tolerable.\n\nY sí, ¡puedes elegir el estilo del delineado! Puedes optar por un look más sutil o uno más marcado, según tus preferencias. Durante la consulta, Elizabeth te ayudará a definir el diseño que mejor se adapte a ti.\n\n¿Te gustaría agendar una cita para el delineado de ojos? 🌿✨ Si es así, ¿qué día te gustaría?"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgARGBI4N0M1NUU1QjU4QUE2QjUzMTMA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:07:31.000Z",
+        "createTime": "2026-05-07T14:07:30.007Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:07:32.489Z",
+        "deliverTime": "2026-05-07T14:07:32.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087747041789337"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "adcbdea4-399c-473d-af47-e5b6b8c82cd3",
+    "created_at": "2026-05-07T14:07:32.988313+00:00",
+    "payload": {
+      "id": "evt_69fc9ca46a7faa523208ea9e",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:07:32.485Z",
+      "whatsappMessage": {
+        "id": "69fc9ca1a769457cde6e9d34",
+        "to": "+56989215781",
+        "from": "+56983275699",
+        "text": {
+          "body": "Exactamente, el precio normal del delineado de ojos es de **$130.000**, y el retoque se cancela por separado. \n\nEn cuanto al dolor, cada persona tiene una sensibilidad diferente, pero generalmente se utiliza un anestésico tópico para minimizar cualquier molestia durante el procedimiento. La mayoría de las personas lo describe como tolerable.\n\nY sí, ¡puedes elegir el estilo del delineado! Puedes optar por un look más sutil o uno más marcado, según tus preferencias. Durante la consulta, Elizabeth te ayudará a definir el diseño que mejor se adapte a ti.\n\n¿Te gustaría agendar una cita para el delineado de ojos? 🌿✨ Si es así, ¿qué día te gustaría?"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgARGBI4N0M1NUU1QjU4QUE2QjUzMTMA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:07:31.000Z",
+        "createTime": "2026-05-07T14:07:30.007Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:07:31.237Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087747041789337"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "f1f6740b-1a4f-44e7-a37e-27559b2dadb9",
+    "created_at": "2026-05-07T14:07:30.132857+00:00",
+    "payload": {
+      "to": "56989215781",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "87a6a3b6-307d-4ac1-9c0e-8c66c5c90d73"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "f7d29b54-0ef2-4491-935a-291ca8552c44",
+    "created_at": "2026-05-07T14:07:22.362203+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "05b259a8-deac-4012-8b89-ae8770cda5e0",
+    "created_at": "2026-05-07T14:06:50.065262+00:00",
+    "payload": {
+      "id": "evt_69fc9c79fca36f3a65a53890",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:06:49.271Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9c793f169d53ff6b3e1b",
+        "to": "+56983275699",
+        "from": "+56989215781",
+        "text": {
+          "body": "Y cuando se cancela $130.000 el retoque tb. Se cancela aparte.\nEl doloroso hacérselo? Y el delineado se elige si lo quiero sutil o grueso ?"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgASGBQzQUU3OUM3RjBGQjU4NjIxRjkzQQA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T14:06:47.000Z",
+        "fromUserId": "CL.2087747041789337",
+        "customerProfile": {
+          "name": "Gema Ibañez"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "a3c8015b-a567-459c-921d-f9f01a526bed",
+    "created_at": "2026-05-07T14:02:06.430848+00:00",
+    "payload": {
+      "id": "evt_69fc9b5d6cb5c005e89598b3",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:02:05.679Z",
+      "whatsappMessage": {
+        "id": "69fc9b5aec8c607c59ae1b3e",
+        "to": "+56973323611",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Tu cita ha sido confirmada, Margarita! 🎉\n\nAquí están los detalles nuevamente:\n- **Fecha:** jueves, 7 de mayo de 2026\n- **Hora:** 12:00 PM\n- **Servicio:** Microblading de cejas\n\nEstamos felices de tenerte con nosotros. Si necesitas algo más o tienes alguna pregunta antes de tu cita, ¡no dudes en decírmelo! 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5NzMzMjM2MTEVAgARGBIwN0Q1MUY4M0U4OTQ2RkVCQjAA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:02:03.000Z",
+        "createTime": "2026-05-07T14:02:02.220Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:02:04.451Z",
+        "deliverTime": "2026-05-07T14:02:04.000Z",
+        "pricingType": "free_customer_service",
+        "pricingModel": "PMP",
+        "pricingCategory": "service",
+        "recipientUserId": "CL.2084744962089545"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "c0d8c824-d6b2-4f10-8c1e-52aec1870d07",
+    "created_at": "2026-05-07T14:02:04.911656+00:00",
+    "payload": {
+      "id": "evt_69fc9b5c3f169d53ff6af889",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:02:04.448Z",
+      "whatsappMessage": {
+        "id": "69fc9b5aec8c607c59ae1b3e",
+        "to": "+56973323611",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Tu cita ha sido confirmada, Margarita! 🎉\n\nAquí están los detalles nuevamente:\n- **Fecha:** jueves, 7 de mayo de 2026\n- **Hora:** 12:00 PM\n- **Servicio:** Microblading de cejas\n\nEstamos felices de tenerte con nosotros. Si necesitas algo más o tienes alguna pregunta antes de tu cita, ¡no dudes en decírmelo! 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5NzMzMjM2MTEVAgARGBIwN0Q1MUY4M0U4OTQ2RkVCQjAA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:02:03.000Z",
+        "createTime": "2026-05-07T14:02:02.220Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:02:03.262Z",
+        "pricingType": "free_customer_service",
+        "pricingModel": "PMP",
+        "pricingCategory": "service",
+        "recipientUserId": "CL.2084744962089545"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "13d8e8db-5a42-40ec-b526-608956804655",
+    "created_at": "2026-05-07T14:02:02.35782+00:00",
+    "payload": {
+      "to": "56973323611",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "c6bc6d3b-66be-4e45-9788-6add2e539cf0"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "befc207b-3ba3-4575-8c2b-74080ddfe2c3",
+    "created_at": "2026-05-07T14:01:52.641148+00:00",
+    "payload": {
+      "args": {
+        "response": "yes"
+      },
+      "phone": "56973323611"
+    },
+    "message": "Tool execution: confirm_appointment"
+  },
+  {
+    "id": "df2d7798-d343-4d87-9a31-df515ec8bfdd",
+    "created_at": "2026-05-07T14:01:45.289943+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "013db535-4422-40bd-ad8b-90e2c49691a2",
+    "created_at": "2026-05-07T14:01:33.355045+00:00",
+    "payload": {
+      "id": "evt_69fc9b3d3f169d53ff6af094",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:01:33.003Z",
+      "whatsappMessage": {
+        "id": "69fc9b3696dab26144c3359d",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Para confirmar su cita, aquí están los datos de la cuenta para el abono de $10.000:\n\n- **Nombre:** Elizabeth Hernández  \n- **Rut:** 18.342.131-k  \n- **Banco:** Banco Estado  \n- **Tipo de cuenta:** Cuenta Vista/Chequera electrónica  \n- **Número de cuenta:** 80070001890  \n\nRecuerde que el abono se descontará del valor total del tratamiento. Quedo atenta a recibir la imagen del comprobante de transferencia para confirmar su cita. ¡Gracias! 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzNzEwOUQ4NzFCMUQ5QjJFMjQA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T14:01:32.000Z",
+        "sendTime": "2026-05-07T14:01:27.000Z",
+        "createTime": "2026-05-07T14:01:26.474Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:01:29.037Z",
+        "deliverTime": "2026-05-07T14:01:27.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "4fca4634-1988-4552-86d3-86d93e66fe4a",
+    "created_at": "2026-05-07T14:01:30.83581+00:00",
+    "payload": {
+      "id": "evt_69fc9b3a6a7faa5232089303",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:01:30.405Z",
+      "whatsappMessage": {
+        "id": "69fc9b37a769457cde6e7b76",
+        "to": "+56989215781",
+        "from": "+56983275699",
+        "text": {
+          "body": "Gracias por compartir que es tu primera vez. 🌟 \n\nEn general, para la micropigmentación de ojos, se recomienda un retoque para asegurar que el color y la forma queden perfectos, especialmente porque cada piel reacciona de manera diferente al pigmento. Este retoque se suele realizar entre 6 a 8 semanas después del tratamiento inicial.\n\nEl valor del retoque es de **$50.000**. Sin embargo, el tratamiento inicial a precio promocional de $79.000 no incluye este retoque.\n\n¿Te gustaría saber más sobre cómo agendar la cita para el delineado de ojos? 📅✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgARGBIwQkEyRUQ1OTk0MTk4MUQyRTUA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:01:28.000Z",
+        "createTime": "2026-05-07T14:01:27.730Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:01:30.111Z",
+        "deliverTime": "2026-05-07T14:01:29.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087747041789337"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "2cd22a47-de0d-4346-9765-48613b94c559",
+    "created_at": "2026-05-07T14:01:30.482081+00:00",
+    "payload": {
+      "id": "evt_69fc9b3a6a7faa52320892f6",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:01:30.099Z",
+      "whatsappMessage": {
+        "id": "69fc9b37a769457cde6e7b76",
+        "to": "+56989215781",
+        "from": "+56983275699",
+        "text": {
+          "body": "Gracias por compartir que es tu primera vez. 🌟 \n\nEn general, para la micropigmentación de ojos, se recomienda un retoque para asegurar que el color y la forma queden perfectos, especialmente porque cada piel reacciona de manera diferente al pigmento. Este retoque se suele realizar entre 6 a 8 semanas después del tratamiento inicial.\n\nEl valor del retoque es de **$50.000**. Sin embargo, el tratamiento inicial a precio promocional de $79.000 no incluye este retoque.\n\n¿Te gustaría saber más sobre cómo agendar la cita para el delineado de ojos? 📅✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgARGBIwQkEyRUQ1OTk0MTk4MUQyRTUA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:01:28.000Z",
+        "createTime": "2026-05-07T14:01:27.730Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:01:28.706Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087747041789337"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "3c605c48-71ac-409f-bb67-7ea7973dc949",
+    "created_at": "2026-05-07T14:01:29.640264+00:00",
+    "payload": {
+      "id": "evt_69fc9b396a7faa52320892a8",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:01:29.029Z",
+      "whatsappMessage": {
+        "id": "69fc9b3696dab26144c3359d",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Para confirmar su cita, aquí están los datos de la cuenta para el abono de $10.000:\n\n- **Nombre:** Elizabeth Hernández  \n- **Rut:** 18.342.131-k  \n- **Banco:** Banco Estado  \n- **Tipo de cuenta:** Cuenta Vista/Chequera electrónica  \n- **Número de cuenta:** 80070001890  \n\nRecuerde que el abono se descontará del valor total del tratamiento. Quedo atenta a recibir la imagen del comprobante de transferencia para confirmar su cita. ¡Gracias! 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzNzEwOUQ4NzFCMUQ5QjJFMjQA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:01:27.000Z",
+        "createTime": "2026-05-07T14:01:26.474Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:01:28.804Z",
+        "deliverTime": "2026-05-07T14:01:27.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "d58c3119-8f61-45f4-989a-dde954f729d5",
+    "created_at": "2026-05-07T14:01:29.214274+00:00",
+    "payload": {
+      "id": "evt_69fc9b383f169d53ff6aefb4",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:01:28.801Z",
+      "whatsappMessage": {
+        "id": "69fc9b3696dab26144c3359d",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Para confirmar su cita, aquí están los datos de la cuenta para el abono de $10.000:\n\n- **Nombre:** Elizabeth Hernández  \n- **Rut:** 18.342.131-k  \n- **Banco:** Banco Estado  \n- **Tipo de cuenta:** Cuenta Vista/Chequera electrónica  \n- **Número de cuenta:** 80070001890  \n\nRecuerde que el abono se descontará del valor total del tratamiento. Quedo atenta a recibir la imagen del comprobante de transferencia para confirmar su cita. ¡Gracias! 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzNzEwOUQ4NzFCMUQ5QjJFMjQA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:01:27.000Z",
+        "createTime": "2026-05-07T14:01:26.474Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:01:27.577Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "d9504e0c-328d-48bd-9e10-629d3f0b7449",
+    "created_at": "2026-05-07T14:01:27.863736+00:00",
+    "payload": {
+      "to": "56989215781",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "c3b824df-d848-461b-883d-67b03492c1ff"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "5317313b-6a63-469d-a128-b1d8f750d721",
+    "created_at": "2026-05-07T14:01:26.631141+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "12ad08cd-fa70-408a-ac92-c1cd7a8f657e"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "c103dcfd-6ca5-483b-be8e-4c042b70f80a",
+    "created_at": "2026-05-07T14:01:15.422331+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "f6b44590-c757-4aa9-a834-645e74c40ffc",
+    "created_at": "2026-05-07T14:01:14.687205+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "135d3ae5-0ea4-4f64-8245-8f4363789530",
+    "created_at": "2026-05-07T14:01:11.846278+00:00",
+    "payload": {
+      "id": "evt_69fc9b273f169d53ff6aeba9",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:01:11.422Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9b276a7faa5232088e7d",
+        "to": "+56983275699",
+        "from": "+56973323611",
+        "type": "button",
+        "wamid": "wamid.HBgLNTY5NzMzMjM2MTEVAgASGCBBQ0QzNTZCRkI1MzMwNUM5Qjk4QUQyNDc3M0YwNzQ2QwA=",
+        "button": {
+          "text": "Sí, confirmo",
+          "payload": "Sí, confirmo"
+        },
+        "wabaId": "1409736207183012",
+        "context": {
+          "id": "wamid.HBgLNTY5NzMzMjM2MTEVAgARGBIxRUQ3NTI2ODJEQjhBMDkzNEIA",
+          "from": "56983275699"
+        },
+        "sendTime": "2026-05-07T14:01:10.000Z",
+        "fromUserId": "CL.2084744962089545",
+        "customerProfile": {
+          "name": "Margarita🌻"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "4d23474d-0881-4592-810d-f51c25f6d220",
+    "created_at": "2026-05-07T14:01:01.765874+00:00",
+    "payload": {
+      "msgRowId": "ea215b51-641e-4b4b-a26b-fc2a38dc3bc7"
+    },
+    "message": "Debounced message"
+  },
+  {
+    "id": "6468d13e-363b-47cb-8feb-767c1b0b832f",
+    "created_at": "2026-05-07T14:00:51.38768+00:00",
+    "payload": {
+      "msgRowId": "16c49c39-1f38-4ebc-a76d-3af1e9803d8a"
+    },
+    "message": "Debounced message"
+  },
+  {
+    "id": "7cc3790e-722b-4815-ab7f-a37cfaec5272",
+    "created_at": "2026-05-07T14:00:43.208111+00:00",
+    "payload": {
+      "id": "evt_69fc9b0a1be35132033f9d57",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:42.443Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9b0a3f169d53ff6ae527",
+        "to": "+56983275699",
+        "from": "+56989215781",
+        "text": {
+          "body": "Es primera vez que me lo quiero realizar"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgASGBQzQTNEQjc4MEUxNjRGNDAwOEUxMAA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T14:00:41.000Z",
+        "fromUserId": "CL.2087747041789337",
+        "customerProfile": {
+          "name": "Gema Ibañez"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "624322bd-580c-49bc-98b2-804562368b73",
+    "created_at": "2026-05-07T14:00:41.864386+00:00",
+    "payload": {
+      "id": "evt_69fc9b096a7faa52320887fc",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:41.443Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9b096cb5c005e8958471",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "text": {
+          "body": "Número de cuenta porfabor"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzI2N0Y5OTU4Q0I4REVFRjZCOThDQzc2OUMyMzkxMQA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T14:00:40.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "49978bc9-dcdd-48c7-bea6-77145dbfa64e",
+    "created_at": "2026-05-07T14:00:30.33015+00:00",
+    "payload": {
+      "id": "evt_69fc9afd6a7faa5232088580",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:29.921Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9afdfca36f3a65a4dd5e",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "type": "button",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzQ4RTcyRTE3OEYwNTE2NDFDNjJCMEU0RjlFQjQ5MQA=",
+        "button": {
+          "text": "Sí, confirmo",
+          "payload": "Sí, confirmo"
+        },
+        "wabaId": "1409736207183012",
+        "context": {
+          "id": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRkMwQzNDODk1QkMxRDBEQkUA",
+          "from": "56983275699"
+        },
+        "sendTime": "2026-05-07T14:00:28.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "20e9ddbb-5a93-4a54-b0f5-ed4f24b69414",
+    "created_at": "2026-05-07T14:00:19.602167+00:00",
+    "payload": {
+      "id": "evt_69fc9af36cb5c005e8958016",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:19.187Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9af31be35132033f982d",
+        "to": "+56983275699",
+        "from": "+56989215781",
+        "text": {
+          "body": "Hay que hacerse retoques en días posteriores, obligatoriamente?"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgASGBQzQUEyRjNDRUVDQUM5RENCMjVEMwA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T14:00:17.000Z",
+        "fromUserId": "CL.2087747041789337",
+        "customerProfile": {
+          "name": "Gema Ibañez"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "5b7edb67-0e44-443d-94b0-4ed559c5d364",
+    "created_at": "2026-05-07T14:00:19.374664+00:00",
+    "payload": {
+      "id": "evt_69fc9af21be35132033f980d",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:18.596Z",
+      "whatsappMessage": {
+        "id": "69fc9ae37650ac29ae2ffe68",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "type": "template",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRkMwQzNDODk1QkMxRDBEQkUA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T14:00:17.000Z",
+        "sendTime": "2026-05-07T14:00:12.000Z",
+        "template": {
+          "name": "confirmacion_cita",
+          "language": {
+            "code": "es"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "text": "Carolina zenteno flores",
+                  "type": "text"
+                },
+                {
+                  "text": "Elizabeth Microblading",
+                  "type": "text"
+                },
+                {
+                  "text": "Micropigmentación de Ojos",
+                  "type": "text"
+                },
+                {
+                  "text": "viernes, 8 de mayo a las 12:00 p.m.",
+                  "type": "text"
+                },
+                {
+                  "text": "nuestro equipo",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "createTime": "2026-05-07T14:00:03.492Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:00:13.877Z",
+        "deliverTime": "2026-05-07T14:00:12.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "986c2074-1f6a-47bc-bd78-90d584c3339f",
+    "created_at": "2026-05-07T14:00:14.885425+00:00",
+    "payload": {
+      "id": "evt_69fc9aee6cb5c005e8957ec4",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:14.002Z",
+      "whatsappMessage": {
+        "id": "69fc9ae418167031b06768fd",
+        "to": "+56973323611",
+        "from": "+56983275699",
+        "type": "template",
+        "wamid": "wamid.HBgLNTY5NzMzMjM2MTEVAgARGBIxRUQ3NTI2ODJEQjhBMDkzNEIA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "template": {
+          "name": "confirmacion_cita",
+          "language": {
+            "code": "es"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "text": "Margarita Retamal Perez",
+                  "type": "text"
+                },
+                {
+                  "text": "Elizabeth Microblading",
+                  "type": "text"
+                },
+                {
+                  "text": "Microblading de cejas",
+                  "type": "text"
+                },
+                {
+                  "text": "jueves, 7 de mayo a las 12:00 p.m.",
+                  "type": "text"
+                },
+                {
+                  "text": "nuestro equipo",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "createTime": "2026-05-07T14:00:04.173Z",
+        "regionCode": "CL",
+        "totalPrice": 0.0889,
+        "updateTime": "2026-05-07T14:00:04.795Z",
+        "deliverTime": "2026-05-07T14:00:13.000Z",
+        "pricingType": "regular",
+        "pricingModel": "PMP",
+        "pricingCategory": "marketing_lite",
+        "recipientUserId": "CL.2084744962089545"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "92e83e2e-7216-4116-923f-07e6ec5d8428",
+    "created_at": "2026-05-07T14:00:14.702459+00:00",
+    "payload": {
+      "id": "evt_69fc9aee6a7faa52320881bd",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:14.272Z",
+      "whatsappMessage": {
+        "id": "69fc9ae418167031b06768fd",
+        "to": "+56973323611",
+        "from": "+56983275699",
+        "type": "template",
+        "wamid": "wamid.HBgLNTY5NzMzMjM2MTEVAgARGBIxRUQ3NTI2ODJEQjhBMDkzNEIA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:00:12.000Z",
+        "template": {
+          "name": "confirmacion_cita",
+          "language": {
+            "code": "es"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "text": "Margarita Retamal Perez",
+                  "type": "text"
+                },
+                {
+                  "text": "Elizabeth Microblading",
+                  "type": "text"
+                },
+                {
+                  "text": "Microblading de cejas",
+                  "type": "text"
+                },
+                {
+                  "text": "jueves, 7 de mayo a las 12:00 p.m.",
+                  "type": "text"
+                },
+                {
+                  "text": "nuestro equipo",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "createTime": "2026-05-07T14:00:04.173Z",
+        "regionCode": "CL",
+        "totalPrice": 0.0889,
+        "updateTime": "2026-05-07T14:00:14.024Z",
+        "deliverTime": "2026-05-07T14:00:13.000Z",
+        "pricingType": "regular",
+        "pricingModel": "PMP",
+        "pricingCategory": "marketing_lite",
+        "recipientUserId": "CL.2084744962089545"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "a91e3194-0296-4762-9f52-df7b484dc282",
+    "created_at": "2026-05-07T14:00:14.320332+00:00",
+    "payload": {
+      "id": "evt_69fc9aedfca36f3a65a4d9e0",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:13.859Z",
+      "whatsappMessage": {
+        "id": "69fc9ae37650ac29ae2ffe68",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "type": "template",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRkMwQzNDODk1QkMxRDBEQkUA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:00:12.000Z",
+        "template": {
+          "name": "confirmacion_cita",
+          "language": {
+            "code": "es"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "text": "Carolina zenteno flores",
+                  "type": "text"
+                },
+                {
+                  "text": "Elizabeth Microblading",
+                  "type": "text"
+                },
+                {
+                  "text": "Micropigmentación de Ojos",
+                  "type": "text"
+                },
+                {
+                  "text": "viernes, 8 de mayo a las 12:00 p.m.",
+                  "type": "text"
+                },
+                {
+                  "text": "nuestro equipo",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "createTime": "2026-05-07T14:00:03.492Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T14:00:13.309Z",
+        "deliverTime": "2026-05-07T14:00:12.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "75068ead-7dca-4066-a16b-5c2f7e5482c9",
+    "created_at": "2026-05-07T14:00:13.854136+00:00",
+    "payload": {
+      "id": "evt_69fc9aed1be35132033f968d",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T14:00:13.306Z",
+      "whatsappMessage": {
+        "id": "69fc9ae37650ac29ae2ffe68",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "type": "template",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRkMwQzNDODk1QkMxRDBEQkUA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T14:00:12.000Z",
+        "template": {
+          "name": "confirmacion_cita",
+          "language": {
+            "code": "es"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "text": "Carolina zenteno flores",
+                  "type": "text"
+                },
+                {
+                  "text": "Elizabeth Microblading",
+                  "type": "text"
+                },
+                {
+                  "text": "Micropigmentación de Ojos",
+                  "type": "text"
+                },
+                {
+                  "text": "viernes, 8 de mayo a las 12:00 p.m.",
+                  "type": "text"
+                },
+                {
+                  "text": "nuestro equipo",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "createTime": "2026-05-07T14:00:03.492Z",
+        "regionCode": "CL",
+        "totalPrice": 0.0889,
+        "updateTime": "2026-05-07T14:00:04.146Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "2ad991c6-aa04-4fb1-a831-1d8e35988574",
+    "created_at": "2026-05-07T14:00:04.439+00:00",
+    "payload": {
+      "totalSent": 2
+    },
+    "message": "[CronReminders] Completed cron-process-reminders"
+  },
+  {
+    "id": "810bc696-f43d-4b99-8f11-5218a748c110",
+    "created_at": "2026-05-07T14:00:03.788+00:00",
+    "payload": {
+      "clinicsCount": 2
+    },
+    "message": "[CronReminders] Starting 2h reminders check"
+  },
+  {
+    "id": "fb120aa0-f381-4d5f-a246-ccaf8f5ead8c",
+    "created_at": "2026-05-07T14:00:02.588+00:00",
+    "payload": {
+      "clinicsCount": 2
+    },
+    "message": "[CronReminders] Starting 24h reminders check"
+  },
+  {
+    "id": "28e2e658-8b45-4078-8309-1257554e0639",
+    "created_at": "2026-05-07T14:00:02.199+00:00",
+    "payload": {
+      "range": {
+        "to": "2026-05-06T14:00:02.189Z",
+        "from": "2026-05-05T14:00:02.189Z"
+      }
+    },
+    "message": "[CronSurveys] Starting survey check"
+  },
+  {
+    "id": "5905cdb7-930f-44ef-8985-5e40512d34a2",
+    "created_at": "2026-05-07T13:57:42.761044+00:00",
+    "payload": {
+      "id": "evt_69fc9a563f169d53ff6ac3e9",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:57:42.050Z",
+      "whatsappMessage": {
+        "id": "69fc9a4c6a7faa5232086562",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "type": "image",
+        "image": {
+          "id": "2456230361547733",
+          "_id": "2456230361547733",
+          "link": "https://api.ycloud.com/v2/whatsapp/media/download/2456230361547733?sig=t%3D1778162250%2Cs%3D70b5c99d1ae8c08856c0ea46f289ff3b49fe02e7a7374abf02ed9a2d86bcf57d&payload=eyJpZCI6IjI0NTYyMzAzNjE1NDc3MzMiLCJ3YWJhSWQiOiIxNDA5NzM2MjA3MTgzMDEyIiwid2FtaWQiOiJ3YW1pZC5IQmdMTlRZNU9Ea3dORE0wTWpZVkFnQVJHQ0JCTlVKRk1VRkJRVGczTVRnMlFqbEZNVFl5UkVRMlJFTTJPRFUzUWtVd1JBQT0ifQ",
+          "sha256": "qmfGO4rjV+frrI9BlhFEw7wYfa+838ffUXQl1fj5dkw=",
+          "mime_type": "image/jpeg"
+        },
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGCBBNUJFMUFBQTg3MTg2QjlFMTYyREQ2REM2ODU3QkUwRAA=",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:57:30.000Z",
+        "sendTime": "2026-05-07T13:57:30.000Z",
+        "toUserId": "CL.2084853205412054",
+        "createTime": "2026-05-07T13:57:30.000Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "pricingType": "free_customer_service",
+        "pricingModel": "PMP",
+        "customerProfile": {},
+        "pricingCategory": "service",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "54475eed-0024-4d44-a304-83b4d4ad91e1",
+    "created_at": "2026-05-07T13:57:37.813546+00:00",
+    "payload": {
+      "id": "evt_69fc9a513f169d53ff6ac334",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:57:37.375Z",
+      "whatsappMessage": {
+        "id": "69fc9a4eec8c607c59ae0774",
+        "to": "+56989215781",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Hola! 😊 Soy Lía, la asistente virtual de Elizabeth Hernández. \n\nEl valor para la micropigmentación de ojos (delineado) es de $130.000. Sin embargo, actualmente tenemos una oferta especial, y puedes realizarlo por solo **$79.000**. Esta promoción es válida hasta el 31 de mayo y no incluye retoques.\n\n¿Es la primera vez que te realizas este tratamiento o ya tienes un trabajo previo? Esto me ayudará a brindarte más información específica. 🌿"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgARGBI2NzFDMUM0MUVFNDBGQ0JFQzIA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:57:35.000Z",
+        "createTime": "2026-05-07T13:57:34.106Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:57:36.517Z",
+        "deliverTime": "2026-05-07T13:57:36.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087747041789337"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "f0120ec3-73b9-4aaa-8d36-2ed6afa4a82e",
+    "created_at": "2026-05-07T13:57:37.224691+00:00",
+    "payload": {
+      "id": "evt_69fc9a506a7faa52320865fb",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:57:36.513Z",
+      "whatsappMessage": {
+        "id": "69fc9a4eec8c607c59ae0774",
+        "to": "+56989215781",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Hola! 😊 Soy Lía, la asistente virtual de Elizabeth Hernández. \n\nEl valor para la micropigmentación de ojos (delineado) es de $130.000. Sin embargo, actualmente tenemos una oferta especial, y puedes realizarlo por solo **$79.000**. Esta promoción es válida hasta el 31 de mayo y no incluye retoques.\n\n¿Es la primera vez que te realizas este tratamiento o ya tienes un trabajo previo? Esto me ayudará a brindarte más información específica. 🌿"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgARGBI2NzFDMUM0MUVFNDBGQ0JFQzIA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:57:35.000Z",
+        "createTime": "2026-05-07T13:57:34.106Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:57:35.140Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087747041789337"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "878c98cb-eff1-43e2-bbbb-94faf9021cfe",
+    "created_at": "2026-05-07T13:57:34.264986+00:00",
+    "payload": {
+      "to": "56989215781",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "2b5b4d93-5c47-47df-a524-80c31d588b0a"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "eb00cc92-6042-4009-aa08-d63bc8ceae2c",
+    "created_at": "2026-05-07T13:57:26.628306+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "d4dab8c5-6b74-4144-8968-8eace417c726",
+    "created_at": "2026-05-07T13:56:53.10426+00:00",
+    "payload": {
+      "id": "evt_69fc9a236a7faa5232085e9c",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:56:51.753Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9a233f169d53ff6abc05",
+        "to": "+56983275699",
+        "from": "+56989215781",
+        "text": {
+          "body": "Hola 💐! \nBuen día, quisiera saber el valor del delineado de ojos?"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgASGBQzQUNBNThCMzJCQzcyQTQxQjREMgA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:56:50.000Z",
+        "fromUserId": "CL.2087747041789337",
+        "customerProfile": {
+          "name": "Gema Ibañez"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "87fa8186-06e7-4406-82e2-8a999588035c",
+    "created_at": "2026-05-07T13:55:43.169858+00:00",
+    "payload": {
+      "msgType": "unsupported"
+    },
+    "message": "Ignored: Unsupported message type"
+  },
+  {
+    "id": "66f669e4-d7fd-4ab7-8a2b-e14347fcd183",
+    "created_at": "2026-05-07T13:55:42.938546+00:00",
+    "payload": {
+      "id": "evt_69fc99defca36f3a65a4a856",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:55:42.560Z",
+      "whatsappInboundMessage": {
+        "id": "69fc99defca36f3a65a4a853",
+        "to": "+56983275699",
+        "from": "+56989215781",
+        "type": "unsupported",
+        "wamid": "wamid.HBgLNTY5ODkyMTU3ODEVAgASGBQzQTM3Njc4OTc1RkI5RTVEOTVCOQA=",
+        "errors": [
+          {
+            "code": "131060",
+            "title": "This message is unavailable.",
+            "message": "This message is unavailable.",
+            "error_data": {
+              "details": "This message is currently unavailable."
+            },
+            "errorDataDetails": "This message is currently unavailable."
+          }
+        ],
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:55:40.000Z",
+        "fromUserId": "CL.2087747041789337",
+        "customerProfile": {
+          "name": "Gema Ibañez"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "e3e77f36-5798-455b-bb62-92235ca2f103",
+    "created_at": "2026-05-07T13:55:07.976406+00:00",
+    "payload": {
+      "id": "evt_69fc99bbfca36f3a65a4a171",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:55:07.413Z",
+      "whatsappMessage": {
+        "id": "69fc99b23f169d53ff6aa691",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "type": "audio",
+        "audio": {
+          "id": "977147404699371",
+          "_id": "977147404699371",
+          "link": "https://api.ycloud.com/v2/whatsapp/media/download/977147404699371?sig=t%3D1778162096%2Cs%3D065a853e7105153ae4e6103fa90954fd1791233908d0363423960c01503b2bd6&payload=eyJpZCI6Ijk3NzE0NzQwNDY5OTM3MSIsIndhYmFJZCI6IjE0MDk3MzYyMDcxODMwMTIiLCJ3YW1pZCI6IndhbWlkLkhCZ0xOVFk1T0Rrd05ETTBNallWQWdBUkdDQkJOVUk0TlRCR1JEQTROMEl4T0VGQ01URkdSRGcxTmpNeE9UY3lORFF3UkFBPSJ9",
+          "voice": true,
+          "sha256": "1UiqEduYGSkJ2ZnTwoXisiIK1ylgCaJsBEyctDEiJWU=",
+          "mime_type": "audio/ogg; codecs=opus"
+        },
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGCBBNUI4NTBGRDA4N0IxOEFCMTFGRDg1NjMxOTcyNDQwRAA=",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:54:56.000Z",
+        "sendTime": "2026-05-07T13:54:56.000Z",
+        "toUserId": "CL.2084853205412054",
+        "createTime": "2026-05-07T13:54:56.000Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "pricingType": "free_customer_service",
+        "pricingModel": "PMP",
+        "customerProfile": {},
+        "pricingCategory": "service",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "cdeee8bc-91ae-4bb2-b06f-626a52de52e0",
+    "created_at": "2026-05-07T13:54:32.520455+00:00",
+    "payload": {
+      "id": "evt_69fc99971be35132033f55cc",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:54:31.780Z",
+      "whatsappMessage": {
+        "id": "69fc9995ec8c607c59adfd2f",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "text": {
+          "body": "En cuanto a la ubicación, la clínica **Elizabeth Microblading** se encuentra en:\n\n**Dirección:** Mariano Latorre #24, Linares  \n**Referencias:** Frente a la Copec de León Bustos, a unos pasos del Mall Espacio Urbano.  \n**Mapa:** [Ver en Google Maps](https://maps.app.goo.gl/JgAsXrnCcGA32BXi6)\n\nSi necesitas más indicaciones o estás teniendo problemas para llegar, no dudes en preguntar. Estoy aquí para ayudarte. 😊"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGBI5QUU2OTBCQkQ1MEMwMjI3QTgA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:54:30.000Z",
+        "sendTime": "2026-05-07T13:54:30.000Z",
+        "createTime": "2026-05-07T13:54:29.434Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:54:31.689Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "8e98bae2-3240-42df-9fda-41f1b53e1c76",
+    "created_at": "2026-05-07T13:54:32.054158+00:00",
+    "payload": {
+      "id": "evt_69fc99976a7faa5232084505",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:54:31.684Z",
+      "whatsappMessage": {
+        "id": "69fc9995ec8c607c59adfd2f",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "text": {
+          "body": "En cuanto a la ubicación, la clínica **Elizabeth Microblading** se encuentra en:\n\n**Dirección:** Mariano Latorre #24, Linares  \n**Referencias:** Frente a la Copec de León Bustos, a unos pasos del Mall Espacio Urbano.  \n**Mapa:** [Ver en Google Maps](https://maps.app.goo.gl/JgAsXrnCcGA32BXi6)\n\nSi necesitas más indicaciones o estás teniendo problemas para llegar, no dudes en preguntar. Estoy aquí para ayudarte. 😊"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGBI5QUU2OTBCQkQ1MEMwMjI3QTgA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:54:30.000Z",
+        "createTime": "2026-05-07T13:54:29.434Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:54:30.300Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "65279042-32f0-40e5-b037-f85d3fd09a0d",
+    "created_at": "2026-05-07T13:54:29.56196+00:00",
+    "payload": {
+      "to": "56989043426",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "157df12b-d323-4f66-a433-003051573487"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "22c1fa37-3866-4c54-9e6d-00c743c85cf7",
+    "created_at": "2026-05-07T13:54:25.533406+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "06cd55a1-a8f1-4612-8a50-2d00f6cfaa3b",
+    "created_at": "2026-05-07T13:54:00.745445+00:00",
+    "payload": {
+      "id": "evt_69fc99783f169d53ff6a9d42",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:54:00.386Z",
+      "whatsappMessage": {
+        "id": "69fc99743152a70e27b44dae",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Hola! 😊 Actualmente tenemos promociones especiales hasta el 31 de mayo en los siguientes tratamientos:\n\n1. **Microblading de Cejas**:\n   - **Precio Normal:** $99.000\n   - **Precio Promocional:** $79.000\n   - *Nota: La oferta no incluye retoque.*\n\n2. **Micropigmentación de Labios**:\n   - **Precio Normal:** $150.000\n   - **Precio Promocional:** $79.000\n   - *Nota: La oferta no incluye retoque.*\n\n3. **Micropigmentación de Ojos (Delineado)**:\n   - **Precio Normal:** $130.000\n   - **Precio Promocional:** $79.000\n   - *Nota: La oferta no incluye retoque.*\n\nSi estás interesada en alguno de estos tratamientos o necesitas más información, estaré encantada de ayudarte a agendar una cita o responder a tus preguntas. ¿Hay algún tratamiento que te interese en particular? 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGBJDRjEzQkY2NTAwNkM2Njk5RDEA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:53:59.000Z",
+        "sendTime": "2026-05-07T13:53:58.000Z",
+        "createTime": "2026-05-07T13:53:56.351Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:53:59.369Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "df6630d5-fa74-48fb-bc12-142772ca3df5",
+    "created_at": "2026-05-07T13:54:00.19541+00:00",
+    "payload": {
+      "id": "evt_69fc99773f169d53ff6a9d1c",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:53:59.366Z",
+      "whatsappMessage": {
+        "id": "69fc99743152a70e27b44dae",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Hola! 😊 Actualmente tenemos promociones especiales hasta el 31 de mayo en los siguientes tratamientos:\n\n1. **Microblading de Cejas**:\n   - **Precio Normal:** $99.000\n   - **Precio Promocional:** $79.000\n   - *Nota: La oferta no incluye retoque.*\n\n2. **Micropigmentación de Labios**:\n   - **Precio Normal:** $150.000\n   - **Precio Promocional:** $79.000\n   - *Nota: La oferta no incluye retoque.*\n\n3. **Micropigmentación de Ojos (Delineado)**:\n   - **Precio Normal:** $130.000\n   - **Precio Promocional:** $79.000\n   - *Nota: La oferta no incluye retoque.*\n\nSi estás interesada en alguno de estos tratamientos o necesitas más información, estaré encantada de ayudarte a agendar una cita o responder a tus preguntas. ¿Hay algún tratamiento que te interese en particular? 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGBJDRjEzQkY2NTAwNkM2Njk5RDEA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:53:58.000Z",
+        "createTime": "2026-05-07T13:53:56.351Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:53:57.793Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "d1c7dc9e-2396-4934-9d02-dccd7bb0260c",
+    "created_at": "2026-05-07T13:53:56.482921+00:00",
+    "payload": {
+      "to": "56989043426",
+      "tier": 3,
+      "model": "gpt-4o",
+      "msgId": "c1520412-9a79-40ad-8c8f-8e9a1a9da325"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "2583e98b-50e0-4b8d-bc67-fdc4a9287a24",
+    "created_at": "2026-05-07T13:53:52.469547+00:00",
+    "payload": {
+      "id": "evt_69fc9970fca36f3a65a496aa",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:53:52.038Z",
+      "whatsappInboundMessage": {
+        "id": "69fc9970fca36f3a65a496a9",
+        "to": "+56983275699",
+        "from": "+56989043426",
+        "text": {
+          "body": "Hola estoy en mariano latorre pero no encuentro la clinica"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgASGCBBQ0E5NzExNEZGOEQ5ODIyOEVGODY0RDhCNUNBMEUyRAA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:53:50.000Z",
+        "fromUserId": "CL.2084853205412054",
+        "customerProfile": {
+          "name": "Margarita 🌸"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "48a81aa4-38d7-4f80-9539-039141420c2b",
+    "created_at": "2026-05-07T13:53:51.809493+00:00",
+    "payload": {
+      "cost": 60,
+      "tier": 3,
+      "model": "gpt-4o"
+    },
+    "message": "Hybrid Router: N3"
+  },
+  {
+    "id": "a5c10871-69bd-4712-9423-215c8fdab3e8",
+    "created_at": "2026-05-07T13:53:18.116548+00:00",
+    "payload": {
+      "id": "evt_69fc994dfca36f3a65a49184",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:53:17.324Z",
+      "whatsappInboundMessage": {
+        "id": "69fc994d1be35132033f4a05",
+        "to": "+56983275699",
+        "from": "+56989043426",
+        "text": {
+          "body": "información sobre el los tratamientos en promoción"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgASGCBBQzJBMUZGRkY1MkM4OERFNUM3ODg2ODMzMjU3Q0E5RAA=",
+        "wabaId": "1409736207183012",
+        "referral": {
+          "body": "✅ RESERVAR CON PROMOCIÓN",
+          "headline": "+500 Clientas Satisfechas ⭐️",
+          "image_url": "https://scontent.xx.fbcdn.net/v/t45.1600-4/681300655_2238115746997997_286277531838474232_n.png?stp=c3.3.300.300a_dst-png_p306x306&_nc_cat=111&ccb=1-7&_nc_sid=e37a05&_nc_ohc=uuFTL_BpITUQ7kNvwFKg5UL&_nc_oc=AdrhmCtTReT53mx5nG9qkawUukGbWtXUkjDDxy1MpiLpeB10BqPbZ-AuwkEPZYaQSj1G10bmLKSMLReIzv-Y5aFE&_nc_ad=z-m&_nc_cid=0&_nc_zt=1&_nc_ht=scontent.xx&_nc_gid=Eo2AODtUZt9BK6PD5HqY4Q&oh=00_Af6b2fyupryYkwa1Jsr92s73RGOv9LIdmB3wLFxWKu09vw&oe=6A012AB8",
+          "source_id": "120248309404460039",
+          "media_type": "image",
+          "source_url": "https://fb.me/7HRSH0JXW",
+          "source_type": "ad",
+          "welcome_message": {
+            "text": "¡Hola! ¿Cómo puedo ayudarle?"
+          }
+        },
+        "sendTime": "2026-05-07T13:53:15.000Z",
+        "fromUserId": "CL.2084853205412054",
+        "customerProfile": {
+          "name": "Margarita 🌸"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "839fb2d6-5b29-4639-b4a4-f33fab8848aa",
+    "created_at": "2026-05-07T13:52:55.332926+00:00",
+    "payload": {
+      "id": "evt_69fc99366cb5c005e8953304",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:52:54.275Z",
+      "whatsappMessage": {
+        "id": "69fc7ec418167031b0657ca9",
+        "to": "+56989043426",
+        "from": "+56983275699",
+        "type": "template",
+        "wamid": "wamid.HBgLNTY5ODkwNDM0MjYVAgARGBIzRTU0QzM5QkFBQzQ0Mzk3QkIA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:52:53.000Z",
+        "sendTime": "2026-05-07T12:00:15.000Z",
+        "template": {
+          "name": "confirmacion_cita",
+          "language": {
+            "code": "es"
+          },
+          "components": [
+            {
+              "type": "body",
+              "parameters": [
+                {
+                  "text": "Margarita Labra Rojas",
+                  "type": "text"
+                },
+                {
+                  "text": "Elizabeth Microblading",
+                  "type": "text"
+                },
+                {
+                  "text": "Microblading de cejas",
+                  "type": "text"
+                },
+                {
+                  "text": "jueves, 7 de mayo a las 10:00 a.m.",
+                  "type": "text"
+                },
+                {
+                  "text": "nuestro equipo",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "createTime": "2026-05-07T12:00:04.078Z",
+        "regionCode": "CL",
+        "totalPrice": 0.0889,
+        "updateTime": "2026-05-07T12:00:18.480Z",
+        "deliverTime": "2026-05-07T12:00:17.000Z",
+        "pricingType": "regular",
+        "pricingModel": "PMP",
+        "pricingCategory": "marketing_lite",
+        "recipientUserId": "CL.2084853205412054"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "49870fcb-02dd-4f62-a5ab-94ceb2a26063",
+    "created_at": "2026-05-07T13:46:13.323638+00:00",
+    "payload": {
+      "id": "evt_69fc97a43f169d53ff6a4bda",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:46:12.569Z",
+      "whatsappMessage": {
+        "id": "69fc969d7650ac29ae2fc5aa",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Claro, aquí está la dirección de la clínica:\n\n**Elizabeth Microblading**  \n**Dirección:** Mariano Latorre #24, Linares  \n**Referencias de Dirección:** El centro se llama \"FixSalud\", y queda a unos pasos del Mall Espacio Urbano, frente a la Copec de León Bustos.  \n\nTambién puede ver la ubicación en este [Mapa de Google](https://maps.app.goo.gl/JgAsXrnCcGA32BXi6). \n\nSi tiene alguna otra consulta o necesita más información, no dude en preguntar. ¡Estoy aquí para ayudarle! 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRDZCQ0YwQzQ4NDVGRUY3MDcA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:46:11.000Z",
+        "sendTime": "2026-05-07T13:41:51.000Z",
+        "createTime": "2026-05-07T13:41:49.779Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:41:52.591Z",
+        "deliverTime": "2026-05-07T13:41:51.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "b9f5f066-1df4-4989-bfa7-0b5a5e069320",
+    "created_at": "2026-05-07T13:41:52.950613+00:00",
+    "payload": {
+      "id": "evt_69fc96a06a7faa523207c2ec",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:41:52.580Z",
+      "whatsappMessage": {
+        "id": "69fc969d7650ac29ae2fc5aa",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Claro, aquí está la dirección de la clínica:\n\n**Elizabeth Microblading**  \n**Dirección:** Mariano Latorre #24, Linares  \n**Referencias de Dirección:** El centro se llama \"FixSalud\", y queda a unos pasos del Mall Espacio Urbano, frente a la Copec de León Bustos.  \n\nTambién puede ver la ubicación en este [Mapa de Google](https://maps.app.goo.gl/JgAsXrnCcGA32BXi6). \n\nSi tiene alguna otra consulta o necesita más información, no dude en preguntar. ¡Estoy aquí para ayudarle! 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRDZCQ0YwQzQ4NDVGRUY3MDcA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:41:51.000Z",
+        "createTime": "2026-05-07T13:41:49.779Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:41:52.461Z",
+        "deliverTime": "2026-05-07T13:41:51.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "7b88ad69-04f9-4c84-995f-b6c6d2781bfc",
+    "created_at": "2026-05-07T13:41:52.876702+00:00",
+    "payload": {
+      "id": "evt_69fc96a0fca36f3a65a4187b",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:41:52.455Z",
+      "whatsappMessage": {
+        "id": "69fc969d7650ac29ae2fc5aa",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Claro, aquí está la dirección de la clínica:\n\n**Elizabeth Microblading**  \n**Dirección:** Mariano Latorre #24, Linares  \n**Referencias de Dirección:** El centro se llama \"FixSalud\", y queda a unos pasos del Mall Espacio Urbano, frente a la Copec de León Bustos.  \n\nTambién puede ver la ubicación en este [Mapa de Google](https://maps.app.goo.gl/JgAsXrnCcGA32BXi6). \n\nSi tiene alguna otra consulta o necesita más información, no dude en preguntar. ¡Estoy aquí para ayudarle! 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIzRDZCQ0YwQzQ4NDVGRUY3MDcA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:41:51.000Z",
+        "createTime": "2026-05-07T13:41:49.779Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:41:51.263Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "02e4e451-019e-4cb0-9e27-2e21acb5f208",
+    "created_at": "2026-05-07T13:41:50.008081+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "52080786-ec5b-42cf-afa0-05a45a617f07"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "bac0f163-7284-4342-b324-d357c597fe24",
+    "created_at": "2026-05-07T13:41:44.90429+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "516fd34b-7942-42c8-ae88-95b903b59d49",
+    "created_at": "2026-05-07T13:41:13.330025+00:00",
+    "payload": {
+      "id": "evt_69fc9678fca36f3a65a413b8",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:41:12.955Z",
+      "whatsappMessage": {
+        "id": "69fc967696dab26144c2f3d8",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento mucho la confusión y los inconvenientes causados. Para aclarar, hoy es jueves 7 de mayo, y el lunes 11 de mayo es un día que está disponible para agendar. \n\nSi desea, puedo verificar la disponibilidad para el lunes 11 de mayo a las 12:00 p. m. Solo necesito su nombre completo para proceder. Nuevamente, le pido disculpas por la confusión. ¿Le gustaría confirmar esa fecha y hora? 🌼"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIwMjBBRTFDQTJFQzVBNUM0REYA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:41:11.000Z",
+        "sendTime": "2026-05-07T13:41:11.000Z",
+        "createTime": "2026-05-07T13:41:10.606Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:41:12.725Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "7104f9c0-f3f8-4479-a527-50847ed0e013",
+    "created_at": "2026-05-07T13:41:13.096555+00:00",
+    "payload": {
+      "id": "evt_69fc96783f169d53ff6a1663",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:41:12.720Z",
+      "whatsappMessage": {
+        "id": "69fc967696dab26144c2f3d8",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento mucho la confusión y los inconvenientes causados. Para aclarar, hoy es jueves 7 de mayo, y el lunes 11 de mayo es un día que está disponible para agendar. \n\nSi desea, puedo verificar la disponibilidad para el lunes 11 de mayo a las 12:00 p. m. Solo necesito su nombre completo para proceder. Nuevamente, le pido disculpas por la confusión. ¿Le gustaría confirmar esa fecha y hora? 🌼"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIwMjBBRTFDQTJFQzVBNUM0REYA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:41:11.000Z",
+        "createTime": "2026-05-07T13:41:10.606Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:41:11.502Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "67b0abcb-1158-4145-810e-26c85bea846a",
+    "created_at": "2026-05-07T13:41:11.255819+00:00",
+    "payload": {
+      "id": "evt_69fc96766cb5c005e894b704",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:41:10.132Z",
+      "whatsappInboundMessage": {
+        "id": "69fc96763f169d53ff6a15e9",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "text": {
+          "body": "Mejor dame la dirección para ir personalmente"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzAxNDI0NTZGRTRGMDE2MDFEODIxRDdCQUNCOEVDQQA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:41:08.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "c374b92e-df1b-4ccf-a5a3-82c3796a5d40",
+    "created_at": "2026-05-07T13:41:10.743922+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "e7d8b0eb-affe-4267-b2bc-8e564662e43d"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "e345fb00-e81e-44f8-a097-77d2887f38e0",
+    "created_at": "2026-05-07T13:41:05.866309+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "c68d2200-15ba-495c-82a1-4a32055b67eb",
+    "created_at": "2026-05-07T13:40:33.626316+00:00",
+    "payload": {
+      "id": "evt_69fc96516a7faa523207b365",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:40:33.190Z",
+      "whatsappInboundMessage": {
+        "id": "69fc96513f169d53ff6a0fc9",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "text": {
+          "body": "No ya me confundiste"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzM1QkMyNThFRUFERTFFQUI1RUQ3QTRBMDRBN0Y2QQA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:40:31.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "a0f0b04e-b9b7-4420-b406-599125ec0c68",
+    "created_at": "2026-05-07T13:39:58.07936+00:00",
+    "payload": {
+      "id": "evt_69fc962d1be35132033eb56b",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:39:57.652Z",
+      "whatsappMessage": {
+        "id": "69fc962b3152a70e27b41ad0",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Gracias por su paciencia! 😊 El lunes 11 de mayo tengo disponibilidad para la micropigmentación de ojos a las 12:00 p. m. \n\nSi desea, puedo proceder a reservar esa hora. Solo necesitaré su nombre completo nuevamente y le proporcionaré los datos para el abono de $10.000. ¿Le gustaría confirmar para esa hora? 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJDM0M2MzZDNjVCN0Y5QjUyNjQA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:39:56.000Z",
+        "sendTime": "2026-05-07T13:39:56.000Z",
+        "createTime": "2026-05-07T13:39:55.341Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:39:57.488Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "0bf2c2da-0db5-4778-97e2-e4777786d2dd",
+    "created_at": "2026-05-07T13:39:57.831093+00:00",
+    "payload": {
+      "id": "evt_69fc962d1be35132033eb55f",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:39:57.483Z",
+      "whatsappMessage": {
+        "id": "69fc962b3152a70e27b41ad0",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Gracias por su paciencia! 😊 El lunes 11 de mayo tengo disponibilidad para la micropigmentación de ojos a las 12:00 p. m. \n\nSi desea, puedo proceder a reservar esa hora. Solo necesitaré su nombre completo nuevamente y le proporcionaré los datos para el abono de $10.000. ¿Le gustaría confirmar para esa hora? 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJDM0M2MzZDNjVCN0Y5QjUyNjQA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:39:56.000Z",
+        "createTime": "2026-05-07T13:39:55.341Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:39:56.453Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "f108e29a-ab88-445a-a394-68952e7a667f",
+    "created_at": "2026-05-07T13:39:55.464979+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "50ab9a77-9b63-43a2-9a30-8e072d06037b"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "07f5ecb8-c6ed-4409-8e7f-744b20cf46d2",
+    "created_at": "2026-05-07T13:39:51.137928+00:00",
+    "payload": {
+      "args": {
+        "date": "2026-05-11",
+        "service_name": "Micropigmentación de Ojos"
+      },
+      "phone": "56985261412"
+    },
+    "message": "Tool execution: check_availability"
+  },
+  {
+    "id": "f730a43e-2c8f-49aa-aaa5-ec06741318ac",
+    "created_at": "2026-05-07T13:39:47.607667+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "3f2f1681-e6c2-47e2-881a-610e2c47254c",
+    "created_at": "2026-05-07T13:39:20.867987+00:00",
+    "payload": {
+      "msgType": "sticker"
+    },
+    "message": "Ignored: Unsupported message type"
+  },
+  {
+    "id": "27d39a43-7a30-4fe7-87e1-2134bead2368",
+    "created_at": "2026-05-07T13:39:20.648447+00:00",
+    "payload": {
+      "id": "evt_69fc96081be35132033eade0",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:39:20.202Z",
+      "whatsappInboundMessage": {
+        "id": "69fc96086a7faa523207a56f",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "type": "sticker",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQ0YxNUJDODg2QzAzM0JBMjBBOTQwQTUzNzQwMDU0RQA=",
+        "wabaId": "1409736207183012",
+        "sticker": {
+          "id": "979986677868352",
+          "link": "https://api.ycloud.com/v2/whatsapp/media/download/979986677868352?sig=t%3D1778161157%2Cs%3Da90f75d3281c105bde36da9bd3b9fe2f8ac7e330a00eb51a617182157d78602a&payload=eyJpZCI6Ijk3OTk4NjY3Nzg2ODM1MiIsIndhYmFJZCI6IjE0MDk3MzYyMDcxODMwMTIiLCJ3YW1pZCI6IndhbWlkLkhCZ0xOVFk1T0RVeU5qRTBNVElWQWdBU0dDQkJRMFl4TlVKRE9EZzJRekF6TTBKQk1qQkJPVFF3UVRVek56UXdNRFUwUlFBPSIsIm1pbWVUeXBlIjoiaW1hZ2Uvd2VicCIsInNoYTI1NiI6InpMUWFtSEJEbG5hMERCTE1QYXlqQkZ3MXA0WXhPTkN2MGdYZFNHZVR4bTg9In0",
+          "sha256": "zLQamHBDlna0DBLMPayjBFw1p4YxONCv0gXdSGeTxm8=",
+          "animated": true,
+          "mime_type": "image/webp"
+        },
+        "sendTime": "2026-05-07T13:39:17.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "fa991366-bd55-45f6-99fe-629927367af2",
+    "created_at": "2026-05-07T13:39:15.310342+00:00",
+    "payload": {
+      "id": "evt_69fc96021be35132033eace7",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:39:14.924Z",
+      "whatsappInboundMessage": {
+        "id": "69fc96023f169d53ff6a02b7",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "text": {
+          "body": "El lunes es 11 no 9"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzc1RkIyRUI0RUU5QzUxRUNDN0Y5MzU2NDZGMURDMwA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:39:13.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "ffe89e95-3da4-4018-bfd3-4dca417cb4ac",
+    "created_at": "2026-05-07T13:38:51.745902+00:00",
+    "payload": {
+      "id": "evt_69fc95eb3f169d53ff69fe1c",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:38:51.267Z",
+      "whatsappMessage": {
+        "id": "69fc95d0a769457cde6e263e",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento la confusión anterior. La clínica está cerrada el sábado y el lunes 9 de mayo. Sin embargo, puedo buscar disponibilidad para el martes 10 de mayo a las 12:00 p. m. o en otro horario que le acomode.\n\n¿Le gustaría que verifique esa opción? 😊✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJCQjQ3M0UyODg0QTNFQzQzNDEA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:38:50.000Z",
+        "sendTime": "2026-05-07T13:38:25.000Z",
+        "createTime": "2026-05-07T13:38:24.747Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:38:27.242Z",
+        "deliverTime": "2026-05-07T13:38:26.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "28ec2785-dc90-4e5e-bf58-0b9f698da167",
+    "created_at": "2026-05-07T13:38:27.901968+00:00",
+    "payload": {
+      "id": "evt_69fc95d33f169d53ff69f961",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:38:27.234Z",
+      "whatsappMessage": {
+        "id": "69fc95d0a769457cde6e263e",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento la confusión anterior. La clínica está cerrada el sábado y el lunes 9 de mayo. Sin embargo, puedo buscar disponibilidad para el martes 10 de mayo a las 12:00 p. m. o en otro horario que le acomode.\n\n¿Le gustaría que verifique esa opción? 😊✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJCQjQ3M0UyODg0QTNFQzQzNDEA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:38:25.000Z",
+        "createTime": "2026-05-07T13:38:24.747Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:38:26.807Z",
+        "deliverTime": "2026-05-07T13:38:26.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "5d681c83-7647-4e96-acce-8bda4c4c7e33",
+    "created_at": "2026-05-07T13:38:27.768145+00:00",
+    "payload": {
+      "id": "evt_69fc95d26cb5c005e8949b18",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:38:26.804Z",
+      "whatsappMessage": {
+        "id": "69fc95d0a769457cde6e263e",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento la confusión anterior. La clínica está cerrada el sábado y el lunes 9 de mayo. Sin embargo, puedo buscar disponibilidad para el martes 10 de mayo a las 12:00 p. m. o en otro horario que le acomode.\n\n¿Le gustaría que verifique esa opción? 😊✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJCQjQ3M0UyODg0QTNFQzQzNDEA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:38:25.000Z",
+        "createTime": "2026-05-07T13:38:24.747Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:38:25.790Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "240d3f8c-e7f8-4fb7-ac90-8eac7c0e2be2",
+    "created_at": "2026-05-07T13:38:24.866041+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "5ad3081a-a397-43a7-846a-86e017d71a55"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "526fc1f1-25da-4a4c-a08b-5b257e4e91df",
+    "created_at": "2026-05-07T13:38:19.393182+00:00",
+    "payload": {
+      "args": {
+        "date": "2026-05-09",
+        "service_name": "Micropigmentación de Ojos"
+      },
+      "phone": "56985261412"
+    },
+    "message": "Tool execution: check_availability"
+  },
+  {
+    "id": "0d4178f5-d12b-4fee-b1fd-43bd3351f396",
+    "created_at": "2026-05-07T13:38:14.060891+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "340e7f52-27a0-4a0f-a701-b37787c86718",
+    "created_at": "2026-05-07T13:37:52.119951+00:00",
+    "payload": {
+      "id": "evt_69fc95af3f169d53ff69f2e4",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:37:51.385Z",
+      "whatsappMessage": {
+        "id": "69fc95aca769457cde6e23e1",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento la confusión, pero el lunes 9 de mayo la clínica está cerrada. Sin embargo, puedo ofrecerle disponibilidad para el martes o cualquier otro día que le acomode. \n\n¿Le gustaría agendar para el martes a las 12:00 p. m. o en otro horario? 😊✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJDRDY1RTA3RkM2RThFRTIwRUYA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:37:50.000Z",
+        "sendTime": "2026-05-07T13:37:50.000Z",
+        "createTime": "2026-05-07T13:37:49.001Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:37:51.009Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "15f39f51-099b-4510-a406-1bb876040578",
+    "created_at": "2026-05-07T13:37:51.353156+00:00",
+    "payload": {
+      "id": "evt_69fc95af3f169d53ff69f2d7",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:37:51.005Z",
+      "whatsappMessage": {
+        "id": "69fc95aca769457cde6e23e1",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "Lamento la confusión, pero el lunes 9 de mayo la clínica está cerrada. Sin embargo, puedo ofrecerle disponibilidad para el martes o cualquier otro día que le acomode. \n\n¿Le gustaría agendar para el martes a las 12:00 p. m. o en otro horario? 😊✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJDRDY1RTA3RkM2RThFRTIwRUYA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:37:50.000Z",
+        "createTime": "2026-05-07T13:37:49.001Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:37:49.944Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "160e6f07-e942-4f7d-9b9d-8f13c038f4b5",
+    "created_at": "2026-05-07T13:37:49.118043+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "4b8111d2-73ca-4788-8892-1e2d231aed84"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "52d968fa-4c20-4938-9095-15101d7edde0",
+    "created_at": "2026-05-07T13:37:42.671095+00:00",
+    "payload": {
+      "args": {
+        "date": "2026-05-09",
+        "service_name": "Micropigmentación de Ojos"
+      },
+      "phone": "56985261412"
+    },
+    "message": "Tool execution: check_availability"
+  },
+  {
+    "id": "86577518-3e8e-4e1b-beac-d898bfaefe26",
+    "created_at": "2026-05-07T13:37:42.254351+00:00",
+    "payload": {
+      "body": "Hola, Pucha, mire, no estoy muy conforme porque me sale una respuesta, me tira para el día sábado, me tira para el día viernes, yo quiero el día lunes a las 12. Confírmenme si va a poder ser ese día, por favor, el lunes a las 12. Sería el lunes 11 a las 12 del día. ¿Me confirma, por favor?\n"
+    },
+    "message": "Audio transcribed"
+  },
+  {
+    "id": "f34c6a94-9dd9-433d-a688-b104a8c46b26",
+    "created_at": "2026-05-07T13:37:36.866816+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "2dec38b2-24d2-45cf-bd6e-721882dc7709",
+    "created_at": "2026-05-07T13:37:35.080429+00:00",
+    "payload": {
+      "id": "evt_69fc959e3f169d53ff69f04c",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:37:34.713Z",
+      "whatsappInboundMessage": {
+        "id": "69fc959e1be35132033e9c29",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "type": "audio",
+        "audio": {
+          "id": "2133579067438516",
+          "link": "https://api.ycloud.com/v2/whatsapp/media/download/2133579067438516?sig=t%3D1778161052%2Cs%3D44c2e90a8b354e158427c110c80a39a26333704a156a9f2eb7412b2692ec1ba5&payload=eyJpZCI6IjIxMzM1NzkwNjc0Mzg1MTYiLCJ3YWJhSWQiOiIxNDA5NzM2MjA3MTgzMDEyIiwid2FtaWQiOiJ3YW1pZC5IQmdMTlRZNU9EVXlOakUwTVRJVkFnQVNHQ0JCUXpBd05VSTBOVEUzTVRSRVJUSkdRa1V3UWtVNFJFRTBPVU5ET1RZMFJBQT0iLCJtaW1lVHlwZSI6ImF1ZGlvL29nZzsgY29kZWNzPW9wdXMiLCJzaGEyNTYiOiJWQ00zeG83bkl4cUZyZW5RditjYzZmdTA2MERmWEdkZnVwN0ZSMjBLbHJrPSJ9",
+          "voice": true,
+          "sha256": "VCM3xo7nIxqFrenQv+cc6fu060DfXGdfup7FR20Klrk=",
+          "mime_type": "audio/ogg; codecs=opus"
+        },
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzAwNUI0NTE3MTRERTJGQkUwQkU4REE0OUNDOTY0RAA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:37:32.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "9597d737-4d67-4987-80a5-0827d8992dbb",
+    "created_at": "2026-05-07T13:37:04.786594+00:00",
+    "payload": {
+      "id": "evt_69fc9580fca36f3a65a3e7ee",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:37:04.377Z",
+      "whatsappInboundMessage": {
+        "id": "69fc95806cb5c005e8948ae4",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "text": {
+          "body": "Es para el para el día lunes"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQzlGREI5N0IzQjZDMzA4NTg2RjI0MTNGRTNCNzRFMQA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:37:02.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "da8839b3-2602-45c3-a961-614be45ba679",
+    "created_at": "2026-05-07T13:37:00.466741+00:00",
+    "payload": {
+      "id": "evt_69fc957c1be35132033e950f",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:37:00.080Z",
+      "whatsappMessage": {
+        "id": "69fc94a718167031b0671415",
+        "to": "+56995200677",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Tu cita ha sido confirmada! 🎉\n\n📅 **Fecha:** Martes, 12 de mayo  \n🕐 **Hora:** 10:00 AM  \n💆 **Servicio:** Microblading de cejas  \n\nTe esperamos para realzar tu belleza natural. Si necesitas algo más, no dudes en decírmelo. ¡Hasta pronto! 🌿✨"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5OTUyMDA2NzcVAgARGBJCNTlDNDdBMTlCOUZFN0FFRTcA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:36:59.000Z",
+        "sendTime": "2026-05-07T13:33:28.000Z",
+        "createTime": "2026-05-07T13:33:27.323Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:33:34.980Z",
+        "deliverTime": "2026-05-07T13:33:34.000Z",
+        "pricingType": "free_customer_service",
+        "pricingModel": "PMP",
+        "pricingCategory": "service",
+        "recipientUserId": "CL.2085446555352719"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "a3e0ea06-8fa5-4fec-880e-223006ad50e1",
+    "created_at": "2026-05-07T13:36:31.013522+00:00",
+    "payload": {
+      "id": "evt_69fc955e1be35132033e9035",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:36:30.524Z",
+      "whatsappMessage": {
+        "id": "69fc9557ec8c607c59adbb31",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Su cita ha sido agendada! 🎉\n\n📅 **Día:** Viernes, 8 de mayo  \n🕐 **Hora:** 12:00 p. m.  \n💆 **Servicio:** Micropigmentación de Ojos  \n\nPara confirmar la reserva, por favor realice un abono de $10.000. Aquí están los datos de la cuenta:\n\n- **Nombre:** Elizabeth Hernández  \n- **Rut:** 18.342.131-k  \n- **Banco:** Banco Estado  \n- **Tipo de cuenta:** Cuenta Vista/Chequera electrónica  \n- **Número de cuenta:** 80070001890  \n\nRecuerde que el abono se descontará del valor total del tratamiento. Quedo atenta a recibir la imagen del comprobante de transferencia para confirmar su cita. ¡Gracias! 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIyMUNEQjI0OTg5OUIyQkMyQUIA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:36:29.000Z",
+        "sendTime": "2026-05-07T13:36:24.000Z",
+        "createTime": "2026-05-07T13:36:23.280Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:36:26.317Z",
+        "deliverTime": "2026-05-07T13:36:25.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "bbd150d1-d7f6-444b-b8bd-ecb0c511aa2d",
+    "created_at": "2026-05-07T13:36:26.730414+00:00",
+    "payload": {
+      "id": "evt_69fc955a3f169d53ff69e4eb",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:36:26.311Z",
+      "whatsappMessage": {
+        "id": "69fc9557ec8c607c59adbb31",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Su cita ha sido agendada! 🎉\n\n📅 **Día:** Viernes, 8 de mayo  \n🕐 **Hora:** 12:00 p. m.  \n💆 **Servicio:** Micropigmentación de Ojos  \n\nPara confirmar la reserva, por favor realice un abono de $10.000. Aquí están los datos de la cuenta:\n\n- **Nombre:** Elizabeth Hernández  \n- **Rut:** 18.342.131-k  \n- **Banco:** Banco Estado  \n- **Tipo de cuenta:** Cuenta Vista/Chequera electrónica  \n- **Número de cuenta:** 80070001890  \n\nRecuerde que el abono se descontará del valor total del tratamiento. Quedo atenta a recibir la imagen del comprobante de transferencia para confirmar su cita. ¡Gracias! 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIyMUNEQjI0OTg5OUIyQkMyQUIA",
+        "status": "delivered",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:36:24.000Z",
+        "createTime": "2026-05-07T13:36:23.280Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:36:25.716Z",
+        "deliverTime": "2026-05-07T13:36:25.000Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "b87f3cb4-5d2a-44a0-8008-b038a9515467",
+    "created_at": "2026-05-07T13:36:26.152109+00:00",
+    "payload": {
+      "id": "evt_69fc9559fca36f3a65a3deb9",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:36:25.710Z",
+      "whatsappMessage": {
+        "id": "69fc9557ec8c607c59adbb31",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "¡Su cita ha sido agendada! 🎉\n\n📅 **Día:** Viernes, 8 de mayo  \n🕐 **Hora:** 12:00 p. m.  \n💆 **Servicio:** Micropigmentación de Ojos  \n\nPara confirmar la reserva, por favor realice un abono de $10.000. Aquí están los datos de la cuenta:\n\n- **Nombre:** Elizabeth Hernández  \n- **Rut:** 18.342.131-k  \n- **Banco:** Banco Estado  \n- **Tipo de cuenta:** Cuenta Vista/Chequera electrónica  \n- **Número de cuenta:** 80070001890  \n\nRecuerde que el abono se descontará del valor total del tratamiento. Quedo atenta a recibir la imagen del comprobante de transferencia para confirmar su cita. ¡Gracias! 🌟"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBIyMUNEQjI0OTg5OUIyQkMyQUIA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:36:24.000Z",
+        "createTime": "2026-05-07T13:36:23.280Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:36:24.458Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "408ef9fc-1d7c-41e3-b236-e33114de3d19",
+    "created_at": "2026-05-07T13:36:23.407296+00:00",
+    "payload": {
+      "to": "56985261412",
+      "tier": 1,
+      "model": "gpt-4o-mini",
+      "msgId": "f57b5dac-3df2-492b-b9e0-8c77faf2df79"
+    },
+    "message": "Citenly AI Response Sent"
+  },
+  {
+    "id": "6264ed2e-0b7a-45aa-b7c6-ca5f286a19c4",
+    "created_at": "2026-05-07T13:36:08.559154+00:00",
+    "payload": {
+      "args": {
+        "date": "2026-05-08",
+        "time": "12:00",
+        "patient_name": "Carolina zenteno flores",
+        "service_name": "Micropigmentación de Ojos"
+      },
+      "phone": "56985261412"
+    },
+    "message": "Tool execution: create_appointment"
+  },
+  {
+    "id": "67673fe7-b71e-45c1-ba6c-88e128863f47",
+    "created_at": "2026-05-07T13:36:03.478872+00:00",
+    "payload": {
+      "args": {
+        "date": "2026-05-08",
+        "service_name": "Micropigmentación de Ojos"
+      },
+      "phone": "56985261412"
+    },
+    "message": "Tool execution: check_availability"
+  },
+  {
+    "id": "778f9827-0dfe-47ca-8de4-4297fcbff36f",
+    "created_at": "2026-05-07T13:35:59.10108+00:00",
+    "payload": {
+      "args": {
+        "date": "2026-05-09",
+        "service_name": "Micropigmentación de Ojos"
+      },
+      "phone": "56985261412"
+    },
+    "message": "Tool execution: check_availability"
+  },
+  {
+    "id": "4d234e2d-b1a7-4891-9b5f-c58cad073398",
+    "created_at": "2026-05-07T13:35:52.914595+00:00",
+    "payload": {
+      "cost": 1,
+      "tier": 1,
+      "model": "gpt-4o-mini"
+    },
+    "message": "Hybrid Router: N1"
+  },
+  {
+    "id": "c01bb240-a321-4070-b581-4707bbf2246e",
+    "created_at": "2026-05-07T13:35:19.600481+00:00",
+    "payload": {
+      "id": "evt_69fc95163f169d53ff69d9c7",
+      "type": "whatsapp.inbound_message.received",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:35:18.660Z",
+      "whatsappInboundMessage": {
+        "id": "69fc95166a7faa5232077b12",
+        "to": "+56983275699",
+        "from": "+56985261412",
+        "text": {
+          "body": "Carolina zenteno flores"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgASGCBBQ0Y4REMzMUI1MjhENThERDZEMjIxODNDNDhBNUE0RQA=",
+        "wabaId": "1409736207183012",
+        "sendTime": "2026-05-07T13:35:17.000Z",
+        "fromUserId": "CL.2087722981791743",
+        "customerProfile": {
+          "name": "Carito"
+        }
+      }
+    },
+    "message": "Incoming webhook: whatsapp.inbound_message.received"
+  },
+  {
+    "id": "acadf590-4262-4d36-a215-a1c6ffe31a1b",
+    "created_at": "2026-05-07T13:34:55.021025+00:00",
+    "payload": {
+      "id": "evt_69fc94fe6cb5c005e8947464",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:34:54.638Z",
+      "whatsappMessage": {
+        "id": "69fc94fcec8c607c59adb56a",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "El valor normal de la micropigmentación de ojos es de $130.000, pero actualmente está en promoción por $79.000 durante mayo. ✨\n\nPor favor, indíqueme su nombre completo para proceder con la reserva para el lunes a las 12:00 p. m. y así también le daré los datos de la cuenta para el abono. 😊"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJEODVENzEzQjVGMjZCRkMxQ0IA",
+        "status": "read",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "readTime": "2026-05-07T13:34:53.000Z",
+        "sendTime": "2026-05-07T13:34:53.000Z",
+        "createTime": "2026-05-07T13:34:52.286Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:34:54.402Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  },
+  {
+    "id": "97a95065-7f84-40b0-8d79-caabfea4d2fd",
+    "created_at": "2026-05-07T13:34:54.757456+00:00",
+    "payload": {
+      "id": "evt_69fc94fe6cb5c005e8947457",
+      "type": "whatsapp.message.updated",
+      "apiVersion": "v2",
+      "createTime": "2026-05-07T13:34:54.398Z",
+      "whatsappMessage": {
+        "id": "69fc94fcec8c607c59adb56a",
+        "to": "+56985261412",
+        "from": "+56983275699",
+        "text": {
+          "body": "El valor normal de la micropigmentación de ojos es de $130.000, pero actualmente está en promoción por $79.000 durante mayo. ✨\n\nPor favor, indíqueme su nombre completo para proceder con la reserva para el lunes a las 12:00 p. m. y así también le daré los datos de la cuenta para el abono. 😊"
+        },
+        "type": "text",
+        "wamid": "wamid.HBgLNTY5ODUyNjE0MTIVAgARGBJEODVENzEzQjVGMjZCRkMxQ0IA",
+        "status": "sent",
+        "wabaId": "1409736207183012",
+        "bizType": "whatsapp",
+        "currency": "USD",
+        "sendTime": "2026-05-07T13:34:53.000Z",
+        "createTime": "2026-05-07T13:34:52.286Z",
+        "regionCode": "CL",
+        "totalPrice": 0,
+        "updateTime": "2026-05-07T13:34:53.255Z",
+        "pricingType": "free_entry_point",
+        "pricingModel": "PMP",
+        "pricingCategory": "referral_conversion",
+        "recipientUserId": "CL.2087722981791743"
+      }
+    },
+    "message": "Incoming webhook: whatsapp.message.updated"
+  }
+]

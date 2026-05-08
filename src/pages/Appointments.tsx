@@ -378,9 +378,7 @@ export default function Appointments() {
             }
 
             const [year, month, day] = dateStr.split('-').map(Number)
-            const [hours, rawMinutes] = timeStr.split(':').map(Number)
-            // Round to 00 if not one of the allowed values to ensure data integrity
-            const minutes = [0, 15, 30, 45].includes(rawMinutes) ? rawMinutes : 0
+            const [hours, minutes] = timeStr.split(':').map(Number)
 
             if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) {
                 toast.error('Formato de fecha u hora inválido')
@@ -1128,11 +1126,7 @@ export default function Appointments() {
                                     phone_number: event.resource.phone_number,
                                     service: event.resource.service,
                                     appointment_date: format(event.start, 'yyyy-MM-dd'),
-                                    appointment_time: (() => {
-                                        const m = event.start.getMinutes()
-                                        const roundedM = [0, 15, 30, 45].includes(m) ? m : 0
-                                        return `${format(event.start, 'HH')}:${roundedM.toString().padStart(2, '0')}`
-                                    })(),
+                                    appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
                                     box_id: event.resource.box_id || '',
@@ -1166,11 +1160,7 @@ export default function Appointments() {
                                     phone_number: event.resource.phone_number,
                                     service: event.resource.service,
                                     appointment_date: format(event.start, 'yyyy-MM-dd'),
-                                    appointment_time: (() => {
-                                        const m = event.start.getMinutes()
-                                        const roundedM = [0, 15, 30, 45].includes(m) ? m : 0
-                                        return `${format(event.start, 'HH')}:${roundedM.toString().padStart(2, '0')}`
-                                    })(),
+                                    appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
                                     box_id: event.resource.box_id || '',
@@ -1206,11 +1196,7 @@ export default function Appointments() {
                                     phone_number: event.resource.phone_number,
                                     service: event.resource.service,
                                     appointment_date: format(event.start, 'yyyy-MM-dd'),
-                                    appointment_time: (() => {
-                                        const m = event.start.getMinutes()
-                                        const roundedM = [0, 15, 30, 45].includes(m) ? m : 0
-                                        return `${format(event.start, 'HH')}:${roundedM.toString().padStart(2, '0')}`
-                                    })(),
+                                    appointment_time: format(event.start, 'HH:mm'),
                                     notes: event.resource.notes || '',
                                     professional_id: event.resource.professional_id || '',
                                     box_id: event.resource.box_id || '',
@@ -1353,11 +1339,7 @@ export default function Appointments() {
                                                                         phone_number: appointment.phone_number,
                                                                         service: appointment.service,
                                                                         appointment_date: format(d, 'yyyy-MM-dd'),
-                                                                        appointment_time: (() => {
-                                                                            const m = d.getMinutes()
-                                                                            const roundedM = [0, 15, 30, 45].includes(m) ? m : 0
-                                                                            return `${format(d, 'HH')}:${roundedM.toString().padStart(2, '0')}`
-                                                                        })(),
+                                                                        appointment_time: format(d, 'HH:mm'),
                                                                         notes: appointment.notes || '',
                                                                         professional_id: appointment.professional_id || '',
                                                                         box_id: (appointment as any).box_id || '',
@@ -1497,11 +1479,7 @@ export default function Appointments() {
                                                 phone_number: appointment.phone_number,
                                                 service: appointment.service,
                                                 appointment_date: format(d, 'yyyy-MM-dd'),
-                                                appointment_time: (() => {
-                                                    const m = d.getMinutes()
-                                                    const roundedM = [0, 15, 30, 45].includes(m) ? m : 0
-                                                    return `${format(d, 'HH')}:${roundedM.toString().padStart(2, '0')}`
-                                                })(),
+                                                appointment_time: format(d, 'HH:mm'),
                                                 notes: appointment.notes || '',
                                                 professional_id: appointment.professional_id || '',
                                                 box_id: (appointment as any).box_id || '',
@@ -2108,11 +2086,7 @@ export default function Appointments() {
                                                 phone_number: '',
                                                 service: '',
                                                 appointment_date: format(selectedSlot.start, 'yyyy-MM-dd'),
-                                                appointment_time: (() => {
-                                                    const m = selectedSlot.start.getMinutes()
-                                                    const roundedM = [0, 15, 30, 45].includes(m) ? m : 0
-                                                    return `${format(selectedSlot.start, 'HH')}:${roundedM.toString().padStart(2, '0')}`
-                                                })(),
+                                                appointment_time: format(selectedSlot.start, 'HH:mm'),
                                                 notes: '',
                                                 professional_id: '',
                                                 box_id: '',

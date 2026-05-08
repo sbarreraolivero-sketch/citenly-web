@@ -363,11 +363,23 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
         let slots: any[] = [];
         if (professionalId) {
-            const { data } = await sb.rpc("get_professional_available_slots", { p_clinic_id: clinicId, p_member_id: professionalId, p_duration: duration, p_interval: Math.min(duration, 60), p_timezone: timezone });
+            const { data } = await sb.rpc("get_professional_available_slots", { 
+                p_clinic_id: clinicId, 
+                p_date: targetDate,
+                p_member_id: professionalId, 
+                p_duration: duration, 
+                p_interval: Math.min(duration, 60), 
+                p_timezone: timezone 
+            });
             if (data) slots = data;
         }
         if (slots.length === 0) {
-            const { data } = await sb.rpc("get_available_slots", { p_clinic_id: clinicId, p_date: targetDate, p_duration: duration, p_interval: Math.min(duration, 60) });
+            const { data } = await sb.rpc("get_available_slots", { 
+                p_clinic_id: clinicId, 
+                p_date: targetDate, 
+                p_duration: duration, 
+                p_interval: Math.min(duration, 60) 
+            });
             slots = data || [];
         }
 
@@ -514,6 +526,32 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
     args.time = cleanTime; // Ensure args has the clean time
 
+    // --- IDENTITY PROTECTION: Prevent AI from using clinic owner's name for patient ---
+    try {
+        const { data: ownerMember } = await sb.from("clinic_members")
+            .select("first_name, last_name, phone_number")
+            .eq("clinic_id", clinicId)
+            .eq("role", "owner")
+            .limit(1)
+            .maybeSingle();
+
+        if (ownerMember) {
+            const ownerFullName = `${ownerMember.first_name} ${ownerMember.last_name}`.toLowerCase().trim();
+            const providedName = (args.patient_name || "").toLowerCase().trim();
+            
+            // If provided name matches owner BUT phone is different, it's likely an AI hallucination
+            if (providedName.includes(ownerFullName) || ownerFullName.includes(providedName)) {
+                if (normalizedPhone !== normalizePhone(ownerMember.phone_number || "")) {
+                    console.warn(`[createAppt] Hallucinated owner name detected: ${args.patient_name}`);
+                    return { success: false, message: "Error: No puedo registrar la cita con mi propio nombre. Por favor, ¿podrías darme TU nombre completo para agendar?" };
+                }
+            }
+        }
+    } catch (e) {
+        console.error("[createAppt] Identity check error:", e);
+    }
+    // ---------------------------------------------------------------------------------
+
     // Fix Timezone: Construct ISO string with offset
 
     const offset = getOffset(timezone, new Date(`${args.date}T12:00:00`));
@@ -540,11 +578,32 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     // Proactive availability check: Ensure the slot is actually free before inserting
-    const { available } = await checkAvail(sb, clinicId, normalizedPhone, args.date, args.service_name, timezone, profName);
-    if (!available) {
-        console.warn(`[createAppt] Slot no longer available: ${appointmentDateWithOffset}`);
-        return { success: false, message: "Lo siento, ese horario se acaba de ocupar. Por favor consulta la disponibilidad nuevamente para elegir otro momento." };
+    const availResult = await checkAvail(sb, clinicId, normalizedPhone, args.date, args.service_name, timezone, profName);
+    if (!availResult.available) {
+        console.warn(`[createAppt] Day no longer available: ${args.date}`);
+        return { success: false, message: "Lo siento, ese día ya no tiene disponibilidad. Por favor consulta la disponibilidad nuevamente para elegir otro momento." };
     }
+
+    // --- STRICT TIME VALIDATION ---
+    // Extract a normalized label for the requested time (e.g. "5:20 PM") to match RPC format
+    const requestedTimeLabel = (() => {
+        const h = parseInt(args.time.split(":")[0]);
+        const m = args.time.split(":")[1];
+        return `${h > 12 ? h - 12 : h}:${m} ${h >= 12 ? "PM" : "AM"}`;
+    })();
+
+    // Check if the exact requested time is in the available slots list
+    // We use a flexible match to ignore leading zeros (e.g. "05:00 PM" vs "5:00 PM")
+    const isTimeAvailable = availResult.slots.some(s => s.replace(/^0/, "") === requestedTimeLabel.replace(/^0/, ""));
+    
+    if (!isTimeAvailable) {
+        console.warn(`[createAppt] Specific slot ${requestedTimeLabel} not in available list:`, availResult.slots);
+        return { 
+            success: false, 
+            message: `Lo siento, el horario de las ${requestedTimeLabel} no está disponible o se acaba de ocupar. Los horarios disponibles para ese día son: ${availResult.slots.join(", ")}. ¿Te gustaría alguno de esos?` 
+        };
+    }
+    // -----------------------------
 
     // --- AUTOMATIC RESCHEDULE DETECTION ---
     // If patient already has an upcoming appointment for the SAME SERVICE, we update it instead of creating a duplicate.
@@ -1512,7 +1571,7 @@ Deno.serve(async (req) => {
 
                 const clinicTz = clinic.timezone || "America/Santiago";
                 const now = new Date();
-                const localTime = now.toLocaleString("es-CL", { timeZone: clinicTz, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                const localTime = now.toLocaleString("es-CL", { timeZone: clinicTz, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit" }) + ":00";
 
                 const daysMapES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
                 const getLocalDayName = (d: Date, tz: string) => {
@@ -1613,8 +1672,9 @@ ${lagRule}
 5. CONFÍA plenamente en el nombre del día y disponibilidad devueltos por 'check_availability'.
 6. El Horario General es tu guía; la herramienta es tu confirmación final.
 7. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
-8. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
-9. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
+8. REGLA ESTRICTA DE MINUTOS: Las citas SOLO se pueden agendar en intervalos de 15 minutos (:00, :15, :30, :45). NUNCA agendes en minutos como :08, :12, :23, etc. Si detectas que un horario disponible tiene minutos irregulares (por arrastre de citas antiguas), redondea siempre al intervalo de 15 minutos más cercano para proponerlo al paciente.
+9. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
+10. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
    a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
    b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO REAL. 
        - REGLA DE ORO: SIEMPRE obtén el nombre real del humano. 
