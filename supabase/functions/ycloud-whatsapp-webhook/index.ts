@@ -546,6 +546,44 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         return { success: false, message: "Lo siento, ese horario se acaba de ocupar. Por favor consulta la disponibilidad nuevamente para elegir otro momento." };
     }
 
+    // --- AUTOMATIC RESCHEDULE DETECTION ---
+    // If patient already has an upcoming appointment for the SAME SERVICE, we update it instead of creating a duplicate.
+    // This handles cases where the AI incorrectly uses create_appointment for a reschedule.
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: existingApptForReschedule } = await sb.from("appointments")
+        .select("id")
+        .eq("clinic_id", clinicId)
+        .eq("phone_number", normalizedPhone)
+        .eq("service", args.service_name)
+        .in("status", ["pending", "confirmed"])
+        .gte("appointment_date", twentyFourHoursAgo)
+        .limit(1)
+        .maybeSingle();
+
+    if (existingApptForReschedule) {
+        console.log(`[createAppt] Auto-rescheduling existing appointment ${existingApptForReschedule.id} for ${args.service_name}`);
+        const { data: updatedData, error: updateError } = await sb.from("appointments").update({
+            appointment_date: appointmentDateWithOffset,
+            status: "pending",
+            reminder_sent: false,
+            reminder_sent_at: null,
+            confirmation_received: false,
+            confirmation_response: null,
+            updated_at: new Date().toISOString()
+        }).eq("id", existingApptForReschedule.id).select().single();
+
+        if (!updateError && updatedData) {
+            const d = new Date(`${args.date}T${args.time}:00`);
+            const h = parseInt(args.time.split(":")[0]);
+            return {
+                success: true,
+                appointment_id: updatedData.id,
+                message: `¡Tu cita ha sido reprogramada!\n\n📅 ${d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" })}\n🕐 ${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}\n💆 ${args.service_name}`
+            };
+        }
+    }
+    // ---------------------------------------
+
     const { data, error } = await sb.from("appointments").insert({
         clinic_id: clinicId,
         patient_name: args.patient_name,
@@ -977,16 +1015,19 @@ const tagPatient = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
 const rescheduleAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { new_date: string; new_time: string }, timezone: string) => {
     try {
+        const normalizedPhone = normalizePhone(phone);
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
         // 1. Find the patient's nearest upcoming appointment
         const { data: appt, error: apptError } = await sb.from("appointments")
             .select("*")
             .eq("clinic_id", clinicId)
-            .eq("phone_number", phone)
+            .eq("phone_number", normalizedPhone)
             .in("status", ["pending", "confirmed"])
-            .gte("appointment_date", new Date().toISOString())
+            .gte("appointment_date", twentyFourHoursAgo)
             .order("appointment_date", { ascending: true })
             .limit(1)
-            .single();
+            .maybeSingle();
 
         if (apptError || !appt) {
             return { success: false, message: "No encontré una cita próxima para reagendar. ¿Podrías darme más detalles?" };
