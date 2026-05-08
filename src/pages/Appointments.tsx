@@ -558,7 +558,7 @@ export default function Appointments() {
                 phone_number: '000000000',
                 service: 'Bloqueo',
                 appointment_date: format(new Date(), 'yyyy-MM-dd'),
-                appointment_time: format(new Date(), 'HH:mm'),
+                appointment_time: format(new Date(), 'HH:00'),
                 notes: 'Horario bloqueado manualmente.',
                 professional_id: '',
                 box_id: '',
@@ -828,7 +828,7 @@ export default function Appointments() {
                                     phone_number: '',
                                     service: '',
                                     appointment_date: format(new Date(), 'yyyy-MM-dd'),
-                                    appointment_time: format(new Date(), 'HH:mm'),
+                                    appointment_time: format(new Date(), 'HH:00'),
                                     notes: '',
                                     professional_id: '',
                                     box_id: '',
@@ -1813,7 +1813,9 @@ export default function Appointments() {
                                                 onChange={(e) => {
                                                     const timeParts = newAppointment.appointment_time.split(':')
                                                     const currentH = parseInt(timeParts[0]) || 9
-                                                    const currentM = parseInt(timeParts[1]) || 0
+                                                    const rawM = timeParts[1] || '00'
+                                                    const currentM = ['00', '15', '30', '45'].includes(rawM) ? rawM : '00'
+                                                    
                                                     // Determine current AM/PM
                                                     const isPM = currentH >= 12
                                                     let newH = parseInt(e.target.value)
@@ -1823,7 +1825,7 @@ export default function Appointments() {
 
                                                     setNewAppointment({
                                                         ...newAppointment,
-                                                        appointment_time: `${newH.toString().padStart(2, '0')}:${currentM.toString().padStart(2, '0')}`
+                                                        appointment_time: `${newH.toString().padStart(2, '0')}:${currentM}`
                                                     })
                                                 }}
                                             >
@@ -1833,7 +1835,10 @@ export default function Appointments() {
                                             </select>
                                             <select
                                                 className="input-soft w-full appearance-none text-center !px-1 sm:!px-4"
-                                                value={newAppointment.appointment_time.split(':')[1] || '00'}
+                                                value={(() => {
+                                                    const m = newAppointment.appointment_time.split(':')[1] || '00'
+                                                    return ['00', '15', '30', '45'].includes(m) ? m : '00'
+                                                })()}
                                                 onChange={(e) => {
                                                     const currentH = parseInt(newAppointment.appointment_time.split(':')[0]) || 9
                                                     // Handle NaN minutes if initialization failed
@@ -1857,7 +1862,8 @@ export default function Appointments() {
                                                 onChange={(e) => {
                                                     const timeParts = newAppointment.appointment_time.split(':')
                                                     const currentH = parseInt(timeParts[0]) || 9
-                                                    const currentM = parseInt(timeParts[1]) || 0
+                                                    const rawM = timeParts[1] || '00'
+                                                    const currentM = ['00', '15', '30', '45'].includes(rawM) ? rawM : '00'
                                                     const newIsPM = e.target.value === 'PM'
                                                     let newH = currentH
 
@@ -1866,7 +1872,7 @@ export default function Appointments() {
 
                                                     setNewAppointment({
                                                         ...newAppointment,
-                                                        appointment_time: `${newH.toString().padStart(2, '0')}:${currentM.toString().padStart(2, '0')}`
+                                                        appointment_time: `${newH.toString().padStart(2, '0')}:${currentM}`
                                                     })
                                                 }}
                                             >
