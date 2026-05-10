@@ -1,5 +1,4 @@
-import { AISettingsTab } from "./settings/AISettingsTab";
-import { useState, useEffect } from 'react'
+import { AISettingsTab } from "./settings/AISettingsTab";import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Building2,
@@ -48,7 +47,6 @@ import { TagManager } from '@/components/settings/TagManager'
 import Team from './settings/Team'
 import MyProfile from './settings/MyProfile'
 import { TemplateSelector } from '@/components/settings/TemplateSelector'
-import { AITransactionHistory } from '@/components/dashboard/AITransactionHistory'
 
 // Get the Supabase URL for webhook display
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
@@ -1301,6 +1299,8 @@ export default function Settings() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    )}
 
                     {/* Clinic Settings */}
                     {activeTab === 'clinic' && (
@@ -2197,25 +2197,9 @@ export default function Settings() {
                                         "Si no tomas el sistema Radiance hoy, tu clínica seguirá perdiendo clientas que la competencia está capturando por responder más rápido."
                                     </p>
                                 </div>
-                                
-                                {/* AI Transaction History Section */}
-                                <div className="mt-8">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg shrink-0 border border-indigo-500/20">
-                                            <History className="w-5 h-5 text-white" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold text-primary-theme">Control de Créditos y Recargas</h2>
-                                            <p className="text-sm text-secondary-theme font-medium">Historial transparente de consumos y renovaciones mensuales.</p>
-                                        </div>
-                                    </div>
-                                    
-                                    {profile?.clinic_id && (
-                                        <AITransactionHistory clinicId={profile.clinic_id} />
-                                    )}
-                                </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
                     {/* Team Settings */}
                     {activeTab === 'team' && (
@@ -2500,7 +2484,8 @@ export default function Settings() {
                                     )}
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
                     {/* Integrations Settings */}
                     {activeTab === 'integrations' && (
@@ -3306,6 +3291,20 @@ export default function Settings() {
 
                     {/* AI Settings */}
                     {activeTab === 'ai' && (
+                        <div className="space-y-6">
+                            {/* Hybrid Router Header */}
+                            <div className="card-premium p-6 bg-secondary-theme/30 border-theme">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-violet-600 rounded-soft flex items-center justify-center shadow-lg shadow-violet-200">
+                                            <Zap className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-primary-theme">Citenly Hybrid Intelligence</h2>
+                                            <p className="text-sm text-primary-theme/50">Motor de ruteo inteligente de modelos AI</p>
+                                        </div>
+                                    </div>
+                    {activeTab === "ai" && (
                         <AISettingsTab 
                             aiAutoRespond={aiAutoRespond}
                             setAiAutoRespond={setAiAutoRespond}
@@ -3321,6 +3320,8 @@ export default function Settings() {
                             handleBuyCredits={handleBuyCredits}
                             profile={profile}
                         />
+                    )}    )
+}
                     )}
 
                     {/* Tags Settings */}
