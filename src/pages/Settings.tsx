@@ -2499,8 +2499,7 @@ export default function Settings() {
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* Integrations Settings */}
                     {activeTab === 'integrations' && (
