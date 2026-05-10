@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, History, Zap } from 'lucide-react'
 import { AITransactionHistory } from '@/components/dashboard/AITransactionHistory'
-import { useProfile } from '@/hooks/useProfile'
+import { useProfile } from '../hooks/useProfile'
 
 const AICreditsPage: React.FC = () => {
     const navigate = useNavigate()

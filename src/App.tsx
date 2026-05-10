@@ -1,4 +1,4 @@
-import AICreditsPage from "./pages/AICredits";import AICreditsPage from "./pages/AICredits";import { lazy, Suspense } from 'react'
+import AICreditsPage from "./pages/AICredits";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'

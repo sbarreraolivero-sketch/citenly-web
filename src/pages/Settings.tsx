@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
     Building2,
     Clock,
@@ -91,6 +91,7 @@ const dayNames: Record<string, string> = {
 const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export default function Settings() {
+    const navigate = useNavigate()
     const { user, profile, member, refreshClinics } = useAuth()
     const [searchParams] = useSearchParams()
 
