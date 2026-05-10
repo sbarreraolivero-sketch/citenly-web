@@ -78,7 +78,11 @@ const VERCEL_AI_GATEWAY = Deno.env.get("VERCEL_AI_GATEWAY_URL") || "https://api.
 // =============================================
 // Hybrid AI Architecture Constants & Helpers
 // =============================================
-const TIER_COSTS: Record<number, number> = { 1: 1, 2: 8, 3: 60 };
+const TIER_COSTS: Record<number, number> = {
+    1: 1,  // N1: Flash Mini
+    2: 8,  // N2: Standard
+    3: 60  // N3: Sovereign Pro
+};
 
 const classifyMessage = (body: string, isImage: boolean): number => {
     const lowerBody = body.toLowerCase();
@@ -1334,11 +1338,189 @@ const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true
             functions: useFns ? functions : undefined,
             function_call: useFns ? "auto" : undefined,
             temperature: 0.7,
-            max_tokens: 500
+            max_tokens: 800
         })
     });
     if (!r.ok) throw new Error(await r.text());
     return r.json();
+};
+
+const callOpenRouter = async (key: string, model: string, msgs: Msg[], useFns = true) => {
+    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${key}`,
+            "HTTP-Referer": "https://citenly.com",
+            "X-Title": "Citenly AI"
+        },
+        body: JSON.stringify({
+            model: model || "openai/gpt-4o-mini",
+            messages: msgs.map(m => ({
+                role: m.role,
+                content: m.content,
+                name: m.name,
+                function_call: m.function_call
+            })),
+            // MODERN TOOL CALLING
+            tools: useFns ? functions.map(f => ({
+                type: "function",
+                function: {
+                    name: f.name,
+                    description: f.description,
+                    parameters: f.parameters
+                }
+            })) : undefined,
+            tool_choice: useFns ? "auto" : undefined,
+            temperature: 0.7,
+            max_tokens: 800
+        })
+    });
+
+    if (!r.ok) throw new Error(`OpenRouter Error: ${await r.text()}`);
+    const data = await r.json();
+    
+    // Compatibility Layer: Transform Tool Calls back to Function Calls for the rest of the code
+    const message = data.choices[0].message;
+    let function_call = message.function_call;
+    
+    if (!function_call && message.tool_calls && message.tool_calls.length > 0) {
+        const firstTool = message.tool_calls[0];
+        if (firstTool.type === "function") {
+            function_call = {
+                name: firstTool.function.name,
+                arguments: firstTool.function.arguments
+            };
+        }
+    }
+
+    return {
+        choices: [{
+            message: {
+                content: message.content,
+                function_call: function_call
+            }
+        }]
+    };
+};
+
+const callGemini = async (key: string, model: string, msgs: Msg[], useFns = true) => {
+    const systemMsg = msgs.find(m => m.role === "system");
+    const chatMsgs = msgs.filter(m => m.role !== "system");
+
+    const contents = chatMsgs.map(m => {
+        // Special case for Gemini parts persistence (avoiding 400 errors)
+        if ((m as any).geminiParts) {
+            return {
+                role: m.role === "assistant" ? "model" : (m.role === "function" ? "function" : "user"),
+                parts: (m as any).geminiParts
+            };
+        }
+
+        let parts: any[] = [];
+        if (typeof m.content === "string") {
+            parts.push({ text: m.content });
+        }
+        
+        if (m.function_call) {
+            parts.push({
+                functionCall: {
+                    name: m.function_call.name,
+                    args: JSON.parse(m.function_call.arguments)
+                }
+            });
+        }
+        
+        if (m.role === "function") {
+            return {
+                role: "function",
+                parts: [{
+                    functionResponse: {
+                        name: m.name,
+                        response: { content: m.content }
+                    }
+                }]
+            };
+        }
+
+        return {
+            role: m.role === "assistant" ? "model" : "user",
+            parts
+        };
+    });
+
+    const body: any = {
+        contents,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+    };
+
+    if (systemMsg) body.system_instruction = { parts: [{ text: systemMsg.content }] };
+
+    if (useFns) {
+        body.tools = [{
+            function_declarations: functions.map(f => ({
+                name: f.name,
+                description: f.description,
+                parameters: f.parameters
+            }))
+        }];
+    }
+
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    if (!data.candidates || data.candidates.length === 0) throw new Error("Gemini returned no candidates");
+
+    const candidate = data.candidates[0];
+    const part = candidate.content.parts.find((p: any) => p.functionCall) || candidate.content.parts[0];
+    
+    // Transform Gemini response to OpenAI format for compatibility
+    return {
+        choices: [{
+            message: {
+                content: part.text || null,
+                function_call: part.functionCall ? {
+                    name: part.functionCall.name,
+                    arguments: JSON.stringify(part.functionCall.args)
+                } : undefined,
+                geminiParts: candidate.content.parts // NEW metadata for loop
+            }
+        }]
+    };
+};
+
+const callAI = async (model: string, msgs: Msg[], useFns = true): Promise<any> => {
+    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+
+    // Strategy 1: OpenRouter (Primary)
+    if (OPENROUTER_API_KEY) {
+        try {
+            let orModel = model;
+            if (model.includes("gpt-4o-mini")) orModel = "openai/gpt-4o-mini";
+            else if (model.includes("gpt-4o")) orModel = "openai/gpt-4o";
+            else if (model.includes("gemini-flash")) orModel = "google/gemini-flash-1.5";
+            else if (model.includes("gemini-pro")) orModel = "google/gemini-pro-1.5";
+            
+            return await callOpenRouter(OPENROUTER_API_KEY, orModel, msgs, useFns);
+        } catch (e) { 
+            console.error("OpenRouter Error:", e.message);
+            throw e;
+        }
+    }
+
+    // Strategy 2: Gemini Direct
+    if (model.startsWith("gemini") && GOOGLE_AI_API_KEY) {
+        try { return await callGemini(GOOGLE_AI_API_KEY, model, msgs, useFns); }
+        catch (e) { console.warn("Gemini direct failed:", e.message); }
+    }
+
+    throw new Error("No AI providers available or all failed.");
 };
 
 const sendWA = async (key: string, to: string, from: string, msg: string) => {
@@ -1788,14 +1970,28 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 console.log(`[Hybrid AI] Message classified as N${tier}. Cost: ${creditCost}x. Model: ${optimalModel}`);
                 await debugLog(sb, `Hybrid Router: N${tier}`, { tier, model: optimalModel, cost: creditCost });
 
-                let res = await callOpenAI(openaiApiKey, optimalModel, msgs);
+                let res = await callAI(optimalModel, msgs);
 
-                // Track usage (unified credits)
+                // Track usage (Ledger System)
+                const newBalance = (clinic.ai_credits_balance || 0) - creditCost;
                 await sb.from("clinic_settings")
-                    .update({ ai_credits_used: (clinic.ai_credits_used || 0) + creditCost })
+                    .update({ 
+                        ai_credits_used: (clinic.ai_credits_used || 0) + creditCost,
+                        ai_credits_balance: newBalance 
+                    })
                     .eq("id", clinic.id);
 
-                let assistant = res.choices[0].message;
+                // Record transaction for transparency
+                await sb.from("ai_credit_transactions").insert({
+                    clinic_id: clinic.id,
+                    type: 'usage',
+                    amount: -creditCost,
+                    balance_after: newBalance,
+                    description: `Consumo IA N${tier}: ${optimalModel}`,
+                    metadata: { tier, model: optimalModel, message_id: msgRowId }
+                });
+
+                const reply = assistant.content || "Error. ¿Puedes repetir?";
                 let funcResult: Record<string, unknown> | null = null;
                 let allFuncResults: Record<string, unknown>[] = [];
 
@@ -1807,11 +2003,16 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     allFuncResults.push({ name: assistant.function_call.name, result: funcResult });
 
                     msgs.push(
-                        { role: "assistant", content: "", function_call: assistant.function_call },
+                        { 
+                            role: "assistant", 
+                            content: assistant.content || "", 
+                            function_call: assistant.function_call,
+                            geminiParts: assistant.geminiParts // CRITICAL: preserve Gemini parts for next turn
+                        } as any,
                         { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
                     );
 
-                    res = await callOpenAI(openaiApiKey, optimalModel, msgs);
+                    res = await callAI(optimalModel, msgs);
                     assistant = res.choices[0].message;
                     maxCalls--;
                 }
@@ -1832,9 +2033,9 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 console.error("Async Process Error:", err);
                 await debugLog(sb, "Async Process Error (OpenAI/Otros)", { error: (err as Error).message, phone: from });
 
-                // Respond to user so it doesn't stay silent
+                // Respond to user
                 const fallbackReply = "Lo siento, tuve un problema técnico procesando tu mensaje. Por favor intenta consultarme en unos minutos.";
-                await saveMsg(sb, clinic.id, from, fallbackReply, "outbound", { error_fallback: true });
+                await saveMsg(sb, clinic.id, from, fallbackReply, "outbound", { error_fallback: true, error_message: err.message });
                 await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, fallbackReply).catch(e => console.error("Failed sending fallback WA:", e));
             }
         };

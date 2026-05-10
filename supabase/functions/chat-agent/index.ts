@@ -34,51 +34,72 @@ serve(async (req) => {
             throw new Error("Formato de mensajes inválido");
         }
 
-        if (!OPENAI_API_KEY) {
-            throw new Error("No se encontró OPENAI_API_KEY en las variables de entorno");
-        }
+        const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+        const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
         const type = variant === "sales" ? "sales" : "support";
-        const systemMessage = { role: "system", content: SYSTEM_PROMPTS[type] };
+        const systemPrompt = SYSTEM_PROMPTS[type];
 
-        // Formatear mensajes para OpenAI
-        const promptMessages = [
-            systemMessage,
-            ...messages.map((m: any) => ({
-                role: m.sender === "ai" ? "assistant" : "user",
-                content: m.text,
-            })),
-        ];
+        if (GOOGLE_AI_API_KEY) {
+            // Llamada a Gemini
+            const chatHistory = messages.map((m: any) => ({
+                role: m.sender === "ai" ? "model" : "user",
+                parts: [{ text: m.text }]
+            }));
 
-        // Llamada a OpenAI
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${OPENAI_API_KEY}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini", // O cambiar a gpt-4o si tienes acceso y quieres máxima calidad
-                messages: promptMessages,
-                temperature: 0.7,
-                max_tokens: 500,
-                stream: false, // Por ahora usaremos la respuesta completa para simplificar el frontend, pero puede ser true
-            }),
-        });
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GOOGLE_AI_API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: chatHistory,
+                    system_instruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+                }),
+            });
 
-        const data = await response.json();
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            const reply = data.candidates[0].content.parts[0].text;
 
-        if (data.error) {
-            console.error("OpenAI Error:", data.error);
-            throw new Error("Error interno al comunicarse con IA");
+            return new Response(JSON.stringify({ reply }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 200,
+            });
+        } else if (OPENAI_API_KEY) {
+            // Fallback a OpenAI si no hay Gemini key (aunque el usuario dijo que es global)
+            const promptMessages = [
+                { role: "system", content: systemPrompt },
+                ...messages.map((m: any) => ({
+                    role: m.sender === "ai" ? "assistant" : "user",
+                    content: m.text,
+                })),
+            ];
+
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${OPENAI_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    messages: promptMessages,
+                    temperature: 0.7,
+                    max_tokens: 500,
+                }),
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            const reply = data.choices[0].message.content;
+
+            return new Response(JSON.stringify({ reply }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 200,
+            });
+        } else {
+            throw new Error("No se encontró una API Key válida (Gemini o OpenAI)");
         }
-
-        const reply = data.choices[0].message.content;
-
-        return new Response(JSON.stringify({ reply }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-        });
 
     } catch (error: any) {
         console.error("Function Error:", error.message);
