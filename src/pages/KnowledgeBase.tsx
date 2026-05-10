@@ -22,13 +22,11 @@ import {
     Check,
     Info,
     Maximize2,
-    History
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { GuideBox } from '@/components/ui/GuideBox'
-import { AITransactionHistory } from '@/components/dashboard/AITransactionHistory'
 
 interface KnowledgeDocument {
     id: string
@@ -799,23 +797,6 @@ export default function KnowledgeBase() {
                     })}
                 </div>
             )}
-
-            {/* AI Transaction History Section */}
-            <div className="mt-12">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg shrink-0 border border-indigo-500/20">
-                        <History className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-primary-theme">Control de Créditos y Recargas</h2>
-                        <p className="text-sm text-secondary-theme font-medium">Historial transparente de consumos y renovaciones mensuales.</p>
-                    </div>
-                </div>
-                
-                {profile?.clinic_id && (
-                    <AITransactionHistory clinicId={profile.clinic_id} />
-                )}
-            </div>
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
