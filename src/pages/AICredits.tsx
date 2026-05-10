@@ -13,7 +13,7 @@ const AICreditsPage: React.FC = () => {
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <button 
-                    onClick={() => navigate('/settings?tab=ai')}
+                    onClick={() => navigate('/app/settings?tab=ai')}
                     className="flex items-center gap-2 text-primary-theme/50 hover:text-[#FF2E88] transition-colors mb-6 group"
                 >
                     <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />

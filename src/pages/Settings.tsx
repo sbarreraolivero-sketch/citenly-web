@@ -103,7 +103,7 @@ export default function Settings() {
         return allowedTabs.includes(tab.id)
     })
 
-    const [activeTab, setActiveTab] = useState('profile') // Default to profile for non-owners safety
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile')
     const [clinicName, setClinicName] = useState('Clínica Estética Demo')
     const [clinicAddress, setClinicAddress] = useState('')
     const [addressReferences, setAddressReferences] = useState('')
