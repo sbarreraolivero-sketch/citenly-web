@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import AICreditsPage from "./pages/AICredits";import AICreditsPage from "./pages/AICredits";import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
@@ -204,6 +204,7 @@ function MainRoutes() {
                             </SubscriptionGuard>
                         } />
                         <Route path="settings" element={<Settings />} />
+                        <Route path="ai-credits" element={<AICreditsPage />} />
                     </Route>
 
                     {/* Legacy redirects */}

@@ -3302,6 +3302,13 @@ export default function Settings() {
                                         <div>
                                             <h2 className="text-xl font-bold text-primary-theme">Citenly Hybrid Intelligence</h2>
                                             <p className="text-sm text-primary-theme/50">Motor de ruteo inteligente de modelos AI</p>
+                                            <button 
+                                                onClick={() => navigate('/app/ai-credits')}
+                                                className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#FF2E88] hover:bg-[#FF2E88]/5 px-3 py-1.5 rounded-full transition-all border border-[#FF2E88]/20 w-fit"
+                                            >
+                                                <History className="w-3 h-3" />
+                                                Ver Historial Detallado de Consumos
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
