@@ -2214,8 +2214,7 @@ export default function Settings() {
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* Team Settings */}
                     {activeTab === 'team' && (
