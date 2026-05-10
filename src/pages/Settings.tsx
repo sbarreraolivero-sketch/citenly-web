@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { AISettingsTab } from "./settings/AISettingsTab";import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Building2,
@@ -3304,243 +3304,23 @@ export default function Settings() {
 
 
                     {/* AI Settings */}
-                    {activeTab === 'ai' && (
-                        <div className="space-y-6">
-                            {/* Hybrid Router Header */}
-                            <div className="card-premium p-6 bg-secondary-theme/30 border-theme">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-violet-600 rounded-soft flex items-center justify-center shadow-lg shadow-violet-200">
-                                            <Zap className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold text-primary-theme">Citenly Hybrid Intelligence</h2>
-                                            <p className="text-sm text-primary-theme/50">Motor de ruteo inteligente de modelos AI</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-bold text-primary-theme/40 uppercase tracking-widest">Atención Automática</span>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={aiAutoRespond}
-                                                onChange={(e) => setAiAutoRespond(e.target.checked)}
-                                            />
-                                            <div className="w-11 h-6 bg-charcoal/20 dark:bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {[
-                                        { id: 'eco', title: 'Ahorro Máximo', desc: 'Fuerza al sistema a mantenerse en Nivel 1 (Ideal para bajo presupuesto).', icon: ToggleLeft, color: 'emerald' },
-                                        { id: 'auto', title: 'Híbrido Automático', desc: 'Enrutador inteligente (Recomendado). La opción más rentable.', icon: Sparkles, color: 'violet', badge: 'Popular' },
-                                        { id: 'pro', title: 'Máximo Poder', desc: 'Fuerza el uso de modelos Pro siempre (Máxima precisión).', icon: Zap, color: 'orange' },
-                                    ].map((strat) => (
-                                        <button
-                                            key={strat.id}
-                                            onClick={() => setAiStrategy(strat.id as any)}
-                                            className={cn(
-                                                "p-4 rounded-soft border-2 text-left transition-all relative group",
-                                                aiStrategy === strat.id 
-                                                    ? `bg-primary-theme border-[#FF2E88] shadow-md ring-1 ring-[#FF2E88]/50`
-                                                    : "bg-secondary-theme border-theme hover:border-[#FF2E88]/30"
-                                            )}
-                                        >
-                                            {strat.badge && (
-                                                <span className="absolute -top-2 -right-2 bg-violet-600 text-[10px] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
-                                                    {strat.badge}
-                                                </span>
-                                            )}
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className={cn(
-                                                    "w-8 h-8 rounded-full flex items-center justify-center",
-                                                    aiStrategy === strat.id ? `bg-${strat.color}-500 text-white` : "bg-secondary-theme text-primary-theme/40"
-                                                )}>
-                                                    <strat.icon className="w-4 h-4" />
-                                                </div>
-                                                <h3 className={cn("font-bold text-sm", aiStrategy === strat.id ? `text-[#FF2E88]` : "text-primary-theme")}>
-                                                    {strat.title}
-                                                </h3>
-                                            </div>
-                                            <p className="text-xs text-primary-theme/50 leading-relaxed">{strat.desc}</p>
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <div className="mt-8 pt-6 border-t border-violet-100 flex items-center gap-4">
-                                    <button
-                                        onClick={handleSaveAI}
-                                        disabled={savingAI}
-                                        className="btn-premium-primary bg-violet-600 hover:bg-violet-700 flex items-center gap-2 shadow-lg shadow-violet-200"
-                                    >
-                                        {savingAI ? (
-                                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                                        ) : (
-                                            <><Save className="w-4 h-4" /> Guardar Configuración</>
-                                        )}
-                                    </button>
-                                    {aiSaved && (
-                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
-                                            <CheckCircle2 className="w-4 h-4" />
-                                            ¡Configuración guardada!
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Unified Credits Dashboard */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="card-premium p-6 border-l-4 border-l-[#FF2E88] bg-secondary-theme/50">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-primary-50 rounded-soft flex items-center justify-center">
-                                                <CreditCard className="w-5 h-5 text-primary-600" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-primary-theme">Citenly Credits</h3>
-                                                <p className="text-xs text-primary-theme/50">Saldo unificado de inteligencia artificial</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-2xl font-bold text-primary-theme">{(aiCreditsLimit + aiCreditsExtra) - aiCreditsUsed}</span>
-                                            <p className="text-[10px] text-primary-theme/40 font-bold uppercase">Créditos Disponibles</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="h-3 bg-charcoal/5 rounded-full overflow-hidden">
-                                            <div
-                                                className={cn(
-                                                    "h-full transition-all duration-500",
-                                                    (aiCreditsUsed / (aiCreditsLimit + aiCreditsExtra)) > 0.9 ? "bg-rose-500" : "bg-primary-500"
-                                                )}
-                                                style={{ width: `${Math.min(100, (aiCreditsUsed / (aiCreditsLimit + aiCreditsExtra)) * 100)}%` }}
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-4 text-center">
-                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
-                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Plan</p>
-                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsLimit}</p>
-                                            </div>
-                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
-                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Cargas</p>
-                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsExtra}</p>
-                                            </div>
-                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
-                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Consumo</p>
-                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsUsed}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="card-premium p-6 bg-secondary-theme/50 flex flex-col justify-center">
-                                    <h3 className="text-sm font-bold text-primary-theme mb-4 uppercase tracking-wider text-primary-theme/40">Tabla de Costos Híbridos</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-soft border border-emerald-100">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-6 h-6 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">N1</span>
-                                                <span className="text-xs font-semibold text-emerald-800">Flash Mini - GPT-5.4</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-emerald-700">1x Créditos</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 bg-violet-50/50 rounded-soft border border-violet-100">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-6 h-6 bg-violet-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">N2</span>
-                                                <span className="text-xs font-semibold text-violet-800">Standard - GPT-5.4</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-violet-700">8x Créditos</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 bg-orange-50/50 rounded-soft border border-orange-100">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-6 h-6 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">N3</span>
-                                                <span className="text-xs font-semibold text-orange-800">Sovereign Pro - GPT-5</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-orange-700">60x Créditos</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Credit Recharge */}
-                            <div id="ai-credits-packs" className="card-premium p-6">
-                                <div className="flex items-center justify-between mb-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg">
-                                            <Plus className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-lg font-bold text-primary-theme">Recarga de Citenly Credits</h2>
-                                            <p className="text-sm text-primary-theme/50">Selecciona el paquete que mejor se adapte a tu clínica</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {(() => {
-                                        const currentPacks = paymentRegion === 'international' ? LS_CREDIT_PACKS : CREDIT_PACKS;
-                                        const currencySymbol = paymentRegion === 'international' ? 'US$' : '$';
-                                        
-                                        return Object.entries(currentPacks).map(([packId, pack]: [string, any]) => (
-                                            <div key={packId} className="group p-6 bg-secondary-theme border border-theme rounded-soft hover:shadow-premium-lg hover:border-[#FF2E88]/30 transition-all flex flex-col relative overflow-hidden">
-                                                <div className="mb-6">
-                                                    <h3 className="text-lg font-bold text-primary-theme">{pack.name}</h3>
-                                                    <div className="flex items-baseline gap-1 mt-2">
-                                                        <span className="text-3xl font-black text-violet-600">
-                                                            {currencySymbol}{pack.price.toLocaleString()}
-                                                        </span>
-                                                        <span className="text-[10px] text-primary-theme/40 font-bold uppercase tracking-widest">{paymentRegion === 'international' ? 'USD' : 'CLP'}</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex-grow space-y-3 mb-6">
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-primary-theme/70"><strong>{pack.credits.toLocaleString()}</strong> Citenly Credits</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-primary-theme/70">Uso Híbrido (N1, N2, N3)</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-primary-theme/70">Sin fecha de vencimiento</span>
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleBuyCredits(packId)}
-                                                    className="w-full py-3 bg-charcoal text-white rounded-soft font-bold text-sm hover:bg-violet-600 transition-colors shadow-sm group-hover:shadow-violet-200"
-                                                >
-                                                    Seleccionar Pack
-                                                </button>
-                                            </div>
-                                        ))
-                                    })()}
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center justify-center gap-4 py-4 border-t border-dashed border-theme">
-                                <button
-                                    onClick={saveIntegrations}
-                                    disabled={isSavingIntegrations}
-                                    className="btn-premium-primary flex items-center gap-2"
-                                >
-                                    {isSavingIntegrations ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    Guardar Configuración Citenly
-                                </button>
-                                {saveStatus === 'success' && (
-                                    <span className="text-emerald-600 text-sm font-bold animate-fade-in flex items-center gap-1">
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        Guardado
-                                    </span>
-                                )}
-                        {/* AI Transaction History Section */}
-                        <div className="mt-8 border-t border-theme pt-12">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg shrink-0 border border-indigo-500/20">
+                    {activeTab === "ai" && (
+                        <AISettingsTab 
+                            aiAutoRespond={aiAutoRespond}
+                            setAiAutoRespond={setAiAutoRespond}
+                            aiStrategy={aiStrategy}
+                            setAiStrategy={setAiStrategy}
+                            handleSaveAI={handleSaveAI}
+                            savingAI={savingAI}
+                            aiSaved={aiSaved}
+                            aiCreditsLimit={aiCreditsLimit}
+                            aiCreditsExtra={aiCreditsExtra}
+                            aiCreditsUsed={aiCreditsUsed}
+                            paymentRegion={paymentRegion}
+                            handleBuyCredits={handleBuyCredits}
+                            profile={profile}
+                        />
+                    )}                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg shrink-0 border border-indigo-500/20">
                                     <History className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
