@@ -2,11 +2,11 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, History, Zap } from 'lucide-react'
 import { AITransactionHistory } from '@/components/dashboard/AITransactionHistory'
-import { useProfile } from '../hooks/useProfile'
+import { useAuth } from '@/contexts/AuthContext'
 
 const AICreditsPage: React.FC = () => {
     const navigate = useNavigate()
-    const { profile } = useProfile()
+    const { profile } = useAuth()
 
     return (
         <div className="min-h-screen bg-primary-theme/5 p-4 md:p-8 animate-fade-in">
