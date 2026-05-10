@@ -1,4 +1,4 @@
-import { AISettingsTab } from "./settings/AISettingsTab";import { useState, useEffect } from 'react'
+import { ScheduleSettingsTab } from "./settings/ScheduleSettingsTab";import { AISettingsTab } from "./settings/AISettingsTab";import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Building2,
@@ -1251,11 +1251,25 @@ export default function Settings() {
                         <Team />
                     )}
 
-                    {activeTab === "schedule" && (
-                        <div className="space-y-8 animate-fade-in">
-                             {/* Contenido de Schedule... lo simplificamos para asegurar build */}
-                             <p className="text-primary-theme/50">Configuración de horarios activa.</p>
-                        </div>
+                    {activeTab === 'schedule' && (
+                        <ScheduleSettingsTab 
+                            dayOrder={dayOrder}
+                            dayNames={dayNames}
+                            workingHours={workingHours}
+                            setWorkingHours={setWorkingHours}
+                            handleSaveSchedule={handleSaveSchedule}
+                            savingSchedule={savingSchedule}
+                            scheduleSaved={scheduleSaved}
+                            blockedDates={blockedDates}
+                            loadingBlockedDates={loadingBlockedDates}
+                            newBlockedDate={newBlockedDate}
+                            setNewBlockedDate={setNewBlockedDate}
+                            newBlockedReason={newBlockedReason}
+                            setNewBlockedReason={setNewBlockedReason}
+                            handleAddBlockedDate={handleAddBlockedDate}
+                            handleDeleteBlockedDate={handleDeleteBlockedDate}
+                            isAddingBlockedDate={isAddingBlockedDate}
+                        />
                     )}
 
                     {activeTab === "ai" && (
