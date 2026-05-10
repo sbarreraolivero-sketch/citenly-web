@@ -10,7 +10,6 @@ import {
   Zap, 
   Calendar,
   Filter,
-  CheckCircle2
 } from 'lucide-react';
 
 interface Transaction {
