@@ -275,7 +275,9 @@ export default function Appointments() {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const patientData = (updatedApt as any).patient
                     if (window.confirm(`Cita completada con éxito.\n\nEl paciente ${patientData.name} está registrado en tu CRM.\n\n¿Deseas agregar sus notas y ficha clínica ahora?`)) {
-                        navigate(`/patients/${patientData.id}?action=new_record`)
+                        setFoundPatient(patientData)
+                        setSelectedAppointment(updatedApt || appointment)
+                        setShowRecordModal(true)
                     }
                 } else {
                     // If no patient found, prompt to create one

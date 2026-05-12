@@ -125,10 +125,10 @@ export function PatientSecurityHeader({
         <div className="mb-6 space-y-4 animate-fade-in relative z-[100]">
             {/* Main Primary Banner: Premium Style */}
             <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-0 text-primary-theme dark:text-white border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)]">
-                <div className="px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-8 relative">
+                <div className="px-4 sm:px-8 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-8 relative">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none" />
                     
-                    <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
+                    <div className="flex items-center gap-4 sm:gap-6 relative z-10 w-full md:w-auto">
                         {onBack && (
                             <button
                                 onClick={onBack}
@@ -200,8 +200,8 @@ export function PatientSecurityHeader({
                 </div>
 
                 {/* Context Bar: Professional, Convenio, Sucursal, BOX */}
-                <div className="bg-secondary-theme px-8 py-3.5 flex items-center justify-between border-t border-theme relative overflow-visible">
-                    <div className="flex items-center gap-8">
+                <div className="bg-secondary-theme px-4 sm:px-8 py-3.5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-theme relative overflow-visible">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-8 w-full md:w-auto">
                         {/* Profesional Dropdown */}
                         <div className="flex items-center gap-3 group relative">
                             <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-charcoal/60 group-hover:bg-primary-50 group-hover:text-primary-600 transition-all border border-black/5">
@@ -302,11 +302,11 @@ export function PatientSecurityHeader({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button className="px-5 py-2 bg-primary-theme border border-theme text-primary-theme text-[10px] font-black uppercase tracking-widest rounded-soft hover:bg-secondary-theme transition-all shadow-sm">
+                    <div className="flex items-center gap-3 w-full md:w-auto justify-end mt-2 md:mt-0">
+                        <button className="px-5 py-2 bg-primary-theme border border-theme text-primary-theme text-[10px] font-black uppercase tracking-widest rounded-soft hover:bg-secondary-theme transition-all shadow-sm flex-1 md:flex-none">
                              Agendar
                         </button>
-                        <button className="px-5 py-2 bg-[#FF2E88] text-white rounded-soft text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#FF2E88]/20 hover:bg-[#FF4DA6] transition-all">
+                        <button className="px-5 py-2 bg-[#FF2E88] text-white rounded-soft text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#FF2E88]/20 hover:bg-[#FF4DA6] transition-all flex-1 md:flex-none">
                              Historia
                         </button>
                     </div>

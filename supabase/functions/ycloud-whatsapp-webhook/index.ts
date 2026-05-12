@@ -115,7 +115,10 @@ const getOptimalModel = (tier: number, strategy: string = 'auto'): string => {
 // =============================================
 // OpenAI Function Definitions (Agent Tools)
 // =============================================
-const functions = [
+const getFunctions = (ownerEmail?: string) => {
+    const isElizabeth = ownerEmail?.toLowerCase() === 'elizabeth.zibaaa@gmail.com';
+    
+    return [
     {
         name: "check_availability",
         description: "Verifica disponibilidad para NUEVAS citas. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). NO la uses para confirmar citas ya existentes.",
@@ -143,7 +146,9 @@ const functions = [
     },
     {
         name: "confirm_appointment",
-        description: "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy.",
+        description: isElizabeth 
+            ? "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. CRÍTICO Y ESTRICTO PARA CONFIRMAR: Úsala para confirmar SÓLO si el usuario ha enviado o adjuntado una IMAGEN del comprobante de transferencia. Si el usuario dice que ya pagó pero NO ha enviado una imagen, EXIGE la imagen antes de usar esta función con 'yes'. Úsala con 'no' si el usuario responde a un recordatorio indicando que no podrá asistir."
+            : "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy. Úsala con 'no' si el usuario indica que no podrá asistir.",
         parameters: { type: "object", properties: { response: { type: "string", enum: ["yes", "no"] } }, required: ["response"] }
     },
     {
@@ -200,7 +205,8 @@ const functions = [
             required: ["tag_name"]
         }
     }
-];
+    ];
+};
 
 // =============================================
 // Supabase & Helper Functions
@@ -718,7 +724,7 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
         .select("*")
         .eq("clinic_id", clinicId)
         .eq("phone_number", normalizedPhone)
-        .eq("status", "pending")
+        .in("status", ["pending", "confirmed"])
         .gte("appointment_date", twentyFourHoursAgo)
         .order("appointment_date", { ascending: true })
         .limit(1)
@@ -1327,7 +1333,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
     }
 };
 
-const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true) => {
+const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true, fns: any[] = []) => {
     const baseUrl = VERCEL_AI_GATEWAY || "https://api.openai.com/v1";
     const r = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
@@ -1335,7 +1341,7 @@ const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true
         body: JSON.stringify({
             model: model || "gpt-4o-mini",
             messages: msgs,
-            functions: useFns ? functions : undefined,
+            functions: useFns ? fns : undefined,
             function_call: useFns ? "auto" : undefined,
             temperature: 0.7,
             max_tokens: 800
@@ -1345,7 +1351,7 @@ const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true
     return r.json();
 };
 
-const callOpenRouter = async (key: string, model: string, msgs: Msg[], useFns = true) => {
+const callOpenRouter = async (key: string, model: string, msgs: Msg[], useFns = true, fns: any[] = []) => {
     const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -1363,7 +1369,7 @@ const callOpenRouter = async (key: string, model: string, msgs: Msg[], useFns = 
                 function_call: m.function_call
             })),
             // MODERN TOOL CALLING
-            tools: useFns ? functions.map(f => ({
+            tools: useFns ? fns.map(f => ({
                 type: "function",
                 function: {
                     name: f.name,
@@ -1404,7 +1410,7 @@ const callOpenRouter = async (key: string, model: string, msgs: Msg[], useFns = 
     };
 };
 
-const callGemini = async (key: string, model: string, msgs: Msg[], useFns = true) => {
+const callGemini = async (key: string, model: string, msgs: Msg[], useFns = true, fns: any[] = []) => {
     const systemMsg = msgs.find(m => m.role === "system");
     const chatMsgs = msgs.filter(m => m.role !== "system");
 
@@ -1458,7 +1464,7 @@ const callGemini = async (key: string, model: string, msgs: Msg[], useFns = true
 
     if (useFns) {
         body.tools = [{
-            function_declarations: functions.map(f => ({
+            function_declarations: fns.map(f => ({
                 name: f.name,
                 description: f.description,
                 parameters: f.parameters
@@ -1494,7 +1500,7 @@ const callGemini = async (key: string, model: string, msgs: Msg[], useFns = true
     };
 };
 
-const callAI = async (model: string, msgs: Msg[], useFns = true): Promise<any> => {
+const callAI = async (model: string, msgs: Msg[], useFns = true, customFunctions: any[] = []): Promise<any> => {
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 
@@ -1507,7 +1513,7 @@ const callAI = async (model: string, msgs: Msg[], useFns = true): Promise<any> =
             else if (model.includes("gemini-flash")) orModel = "google/gemini-flash-1.5";
             else if (model.includes("gemini-pro")) orModel = "google/gemini-pro-1.5";
             
-            return await callOpenRouter(OPENROUTER_API_KEY, orModel, msgs, useFns);
+            return await callOpenRouter(OPENROUTER_API_KEY, orModel, msgs, useFns, customFunctions);
         } catch (e) { 
             console.error("OpenRouter Error:", e.message);
             throw e;
@@ -1516,7 +1522,7 @@ const callAI = async (model: string, msgs: Msg[], useFns = true): Promise<any> =
 
     // Strategy 2: Gemini Direct
     if (model.startsWith("gemini") && GOOGLE_AI_API_KEY) {
-        try { return await callGemini(GOOGLE_AI_API_KEY, model, msgs, useFns); }
+        try { return await callGemini(GOOGLE_AI_API_KEY, model, msgs, useFns, customFunctions); }
         catch (e) { console.warn("Gemini direct failed:", e.message); }
     }
 
@@ -1970,7 +1976,21 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 console.log(`[Hybrid AI] Message classified as N${tier}. Cost: ${creditCost}x. Model: ${optimalModel}`);
                 await debugLog(sb, `Hybrid Router: N${tier}`, { tier, model: optimalModel, cost: creditCost });
 
-                let res = await callAI(optimalModel, msgs);
+                // Try to get owner email for dynamic functions scoping
+                let ownerEmail = undefined;
+                try {
+                    const { data: ownerMember } = await sb.from("clinic_members").select("user_id").eq("clinic_id", clinic.id).eq("role", "owner").limit(1).maybeSingle();
+                    if (ownerMember?.user_id) {
+                        const { data: ownerUser } = await sb.from("users").select("email").eq("id", ownerMember.user_id).limit(1).maybeSingle();
+                        if (ownerUser?.email) ownerEmail = ownerUser.email;
+                    }
+                } catch (e) {
+                    console.error("Error fetching owner email:", e);
+                }
+                
+                const dynamicFns = getFunctions(ownerEmail);
+
+                let res = await callAI(optimalModel, msgs, true, dynamicFns);
 
                 // Track usage (Ledger System)
                 const newBalance = (clinic.ai_credits_balance || 0) - creditCost;
@@ -2012,7 +2032,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                         { role: "function", name: assistant.function_call.name, content: JSON.stringify(funcResult) }
                     );
 
-                    res = await callAI(optimalModel, msgs);
+                    res = await callAI(optimalModel, msgs, true, dynamicFns);
                     assistant = res.choices[0].message;
                     maxCalls--;
                 }

@@ -434,7 +434,7 @@ export function PatientDetails({ patient, onBack, onUpdate }: PatientDetailsProp
 
             {/* Tabs */}
             <div className="border-b border-silk-beige">
-                <div className="flex gap-6">
+                <div className="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar no-scrollbar whitespace-nowrap pb-1">
                     <button
                         onClick={() => setActiveTab('info')}
                         className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'info'
