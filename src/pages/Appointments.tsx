@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { format } from 'date-fns'
-import { useNavigate } from 'react-router-dom'
 import {
     Calendar,
     Clock,
@@ -73,7 +72,6 @@ const tabs = [
 export default function Appointments() {
     const { user, profile, session, member } = useAuth()
     const isProfessional = member?.role === 'professional'
-    const navigate = useNavigate()
     const [appointments, setAppointments] = useState<Appointment[]>([])
     const [blockedDates, setBlockedDates] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
