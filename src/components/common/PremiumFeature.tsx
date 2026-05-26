@@ -6,23 +6,20 @@ import { Link } from 'react-router-dom'
 interface PremiumFeatureProps {
     children: ReactNode
     fallback?: ReactNode
-    requiredPlan?: 'radiance' | 'prestige'
+    requiredPlan?: 'starter' | 'pro' | 'enterprise'
     showLock?: boolean
 }
 
-export function PremiumFeature({ children, fallback, requiredPlan = 'radiance', showLock = false }: PremiumFeatureProps) {
+export function PremiumFeature({ children, fallback, requiredPlan = 'starter', showLock = false }: PremiumFeatureProps) {
     const { subscription } = useAuth()
 
-    const plans = ['essence', 'radiance', 'prestige']
-    const currentPlan = subscription?.plan || 'essence'
+    const plans = ['core', 'starter', 'pro', 'enterprise']
+    const currentPlan = subscription?.plan || 'core'
 
-    // Check if current plan meets requirement
-    // Simple hierarchy check: prestige > radiance > essence
     const meetsRequirement = () => {
         if (!subscription) return false
         if (subscription.status !== 'active' && subscription.status !== 'trial') return false
 
-        // If trial, assume access to everything (or prestige level)
         if (subscription.status === 'trial') return true
 
         const currentIndex = plans.indexOf(currentPlan)

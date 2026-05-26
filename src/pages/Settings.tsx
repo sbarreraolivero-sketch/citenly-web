@@ -1012,7 +1012,7 @@ export default function Settings() {
             } else {
                 await redirectToCheckout({
                     clinicId: profile.clinic_id,
-                    planId: planId as "essence" | "radiance" | "prestige",
+                    planId: planId as "core" | "starter" | "pro" | "enterprise",
                     email: user.email,
                 })
             }
@@ -1188,6 +1188,25 @@ export default function Settings() {
 
     return (
         <div className="animate-fade-in relative min-h-[calc(100vh-7rem)] p-4 md:p-8">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[20px] px-5 py-4 sm:px-8 sm:py-5 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-6 flex-shrink-0">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+                <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 bg-white dark:bg-black rounded-xl flex items-center justify-center shadow-lg border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
+                            <ShieldCheck className="w-5 h-5 text-[#FF2E88]" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2.5">
+                                <h1 className="text-lg sm:text-xl font-black text-[#0B0B0F] dark:text-white tracking-tight">Ajustes</h1>
+                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20 whitespace-nowrap">Configuración</span>
+                            </div>
+                            <p className="text-[#0B0B0F]/60 dark:text-white/60 text-xs font-medium leading-tight hidden sm:block">Personaliza tu clínica, equipo, integraciones y plan de suscripción</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="flex flex-col md:flex-row gap-6 md:gap-8">
 
                 {/* Mobile Content Header (Back Button) */}
@@ -1953,9 +1972,10 @@ export default function Settings() {
                                             <div className="flex items-center gap-2 mt-2">
                                                 <Sparkles className="w-4 h-4 text-primary-500" />
                                                 <p className="text-sm font-medium text-primary-theme/70">
-                                                    {subscription?.plan === 'essence' ? 'Control Esencial y Automatización' :
-                                                     subscription?.plan === 'radiance' ? 'Escalamiento Profesional y Retención' :
-                                                     subscription?.plan === 'prestige' ? 'Potencia Empresarial Multi-Sede' :
+                                                    {subscription?.plan === 'core' ? 'Gestión completa sin IA conversacional' :
+                                                     subscription?.plan === 'starter' ? 'Agente IA WhatsApp para independientes' :
+                                                     subscription?.plan === 'pro' ? 'IA completa, recordatorios y citas ilimitadas' :
+                                                     subscription?.plan === 'enterprise' ? 'Infraestructura completa para múltiples sedes' :
                                                      'Prueba gratuita - 7 días de acceso total'}
                                                 </p>
                                             </div>
@@ -2070,18 +2090,18 @@ export default function Settings() {
                                         const currencySymbol = paymentRegion === 'international' ? 'US$' : '$'
                                         const currencyCode = paymentRegion === 'international' ? 'USD' : 'CLP'
                                         const isCurrentPlan = planId === subscription?.plan
-                                        const isRadiance = planId === 'radiance'
+                                        const isPro = planId === 'pro'
 
                                         return (
-                                            <div 
+                                            <div
                                                 key={planId.toString()}
                                                 className={cn(
                                                     "relative flex flex-col p-8 rounded-[2rem] border-2 transition-all duration-500",
                                                     isCurrentPlan ? "border-[#FF2E88] bg-[#FF2E88]/5 ring-8 ring-[#FF2E88]/5" : "border-theme bg-secondary-theme hover:border-[#FF2E88]/30 hover:shadow-2xl hover:-translate-y-1",
-                                                    isRadiance && !isCurrentPlan && "md:scale-105 shadow-[0_20px_50px_rgba(255,46,136,0.15)] border-[#FF2E88] z-10 bg-white dark:bg-charcoal"
+                                                    isPro && !isCurrentPlan && "md:scale-105 shadow-[0_20px_50px_rgba(255,46,136,0.15)] border-[#FF2E88] z-10 bg-white dark:bg-charcoal"
                                                 )}
                                             >
-                                                {isRadiance && (
+                                                {isPro && (
                                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white text-[11px] font-black px-6 py-2 rounded-full shadow-xl uppercase tracking-[0.2em] whitespace-nowrap z-20">
                                                         Más Popular
                                                     </div>
@@ -2090,13 +2110,15 @@ export default function Settings() {
                                                 <div className="mb-8">
                                                     <div className={cn(
                                                         "w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4",
-                                                        planId === 'essence' ? "bg-emerald-100 text-emerald-700" :
-                                                        planId === 'radiance' ? "bg-purple-100 text-purple-700" :
+                                                        planId === 'core' ? "bg-slate-100 text-slate-700" :
+                                                        planId === 'starter' ? "bg-emerald-100 text-emerald-700" :
+                                                        planId === 'pro' ? "bg-purple-100 text-purple-700" :
                                                         "bg-amber-100 text-amber-700"
                                                     )}>
-                                                        {planId === 'essence' ? 'Para clínicas que quieren dejar de perder clientas' :
-                                                         planId === 'radiance' ? 'Para clínicas que quieren crecer en serio' :
-                                                         'Para clínicas que quieren operar como negocio serio'}
+                                                        {planId === 'core' ? 'Gestión sin IA conversacional' :
+                                                         planId === 'starter' ? 'Para esteticistas independientes' :
+                                                         planId === 'pro' ? 'Para clínicas en pleno crecimiento' :
+                                                         'Para redes de salones y multi-sucursal'}
                                                     </div>
                                                     <h3 className="text-3xl font-black text-primary-theme uppercase tracking-tighter mb-1">{plan.name}</h3>
                                                     <p className="text-sm font-bold text-[#FF2E88] leading-tight mb-4">{plan.promise}</p>
@@ -2146,8 +2168,8 @@ export default function Settings() {
                                                         "w-full py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95",
                                                         isCurrentPlan
                                                             ? "bg-secondary-theme text-primary-theme/20 cursor-not-allowed border border-theme" 
-                                                            : isRadiance 
-                                                                ? "bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white hover:opacity-90" 
+                                                            : isPro
+                                                                ? "bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white hover:opacity-90"
                                                                 : "bg-primary-theme text-primary-theme border-2 border-theme hover:bg-secondary-theme"
                                                     )}
                                                 >

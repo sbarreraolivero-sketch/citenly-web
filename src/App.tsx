@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react'
-import AICreditsPage from "./pages/AICredits";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
@@ -21,6 +20,9 @@ const Finance = lazy(() => import('./pages/Finance'))
 const RetentionEngine = lazy(() => import('./pages/RetentionEngine'))
 const Loyalty = lazy(() => import('./pages/Loyalty'))
 const Templates = lazy(() => import('./pages/Templates'))
+const AICreditsPage = lazy(() => import('./pages/AICredits'))
+const Reminders = lazy(() => import('./pages/Reminders'))
+const Demo = lazy(() => import('./pages/Demo'))
 const Pricing = lazy(() => import('./pages/Pricing'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -42,6 +44,7 @@ const AdminSettings = lazy(() => import('./pages/hq/AdminSettings'))
 const AdminLogin = lazy(() => import('./pages/hq/AdminLogin'))
 const AdminCalendar = lazy(() => import('./pages/hq/AdminCalendar'))
 const AdminMessages = lazy(() => import('./pages/hq/AdminMessages'))
+const AdminCRM = lazy(() => import('./pages/hq/AdminCRM'))
 
 // Contexts & Guards
 import { AuthProvider } from './contexts/AuthContext'
@@ -72,6 +75,7 @@ function HQRoutes() {
                             <Route path="calendar" element={<AdminCalendar />} />
                             <Route path="messages" element={<AdminMessages />} />
                             <Route path="clinics" element={<AdminClinics />} />
+                            <Route path="crm" element={<AdminCRM />} />
                             <Route path="settings" element={<AdminSettings />} />
                         </Route>
                     </Route>
@@ -89,6 +93,7 @@ function MainRoutes() {
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/asesoria-gratis" element={<FreeConsultation />} />
+                    <Route path="/demo" element={<Demo />} />
                     <Route path="/diagnostico" element={<DiagnosticLanding />} />
                     <Route path="/r/:code" element={<ReferralRedirect />} />
                     <Route path="/" element={<Landing />} />
@@ -202,6 +207,11 @@ function MainRoutes() {
                                 <RoleGuard allowedRoles={['owner', 'admin']}>
                                     <Templates />
                                 </RoleGuard>
+                            </SubscriptionGuard>
+                        } />
+                        <Route path="reminders" element={
+                            <SubscriptionGuard>
+                                <Reminders />
                             </SubscriptionGuard>
                         } />
                         <Route path="settings" element={<Settings />} />

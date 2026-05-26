@@ -324,7 +324,7 @@ const RetentionEngine = () => {
                             <Sparkles className="w-4 h-4 text-emerald-500" />
                         </div>
                     </div>
-                    <PremiumFeature requiredPlan="radiance" showLock>
+                    <PremiumFeature requiredPlan="pro" showLock>
                         <p className="text-2xl font-bold text-emerald-500">
                             {formatCurrency(stats?.revenue_recovered_month || 0)}
                         </p>
@@ -786,7 +786,7 @@ const RetentionEngine = () => {
             {/* Tab: AI Actions */}
             {
                 activeTab === 'actions' && (
-                    <PremiumFeature requiredPlan="radiance" showLock>
+                    <PremiumFeature requiredPlan="pro" showLock>
                         <div className="space-y-6">
                             {/* Header & Configuration */}
                             <div className="flex items-center justify-between">
@@ -971,7 +971,7 @@ const RetentionEngine = () => {
                         </div>
                         <div>
                             <p className="text-xs text-primary-theme/50 uppercase tracking-wider font-medium">Ingresos Recuperados por Citenly AI</p>
-                            <PremiumFeature requiredPlan="radiance" fallback={
+                            <PremiumFeature requiredPlan="pro" fallback={
                                 <p className="text-xl font-bold text-primary-theme/30">Disponible en Radiance+</p>
                             }>
                                 <p className="text-2xl font-bold text-primary-theme">{formatCurrency(stats?.revenue_recovered_month || 0)}</p>

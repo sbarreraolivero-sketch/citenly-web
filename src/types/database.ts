@@ -347,7 +347,7 @@ export interface Database {
                 Row: {
                     id: string
                     clinic_id: string | null
-                    plan: 'essence' | 'radiance' | 'prestige' | 'trial'
+                    plan: 'core' | 'starter' | 'pro' | 'enterprise' | 'trial'
                     status: 'active' | 'cancelled' | 'past_due' | 'trial'
                     mercadopago_subscription_id: string | null
                     current_period_start: string | null
@@ -361,7 +361,7 @@ export interface Database {
                 Insert: {
                     id?: string
                     clinic_id?: string | null
-                    plan: 'essence' | 'radiance' | 'prestige' | 'trial'
+                    plan: 'core' | 'starter' | 'pro' | 'enterprise' | 'trial'
                     status?: 'active' | 'cancelled' | 'past_due' | 'trial'
                     mercadopago_subscription_id?: string | null
                     current_period_start?: string | null
@@ -375,7 +375,7 @@ export interface Database {
                 Update: {
                     id?: string
                     clinic_id?: string | null
-                    plan?: 'essence' | 'radiance' | 'prestige' | 'trial'
+                    plan?: 'core' | 'starter' | 'pro' | 'enterprise' | 'trial'
                     status?: 'active' | 'cancelled' | 'past_due' | 'trial'
                     mercadopago_subscription_id?: string | null
                     current_period_start?: string | null

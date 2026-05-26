@@ -1,83 +1,110 @@
 import { useState } from 'react'
-import { Check, Sparkles, Zap, Crown, ArrowRight } from 'lucide-react'
+import { Check, Sparkles, Zap, Crown, ArrowRight, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const plans = [
     {
-        id: 'essence',
-        name: 'Plan Essence',
-        tagline: 'Ideal para Profesionales Independientes y Centros de Estética Pequeños.',
-        price: 99,
-        period: '/mes',
-        description: 'Lo necesario para gestionar prospectos, pacientes y reservas con IA.',
+        id: 'core',
+        name: 'Core',
+        tagline: 'Gestión completa sin IA conversacional.',
+        promise: 'Todo lo que necesitas para administrar tu clínica estética.',
+        icon: Star,
+        gradient: 'from-slate-500 to-slate-700',
         highlight: false,
+        badge: null,
+        cta: 'Comenzar con Core',
+        priceCLP: 33000,
+        priceUSD: 33,
+        features: [
+            '1 usuario · 1 agenda',
+            'Dashboard con métricas en tiempo real',
+            'Calendario de citas (gestión manual)',
+            'Fichas de clientes e historial de servicios',
+            'CRM de prospectos',
+            'Sistema de referidos',
+            'Módulo de finanzas y reportes',
+        ],
+        upsells: [
+            'Recordatorios automáticos — packs opcionales',
+            'Mensajería masiva de marketing segmentada',
+        ],
+    },
+    {
+        id: 'starter',
+        name: 'Starter',
+        tagline: 'Ideal para esteticistas independientes.',
+        promise: 'Agrega el agente IA que atiende y agenda por WhatsApp, 24/7.',
         icon: Sparkles,
-        features: [
-            'Hasta 2 Usuarios',
-            'Agente de IA especializado en medicina estética y salud',
-            'Integración con Google Maps (Reservas geolocalizadas)',
-            'Hasta 50 citas automatizadas mensuales',
-            'Hasta 1 agenda disponible',
-            'Gestión de servicios y tratamientos',
-            'Fichas clínicas + historial de procedimientos',
-            'Dashboard con Métricas (Ranking, Conversión, etc.)',
-            'Integración oficial de WhatsApp (Meta). Libre de bloqueos',
-        ],
-        limitations: [],
-        cta: 'Comenzar con Essence',
-        gradient: 'from-gray-500 to-gray-700',
-    },
-    {
-        id: 'radiance',
-        name: 'Plan Radiance',
-        tagline: 'Para clínicas en pleno crecimiento (Físicas o a domicilio).',
-        price: 159,
-        period: '/mes',
-        description: 'Infraestructura Operativa para captar, retener por tratamiento y automatizar tu clínica.',
-        highlight: true,
-        icon: Zap,
-        features: [
-            'Todo lo de Essence, más:',
-            'Hasta 5 usuarios (Adm, Médicos, Recepcionista)',
-            '5 agendas independientes disponibles',
-            'Recordatorios de sesiones/tratamientos con IA',
-            'Recordatorios confirmación (Hasta 50/mes)',
-            'CRM de ventas para prospectos',
-            'Campañas Marketing masivo (WhatsApp)',
-            'Sistema Inteligente de Referidos con IA',
-            'Módulo de Gestión Financiera',
-            'Citas Ilimitadas',
-            'Encuestas de satisfacción personalizadas',
-            'Modelo "Done-for-you" (Implementación)',
-        ],
-        limitations: [],
-        cta: 'Elegir Radiance',
-        gradient: 'from-primary-500 to-primary-700',
-        badge: 'Popular',
-    },
-    {
-        id: 'prestige',
-        name: 'Prestige',
-        tagline: 'Potencia empresarial para redes de clínicas y centros médicos.',
-        price: 297,
-        period: '/mes',
-        description: 'Infraestructura empresarial absoluta para controlar y escalar múltiples sedes.',
+        gradient: 'from-emerald-500 to-teal-600',
         highlight: false,
-        icon: Crown,
+        badge: null,
+        cta: 'Comenzar con Starter',
+        priceCLP: 89000,
+        priceUSD: 89,
         features: [
-            'Todo lo de Radiance, más:',
-            'Usuarios ilimitados',
-            'Multi-sucursal / Multi-sedes',
-            'IA personalizada (especialidades médicas)',
-            'Recordatorios confirmación ilimitados',
-            'Benchmark entre sedes. Super Administrador',
-            'Infraestructura de Éxito Total',
+            'Todo lo de Core, más:',
+            'Hasta 2 usuarios',
+            'Agente IA WhatsApp (GPT-4o mini)',
+            '1.000 créditos IA incluidos/mes',
+            'Hasta 50 citas automatizadas/mes',
+            '1 agenda disponible',
+            '100 recordatorios/mes',
         ],
-        limitations: [],
-        cta: 'Contactar Ventas',
-        gradient: 'from-charcoal to-charcoal/90',
+        upsells: [
+            'Mensajería masiva de marketing segmentada',
+        ],
     },
-];
+    {
+        id: 'pro',
+        name: 'Pro',
+        tagline: 'Para clínicas en pleno crecimiento.',
+        promise: 'IA completa, recordatorios, campañas y citas ilimitadas.',
+        icon: Zap,
+        gradient: 'from-[#FF2E88] to-[#c0236a]',
+        highlight: true,
+        badge: 'Más Popular',
+        cta: 'Elegir Pro',
+        priceCLP: 149000,
+        priceUSD: 149,
+        features: [
+            'Todo lo de Starter, más:',
+            'Hasta 5 usuarios',
+            '5 agendas independientes',
+            'IA GPT-4o — citas ilimitadas',
+            '4.000 créditos IA incluidos/mes',
+            'Recordatorios automáticos (250/mes)',
+            'Encuestas de satisfacción',
+            'Soporte prioritario',
+        ],
+        upsells: [
+            'Mensajería masiva de marketing segmentada',
+        ],
+    },
+    {
+        id: 'enterprise',
+        name: 'Enterprise',
+        tagline: 'Para redes de salones y multi-sucursal.',
+        promise: 'Infraestructura completa para escalar múltiples sedes.',
+        icon: Crown,
+        gradient: 'from-amber-500 to-orange-600',
+        highlight: false,
+        badge: null,
+        cta: 'Contactar Ventas',
+        priceCLP: 349000,
+        priceUSD: 349,
+        features: [
+            'Todo lo de Pro, más:',
+            'Usuarios y agendas ilimitados',
+            'Multi-sucursal con dashboard unificado',
+            '12.000 créditos IA incluidos/mes',
+            'Recordatorios ilimitados',
+            'IA personalizada por servicio',
+            'Super Administrador',
+            'Soporte prioritario 24/7',
+        ],
+        upsells: [],
+    },
+]
 
 const faqs = [
     {
@@ -85,8 +112,8 @@ const faqs = [
         answer: 'Sí, puedes subir o bajar de plan cuando quieras. Los cambios se aplican en tu próximo ciclo de facturación.',
     },
     {
-        question: '¿Qué pasa si supero las 50 citas en el plan Essence?',
-        answer: 'Te notificaremos cuando te acerques al límite y podrás comprar un "Pack de Créditos" o subir al plan Radiance.',
+        question: '¿Qué pasa si supero el límite de citas del plan Starter?',
+        answer: 'Te notificaremos cuando te acerques al límite y podrás subir al plan Pro para obtener citas ilimitadas.',
     },
     {
         question: '¿Necesito tener WhatsApp Business?',
@@ -94,279 +121,269 @@ const faqs = [
     },
     {
         question: '¿Desde cuándo comienzan los 7 días de prueba?',
-        answer: 'Tus 7 días de prueba comienzan exclusivamente cuando validamos que el asistente de IA entiende y atiende perfectamente a tu clínica (100% adecuado). Nosotros asumimos el costo y tiempo de la configuración inicial.',
+        answer: 'Tus 7 días de prueba comienzan exclusivamente cuando validamos que el asistente de IA entiende y atiende perfectamente a tu clínica. Nosotros asumimos el costo y tiempo de la configuración inicial.',
     },
     {
         question: '¿Ofrecen descuento por pago anual?',
-        answer: 'Sí, al pagar anualmente obtienes 2 meses gratis y bonificamos la tarifa de implementación de $150 USD.',
+        answer: 'Sí, al pagar anualmente obtienes 2 meses gratis.',
+    },
+    {
+        question: '¿El Core Plan incluye el agente IA de WhatsApp?',
+        answer: 'No. Core es gestión manual sin IA conversacional. Para obtener el agente IA que atiende automáticamente por WhatsApp, necesitas el plan Starter o superior.',
     },
 ]
 
 export default function Pricing() {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+    const [currency, setCurrency] = useState<'CLP' | 'USD'>('CLP')
 
-    const getPrice = (basePrice: number) => {
+    const getPrice = (plan: typeof plans[0]) => {
+        const base = currency === 'CLP' ? plan.priceCLP : plan.priceUSD
         if (billingPeriod === 'annual') {
-            return Math.round(basePrice * 10 / 12) // 2 meses gratis
+            return Math.round(base * 10 / 12)
         }
-        return basePrice
+        return base
+    }
+
+    const formatPrice = (price: number) => {
+        if (currency === 'CLP') return `$${price.toLocaleString('es-CL')}`
+        return `US$${price}`
     }
 
     return (
-        <div className="min-h-screen bg-subtle-gradient">
+        <div className="min-h-screen bg-[#0A0A0F]">
             {/* Header */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-silk-beige sticky top-0 z-50">
+            <header className="border-b border-white/5 sticky top-0 z-50 backdrop-blur-md bg-[#0A0A0F]/80">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-hero-gradient rounded-soft flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-white" />
+                    <a href="/" className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-xl flex items-center justify-center shadow-lg">
+                            <Sparkles className="w-4.5 h-4.5 text-white" />
                         </div>
-                        <span className="text-xl font-semibold text-charcoal">Citenly AI</span>
-                    </div>
-                    <nav className="hidden md:flex items-center gap-8">
-                        <a href="#features" className="text-charcoal/60 hover:text-charcoal transition-colors">Características</a>
-                        <a href="#pricing" className="text-charcoal/60 hover:text-charcoal transition-colors">Precios</a>
-                        <a href="#faq" className="text-charcoal/60 hover:text-charcoal transition-colors">FAQ</a>
-                    </nav>
+                        <span className="text-lg font-black text-white tracking-tight">Citenly</span>
+                    </a>
                     <div className="flex items-center gap-3">
-                        <a href="/login" className="btn-ghost">Iniciar Sesión</a>
-                        <a href="#pricing" className="btn-primary">Comenzar Gratis</a>
+                        <a href="/login" className="text-sm text-white/50 hover:text-white transition-colors px-4 py-2">
+                            Iniciar Sesión
+                        </a>
+                        <a href="/register" className="text-sm bg-[#FF2E88] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#e0266f] transition-colors">
+                            Comenzar Gratis
+                        </a>
                     </div>
                 </div>
             </header>
 
-            {/* Hero Section */}
-            <section className="py-20 px-6">
-                <div className="max-w-4xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500/10 text-primary-600 rounded-full text-sm font-medium mb-6">
-                        <Sparkles className="w-4 h-4" />
-                        Potenciado por Inteligencia Artificial
-                    </div>
-                    <h1 className="text-display text-charcoal mb-6">
-                        Tu asistente virtual para
-                        <span className="text-gradient-hero"> clínicas estéticas y médicas</span>
-                    </h1>
-                    <p className="text-xl text-charcoal/60 mb-8 max-w-2xl mx-auto leading-relaxed">
-                        No te damos solo la IA, **implementamos tu Infraestructura Operativa de Éxito**. 
-                        Dejamos tu sistema operando al 100% como una recepcionista experta antes de que empiece tu prueba.
-                    </p>
-                    <div className="flex items-center justify-center gap-4">
-                        <a href="#pricing" className="btn-premium flex items-center gap-2 text-lg px-8 py-4">
-                            Ver Planes
-                            <ArrowRight className="w-5 h-5" />
-                        </a>
-                        <a href="#demo" className="btn-ghost text-lg px-8 py-4">
-                            Ver Demo
-                        </a>
-                    </div>
+            {/* Hero */}
+            <section className="pt-20 pb-12 px-6 text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#FF2E88]/10 border border-[#FF2E88]/20 text-[#FF4DA6] rounded-full text-sm font-bold mb-6">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Planes para clínicas estéticas y salones de belleza
                 </div>
+                <h1 className="text-5xl font-black text-white mb-4 tracking-tighter">
+                    Simple. Transparente. Sin sorpresas.
+                </h1>
+                <p className="text-lg text-white/50 max-w-xl mx-auto">
+                    Elige el plan que mejor se adapte a tu negocio. Cambia cuando quieras.
+                </p>
             </section>
 
-            {/* Pricing Section */}
-            <section id="pricing" className="py-20 px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h2 className="text-h2 text-charcoal mb-4">
-                            Planes diseñados para tu crecimiento
-                        </h2>
-                        <p className="text-lg text-charcoal/60 mb-8">
-                            Sin compromisos. Tu prueba de 7 días comienza cuando el sistema esté 100% operativo.
-                        </p>
+            {/* Toggles */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-6 mb-12">
+                {/* Currency */}
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
+                    {(['CLP', 'USD'] as const).map((c) => (
+                        <button
+                            key={c}
+                            onClick={() => setCurrency(c)}
+                            className={cn(
+                                'px-5 py-2 rounded-lg text-sm font-bold transition-all',
+                                currency === c ? 'bg-[#FF2E88] text-white' : 'text-white/40 hover:text-white'
+                            )}
+                        >
+                            {c === 'CLP' ? '🇨🇱 CLP' : '🌍 USD'}
+                        </button>
+                    ))}
+                </div>
 
-                        {/* Billing Toggle */}
-                        <div className="inline-flex items-center bg-white rounded-full p-1 shadow-soft">
-                            <button
-                                onClick={() => setBillingPeriod('monthly')}
-                                className={cn(
-                                    'px-6 py-2 rounded-full text-sm font-medium transition-all',
-                                    billingPeriod === 'monthly'
-                                        ? 'bg-primary-500 text-white'
-                                        : 'text-charcoal/60 hover:text-charcoal'
-                                )}
-                            >
-                                Mensual
-                            </button>
-                            <button
-                                onClick={() => setBillingPeriod('annual')}
-                                className={cn(
-                                    'px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2',
-                                    billingPeriod === 'annual'
-                                        ? 'bg-primary-500 text-white'
-                                        : 'text-charcoal/60 hover:text-charcoal'
-                                )}
-                            >
-                                Anual
-                                <span className="bg-accent-500 text-charcoal text-xs px-2 py-0.5 rounded-full">
-                                    -17%
-                                </span>
-                            </button>
-                        </div>
-                    </div>
+                {/* Period */}
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
+                    {(['monthly', 'annual'] as const).map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setBillingPeriod(p)}
+                            className={cn(
+                                'px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2',
+                                billingPeriod === p ? 'bg-[#FF2E88] text-white' : 'text-white/40 hover:text-white'
+                            )}
+                        >
+                            {p === 'monthly' ? 'Mensual' : (
+                                <>
+                                    Anual
+                                    <span className="text-[10px] bg-emerald-400 text-emerald-900 px-1.5 py-0.5 rounded-full font-black">
+                                        -17%
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-                    {/* Plans Grid */}
-                    <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        {plans.map((plan) => (
-                            <div
-                                key={plan.id}
-                                className={cn(
-                                    'relative rounded-softer p-8 transition-all duration-300',
-                                    plan.highlight
-                                        ? 'bg-white shadow-soft-xl ring-2 ring-accent-500 scale-105'
-                                        : 'bg-white shadow-soft hover:shadow-soft-lg hover:-translate-y-1'
-                                )}
-                            >
-                                {plan.badge && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                        <span className="bg-premium-gradient text-charcoal text-sm font-semibold px-4 py-1.5 rounded-full shadow-glow-gold">
-                                            {plan.badge}
-                                        </span>
+            {/* Plans Grid */}
+            <section className="px-6 pb-20">
+                <div className="max-w-7xl mx-auto grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    {plans.map((plan) => (
+                        <div
+                            key={plan.id}
+                            className={cn(
+                                'relative flex flex-col rounded-2xl border transition-all duration-300',
+                                plan.highlight
+                                    ? 'border-[#FF2E88] bg-[#FF2E88]/5 shadow-[0_0_60px_rgba(255,46,136,0.15)]'
+                                    : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                            )}
+                        >
+                            {plan.badge && (
+                                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
+                                    {plan.badge}
+                                </div>
+                            )}
+
+                            {/* Gradient header */}
+                            <div className={cn('h-2 rounded-t-2xl bg-gradient-to-r', plan.gradient)} />
+
+                            <div className="p-7 flex flex-col flex-1">
+                                {/* Icon + name */}
+                                <div className="flex items-center gap-3 mb-5">
+                                    <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br', plan.gradient)}>
+                                        <plan.icon className="w-5 h-5 text-white" />
                                     </div>
-                                )}
-
-                                {/* Plan Header */}
-                                <div className="text-center mb-6">
-                                    <div className={cn(
-                                        'w-14 h-14 rounded-softer mx-auto mb-4 flex items-center justify-center bg-gradient-to-br',
-                                        plan.gradient
-                                    )}>
-                                        <plan.icon className="w-7 h-7 text-white" />
+                                    <div>
+                                        <h3 className="text-lg font-black text-white">{plan.name}</h3>
+                                        <p className="text-[11px] text-white/40 font-medium leading-tight">{plan.tagline}</p>
                                     </div>
-                                    <h3 className="text-h3 text-charcoal">{plan.name}</h3>
-                                    <p className="text-sm text-charcoal/50 mt-1">{plan.tagline}</p>
                                 </div>
 
                                 {/* Price */}
-                                <div className="text-center mb-6">
-                                    <div className="flex items-baseline justify-center gap-1">
-                                        <span className="text-4xl font-bold text-charcoal">
-                                            ${getPrice(plan.price)}
+                                <div className="mb-5 pb-5 border-b border-white/10">
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-4xl font-black text-white tracking-tighter">
+                                            {formatPrice(getPrice(plan))}
                                         </span>
-                                        <span className="text-charcoal/50">{plan.period}</span>
+                                        <span className="text-white/30 text-sm font-medium">/mes</span>
                                     </div>
                                     {billingPeriod === 'annual' && (
-                                        <p className="text-sm text-primary-600 mt-1">
-                                            2 meses gratis + Setup bonificado
-                                        </p>
+                                        <p className="text-emerald-400 text-xs font-bold mt-1">2 meses gratis</p>
                                     )}
+                                    <p className="text-white/40 text-xs mt-2 leading-tight">{plan.promise}</p>
                                 </div>
 
-                                {/* Description */}
-                                <p className="text-sm text-charcoal/60 text-center mb-6">
-                                    {plan.description}
-                                </p>
-
                                 {/* CTA */}
-                                <button
+                                <a
+                                    href="/register"
                                     className={cn(
-                                        'w-full py-3 rounded-soft font-medium transition-all',
+                                        'w-full py-3 rounded-xl font-black text-sm text-center transition-all mb-6',
                                         plan.highlight
-                                            ? 'bg-premium-gradient text-charcoal hover:shadow-glow-gold'
-                                            : 'bg-primary-500 text-white hover:bg-primary-600'
+                                            ? 'bg-[#FF2E88] text-white hover:bg-[#e0266f] shadow-lg'
+                                            : 'bg-white/10 text-white hover:bg-white/20 border border-white/10'
                                     )}
                                 >
                                     {plan.cta}
-                                </button>
+                                </a>
 
                                 {/* Features */}
-                                <ul className="mt-8 space-y-3">
-                                    {plan.features.map((feature, index) => (
-                                        <li key={index} className="flex items-start gap-3">
-                                            <Check className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" />
-                                            <span className="text-sm text-charcoal/70">{feature}</span>
+                                <ul className="space-y-2.5 flex-1">
+                                    {plan.features.map((feature, i) => (
+                                        <li key={i} className="flex items-start gap-2.5">
+                                            <div className={cn(
+                                                'w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                                                feature.startsWith('Todo') ? 'bg-white/10' : 'bg-[#FF2E88]/20'
+                                            )}>
+                                                <Check className={cn(
+                                                    'w-2.5 h-2.5',
+                                                    feature.startsWith('Todo') ? 'text-white/40' : 'text-[#FF4DA6]'
+                                                )} />
+                                            </div>
+                                            <span className={cn(
+                                                'text-sm leading-tight',
+                                                feature.startsWith('Todo') ? 'text-white/30 italic' : 'text-white/70'
+                                            )}>
+                                                {feature}
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
 
-                                {plan.limitations.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-silk-beige">
-                                        {plan.limitations.map((limitation, index) => (
-                                            <p key={index} className="text-sm text-charcoal/40 italic">
-                                                * {limitation}
+                                {/* Upsells */}
+                                {plan.upsells.length > 0 && (
+                                    <div className="mt-5 pt-4 border-t border-white/5">
+                                        <p className="text-[10px] text-white/25 uppercase tracking-widest font-black mb-2">Extras opcionales</p>
+                                        {plan.upsells.map((u, i) => (
+                                            <p key={i} className="text-xs text-white/30 flex items-center gap-1.5 mb-1">
+                                                <span className="text-[#FF2E88]/50">+</span> {u}
                                             </p>
                                         ))}
                                     </div>
                                 )}
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Setup Fee Notice */}
-                    <div className="mt-12 text-center">
-                        <p className="text-charcoal/50 text-sm">
-                            Tarifa de implementación única: <span className="font-medium text-charcoal">$150 USD</span>
-                            <span className="text-primary-600"> (bonificada con pago anual)</span>
-                        </p>
-                    </div>
+                        </div>
+                    ))}
                 </div>
             </section>
 
-            {/* FAQ Section */}
-            <section id="faq" className="py-20 px-6 bg-white">
-                <div className="max-w-3xl mx-auto">
-                    <h2 className="text-h2 text-charcoal text-center mb-12">
+            {/* FAQ */}
+            <section className="px-6 pb-20 bg-white/[0.02] border-t border-white/5">
+                <div className="max-w-3xl mx-auto pt-16">
+                    <h2 className="text-3xl font-black text-white text-center mb-2 tracking-tighter">
                         Preguntas Frecuentes
                     </h2>
+                    <p className="text-white/40 text-center mb-10">Todo lo que necesitas saber antes de empezar.</p>
 
-                    <div className="space-y-4">
-                        {faqs.map((faq, index) => (
-                            <div
-                                key={index}
-                                className="p-6 bg-ivory rounded-soft"
-                            >
-                                <h3 className="font-semibold text-charcoal mb-2">
-                                    {faq.question}
-                                </h3>
-                                <p className="text-charcoal/60">
-                                    {faq.answer}
-                                </p>
+                    <div className="space-y-3">
+                        {faqs.map((faq, i) => (
+                            <div key={i} className="p-5 bg-white/[0.03] border border-white/8 rounded-xl">
+                                <h3 className="font-black text-white text-sm mb-1.5">{faq.question}</h3>
+                                <p className="text-sm text-white/50 leading-relaxed">{faq.answer}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-20 px-6">
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-hero-gradient rounded-softest p-12 text-center text-white">
-                        <h2 className="text-3xl font-semibold mb-4">
+            {/* CTA bottom */}
+            <section className="px-6 py-20">
+                <div className="max-w-2xl mx-auto text-center">
+                    <div className="bg-gradient-to-br from-[#FF2E88]/20 to-violet-600/10 border border-[#FF2E88]/20 rounded-2xl p-12">
+                        <h2 className="text-3xl font-black text-white mb-3 tracking-tight">
                             ¿Lista para transformar tu clínica?
                         </h2>
-                        <p className="text-white/80 mb-8 max-w-xl mx-auto">
-                            Únete a las clínicas que ya están ahorrando 20+ horas semanales
-                            con su asistente de IA.
+                        <p className="text-white/50 mb-8">
+                            7 días de prueba gratis. Sin tarjeta de crédito requerida para empezar.
                         </p>
-                        <div className="flex items-center justify-center gap-4">
-                            <a href="#pricing" className="bg-white text-primary-600 font-medium px-8 py-4 rounded-soft hover:shadow-soft-lg transition-all">
-                                Comenzar Prueba Gratis
-                            </a>
-                            <a href="#demo" className="border-2 border-white/30 text-white font-medium px-8 py-4 rounded-soft hover:bg-white/10 transition-all">
-                                Agendar Demo
-                            </a>
-                        </div>
+                        <a
+                            href="/register"
+                            className="inline-flex items-center gap-2 bg-[#FF2E88] text-white font-black px-8 py-4 rounded-xl hover:bg-[#e0266f] transition-colors text-base shadow-lg"
+                        >
+                            Comenzar Prueba Gratis
+                            <ArrowRight className="w-5 h-5" />
+                        </a>
                     </div>
                 </div>
             </section>
 
             {/* Footer */}
-            <footer className="bg-charcoal text-white/60 py-12 px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white/10 rounded-soft flex items-center justify-center">
-                                <Sparkles className="w-5 h-5 text-accent-500" />
-                            </div>
-                            <span className="text-lg font-semibold text-white">Citenly AI</span>
+            <footer className="border-t border-white/5 py-8 px-6">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-lg flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-white" />
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
-                            <a href="#" className="hover:text-white transition-colors">Términos</a>
-                            <a href="#" className="hover:text-white transition-colors">Privacidad</a>
-                            <a href="#" className="hover:text-white transition-colors">Contacto</a>
-                        </div>
-                        <p className="text-sm">
-                            © 2024 Citenly AI. Todos los derechos reservados.
-                        </p>
+                        <span className="text-white font-black tracking-tight">Citenly</span>
                     </div>
+                    <div className="flex items-center gap-6 text-sm text-white/30">
+                        <a href="/terms" className="hover:text-white transition-colors">Términos</a>
+                        <a href="/privacy" className="hover:text-white transition-colors">Privacidad</a>
+                        <a href="/demo" className="hover:text-white transition-colors">Agendar Demo</a>
+                    </div>
+                    <p className="text-sm text-white/20">© 2025 Citenly. Todos los derechos reservados.</p>
                 </div>
             </footer>
         </div>

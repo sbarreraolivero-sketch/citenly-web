@@ -44,10 +44,10 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
 }
 
 const planLabels: Record<string, string> = {
-    basic: 'Basic',
-    essence: 'Essence',
-    radiance: 'Radiance',
-    prestige: 'Prestige',
+    core: 'Core',
+    starter: 'Starter',
+    pro: 'Pro',
+    enterprise: 'Enterprise',
     trial: 'Trial',
 }
 

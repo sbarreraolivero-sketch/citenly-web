@@ -93,25 +93,26 @@ export default function Team() {
             console.log('Settings:', settingsData, 'Sub:', subData, 'SubError:', subError)
 
             if (subData) {
-                // Subscription table is the ultimate authority
                 setPlanName(subData.plan)
-                if (subData.plan === 'prestige') {
+                if (subData.plan === 'enterprise') {
                     setMaxUsers(10000)
-                } else if (subData.plan === 'radiance' || subData.plan === 'radiance_plus') {
+                } else if (subData.plan === 'pro') {
                     setMaxUsers(5)
-                } else if (subData.plan === 'essence') {
+                } else if (subData.plan === 'starter') {
                     setMaxUsers(2)
+                } else if (subData.plan === 'core') {
+                    setMaxUsers(1)
                 } else {
-                    // Fallback to settings or default for unknown plans
                     setMaxUsers(settingsData?.max_users || 3)
                 }
             } else if (settingsData) {
-                // Fallback to clinic_settings
                 setPlanName(settingsData.subscription_plan || 'freemium')
-                if (settingsData.subscription_plan === 'prestige') {
+                if (settingsData.subscription_plan === 'enterprise') {
                     setMaxUsers(10000)
-                } else if (settingsData.subscription_plan === 'radiance' || settingsData.subscription_plan === 'radiance_plus') {
+                } else if (settingsData.subscription_plan === 'pro') {
                     setMaxUsers(5)
+                } else if (settingsData.subscription_plan === 'starter') {
+                    setMaxUsers(2)
                 } else {
                     setMaxUsers(settingsData.max_users || 3)
                 }

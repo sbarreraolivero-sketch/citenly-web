@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom'
-import { ShieldAlert, LogOut, Users, Activity, Settings as SettingsIcon, Calendar, MessageSquare } from 'lucide-react'
+import { ShieldAlert, LogOut, Users, Activity, Settings as SettingsIcon, Calendar, MessageSquare, Target } from 'lucide-react'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 
 export default function AdminLayout() {
@@ -14,7 +14,8 @@ export default function AdminLayout() {
     const navigation = [
         { name: 'Activaciones', href: '/hq/dashboard', icon: Activity },
         { name: 'Mensajes', href: '/hq/messages', icon: MessageSquare },
-        { name: 'Calendario', href: '/hq/calendar', icon: Calendar },
+        { name: 'Demos', href: '/hq/calendar', icon: Calendar },
+        { name: 'CRM', href: '/hq/crm', icon: Target },
         { name: 'Clínicas', href: '/hq/clinics', icon: Users },
         { name: 'Configuración', href: '/hq/settings', icon: SettingsIcon },
     ]

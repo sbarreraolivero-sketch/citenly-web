@@ -28,7 +28,7 @@ export default function BranchSwitcher() {
     // the user should be Owner of at least one Prestige clinic.
     // The RPC `create_clinic_branch` handles the strict check.
     // Here we can just show the button if they have 'prestige' in the current context or any clinic.
-    const canCreateBranch = clinics.some(c => c.plan === 'prestige') || subscription?.plan === 'prestige'
+    const canCreateBranch = clinics.some(c => c.plan === 'enterprise') || subscription?.plan === 'enterprise'
 
     return (
         <div className="relative">

@@ -6,13 +6,16 @@ import { supabase } from '@/lib/supabase'
 import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react'
 
 // Initialize MercadoPago outside the component
-const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-61b727c4-a571-46c2-833a-89e68836e5db'
-initMercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' })
+const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY
+if (MP_PUBLIC_KEY) {
+    initMercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' })
+}
 
 const plans = [
-    { id: 'essence', name: 'Essence', price: 99, popular: false },
-    { id: 'radiance', name: 'Radiance', price: 159, popular: true },
-    { id: 'prestige', name: 'Prestige', price: 297, popular: false },
+    { id: 'core',       name: 'Core',       price: 33000,  priceUSD: 33,  popular: false },
+    { id: 'starter',    name: 'Starter',    price: 89000,  priceUSD: 89,  popular: false },
+    { id: 'pro',        name: 'Pro',        price: 149000, priceUSD: 149, popular: true  },
+    { id: 'enterprise', name: 'Enterprise', price: 349000, priceUSD: 349, popular: false },
 ]
 
 export default function Register() {
@@ -26,7 +29,7 @@ export default function Register() {
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
     const [clinicName, setClinicName] = useState('')
-    const [selectedPlan, setSelectedPlan] = useState('radiance')
+    const [selectedPlan, setSelectedPlan] = useState('pro')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -408,7 +411,10 @@ export default function Register() {
                                                 </div>
                                             </div>
                                             <span className="font-semibold text-charcoal">
-                                                ${plan.price}<span className="text-sm text-charcoal/50">/mes</span>
+                                                {paymentRegion === 'international'
+                                                    ? `US$${plan.priceUSD}`
+                                                    : `$${plan.price.toLocaleString('es-CL')}`}
+                                                <span className="text-sm text-charcoal/50">/mes</span>
                                             </span>
                                         </div>
                                     </label>
@@ -440,7 +446,7 @@ export default function Register() {
                                     <div className="border border-gray-200 rounded-soft p-4 bg-white min-h-[400px]">
                                         <CardPayment
                                             initialization={{
-                                                amount: plans.find(p => p.id === selectedPlan)?.price || 159
+                                                amount: plans.find(p => p.id === selectedPlan)?.price || 149000
                                             }}
                                             customization={{
                                                 visual: {
