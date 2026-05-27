@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -18,9 +19,12 @@ interface ClinicData {
     trial_end_date: string | null
     currency: string
     timezone: string
+    ai_credits_used: number
+    ai_credits_limit: number
+    ai_credits_extra: number
+    // legacy column names as fallback
     ai_credits_monthly_limit: number
     ai_credits_extra_balance: number
-    ai_credits_extra_4o: number
     clinic_members: {
         id: string
         email: string
@@ -49,6 +53,10 @@ const planLabels: Record<string, string> = {
     pro: 'Pro',
     enterprise: 'Enterprise',
     trial: 'Trial',
+    essence: 'Starter',
+    radiance: 'Pro',
+    prestige: 'Enterprise',
+    basic: 'Basic',
 }
 
 export default function AdminClinics() {
@@ -67,9 +75,8 @@ export default function AdminClinics() {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-            // Fetch clinics with members and subscriptions
             const response = await fetch(
-                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_monthly_limit,ai_credits_extra_balance,ai_credits_extra_4o,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
+                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
                 {
                     headers: {
                         'apikey': supabaseKey,
@@ -127,7 +134,7 @@ export default function AdminClinics() {
     if (loading) {
         return (
             <div className="p-8 flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#FF2E88]" />
             </div>
         )
     }
@@ -136,75 +143,75 @@ export default function AdminClinics() {
         <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clínicas</h1>
-                <p className="text-gray-500 mt-1 text-sm">Gestiona todas las clínicas registradas en la plataforma.</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">Clínicas</h1>
+                <p className="text-gray-400 mt-1 text-sm">Gestiona todas las clínicas registradas en la plataforma.</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                            <Building2 className="w-5 h-5 text-blue-600" />
+                        <div className="p-2 bg-blue-500/10 rounded-lg">
+                            <Building2 className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                            <p className="text-xs text-gray-500">Total</p>
+                            <p className="text-2xl font-bold text-white">{stats.total}</p>
+                            <p className="text-xs text-gray-400">Total</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-50 rounded-lg">
-                            <CheckCircle className="w-5 h-5 text-emerald-600" />
+                        <div className="p-2 bg-emerald-500/10 rounded-lg">
+                            <CheckCircle className="w-5 h-5 text-emerald-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-                            <p className="text-xs text-gray-500">Activas</p>
+                            <p className="text-2xl font-bold text-white">{stats.active}</p>
+                            <p className="text-xs text-gray-400">Activas</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-50 rounded-lg">
-                            <Clock className="w-5 h-5 text-amber-600" />
+                        <div className="p-2 bg-amber-500/10 rounded-lg">
+                            <Clock className="w-5 h-5 text-amber-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
-                            <p className="text-xs text-gray-500">Pendientes</p>
+                            <p className="text-2xl font-bold text-white">{stats.pending}</p>
+                            <p className="text-xs text-gray-400">Pendientes</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-50 rounded-lg">
-                            <XCircle className="w-5 h-5 text-red-600" />
+                        <div className="p-2 bg-red-500/10 rounded-lg">
+                            <XCircle className="w-5 h-5 text-red-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.inactive}</p>
-                            <p className="text-xs text-gray-500">Inactivas</p>
+                            <p className="text-2xl font-bold text-white">{stats.inactive}</p>
+                            <p className="text-xs text-gray-400">Inactivas</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
                         <input
                             type="text"
                             placeholder="Buscar por nombre o email..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/50 focus:border-[#FF2E88]/50"
                         />
                     </div>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+                        className="px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/50"
                     >
                         <option value="all">Todos los estados</option>
                         <option value="active">Activas</option>
@@ -213,7 +220,7 @@ export default function AdminClinics() {
                     </select>
                     <button
                         onClick={fetchClinics}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 bg-gray-900 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
                     >
                         <RefreshCw className="w-4 h-4" />
                         Actualizar
@@ -222,21 +229,21 @@ export default function AdminClinics() {
             </div>
 
             {/* Clinics Table */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-gray-100">
-                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Clínica</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Owner</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Plan</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Miembros</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th className="px-6 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Detalles</th>
+                            <tr className="border-b border-gray-700">
+                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Clínica</th>
+                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Owner</th>
+                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Plan</th>
+                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
+                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Miembros</th>
+                                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha</th>
+                                <th className="px-6 py-3.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Detalles</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-gray-700/50">
                             {filteredClinics.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-12 text-center text-gray-500 text-sm">
@@ -253,22 +260,22 @@ export default function AdminClinics() {
                                         <tr key={clinic.id}>
                                             <td colSpan={7} className="p-0">
                                                 <div>
-                                                    <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                                                    <div className="flex items-center px-6 py-4 hover:bg-gray-700/30 transition-colors">
                                                         <div className="flex-1 min-w-0 flex items-center">
-                                                            <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center mr-3 flex-shrink-0">
-                                                                <Building2 className="w-5 h-5 text-primary-600" />
+                                                            <div className="w-10 h-10 rounded-lg bg-[#FF2E88]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                                                                <Building2 className="w-5 h-5 text-[#FF2E88]" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-semibold text-gray-900 truncate">{clinic.clinic_name || 'Sin nombre'}</p>
-                                                                <p className="text-xs text-gray-400">{clinic.id.slice(0, 8)}...</p>
+                                                                <p className="text-sm font-semibold text-white truncate">{clinic.clinic_name || 'Sin nombre'}</p>
+                                                                <p className="text-xs text-gray-500">{clinic.id.slice(0, 8)}...</p>
                                                             </div>
                                                         </div>
                                                         <div className="w-44 px-3">
-                                                            <p className="text-sm text-gray-700 truncate">{owner?.email || 'N/A'}</p>
-                                                            <p className="text-xs text-gray-400">{owner?.first_name || ''} {owner?.last_name || ''}</p>
+                                                            <p className="text-sm text-gray-300 truncate">{owner?.email || 'N/A'}</p>
+                                                            <p className="text-xs text-gray-500">{owner?.first_name || ''} {owner?.last_name || ''}</p>
                                                         </div>
                                                         <div className="w-24 px-3">
-                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-xs font-medium">
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-500/10 text-purple-300 text-xs font-medium">
                                                                 <CreditCard className="w-3 h-3" />
                                                                 {planLabels[clinic.subscription_plan] || clinic.subscription_plan}
                                                             </span>
@@ -277,20 +284,20 @@ export default function AdminClinics() {
                                                             {getStatusBadge(clinic.activation_status)}
                                                         </div>
                                                         <div className="w-20 px-3 text-center">
-                                                            <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                                                            <span className="inline-flex items-center gap-1 text-sm text-gray-300">
                                                                 <Users className="w-3.5 h-3.5" />
                                                                 {clinic.clinic_members?.length || 0}
                                                             </span>
                                                         </div>
                                                         <div className="w-28 px-3">
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-xs text-gray-400">
                                                                 {new Date(clinic.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                             </p>
                                                         </div>
                                                         <div className="w-16 px-3 text-center">
                                                             <button
                                                                 onClick={() => setExpandedClinic(isExpanded ? null : clinic.id)}
-                                                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                                                                className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors text-gray-500 hover:text-gray-200"
                                                             >
                                                                 {isExpanded ? <ChevronUp className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                             </button>
@@ -299,43 +306,43 @@ export default function AdminClinics() {
 
                                                     {/* Expanded Details */}
                                                     {isExpanded && (
-                                                        <div className="px-6 pb-4 bg-gray-50/80 border-t border-gray-100">
-                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                                                        <div className="px-6 pb-5 bg-gray-900/60 border-t border-gray-700">
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-5">
                                                                 {/* Subscription Info */}
-                                                                <div className="bg-white rounded-lg p-4 border border-gray-100">
-                                                                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
-                                                                        <CreditCard className="w-3.5 h-3.5" /> Suscripción
+                                                                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                                                    <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                                        <CreditCard className="w-3.5 h-3.5 text-[#FF2E88]" /> Suscripción
                                                                     </h4>
                                                                     <div className="space-y-2 text-sm">
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">Plan</span>
-                                                                            <span className="font-medium">{planLabels[clinic.subscription_plan] || clinic.subscription_plan}</span>
+                                                                            <span className="text-gray-400">Plan</span>
+                                                                            <span className="font-medium text-white">{planLabels[clinic.subscription_plan] || clinic.subscription_plan}</span>
                                                                         </div>
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">Trial</span>
-                                                                            <span className="font-medium capitalize">{clinic.trial_status?.replace('_', ' ')}</span>
+                                                                            <span className="text-gray-400">Trial</span>
+                                                                            <span className="font-medium text-white capitalize">{clinic.trial_status?.replace('_', ' ')}</span>
                                                                         </div>
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">Facturación</span>
-                                                                            <span className="font-medium capitalize">{clinic.billing_status?.replace('_', ' ')}</span>
+                                                                            <span className="text-gray-400">Facturación</span>
+                                                                            <span className="font-medium text-white capitalize">{clinic.billing_status?.replace('_', ' ')}</span>
                                                                         </div>
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">Moneda</span>
-                                                                            <span className="font-medium">{clinic.currency || 'MXN'}</span>
+                                                                            <span className="text-gray-400">Moneda</span>
+                                                                            <span className="font-medium text-white">{clinic.currency || 'MXN'}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Members */}
-                                                                <div className="bg-white rounded-lg p-4 border border-gray-100">
-                                                                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
-                                                                        <Users className="w-3.5 h-3.5" /> Miembros ({clinic.clinic_members?.length || 0})
+                                                                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                                                    <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                                        <Users className="w-3.5 h-3.5 text-[#FF2E88]" /> Miembros ({clinic.clinic_members?.length || 0})
                                                                     </h4>
                                                                     <div className="space-y-2 max-h-32 overflow-y-auto">
                                                                         {clinic.clinic_members?.map((member) => (
                                                                             <div key={member.id} className="flex items-center justify-between text-sm">
-                                                                                <span className="text-gray-700 truncate mr-2">{member.email}</span>
-                                                                                <span className={`text-xs px-1.5 py-0.5 rounded ${member.role === 'owner' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                                                <span className="text-gray-300 truncate mr-2">{member.email}</span>
+                                                                                <span className={`text-xs px-1.5 py-0.5 rounded ${member.role === 'owner' ? 'bg-blue-500/20 text-blue-300' : 'bg-gray-700 text-gray-400'}`}>
                                                                                     {member.role}
                                                                                 </span>
                                                                             </div>
@@ -344,29 +351,29 @@ export default function AdminClinics() {
                                                                 </div>
 
                                                                 {/* Technical */}
-                                                                <div className="bg-white rounded-lg p-4 border border-gray-100">
-                                                                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
-                                                                        <Shield className="w-3.5 h-3.5" /> Información Técnica
+                                                                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                                                    <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                                        <Shield className="w-3.5 h-3.5 text-[#FF2E88]" /> Información Técnica
                                                                     </h4>
                                                                     <div className="space-y-2 text-sm">
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">ID</span>
-                                                                            <span className="font-mono text-xs text-gray-600">{clinic.id.slice(0, 12)}...</span>
+                                                                            <span className="text-gray-400">ID</span>
+                                                                            <span className="font-mono text-xs text-gray-300">{clinic.id.slice(0, 12)}...</span>
                                                                         </div>
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">Timezone</span>
-                                                                            <span className="font-medium text-xs">{clinic.timezone || 'N/A'}</span>
+                                                                            <span className="text-gray-400">Timezone</span>
+                                                                            <span className="font-medium text-xs text-white">{clinic.timezone || 'N/A'}</span>
                                                                         </div>
                                                                         <div className="flex justify-between">
-                                                                            <span className="text-gray-500">Creada</span>
-                                                                            <span className="font-medium text-xs">
+                                                                            <span className="text-gray-400">Creada</span>
+                                                                            <span className="font-medium text-xs text-white">
                                                                                 {new Date(clinic.created_at).toLocaleDateString('es-ES')}
                                                                             </span>
                                                                         </div>
                                                                         {clinic.trial_end_date && (
                                                                             <div className="flex justify-between">
-                                                                                <span className="text-gray-500">Trial hasta</span>
-                                                                                <span className="font-medium text-xs">
+                                                                                <span className="text-gray-400">Trial hasta</span>
+                                                                                <span className="font-medium text-xs text-white">
                                                                                     {new Date(clinic.trial_end_date).toLocaleDateString('es-ES')}
                                                                                 </span>
                                                                             </div>
@@ -374,16 +381,16 @@ export default function AdminClinics() {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* AI Usage */}
-                                                                <div className="bg-white rounded-lg p-4 border border-gray-100 md:col-span-3">
-                                                                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
-                                                                        <Sparkles className="w-3.5 h-3.5" /> Uso de Inteligencia Artificial (Mes Actual)
+                                                                {/* AI Usage — Universal Credits */}
+                                                                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 md:col-span-3">
+                                                                    <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                                                                        <Sparkles className="w-3.5 h-3.5 text-[#FF2E88]" /> Uso de Créditos IA (Ciclo Actual)
                                                                     </h4>
-                                                                    <AdminAIUsage 
-                                                                        clinicId={clinic.id} 
-                                                                        monthlyLimit={clinic.ai_credits_monthly_limit} 
-                                                                        extraBalance={clinic.ai_credits_extra_balance} 
-                                                                        extraBalance4o={clinic.ai_credits_extra_4o} 
+                                                                    <AdminAIUsage
+                                                                        clinicId={clinic.id}
+                                                                        creditsUsed={clinic.ai_credits_used ?? 0}
+                                                                        creditsLimit={clinic.ai_credits_limit ?? clinic.ai_credits_monthly_limit ?? 2000}
+                                                                        creditsExtra={clinic.ai_credits_extra ?? clinic.ai_credits_extra_balance ?? 0}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -403,78 +410,43 @@ export default function AdminClinics() {
     )
 }
 
-function AdminAIUsage({ clinicId, monthlyLimit, extraBalance, extraBalance4o }: { clinicId: string, monthlyLimit: number, extraBalance: number, extraBalance4o: number }) {
-    const [usedMini, setUsedMini] = useState<number | null>(null)
-    const [used4o, setUsed4o] = useState<number | null>(null)
-    const [loading, setLoading] = useState(true)
+function AdminAIUsage({
+    clinicId,
+    creditsUsed,
+    creditsLimit,
+    creditsExtra,
+}: {
+    clinicId: string
+    creditsUsed: number
+    creditsLimit: number
+    creditsExtra: number
+}) {
     const [isUpdating, setIsUpdating] = useState(false)
-    const [currentExtraMini, setCurrentExtraMini] = useState(extraBalance || 0)
-    const [currentExtra4o, setCurrentExtra4o] = useState(extraBalance4o || 0)
+    const [currentExtra, setCurrentExtra] = useState(creditsExtra)
     const [addAmount, setAddAmount] = useState('500')
-    const [chargeTarget, setChargeTarget] = useState<'mini' | '4o'>('mini')
 
-    useEffect(() => {
-        const fetchUsage = async () => {
-            try {
-                const startOfMonth = new Date()
-                startOfMonth.setDate(1)
-                startOfMonth.setHours(0, 0, 0, 0)
-
-                // Fetch Mini count
-                const { count: countMini, error: errorMini } = await (supabase as any)
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', clinicId)
-                    .eq('ai_generated', true)
-                    .or('ai_model.is.null,ai_model.eq.mini')
-                    .gte('created_at', startOfMonth.toISOString())
-                
-                if (errorMini) throw errorMini
-
-                // Fetch 4o count
-                const { count: count4o, error: error4o } = await (supabase as any)
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('clinic_id', clinicId)
-                    .eq('ai_generated', true)
-                    .eq('ai_model', '4o')
-                    .gte('created_at', startOfMonth.toISOString())
-
-                if (error4o) throw error4o
-
-                setUsedMini(countMini || 0)
-                setUsed4o(count4o || 0)
-            } catch (err) {
-                console.error('Error fetching AI usage:', err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchUsage()
-    }, [clinicId])
+    const totalLimit = creditsLimit + currentExtra
+    const used = creditsUsed
+    const percent = totalLimit > 0 ? Math.min(100, Math.round((used / totalLimit) * 100)) : 0
+    const remaining = Math.max(0, totalLimit - used)
+    const isOverLimit = used >= totalLimit
 
     const handleAddCredits = async () => {
         if (isUpdating || !addAmount) return
         setIsUpdating(true)
         try {
             const amount = parseInt(addAmount)
-            const is4o = chargeTarget === '4o'
-            
-            const updates: any = is4o 
-                ? { ai_credits_extra_4o: currentExtra4o + amount }
-                : { ai_credits_extra_balance: currentExtraMini + amount }
-            
+            const newExtra = currentExtra + amount
+
             const { error } = await (supabase as any)
                 .from('clinic_settings')
-                .update(updates)
+                .update({ ai_credits_extra: newExtra, ai_credits_extra_balance: newExtra })
                 .eq('id', clinicId)
 
             if (error) throw error
-            
-            if (is4o) setCurrentExtra4o(prev => prev + amount)
-            else setCurrentExtraMini(prev => prev + amount)
-            
-            alert(`Créditos (${chargeTarget === 'mini' ? 'Mini' : 'GPT-4o'}) cargados correctamente`)
+
+            setCurrentExtra(newExtra)
+            alert(`${amount} créditos extra cargados correctamente`)
         } catch (err) {
             console.error('Error adding credits:', err)
             alert('Error al cargar créditos')
@@ -483,102 +455,77 @@ function AdminAIUsage({ clinicId, monthlyLimit, extraBalance, extraBalance4o }: 
         }
     }
 
-    if (loading) return <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-100 rounded-lg"></div>
-        <div className="h-8 bg-gray-100 rounded-lg"></div>
-    </div>
-
-    const totalMini = (monthlyLimit || 500) + currentExtraMini
-    const percentMini = Math.min(100, Math.round(((usedMini || 0) / totalMini) * 100))
-    
-    // GPT-4o typically doesn't have a plan limit, only extra balance in this logic
-    const total4o = currentExtra4o
-    const percent4o = total4o > 0 ? Math.min(100, Math.round(((used4o || 0) / total4o) * 100)) : 0
-
     return (
-        <div className="space-y-6">
-            {/* GPT-4o mini Dashboard */}
-            <div className="space-y-3 bg-emerald-50/30 p-3 rounded-lg border border-emerald-100/50">
-                <div className="flex justify-between items-end">
-                    <div className="flex gap-4">
-                        <div className="text-center">
-                            <p className="text-[10px] text-emerald-600 uppercase font-bold text-left">GPT-4o-mini (Usados)</p>
-                            <p className="text-sm font-bold text-gray-900 text-left">{usedMini}</p>
+        <div className="space-y-5">
+            {/* Barra de uso */}
+            <div className="space-y-3">
+                <div className="flex items-end justify-between">
+                    <div className="flex gap-6">
+                        <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Créditos Usados</p>
+                            <p className={cn("text-2xl font-black", isOverLimit ? "text-red-400" : "text-white")}>{used.toLocaleString()}</p>
                         </div>
-                        <div className="text-center">
-                            <p className="text-[10px] text-emerald-600 uppercase font-bold text-left">Límite (Plan + Extra)</p>
-                            <p className="text-sm font-medium text-gray-600 text-left">{monthlyLimit || 500} + {currentExtraMini} = {totalMini}</p>
+                        <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Límite Plan</p>
+                            <p className="text-2xl font-black text-gray-300">{creditsLimit.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Créditos Extra</p>
+                            <p className="text-2xl font-black text-violet-400">{currentExtra.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Disponibles</p>
+                            <p className={cn("text-2xl font-black", remaining === 0 ? "text-red-400" : "text-emerald-400")}>{remaining.toLocaleString()}</p>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${percentMini > 90 ? 'bg-red-50 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
-                            {percentMini}%
+                    <div>
+                        <span className={cn(
+                            "text-sm font-bold px-3 py-1 rounded-full",
+                            isOverLimit ? "bg-red-500/20 text-red-400" :
+                            percent > 80 ? "bg-amber-500/20 text-amber-400" :
+                            "bg-emerald-500/20 text-emerald-400"
+                        )}>
+                            {percent}%
                         </span>
                     </div>
                 </div>
-                <div className="w-full bg-emerald-100/30 rounded-full h-2 overflow-hidden shadow-inner">
-                    <div 
-                        className={`h-full transition-all duration-500 ${percentMini > 90 ? 'bg-red-500' : 'bg-emerald-500'}`} 
-                        style={{ width: `${percentMini}%` }}
+
+                <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div
+                        className={cn(
+                            "h-full rounded-full transition-all duration-500",
+                            isOverLimit ? "bg-red-500" :
+                            percent > 80 ? "bg-amber-500" :
+                            "bg-emerald-500"
+                        )}
+                        style={{ width: `${percent}%` }}
                     />
                 </div>
+
+                <p className="text-xs text-gray-500">
+                    Total disponible: <span className="text-gray-300 font-medium">{creditsLimit.toLocaleString()} (plan) + {currentExtra.toLocaleString()} (extra) = {totalLimit.toLocaleString()}</span>
+                </p>
             </div>
 
-            {/* GPT-4o Dashboard */}
-            <div className="space-y-3 bg-violet-50/30 p-3 rounded-lg border border-violet-100/50">
-                <div className="flex justify-between items-end">
-                    <div className="flex gap-4">
-                        <div className="text-center">
-                            <p className="text-[10px] text-violet-600 uppercase font-bold text-left">GPT-4o Premium (Usados)</p>
-                            <p className="text-sm font-bold text-gray-900 text-left">{used4o}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] text-violet-600 uppercase font-bold text-left">Límite (Solo Extra)</p>
-                            <p className="text-sm font-medium text-gray-600 text-left">{currentExtra4o}</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${percent4o > 90 ? 'bg-red-50 text-red-600' : 'bg-violet-100 text-violet-700'}`}>
-                            {percent4o}%
-                        </span>
-                    </div>
-                </div>
-                <div className="w-full bg-violet-100/30 rounded-full h-2 overflow-hidden shadow-inner">
-                    <div 
-                        className={`h-full transition-all duration-500 ${percent4o > 90 ? 'bg-red-500' : 'bg-violet-500'}`} 
-                        style={{ width: `${percent4o}%` }}
-                    />
-                </div>
-            </div>
-
-            {/* Manual Credit Loader */}
-            <div className="pt-2 border-t border-gray-100">
-                <p className="text-[10px] text-gray-400 font-bold uppercase mb-2">Carga Manual de Créditos</p>
+            {/* Carga manual de créditos extra */}
+            <div className="pt-4 border-t border-gray-700">
+                <p className="text-[10px] text-gray-400 font-bold uppercase mb-3 flex items-center gap-1.5">
+                    <Plus className="w-3 h-3" /> Cargar Créditos Extra
+                </p>
                 <div className="flex items-center gap-2">
-                    <select 
-                        value={chargeTarget}
-                        onChange={(e) => setChargeTarget(e.target.value as any)}
-                        className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
-                    >
-                        <option value="mini">Mini</option>
-                        <option value="4o">GPT-4o</option>
-                    </select>
-                    <div className="relative flex-1">
-                        <input 
-                            type="number"
-                            value={addAmount}
-                            onChange={(e) => setAddAmount(e.target.value)}
-                            placeholder="Cantidad..."
-                            className="w-full pl-3 pr-4 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                        />
-                    </div>
+                    <input
+                        type="number"
+                        value={addAmount}
+                        onChange={(e) => setAddAmount(e.target.value)}
+                        min="100"
+                        step="100"
+                        placeholder="Cantidad..."
+                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FF2E88]/50"
+                    />
                     <button
                         onClick={handleAddCredits}
                         disabled={isUpdating}
-                        className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all shadow-sm disabled:opacity-50",
-                            chargeTarget === '4o' ? "bg-violet-600 hover:bg-violet-700" : "bg-emerald-600 hover:bg-emerald-700"
-                        )}
+                        className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-[#FF2E88] hover:bg-[#e0206f] rounded-lg transition-all disabled:opacity-50"
                     >
                         {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                         Cargar Créditos
