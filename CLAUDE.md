@@ -212,6 +212,35 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - Actualizado clpPrice mapping a nuevos IDs
 - Display de créditos: `∞` para packs ilimitados
 
+### Cambios realizados — mayo 2026 (sesión 3)
+
+#### Landing.tsx — fix módulos
+- Eliminada línea "Todas estas funcionalidades incluidas desde el Plan Core · US$39/mes" (Plan Core no incluye todas las funciones listadas)
+
+#### Reminders.tsx — toggle Confirmación
+- Agregado toggle "Confirmación" que reutiliza el campo DB `reminder_1h_before` con label semántico distinto
+- Agregada TemplateSelector para plantilla de confirmación (`template_1h`)
+- Banner actualizado: "WhatsApp automático: 24h antes, 2h antes y solicitud de confirmación."
+- Los 3 toggles activos: `reminder_24h_before`, `reminder_2h_before` (confirmación 24/2h), `reminder_1h_before` (confirmación de cita)
+
+#### Finance.tsx — rediseño completo
+- **Tab Resumen:** barras de proporción ingresos/gastos, ganancia neta, margen %, citas cobradas — reemplaza placeholder "Próximamente"
+- **Tab Transacciones:** filtro "Bloqueo de Agenda" aplicado al cargar datos (centralizado en `setTransactions`), edición inline de monto (ícono lápiz → input con Enter/Escape), botón "Cobrar" en lugar de "Registrar Pago"
+- **Tab Gastos / Otros Ingresos:** filas card-style con avatar icon, badge categoría, botón trash; acceso rápido "Nuevo Gasto"/"Nuevo Ingreso" en headers
+- **Modal Ingresos:** selector de clienta con autocomplete (debounced 250ms, consulta tabla `patients`); nombre de clienta guardado en campo `description` como `"${desc} — Clienta: ${nombre}"` (la tabla `incomes` no tiene `patient_id`)
+- **Modal Gastos:** rediseñado al mismo estilo moderno (`bg-black/50`, `z-[9999]`, `rounded-2xl`, tema rojo)
+- **Patrón de filtro:** `setTransactions((data || []).filter(tx => tx.patient_name !== 'Bloqueo de Agenda'))` — aplicar UNA SOLA VEZ al cargar, no repetir en el JSX
+- Usa `financeService.updateTransactionPrice(appointmentId, price)` para edición inline de montos
+
+#### HQ AdminClinics.tsx — dark theme + créditos IA universales
+- **Tema oscuro completo:** todas las cards usan `bg-gray-800`, `border-gray-700`, `text-white`, compatible con `bg-gray-950` del AdminLayout
+- **Títulos de sección:** `text-white font-bold` con ícono `#FF2E88` — antes eran `text-gray-500` ilegibles sobre fondo oscuro
+- **AdminAIUsage reescrito:** una sola barra universal `Usados / (Límite Plan + Extra)` — elimina split mini/GPT-4o
+- **Métricas universales:** Créditos Usados · Límite Plan · Extra · Disponibles en una fila
+- **Carga manual unificada:** actualiza `ai_credits_extra` + `ai_credits_extra_balance` (ambas columnas para compatibilidad)
+- **Fetch extendido:** incluye `ai_credits_used`, `ai_credits_limit`, `ai_credits_extra` + fallback a `ai_credits_monthly_limit`, `ai_credits_extra_balance`
+- `planLabels` incluye `essence/radiance/prestige/basic` para clínicas con planes legacy
+
 ---
 
 ## Estado actual de configuración
@@ -253,16 +282,15 @@ cron-process-surveys: false      (invocado por pg_cron)
 
 ### Media prioridad — UX/diseño
 - [ ] **Banners degradado pendientes** — agregar banner estilo Vetly (label sección + título H1 + stats) a las páginas restantes:
-  - Sky (`from-sky-500 to-sky-700`): Dashboard, Mensajes, Plantillas, KnowledgeBase ← ya hecho en AISettings e Integrations
-  - Pink (`from-[#FF2E88] to-[#c0236a]`): Patients/Contactos, CRM, Appointments, Reminders, RetentionEngine, Finance
+  - Sky (`from-sky-500 to-sky-700`): Dashboard, Mensajes, Plantillas, KnowledgeBase ← ya hecho en AISettings, Integrations, Finance, Reminders
+  - Pink (`from-[#FF2E88] to-[#c0236a]`): Patients/Contactos, CRM, Appointments, RetentionEngine
   - Violet (`from-violet-500 to-violet-700`): Campaigns, Loyalty
   - Amber (`from-amber-500 to-amber-700`): Settings
 - [ ] **Dashboard** — tarjetas con cabecera de degradado coloreada por área
 - **Colores de sección del DashboardLayout** (para banners):
-  - Principal/Citas/Pacientes/Mensajes: `from-sky-500 to-sky-700`
+  - Principal/Citas/Pacientes/Mensajes/Finanzas: `from-sky-500 to-sky-700`
   - Clínica/CRM/Pacientes/Citas/Recordatorios: `from-[#FF2E88] to-[#c0236a]`
   - Marketing/Campañas/Fidelización: `from-violet-500 to-violet-700`
-  - Finanzas: `from-emerald-500 to-emerald-700`
   - Configuración: `from-amber-500 to-amber-700`
 
 ### Media prioridad — monetización
