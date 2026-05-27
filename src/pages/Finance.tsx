@@ -136,7 +136,7 @@ const Finance = () => {
             setStats(statsData)
             setExpenses(expensesData)
             setIncomes(incomesData)
-            setTransactions(transactionsData || [])
+            setTransactions((transactionsData || []).filter((tx: any) => tx.patient_name !== 'Bloqueo de Agenda'))
         } catch (error) {
             console.error('Error loading finance data:', error)
         } finally {
@@ -702,39 +702,99 @@ const Finance = () => {
             <div className="space-y-6">
                 {activeTab === 'dashboard' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Chart Placeholders */}
-                        <div className="lg:col-span-2 card-soft p-6">
-                            <h3 className="font-semibold text-charcoal mb-4">Ingresos vs Gastos</h3>
-                            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-soft border border-dashed border-gray-200">
-                                <p className="text-charcoal/40 text-sm">Gráfico de barras (Próximamente)</p>
+                        {/* Resumen financiero */}
+                        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                                </div>
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Resumen Financiero</h3>
+                            </div>
+                            <div className="p-6 space-y-5">
+                                {/* Ingresos */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Ingresos</span>
+                                        <span className="text-sm font-bold text-emerald-600">{formatCurrency(stats?.total_income || 0)}</span>
+                                    </div>
+                                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                                            style={{ width: stats && (stats.total_income + stats.total_expenses) > 0 ? `${Math.round((stats.total_income / (stats.total_income + stats.total_expenses)) * 100)}%` : '0%' }}
+                                        />
+                                    </div>
+                                </div>
+                                {/* Gastos */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Gastos</span>
+                                        <span className="text-sm font-bold text-red-500">{formatCurrency(stats?.total_expenses || 0)}</span>
+                                    </div>
+                                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-red-400 rounded-full transition-all duration-500"
+                                            style={{ width: stats && (stats.total_income + stats.total_expenses) > 0 ? `${Math.round((stats.total_expenses / (stats.total_income + stats.total_expenses)) * 100)}%` : '0%' }}
+                                        />
+                                    </div>
+                                </div>
+                                {/* Neto */}
+                                <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Ganancia Neta</span>
+                                        <span className={cn("text-lg font-black", (stats?.net_profit || 0) >= 0 ? "text-emerald-600" : "text-red-500")}>
+                                            {formatCurrency(stats?.net_profit || 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                                {/* Margen */}
+                                {stats && stats.total_income > 0 && (
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-medium">Margen de ganancia</p>
+                                            <p className={cn("text-2xl font-black mt-0.5", (stats.net_profit / stats.total_income) >= 0.2 ? "text-emerald-600" : "text-amber-500")}>
+                                                {Math.round((stats.net_profit / stats.total_income) * 100)}%
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-gray-500 font-medium">Citas cobradas</p>
+                                            <p className="text-2xl font-black text-gray-900 dark:text-gray-100 mt-0.5">{stats.appointments_count || 0}</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Recent Transactions Mini List */}
-                        <div className="card-soft p-6">
-                            <h3 className="font-semibold text-charcoal mb-4">Recientes</h3>
-                            <div className="space-y-4">
-                                {transactions.filter(tx => tx.patient_name !== 'Bloqueo de Agenda').slice(0, 5).map((tx) => (
-                                    <div key={tx.id} className="flex items-center justify-between text-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
-                                                <DollarSign className="w-4 h-4" />
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-charcoal">{tx.patient_name}</p>
-                                                <p className="text-xs text-charcoal/50">{formatInTz(tx.appointment_date, 'd MMM')}</p>
-                                            </div>
+                        {/* Transacciones recientes */}
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                                    <CreditCard className="w-4 h-4 text-sky-600" />
+                                </div>
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Recientes</h3>
+                            </div>
+                            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {transactions.slice(0, 6).map((tx) => (
+                                    <div key={tx.id} className="flex items-center gap-3 px-6 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FF2E88]/10 to-violet-100 dark:from-[#FF2E88]/20 dark:to-violet-900/20 flex items-center justify-center flex-shrink-0">
+                                            <User className="w-3.5 h-3.5 text-[#FF2E88]" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{tx.patient_name}</p>
+                                            <p className="text-[10px] text-gray-400 truncate">{formatInTz(tx.appointment_date, 'd MMM')}</p>
                                         </div>
                                         <span className={cn(
-                                            "font-medium",
-                                            tx.price > 0 ? "text-emerald-600" : "text-charcoal/60"
+                                            "text-xs font-bold flex-shrink-0",
+                                            tx.payment_status === 'paid' ? "text-emerald-600" : "text-amber-500"
                                         )}>
-                                            +{formatCurrency(tx.price || 0)}
+                                            {formatCurrency(tx.price || 0)}
                                         </span>
                                     </div>
                                 ))}
                                 {transactions.length === 0 && (
-                                    <p className="text-sm text-charcoal/50 text-center py-4">No hay transacciones recientes</p>
+                                    <div className="py-12 text-center">
+                                        <CreditCard className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                                        <p className="text-xs text-gray-400">Sin transacciones recientes</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -749,13 +809,11 @@ const Finance = () => {
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Transacciones de citas</h3>
-                                <p className="text-xs text-gray-500">{transactions.filter(tx => tx.patient_name !== 'Bloqueo de Agenda').length} registros en el período</p>
+                                <p className="text-xs text-gray-500">{transactions.length} registros en el período</p>
                             </div>
                         </div>
                         <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {transactions
-                                .filter(tx => tx.patient_name !== 'Bloqueo de Agenda')
-                                .map((tx) => (
+                            {transactions.map((tx) => (
                                 <div key={tx.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     {/* Avatar */}
                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF2E88]/10 to-violet-100 dark:from-[#FF2E88]/20 dark:to-violet-900/20 flex items-center justify-center flex-shrink-0 border border-[#FF2E88]/10">
@@ -840,7 +898,7 @@ const Finance = () => {
                                     </div>
                                 </div>
                             ))}
-                            {transactions.filter(tx => tx.patient_name !== 'Bloqueo de Agenda').length === 0 && (
+                            {transactions.length === 0 && (
                                 <div className="py-16 text-center">
                                     <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
                                         <CreditCard className="w-7 h-7 text-gray-300 dark:text-gray-600" />
