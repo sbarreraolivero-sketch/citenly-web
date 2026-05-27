@@ -133,11 +133,11 @@ export default function AdminClinics() {
     }
 
     return (
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Clínicas</h1>
-                <p className="text-gray-500 mt-1">Gestiona todas las clínicas registradas en la plataforma.</p>
+            <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clínicas</h1>
+                <p className="text-gray-500 mt-1 text-sm">Gestiona todas las clínicas registradas en la plataforma.</p>
             </div>
 
             {/* Stats Cards */}

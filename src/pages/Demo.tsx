@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Sparkles, Calendar, Clock, User, Building2, Mail, Phone, MessageSquare, CheckCircle2, Loader2, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -132,15 +133,25 @@ export default function Demo() {
 
     return (
         <div className="min-h-screen bg-[#0A0A0F]">
-            {/* Header */}
-            <header className="border-b border-white/5 px-6 py-4">
-                <a href="/" className="flex items-center gap-3 w-fit">
-                    <div className="w-9 h-9 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-xl flex items-center justify-center">
-                        <Sparkles className="w-4.5 h-4.5 text-white" />
+            {/* Nav top — igual que Landing */}
+            <nav className="sticky top-0 z-50 bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/5">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <Link to="/" className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF2E88]/20">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-lg font-black tracking-tight text-white">Citenly</span>
+                    </Link>
+                    <div className="hidden md:flex items-center gap-6 text-sm font-medium text-white/60">
+                        <Link to="/#features" className="hover:text-white transition-colors">Funciones</Link>
+                        <Link to="/#planes"   className="hover:text-white transition-colors">Precios</Link>
+                        <Link to="/#faq"      className="hover:text-white transition-colors">FAQ</Link>
                     </div>
-                    <span className="text-lg font-black text-white tracking-tight">Citenly</span>
-                </a>
-            </header>
+                    <Link to="/login" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
+                        Ya tengo cuenta →
+                    </Link>
+                </div>
+            </nav>
 
             <div className="max-w-2xl mx-auto px-6 py-12">
                 {/* Title */}

@@ -45,6 +45,8 @@ const AdminLogin = lazy(() => import('./pages/hq/AdminLogin'))
 const AdminCalendar = lazy(() => import('./pages/hq/AdminCalendar'))
 const AdminMessages = lazy(() => import('./pages/hq/AdminMessages'))
 const AdminCRM = lazy(() => import('./pages/hq/AdminCRM'))
+const AISettings = lazy(() => import('./pages/AISettings'))
+const Integrations = lazy(() => import('./pages/Integrations'))
 
 // Contexts & Guards
 import { AuthProvider } from './contexts/AuthContext'
@@ -212,6 +214,16 @@ function MainRoutes() {
                         <Route path="reminders" element={
                             <SubscriptionGuard>
                                 <Reminders />
+                            </SubscriptionGuard>
+                        } />
+                        <Route path="ai-settings" element={
+                            <SubscriptionGuard>
+                                <AISettings />
+                            </SubscriptionGuard>
+                        } />
+                        <Route path="integrations" element={
+                            <SubscriptionGuard>
+                                <Integrations />
                             </SubscriptionGuard>
                         } />
                         <Route path="settings" element={<Settings />} />

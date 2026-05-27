@@ -206,28 +206,28 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+        <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Panel de Administración</h1>
-                    <p className="text-gray-500 mt-1">Gestiona las activaciones pendientes y cuentas de la plataforma.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Panel de Administración</h1>
+                    <p className="text-gray-500 mt-1 text-sm">Gestiona las activaciones pendientes y cuentas de la plataforma.</p>
                 </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200 flex items-center justify-between gap-4">
-                    <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                         <Clock className="w-5 h-5 text-amber-500" />
                         Activaciones Pendientes ({clinics.length})
                     </h2>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-auto">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Buscar clínica o email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[300px]"
+                            className="w-full sm:w-72 pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                         />
                     </div>
                 </div>

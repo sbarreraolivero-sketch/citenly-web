@@ -2081,7 +2081,7 @@ export default function Settings() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                                     {(Object.keys(PLANS) as PlanId[]).map((planId) => {
                                         const mpPlan = PLANS[planId]
                                         const lsPlan = LS_PLANS[planId as LSPlanId]
@@ -2152,8 +2152,8 @@ export default function Settings() {
                                                         <p className="text-[10px] font-black text-primary-theme/30 uppercase tracking-[0.2em] mb-4">Lo que incluye</p>
                                                         <ul className="space-y-2">
                                                             {plan.features.map((feature: string, idx: number) => (
-                                                                <li key={idx} className="flex items-center gap-2 text-xs font-medium text-primary-theme/60">
-                                                                    <div className="w-1 h-1 rounded-full bg-primary-theme/30" />
+                                                                <li key={idx} className="flex items-start gap-2 text-xs font-medium text-primary-theme/70">
+                                                                    <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isPro ? 'text-[#FF2E88]' : 'text-emerald-500'}`} />
                                                                     {feature}
                                                                 </li>
                                                             ))}
