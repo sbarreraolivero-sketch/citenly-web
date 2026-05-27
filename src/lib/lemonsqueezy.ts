@@ -189,7 +189,7 @@ export type ReminderPackId = 'reminders_50' | 'reminders_350' | 'reminders_unlim
 
 export const REMINDER_PACKS: Record<ReminderPackId, { id: ReminderPackId; name: string; credits: number; price: number; label: string }> = {
     reminders_50:        { id: 'reminders_50',        name: 'Pack Básico',     credits: 50,   price: 9,  label: '50 recordatorios' },
-    reminders_350:       { id: 'reminders_350',       name: 'Pack Estándar',   credits: 350,  price: 19, label: '350 recordatorios' },
+    reminders_350:       { id: 'reminders_350',       name: 'Pack Estándar',   credits: 150,  price: 19, label: '150 recordatorios' },
     reminders_unlimited: { id: 'reminders_unlimited', name: 'Pack Ilimitado',  credits: 9999, price: 29, label: 'Recordatorios ilimitados (mes)' },
 }
 

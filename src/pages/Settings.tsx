@@ -17,7 +17,6 @@ import {
     AlertCircle,
     X,
     Loader2,
-    AlarmClock,
     User,
     Globe,
     Tag,
@@ -27,7 +26,6 @@ import {
     Facebook,
     Music,
     History,
-    ExternalLink,
     RefreshCw,
     Calendar,
     ShieldCheck,
@@ -51,7 +49,6 @@ const tabs = [
     { id: 'schedule', label: 'Horarios', icon: Clock },
     { id: 'tags', label: 'Etiquetas', icon: Tag },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
-    { id: 'reminders', label: 'Recordatorios', icon: AlarmClock },
 ]
 
 // Mock services data
@@ -153,26 +150,6 @@ export default function Settings() {
     const [savingNotifications, setSavingNotifications] = useState(false)
     const [notificationsSaved, setNotificationsSaved] = useState(false)
 
-    // Reminder settings state
-    const [reminderSettings, setReminderSettings] = useState({
-        reminder_24h_before: true,
-        reminder_2h_before: true,
-        reminder_1h_before: false,
-        request_confirmation: true,
-        confirmation_days_before: 1,
-        preferred_hour: '09:00',
-        template_24h: '',
-        template_2h: '',
-        template_1h: '',
-        template_confirmation: '',
-        template_followup: '',
-        followup_enabled: false,
-        followup_days_after: 7,
-    })
-    const [savingReminders, setSavingReminders] = useState(false)
-    const [remindersSaved, setRemindersSaved] = useState(false)
-    const [reminderLogs, setReminderLogs] = useState<any[]>([])
-    const [isLoadingLogs, setIsLoadingLogs] = useState(false)
 
     // Clinic settings state
     const [savingClinic, setSavingClinic] = useState(false)
@@ -242,7 +219,7 @@ export default function Settings() {
             // Clean URL params after reading
             const newUrl = window.location.pathname
             window.history.replaceState({}, '', newUrl)
-        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'reminders', 'ai', 'tags'].includes(tabParam)) {
+        } else if (tabParam && ['profile', 'clinic', 'team', 'schedule', 'integrations', 'subscription', 'notifications', 'ai', 'tags'].includes(tabParam)) {
             setActiveTab(tabParam)
             if (window.innerWidth < 768) setShowMobileList(false)
         }
@@ -275,36 +252,6 @@ export default function Settings() {
                         new_message: notifData.new_message,
                         survey_response: notifData.survey_response,
                         ai_handoff: notifData.ai_handoff !== undefined ? notifData.ai_handoff : true
-                    })
-                }
-
-                // Fetch reminder settings
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: reminderData, error: reminderError } = await (supabase as any)
-                    .from('reminder_settings')
-                    .select('*')
-                    .eq('clinic_id', profile.clinic_id)
-                    .single()
-
-                if (reminderError && reminderError.code !== 'PGRST116') {
-                    throw reminderError
-                }
-
-                if (reminderData) {
-                    setReminderSettings({
-                        reminder_24h_before: reminderData.reminder_24h_before,
-                        reminder_2h_before: reminderData.reminder_2h_before,
-                        reminder_1h_before: reminderData.reminder_1h_before,
-                        request_confirmation: reminderData.request_confirmation,
-                        confirmation_days_before: reminderData.confirmation_days_before,
-                        preferred_hour: reminderData.preferred_hour,
-                        template_24h: reminderData.template_24h || '',
-                        template_2h: reminderData.template_2h || '',
-                        template_1h: reminderData.template_1h || '',
-                        template_confirmation: reminderData.template_confirmation || '',
-                        template_followup: reminderData.template_followup || '',
-                        followup_enabled: reminderData.followup_enabled,
-                        followup_days_after: reminderData.followup_days_after,
                     })
                 }
 
@@ -425,33 +372,6 @@ export default function Settings() {
         }
     }, [activeTab, profile?.clinic_id])
 
-    // Load reminder logs
-    useEffect(() => {
-        const fetchReminderLogs = async () => {
-            if (!profile?.clinic_id || activeTab !== 'reminders') return
-
-            setIsLoadingLogs(true)
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data, error } = await (supabase as any)
-                    .from('reminder_logs')
-                    .select('*, appointments(patient_name)')
-                    .eq('clinic_id', profile.clinic_id)
-                    .order('sent_at', { ascending: false })
-                    .limit(20)
-
-                if (error) throw error
-                setReminderLogs(data || [])
-            } catch (error) {
-                console.error('Error fetching reminder logs:', error)
-            } finally {
-                setIsLoadingLogs(false)
-            }
-        }
-
-        fetchReminderLogs()
-    }, [activeTab, profile?.clinic_id])
-
     const handleSaveNotifications = async () => {
         if (!profile?.clinic_id) return
 
@@ -476,33 +396,6 @@ export default function Settings() {
             console.error('Error saving notification preferences:', error)
         } finally {
             setSavingNotifications(false)
-        }
-    }
-
-    const handleSaveReminders = async () => {
-        if (!profile?.clinic_id) return
-
-        setSavingReminders(true)
-        setRemindersSaved(false)
-
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('reminder_settings')
-                .upsert({
-                    clinic_id: profile.clinic_id,
-                    ...reminderSettings,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'clinic_id' })
-
-            if (error) throw error
-
-            setRemindersSaved(true)
-            setTimeout(() => setRemindersSaved(false), 3000)
-        } catch (error) {
-            console.error('Error saving reminder settings:', error)
-        } finally {
-            setSavingReminders(false)
         }
     }
 
@@ -2340,351 +2233,6 @@ export default function Settings() {
                             </div>
                         </div>
                     )}
-
-                    {/* Reminders Settings */}
-                    {activeTab === 'reminders' && (
-                        <div className="card-premium p-6">
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-soft flex items-center justify-center">
-                                    <AlarmClock className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold text-primary-theme">Configuración de Recordatorios</h2>
-                                    <p className="text-sm text-primary-theme/50">Personaliza cuándo y cómo enviar recordatorios</p>
-                                </div>
-                            </div>
-
-                            {remindersSaved && (
-                                <div className="my-6 p-4 bg-[#FF2E88]/10 border border-[#FF2E88]/20 rounded-soft flex items-center gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-[#FF2E88]" />
-                                    <p className="text-sm text-[#FF2E88] font-medium">¡Configuración de recordatorios guardada!</p>
-                                </div>
-                            )}
-
-                            {/* Timing Section */}
-                            <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Tiempo de recordatorios</h3>
-                                <div className="space-y-3">
-                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
-                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
-                                            <div>
-                                                <p className="font-semibold text-primary-theme">24 horas antes</p>
-                                                <p className="text-sm text-primary-theme/60">Enviar recordatorio un día antes</p>
-                                            </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={reminderSettings.reminder_24h_before}
-                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_24h_before: e.target.checked })}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                            </label>
-                                        </div>
-                                        {reminderSettings.reminder_24h_before && (
-                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
-                                                <TemplateSelector
-                                                    label="Plantilla: Recordatorio 24h"
-                                                    description="Se enviará este mensaje a tus pacientes 24 horas antes de la cita."
-                                                    value={reminderSettings.template_24h}
-                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_24h: val })}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
-                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
-                                            <div>
-                                                <p className="font-semibold text-primary-theme">2 horas antes</p>
-                                                <p className="text-sm text-primary-theme/60">Recordatorio cercano a la cita</p>
-                                            </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={reminderSettings.reminder_2h_before}
-                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_2h_before: e.target.checked })}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                            </label>
-                                        </div>
-                                        {reminderSettings.reminder_2h_before && (
-                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
-                                                <TemplateSelector
-                                                    label="Plantilla: Recordatorio 2h"
-                                                    description="Se enviará este mensaje a tus pacientes 2 horas antes de la cita."
-                                                    value={reminderSettings.template_2h}
-                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_2h: val })}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
-                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
-                                            <div>
-                                                <p className="font-semibold text-primary-theme">1 hora antes</p>
-                                                <p className="text-sm text-primary-theme/60">Último recordatorio antes de la cita</p>
-                                            </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={reminderSettings.reminder_1h_before}
-                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_1h_before: e.target.checked })}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                            </label>
-                                        </div>
-                                        {reminderSettings.reminder_1h_before && (
-                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
-                                                <TemplateSelector
-                                                    label="Plantilla: Recordatorio 1h"
-                                                    description="Se enviará este mensaje a tus pacientes 1 hora antes de la cita."
-                                                    value={reminderSettings.template_1h}
-                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_1h: val })}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Preferred Hour */}
-                            <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Hora preferida de envío</h3>
-                                <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
-                                    <div>
-                                        <p className="font-semibold text-primary-theme">Hora de recordatorios</p>
-                                        <p className="text-sm text-primary-theme/60">Para recordatorios de 24h, enviar a esta hora</p>
-                                    </div>
-                                    <input
-                                        type="time"
-                                        value={reminderSettings.preferred_hour}
-                                        onChange={(e) => setReminderSettings({ ...reminderSettings, preferred_hour: e.target.value })}
-                                        className="px-3 py-2 bg-secondary-theme text-primary-theme border border-theme rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Confirmation Section */}
-                            <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Solicitar confirmación</h3>
-                                <div className="space-y-3">
-                                    <div className="bg-secondary-theme rounded-soft overflow-hidden shadow-soft-md border border-theme">
-                                        <div className="flex items-center justify-between p-5 bg-secondary-theme/50">
-                                            <div>
-                                                <p className="font-semibold text-primary-theme">Pedir confirmación</p>
-                                                <p className="text-sm text-primary-theme/60">Solicitar al paciente que confirme su asistencia</p>
-                                            </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={reminderSettings.request_confirmation}
-                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, request_confirmation: e.target.checked })}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                            </label>
-                                        </div>
-                                        {reminderSettings.request_confirmation && (
-                                            <div className="px-4 pb-4 border-t border-charcoal/5 pt-3">
-                                                <TemplateSelector
-                                                    label="Plantilla: Confirmación Requerida"
-                                                    description="Se utiliza cuando requieres que el paciente confirme expresamente. Incluye mensaje y botones."
-                                                    value={reminderSettings.template_confirmation}
-                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_confirmation: val })}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            {/* Follow-up Section */}
-                            <div className="mt-6">
-                                <h3 className="text-sm font-semibold text-primary-theme mb-4">Seguimiento post-cita</h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
-                                        <div>
-                                            <p className="font-semibold text-primary-theme">Recordatorio de seguimiento</p>
-                                            <p className="text-sm text-primary-theme/60">Enviar mensaje después de la cita para reagendar</p>
-                                        </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={reminderSettings.followup_enabled}
-                                                onChange={(e) => setReminderSettings({ ...reminderSettings, followup_enabled: e.target.checked })}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                        </label>
-                                    </div>
-
-                                    {reminderSettings.followup_enabled && (
-                                        <>
-                                            <div className="flex items-center justify-between p-5 bg-secondary-theme rounded-soft shadow-soft-md border border-theme">
-                                                <div>
-                                                    <p className="font-semibold text-primary-theme">Días después de la cita</p>
-                                                    <p className="text-sm text-primary-theme/60">Cuántos días esperar antes de enviar</p>
-                                                </div>
-                                                <select
-                                                    value={reminderSettings.followup_days_after}
-                                                    onChange={(e) => setReminderSettings({ ...reminderSettings, followup_days_after: parseInt(e.target.value) })}
-                                                    className="px-3 py-2 bg-secondary-theme text-primary-theme border border-theme rounded-soft text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-                                                >
-                                                    <option value={3}>3 días</option>
-                                                    <option value={7}>7 días</option>
-                                                    <option value={14}>14 días</option>
-                                                    <option value={30}>30 días</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="mt-4">
-                                                <TemplateSelector
-                                                    label="Plantilla de Seguimiento"
-                                                    value={reminderSettings.template_followup}
-                                                    onChange={(val) => setReminderSettings({ ...reminderSettings, template_followup: val })}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="mt-6 pt-6 border-t border-theme">
-                                <button
-                                    onClick={handleSaveReminders}
-                                    disabled={savingReminders}
-                                    className="btn-premium-primary flex items-center gap-2"
-                                >
-                                    {savingReminders ? (
-                                        <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                                    ) : (
-                                        <><Save className="w-4 h-4" /> Guardar Recordatorios</>
-                                    )}
-                                </button>
-                            </div>
-
-                            {/* Visual Record / History Section */}
-                            <div className="mt-12">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center">
-                                            <History className="w-5 h-5 text-indigo-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-primary-theme">Registro de Envíos</h3>
-                                            <p className="text-sm text-primary-theme/50">Historial reciente de recordatorios enviados</p>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        onClick={() => {
-                                            // Trigger reload
-                                            setActiveTab('profile');
-                                            setTimeout(() => setActiveTab('reminders'), 10);
-                                        }}
-                                        className="btn-premium-secondary text-primary-theme/50 hover:bg-secondary-theme flex items-center gap-2 text-sm"
-                                    >
-                                        <RefreshCw className={cn("w-4 h-4", isLoadingLogs && "animate-spin")} />
-                                        Sincronizar
-                                    </button>
-                                </div>
-
-                                <div className="bg-secondary-theme rounded-soft shadow-soft-md border border-theme overflow-hidden">
-                                    {isLoadingLogs ? (
-                                        <div className="py-12 flex flex-col items-center justify-center gap-3">
-                                            <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-                                            <p className="text-sm text-primary-theme/40">Cargando historial...</p>
-                                        </div>
-                                    ) : reminderLogs.length === 0 ? (
-                                        <div className="py-12 text-center">
-                                            <div className="w-16 h-16 bg-secondary-theme/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <AlarmClock className="w-8 h-8 text-primary-theme/20" />
-                                            </div>
-                                            <p className="text-primary-theme/50 font-medium">Sin actividad reciente</p>
-                                            <p className="text-primary-theme/40 text-xs mt-1">Los recordatorios enviados aparecerán aquí.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse">
-                                                <thead>
-                                                    <tr className="bg-secondary-theme/50 border-b border-theme text-[11px] uppercase tracking-wider text-primary-theme/40 font-bold">
-                                                        <th className="px-6 py-4">Paciente</th>
-                                                        <th className="px-6 py-4">Tipo</th>
-                                                        <th className="px-6 py-4">Estado</th>
-                                                        <th className="px-6 py-4">Fecha/Hora</th>
-                                                        <th className="px-6 py-4 text-right">Detalle</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-silk-beige/50">
-                                                    {reminderLogs.map((log) => (
-                                                        <tr key={log.id} className="hover:bg-secondary-theme/30 transition-colors">
-                                                            <td className="px-6 py-4">
-                                                                <p className="font-semibold text-primary-theme text-sm">
-                                                                    {log.appointments?.patient_name || 'Paciente'}
-                                                                </p>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <span className={cn(
-                                                                    "text-xs font-bold font-bold px-2 py-0.5 rounded-full font-bold uppercase",
-                                                                    log.type === '24h' && "bg-amber-100 text-amber-700",
-                                                                    log.type === '2h' && "bg-blue-100 text-blue-700",
-                                                                    log.type === '1h' && "bg-indigo-100 text-indigo-700",
-                                                                    log.type === 'confirmation' && "bg-emerald-100 text-emerald-700"
-                                                                )}>
-                                                                    {log.type}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-2">
-                                                                    {log.status === 'sent' ? (
-                                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                                    ) : (
-                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
-                                                                    )}
-                                                                    <span className={cn(
-                                                                        "text-xs font-medium",
-                                                                        log.status === 'sent' ? "text-emerald-700" : "text-red-700"
-                                                                    )}>
-                                                                        {log.status === 'sent' ? 'Enviado' : 'Fallido'}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <p className="text-xs text-primary-theme/60">
-                                                                    {new Date(log.sent_at).toLocaleString()}
-                                                                </p>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-right">
-                                                                {log.error_message && (
-                                                                    <div className="group relative inline-block">
-                                                                        <AlertCircle className="w-4 h-4 text-red-400 cursor-help" />
-                                                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-charcoal text-white text-xs font-bold font-bold rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                                                                            {log.error_message}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="mt-4 flex items-center justify-between text-[11px] text-primary-theme/40 bg-secondary-theme/20 p-3 rounded-soft border border-dashed border-theme">
-                                    <p><strong>Nota:</strong> Los logs muestran los últimos 20 intentos de envío. Si un recordatorio falla, verifica tu saldo en YCloud o la configuración del número.</p>
-                                    <a href="https://www.ycloud.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary-500 font-bold">
-                                        Ir a YCloud Console <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
 
 
                     {/* Tags Settings */}

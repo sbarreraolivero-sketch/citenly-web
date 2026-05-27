@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Bell, Clock, CheckCircle2, XCircle, Package, Loader2, AlertCircle, TrendingUp } from 'lucide-react'
+import { Bell, Clock, CheckCircle2, XCircle, Package, Loader2, AlertCircle, TrendingUp, Save } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { PLANS, normalizePlanId } from '@/lib/mercadopago'
 import { REMINDER_PACKS, redirectToLemonReminderPackCheckout, type ReminderPackId } from '@/lib/lemonsqueezy'
+import { TemplateSelector } from '@/components/settings/TemplateSelector'
 
 type Tab = 'overview' | 'logs' | 'packs'
 
@@ -28,6 +29,7 @@ interface ReminderSettings {
     reminder_1h_before: boolean
     template_24h: string | null
     template_2h: string | null
+    template_1h: string | null
 }
 
 export default function Reminders() {
@@ -39,6 +41,9 @@ export default function Reminders() {
     const [savingSettings, setSavingSettings] = useState(false)
     const [purchasingPack, setPurchasingPack] = useState<string | null>(null)
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
+    const [localTemplates, setLocalTemplates] = useState({ template_24h: '', template_2h: '', template_1h: '' })
+    const [savingTemplates, setSavingTemplates] = useState(false)
+    const [templatesSaved, setTemplatesSaved] = useState(false)
 
     const isAdminOrOwner = member?.role === 'owner' || profile?.role === 'owner' || member?.role === 'admin' || profile?.role === 'admin'
     const planId = normalizePlanId(subscription?.plan)
@@ -65,7 +70,15 @@ export default function Reminders() {
         ])
 
         if (logsRes.data) setLogs(logsRes.data as ReminderLog[])
-        if (settingsRes.data) setSettings(settingsRes.data as ReminderSettings)
+        if (settingsRes.data) {
+            setSettings(settingsRes.data as ReminderSettings)
+            const s = settingsRes.data as ReminderSettings
+            setLocalTemplates({
+                template_24h: s.template_24h || '',
+                template_2h: s.template_2h || '',
+                template_1h: s.template_1h || '',
+            })
+        }
 
         setLoading(false)
     }, [profile?.clinic_id])
@@ -107,6 +120,20 @@ export default function Reminders() {
             alert(err.message || 'Error al conectar con el servidor de pagos')
             setPurchasingPack(null)
         }
+    }
+
+    const handleSaveTemplates = async () => {
+        if (!profile?.clinic_id) return
+        setSavingTemplates(true)
+        const db = supabase as any
+        const { error } = await db
+            .from('reminder_settings')
+            .upsert({ clinic_id: profile.clinic_id, ...localTemplates, updated_at: new Date().toISOString() }, { onConflict: 'clinic_id' })
+        if (!error) {
+            setTemplatesSaved(true)
+            setTimeout(() => setTemplatesSaved(false), 3000)
+        }
+        setSavingTemplates(false)
     }
 
     const sentThisMonth = logs.filter(l => {
@@ -199,6 +226,7 @@ export default function Reminders() {
                 <>
                     {/* OVERVIEW TAB */}
                     {tab === 'overview' && (
+                        <>
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* Toggle settings */}
                             <div className="card-premium p-6">
@@ -288,6 +316,58 @@ export default function Reminders() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Plantillas de mensaje */}
+                        <div className="card-premium p-6">
+                            <div className="flex items-center justify-between mb-5">
+                                <div>
+                                    <h2 className="text-base font-black text-primary-theme">Plantillas de Mensaje</h2>
+                                    <p className="text-xs text-secondary-theme mt-0.5">Selecciona la plantilla de WhatsApp para cada tipo de recordatorio.</p>
+                                </div>
+                                {templatesSaved && (
+                                    <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                                        <CheckCircle2 className="w-4 h-4" /> Guardado
+                                    </span>
+                                )}
+                            </div>
+                            <div className="space-y-5">
+                                <div className="p-4 bg-secondary-theme/50 rounded-xl border border-theme">
+                                    <TemplateSelector
+                                        label="Plantilla: 24 horas antes"
+                                        description="Mensaje enviado automáticamente un día antes de la cita."
+                                        value={localTemplates.template_24h}
+                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_24h: val }))}
+                                    />
+                                </div>
+                                <div className="p-4 bg-secondary-theme/50 rounded-xl border border-theme">
+                                    <TemplateSelector
+                                        label="Plantilla: 2 horas antes"
+                                        description="Mensaje enviado 2 horas antes de la cita."
+                                        value={localTemplates.template_2h}
+                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_2h: val }))}
+                                    />
+                                </div>
+                                <div className="p-4 bg-secondary-theme/50 rounded-xl border border-theme">
+                                    <TemplateSelector
+                                        label="Plantilla: 1 hora antes"
+                                        description="Último recordatorio antes de la cita."
+                                        value={localTemplates.template_1h}
+                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_1h: val }))}
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-5 pt-5 border-t border-theme">
+                                <button
+                                    onClick={handleSaveTemplates}
+                                    disabled={savingTemplates}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-[#FF2E88] hover:bg-[#e0266e] text-white text-sm font-black rounded-xl transition-colors disabled:opacity-60"
+                                >
+                                    {savingTemplates ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    Guardar Plantillas
+                                </button>
+                            </div>
+                        </div>
+                        </>
                     )}
 
                     {/* LOGS TAB */}

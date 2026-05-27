@@ -149,8 +149,10 @@ export default function Dashboard() {
                 ])
 
                 // 2. Process Stats (Primary: clinic_stats table)
-                if (clinicStats && clinicStats.length > 0) {
-                    const findStat = (type: string) => clinicStats.find((s: any) => s.stat_type === type && s.period === filterRange)?.value || 0
+                // Check specifically for the current period — not just any row
+                const periodStats = clinicStats?.filter((s: any) => s.period === filterRange)
+                if (periodStats && periodStats.length > 0) {
+                    const findStat = (type: string) => periodStats.find((s: any) => s.stat_type === type)?.value || 0
                     const appointmentsCount = findStat('appointments')
                     const uniqueContacts = findStat('unique_contacts')
                     const prospectsCount = findStat('prospects')
@@ -227,7 +229,7 @@ export default function Dashboard() {
                     })
 
                 } else {
-                    // Fallback to real-time counts if stats table is empty (e.g. initial setup)
+                    // Fallback to real-time counts if stats unavailable for this period
                     // @ts-ignore
                     supabase.rpc('refresh_clinic_stats', { target_clinic_id: clinicId })
 
@@ -291,8 +293,11 @@ export default function Dashboard() {
                     setSatisfactionStats({ sent, responded, nps, average })
                 }
 
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error)
+            } catch (error: any) {
+                // On timeout, keep existing state visible — don't blank the dashboard
+                if (error?.message !== 'Dashboard timeout') {
+                    console.error('Error fetching dashboard data:', error)
+                }
             } finally {
                 setLoading(false)
             }
@@ -374,26 +379,26 @@ export default function Dashboard() {
         <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
             <div className="flex flex-col gap-6">
             {/* Banner — Principal */}
-            <div className="bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-2xl overflow-hidden shadow-soft-md">
+            <div className="rounded-2xl border border-[#FF2E88]/30 shadow-soft-sm overflow-hidden">
                 <div className="p-6 sm:p-8">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                            <p className="text-xs font-black uppercase tracking-widest text-pink-200 mb-2">Principal</p>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                            <p className="text-xs font-black uppercase tracking-widest text-[#FF2E88]/70 mb-2">Principal</p>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary-theme">
                                 ¡Hola, {profile?.full_name?.split(' ')[0]}! 👋
                             </h1>
-                            <p className="text-sm text-pink-100/80 font-light mt-1">Tu asistente IA está activo y listo para gestionar tus citas. Aquí tienes el resumen de hoy.</p>
+                            <p className="text-sm text-secondary-theme font-light mt-1">Tu asistente IA está activo y listo para gestionar tus citas. Aquí tienes el resumen de hoy.</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="hidden lg:flex flex-col items-end bg-white/15 px-5 py-2.5 rounded-xl border border-white/20">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-pink-200 mb-1">Sistema</p>
+                            <div className="hidden lg:flex flex-col items-end bg-[#FF2E88]/5 px-5 py-2.5 rounded-xl border border-[#FF2E88]/20">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2E88]/70 mb-1">Sistema</p>
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span className="text-xs font-bold text-white">IA Operativa</span>
+                                    <span className="text-xs font-bold text-primary-theme">IA Operativa</span>
                                 </div>
                             </div>
-                            <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center shrink-0">
-                                <Sparkles className="w-6 h-6 text-white" />
+                            <div className="w-12 h-12 bg-[#FF2E88]/10 rounded-2xl flex items-center justify-center shrink-0 border border-[#FF2E88]/20">
+                                <Sparkles className="w-6 h-6 text-[#FF2E88]" />
                             </div>
                         </div>
                     </div>
