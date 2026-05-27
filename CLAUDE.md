@@ -163,6 +163,55 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - `Settings.valid.tsx` (3544 líneas de código muerto) eliminado
 - `pg` eliminado de `package.json` (cliente PostgreSQL de Node.js sin sentido en browser)
 
+### Cambios realizados — mayo 2026 (sesión 2)
+
+#### Landing.tsx — rediseño completo (dark theme)
+- Título: "Tu Centro Estético Lleno Mientras Tú Atiendes"
+- Subtitle badge: "Agente IA para centros de estética y belleza"
+- Sección "Todo lo que necesitas" reescrita al estilo Vetly adaptada a Citenly
+- Sección de referidos agregada
+- Planes en USD con copy adaptado a estética (core/starter/pro/enterprise)
+- Banderas de países disponibles
+- Committed y pushed
+
+#### Login.tsx / ForgotPassword.tsx — dark theme
+- Panel izquierdo: `bg-[#0A0A0F]`, inputs oscuros, botón `#FF2E88`
+- Panel derecho: `bg-[#0D0D17]` con mockup WhatsApp (Login) o cards de seguridad (ForgotPassword)
+- Committed y pushed
+
+#### AISettings.tsx — light theme + banner sky
+- Completamente reescrito: theme claro (`bg-white`, `bg-gray-50`, `text-gray-900`)
+- Banner: `bg-gradient-to-br from-sky-500 to-sky-700` con label "AGENTE IA"
+- Committed y pushed
+
+#### Integrations.tsx — light theme + banner sky
+- Completamente reescrito con theme claro
+- Banner: `bg-gradient-to-br from-sky-500 to-sky-700` con label "AGENTE IA"
+- Committed y pushed
+
+#### Settings.tsx — limpieza de tabs AI/Integraciones
+- Removidas tabs "Inteligencia Artificial" y "Integraciones" del sidebar (ahora son páginas propias)
+- Removidas 555+ líneas de JSX de los tabs eliminados (bloque AI y bloque Integraciones)
+- Removidas funciones huérfanas: copyWebhookUrl, handleBuyCredits, saveIntegrations, openWebhookModal, closeWebhookModal, handleSaveWebhook, handleDeleteWebhook, handleToggleWebhook, handleTestWebhook, toggleWebhookEvent, handleSaveAI
+- Removidos state setters huérfanos del fetchSettings (AI/webhook setters)
+- Conservado `paymentRegion` state (usado en tab Suscripción)
+- Build TypeScript limpio (0 errores)
+
+#### lemonsqueezy-create-checkout/index.ts — paridad con Vetly
+- Agregados plan IDs: core, starter, pro, enterprise + aliases de retrocompatibilidad (essence→starter, radiance→pro, prestige→enterprise)
+- Agregados tipos: reminders (per-unit), reminders_50, reminders_350, reminders_unlimited, campaign_credits
+- Lógica custom_price: recordatorios = units×15 cents, campañas = credits×15 cents
+- Variant IDs de recordatorios/campañas vacíos — deben configurarse en LS dashboard de Citenly
+
+#### src/lib/lemonsqueezy.ts — actualización de packs recordatorios
+- ReminderPackId: `'reminders_50' | 'reminders_350' | 'reminders_unlimited'` (antes `reminder_100/300/500`)
+- REMINDER_PACKS: Pack Básico $9/50, Pack Estándar $19/350, Pack Ilimitado $29/9999
+- Agregada función `redirectToLemonCampaignCreditsCheckout`
+
+#### Reminders.tsx — fix IDs y display
+- Actualizado clpPrice mapping a nuevos IDs
+- Display de créditos: `∞` para packs ilimitados
+
 ---
 
 ## Estado actual de configuración
@@ -203,9 +252,18 @@ cron-process-surveys: false      (invocado por pg_cron)
 - [ ] **Eliminar** 2 registros duplicados de Elizabeth Microblading de la DB
 
 ### Media prioridad — UX/diseño
-- [ ] **Banner de degradado** en todas las páginas (patrón de Vetly: label sección + título + stats + botones como pills)
+- [ ] **Banners degradado pendientes** — agregar banner estilo Vetly (label sección + título H1 + stats) a las páginas restantes:
+  - Sky (`from-sky-500 to-sky-700`): Dashboard, Mensajes, Plantillas, KnowledgeBase ← ya hecho en AISettings e Integrations
+  - Pink (`from-[#FF2E88] to-[#c0236a]`): Patients/Contactos, CRM, Appointments, Reminders, RetentionEngine, Finance
+  - Violet (`from-violet-500 to-violet-700`): Campaigns, Loyalty
+  - Amber (`from-amber-500 to-amber-700`): Settings
 - [ ] **Dashboard** — tarjetas con cabecera de degradado coloreada por área
-- [ ] **Sistema de color por sección**: primary/teal (Citas, Pacientes, Mensajes), violet (Campañas, Fidelización), amber (KB, Config), emerald (Finanzas)
+- **Colores de sección del DashboardLayout** (para banners):
+  - Principal/Citas/Pacientes/Mensajes: `from-sky-500 to-sky-700`
+  - Clínica/CRM/Pacientes/Citas/Recordatorios: `from-[#FF2E88] to-[#c0236a]`
+  - Marketing/Campañas/Fidelización: `from-violet-500 to-violet-700`
+  - Finanzas: `from-emerald-500 to-emerald-700`
+  - Configuración: `from-amber-500 to-amber-700`
 
 ### Media prioridad — monetización
 - [ ] **Subscription `manually_active`** — columna para clínicas que pagan por transferencia bancaria (`UPDATE subscriptions SET manually_active = true WHERE clinic_id = '...'`)

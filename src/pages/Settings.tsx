@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
     Building2,
     Clock,
@@ -13,19 +13,13 @@ import {
     CreditCard,
     CheckCircle2,
     Zap,
-    Copy,
-    Check,
     MessageSquare,
     AlertCircle,
     X,
     Loader2,
     AlarmClock,
     User,
-    Webhook,
     Globe,
-    ToggleLeft,
-    ToggleRight,
-    Send,
     Tag,
     Users,
     ArrowLeft,
@@ -39,8 +33,8 @@ import {
     ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PLANS, type PlanId, redirectToCheckout, CREDIT_PACKS, redirectToCreditsCheckout } from '@/lib/mercadopago'
-import { LS_PLANS, type LSPlanId, LS_CREDIT_PACKS, redirectToLemonCheckout, redirectToLemonCreditsCheckout } from '@/lib/lemonsqueezy'
+import { PLANS, type PlanId, redirectToCheckout } from '@/lib/mercadopago'
+import { LS_PLANS, type LSPlanId, redirectToLemonCheckout } from '@/lib/lemonsqueezy'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { TagManager } from '@/components/settings/TagManager'
@@ -48,8 +42,6 @@ import Team from './settings/Team'
 import MyProfile from './settings/MyProfile'
 import { TemplateSelector } from '@/components/settings/TemplateSelector'
 
-// Get the Supabase URL for webhook display
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 
 const tabs = [
     { id: 'profile', label: 'Mi Perfil', icon: User },
@@ -57,8 +49,6 @@ const tabs = [
     { id: 'team', label: 'Equipo', icon: Users },
     { id: 'subscription', label: 'Plan', icon: CreditCard },
     { id: 'schedule', label: 'Horarios', icon: Clock },
-    { id: 'integrations', label: 'Integraciones', icon: Key },
-    { id: 'ai', label: 'Inteligencia Artificial', icon: Sparkles },
     { id: 'tags', label: 'Etiquetas', icon: Tag },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
     { id: 'reminders', label: 'Recordatorios', icon: AlarmClock },
@@ -91,7 +81,6 @@ const dayNames: Record<string, string> = {
 const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export default function Settings() {
-    const navigate = useNavigate()
     const { user, profile, member, refreshClinics } = useAuth()
     const [searchParams] = useSearchParams()
 
@@ -150,63 +139,6 @@ export default function Settings() {
         'PEN': 'S/',
         'BRL': 'R$',
     }
-
-    // Integration settings
-    const [yCloudApiKey, setYCloudApiKey] = useState('')
-    const [yCloudPhoneNumber, setYCloudPhoneNumber] = useState('')
-    const [openaiModel] = useState('gpt-4o-mini')
-    const [aiStrategy, setAiStrategy] = useState<'auto' | 'eco' | 'pro'>('auto')
-    const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
-    const [aiCreditsLimit, setAiCreditsLimit] = useState(500)
-    const [aiCreditsExtra, setAiCreditsExtra] = useState(0)
-    
-    // Legacy support for display (remaining metrics)
-    
-    const [aiAutoRespond, setAiAutoRespond] = useState(true)
-    const [aiActiveModel, setAiActiveModel] = useState<'mini' | '4o'>('mini')
-    const [savingAI, setSavingAI] = useState(false)
-    const [aiSaved, setAiSaved] = useState(false)
-    const [selectedAiModel] = useState<'mini' | '4o'>('mini') // For the purchase cards selector
-    const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
-    const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
-    const [copiedWebhook, setCopiedWebhook] = useState(false)
-
-    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
-
-    // Webhook state
-    interface WebhookConfig {
-        id?: string
-        name: string
-        url: string
-        events: string[]
-        is_active: boolean
-        secret: string
-        last_triggered_at?: string | null
-        last_status_code?: number | null
-    }
-    const [webhooks, setWebhooks] = useState<WebhookConfig[]>([])
-    const [showWebhookModal, setShowWebhookModal] = useState(false)
-    const [editingWebhook, setEditingWebhook] = useState<WebhookConfig | null>(null)
-    const [webhookForm, setWebhookForm] = useState<WebhookConfig>({
-        name: '',
-        url: '',
-        events: [],
-        is_active: true,
-        secret: '',
-    })
-    const [savingWebhook, setSavingWebhook] = useState(false)
-    const [testingWebhook, setTestingWebhook] = useState<string | null>(null)
-
-    const WEBHOOK_EVENTS = [
-        { value: 'appointment.created', label: 'Nueva cita creada' },
-        { value: 'appointment.confirmed', label: 'Cita confirmada' },
-        { value: 'appointment.cancelled', label: 'Cita cancelada' },
-        { value: 'appointment.rescheduled', label: 'Cita reagendada' },
-        { value: 'message.received', label: 'Mensaje recibido' },
-        { value: 'message.sent', label: 'Mensaje enviado' },
-        { value: 'patient.created', label: 'Nuevo paciente' },
-        { value: 'patient.updated', label: 'Paciente actualizado' },
-    ]
 
     // Notification preferences state
     const [notifPrefs, setNotifPrefs] = useState({
@@ -273,7 +205,8 @@ export default function Settings() {
         monthlyUsed: number
     } | null>(null)
 
-    // AI usage state - consolidated at top of component
+    // Payment region state (used in subscription tab)
+    const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
 
     // Payment return message state
     const [paymentMessage, setPaymentMessage] = useState<{ type: 'success' | 'error' | 'pending'; text: string } | null>(null)
@@ -403,16 +336,6 @@ export default function Settings() {
                     setTemplateSurvey(data.template_survey || '')
                     setTemplateReactivation(data.template_reactivation || '')
 
-                    setYCloudApiKey(data.ycloud_api_key || '')
-                    setYCloudPhoneNumber(data.ycloud_phone_number || '')
-                    
-                    setAiActiveModel(data.ai_active_model || 'mini')
-                    setAiStrategy(data.ai_strategy || 'auto')
-                    setAiCreditsUsed(data.ai_credits_used || 0)
-                    setAiCreditsLimit(data.ai_credits_limit || 500)
-                    setAiCreditsExtra(data.ai_credits_extra || 0)
-
-                    setAiAutoRespond(data.ai_auto_respond !== false) // default to true if undefined
                     setBusinessModel(data.business_model || 'physical')
                     setSpecialty(data.specialty || 'aesthetic')
                     setPaymentRegion(data.payment_provider === 'lemonsqueezy' ? 'international' : 'chile')
@@ -490,21 +413,6 @@ export default function Settings() {
                 console.error('Error loading professionals:', error)
             }
 
-            // Fetch webhooks
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: webhooksData } = await (supabase as any)
-                    .from('webhooks')
-                    .select('*')
-                    .eq('clinic_id', profile.clinic_id)
-                    .order('created_at', { ascending: true })
-
-                if (webhooksData) {
-                    setWebhooks(webhooksData)
-                }
-            } catch (error) {
-                console.error('Error loading webhooks:', error)
-            }
         }
 
         fetchSettings()
@@ -543,199 +451,6 @@ export default function Settings() {
 
         fetchReminderLogs()
     }, [activeTab, profile?.clinic_id])
-
-    // Webhook URL for YCloud
-    const webhookUrl = `${SUPABASE_URL}/functions/v1/ycloud-whatsapp-webhook`
-
-    const copyWebhookUrl = async () => {
-        await navigator.clipboard.writeText(webhookUrl)
-        setCopiedWebhook(true)
-        setTimeout(() => setCopiedWebhook(false), 2000)
-    }
-
-    const handleBuyCredits = async (packId: string) => {
-        if (!profile?.clinic_id || !user?.email) return
-        try {
-            if (paymentRegion === 'international') {
-                await redirectToLemonCreditsCheckout(profile.clinic_id, user.email, packId, selectedAiModel)
-            } else {
-                await redirectToCreditsCheckout(profile.clinic_id, user.email, packId, selectedAiModel)
-            }
-        } catch (error: any) {
-            console.error('Error buying credits:', error)
-            alert(error.message || 'Error al procesar el pago. Por favor intenta de nuevo.')
-        }
-    }
-
-    const saveIntegrations = async () => {
-        if (!profile?.clinic_id) return
-        setIsSavingIntegrations(true)
-        setSaveStatus('idle')
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('clinic_settings')
-                .update({
-                    ycloud_api_key: yCloudApiKey || null,
-                    ycloud_phone_number: yCloudPhoneNumber || null,
-                    openai_model: openaiModel,
-                    ai_active_model: aiActiveModel,
-                    ai_auto_respond: aiAutoRespond,
-                    ai_strategy: aiStrategy,
-                })
-                .eq('id', profile.clinic_id)
-
-            if (error) throw error
-            setSaveStatus('success')
-            setTimeout(() => setSaveStatus('idle'), 3000)
-        } catch (error) {
-            console.error('Error saving integrations:', error)
-            setSaveStatus('error')
-            setTimeout(() => setSaveStatus('idle'), 3000)
-        } finally {
-            setIsSavingIntegrations(false)
-        }
-    }
-
-
-    // Webhook CRUD
-    const openWebhookModal = (webhook?: WebhookConfig) => {
-        if (webhook) {
-            setEditingWebhook(webhook)
-            setWebhookForm({ ...webhook })
-        } else {
-            setEditingWebhook(null)
-            setWebhookForm({ name: '', url: '', events: [], is_active: true, secret: '' })
-        }
-        setShowWebhookModal(true)
-    }
-
-    const closeWebhookModal = () => {
-        setShowWebhookModal(false)
-        setEditingWebhook(null)
-        setWebhookForm({ name: '', url: '', events: [], is_active: true, secret: '' })
-    }
-
-    const handleSaveWebhook = async () => {
-        if (!profile?.clinic_id || !webhookForm.url.trim() || !webhookForm.name.trim()) return
-        setSavingWebhook(true)
-        try {
-            if (editingWebhook?.id) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { error } = await (supabase as any)
-                    .from('webhooks')
-                    .update({
-                        name: webhookForm.name.trim(),
-                        url: webhookForm.url.trim(),
-                        events: webhookForm.events,
-                        is_active: webhookForm.is_active,
-                        secret: webhookForm.secret || null,
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq('id', editingWebhook.id)
-                if (error) throw error
-            } else {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { error } = await (supabase as any)
-                    .from('webhooks')
-                    .insert({
-                        clinic_id: profile.clinic_id,
-                        name: webhookForm.name.trim(),
-                        url: webhookForm.url.trim(),
-                        events: webhookForm.events,
-                        is_active: webhookForm.is_active,
-                        secret: webhookForm.secret || null,
-                    })
-                if (error) throw error
-            }
-            closeWebhookModal()
-            // Refresh webhooks
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data } = await (supabase as any)
-                .from('webhooks')
-                .select('*')
-                .eq('clinic_id', profile.clinic_id)
-                .order('created_at', { ascending: true })
-            if (data) setWebhooks(data)
-        } catch (error) {
-            console.error('Error saving webhook:', error)
-            alert('Error al guardar el webhook.')
-        } finally {
-            setSavingWebhook(false)
-        }
-    }
-
-    const handleDeleteWebhook = async (id: string) => {
-        if (!profile?.clinic_id) return
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any).from('webhooks').delete().eq('id', id)
-            if (error) throw error
-            setWebhooks(prev => prev.filter(w => w.id !== id))
-        } catch (error) {
-            console.error('Error deleting webhook:', error)
-        }
-    }
-
-    const handleToggleWebhook = async (id: string, currentActive: boolean) => {
-        if (!profile?.clinic_id) return
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('webhooks')
-                .update({ is_active: !currentActive, updated_at: new Date().toISOString() })
-                .eq('id', id)
-            if (error) throw error
-            setWebhooks(prev => prev.map(w => w.id === id ? { ...w, is_active: !currentActive } : w))
-        } catch (error) {
-            console.error('Error toggling webhook:', error)
-        }
-    }
-
-    const handleTestWebhook = async (webhook: WebhookConfig) => {
-        if (!webhook.id) return
-        setTestingWebhook(webhook.id)
-        try {
-            const response = await fetch(webhook.url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(webhook.secret ? { 'X-Webhook-Secret': webhook.secret } : {}),
-                },
-                mode: 'no-cors',
-                body: JSON.stringify({
-                    event: 'test.ping',
-                    timestamp: new Date().toISOString(),
-                    data: { message: 'Test webhook from Citenly AI' },
-                }),
-            })
-            // With no-cors we can't read status, so we just mark it as sent
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase as any)
-                .from('webhooks')
-                .update({ last_triggered_at: new Date().toISOString(), last_status_code: response.status || 0 })
-                .eq('id', webhook.id)
-            setWebhooks(prev => prev.map(w => w.id === webhook.id
-                ? { ...w, last_triggered_at: new Date().toISOString(), last_status_code: response.status || 0 }
-                : w
-            ))
-            alert('✅ Webhook de prueba enviado correctamente.')
-        } catch (error) {
-            console.error('Error testing webhook:', error)
-            alert('⚠️ No se pudo verificar la respuesta del webhook (puede ser un problema de CORS). El webhook podría haber sido recibido igualmente.')
-        } finally {
-            setTestingWebhook(null)
-        }
-    }
-
-    const toggleWebhookEvent = (event: string) => {
-        setWebhookForm(prev => ({
-            ...prev,
-            events: prev.events.includes(event)
-                ? prev.events.filter(e => e !== event)
-                : [...prev.events, event]
-        }))
-    }
 
     const handleSaveNotifications = async () => {
         if (!profile?.clinic_id) return
@@ -788,33 +503,6 @@ export default function Settings() {
             console.error('Error saving reminder settings:', error)
         } finally {
             setSavingReminders(false)
-        }
-    }
-
-    const handleSaveAI = async () => {
-        if (!profile?.clinic_id) return
-        setSavingAI(true)
-        setAiSaved(false)
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase as any)
-                .from('clinic_settings')
-                .update({ 
-                    ai_auto_respond: aiAutoRespond,
-                    ai_strategy: aiStrategy,
-                    ai_active_model: aiActiveModel, // Ensure model matches strategy if needed
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', profile.clinic_id)
-
-            if (error) throw error
-            setAiSaved(true)
-            setTimeout(() => setAiSaved(false), 3000)
-        } catch (error) {
-            console.error('Error saving AI settings:', error)
-            alert('Error al guardar la configuración de IA')
-        } finally {
-            setSavingAI(false)
         }
     }
 
@@ -2510,316 +2198,6 @@ export default function Settings() {
                         </div>
                     )}
 
-                    {/* Integrations Settings */}
-                    {activeTab === 'integrations' && (
-                        <div className="space-y-6">
-                            {/* YCloud */}
-                            <div className="card-premium p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 bg-emerald-100 rounded-soft flex items-center justify-center">
-                                        <MessageSquare className="w-6 h-6 text-emerald-600" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-primary-theme">YCloud WhatsApp API</h2>
-                                        <p className="text-sm text-primary-theme/50">Conecta tu número de WhatsApp Business</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-primary-theme mb-2">API Key</label>
-                                        <input
-                                            type="password"
-                                            placeholder="yc_xxxxxxxxxxxxxxxxxxxxxx"
-                                            value={yCloudApiKey}
-                                            onChange={(e) => setYCloudApiKey(e.target.value)}
-                                            className="input-premium"
-                                        />
-                                        <p className="text-xs text-primary-theme/40 mt-1">
-                                            Obtén tu API Key desde <a href="https://www.ycloud.com" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">ycloud.com</a>
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-primary-theme mb-2">Número de WhatsApp</label>
-                                        <input
-                                            type="text"
-                                            placeholder="+521234567890"
-                                            value={yCloudPhoneNumber}
-                                            onChange={(e) => setYCloudPhoneNumber(e.target.value)}
-                                            className="input-premium"
-                                        />
-                                        <p className="text-xs text-primary-theme/40 mt-1">
-                                            El número de WhatsApp Business registrado en YCloud (con código de país)
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-primary-theme mb-2">Webhook URL</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={webhookUrl}
-                                                disabled
-                                                className="input-premium bg-secondary-theme text-primary-theme/60 font-mono text-sm"
-                                            />
-                                            <button
-                                                onClick={copyWebhookUrl}
-                                                className="btn-premium-secondary text-primary-500 flex items-center gap-1"
-                                            >
-                                                {copiedWebhook ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                                {copiedWebhook ? 'Copiado' : 'Copiar'}
-                                            </button>
-                                        </div>
-                                        <p className="text-xs text-primary-theme/40 mt-1">
-                                            Configura esta URL como webhook en tu panel de YCloud (Developer → Webhooks)
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Webhooks / n8n */}
-                            <div className="card-premium p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-orange-100 rounded-soft flex items-center justify-center">
-                                            <Webhook className="w-6 h-6 text-orange-600" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-primary-theme">Webhooks</h2>
-                                            <p className="text-sm text-primary-theme/50">Conecta con n8n, Make, Zapier y otras automatizaciones</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => openWebhookModal()}
-                                        className="btn-premium-primary flex items-center gap-2 text-sm"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Añadir Webhook
-                                    </button>
-                                </div>
-
-                                {webhooks.length === 0 ? (
-                                    <div className="text-center py-8 border-2 border-dashed border-theme rounded-soft">
-                                        <Globe className="w-10 h-10 text-primary-theme/20 mx-auto mb-3" />
-                                        <p className="text-primary-theme/50 text-sm mb-1">No hay webhooks configurados</p>
-                                        <p className="text-primary-theme/40 text-xs">Añade un webhook para enviar eventos a herramientas externas como n8n</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {webhooks.map((wh) => (
-                                            <div
-                                                key={wh.id}
-                                                className={cn(
-                                                    'border rounded-soft p-4 transition-all',
-                                                    wh.is_active
-                                                        ? 'border-theme bg-secondary-theme hover:shadow-sm'
-                                                        : 'border-theme bg-secondary-theme/50 opacity-60'
-                                                )}
-                                            >
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={cn(
-                                                            'w-2.5 h-2.5 rounded-full',
-                                                            wh.is_active ? 'bg-emerald-400' : 'bg-gray-300'
-                                                        )} />
-                                                        <h3 className="font-medium text-primary-theme text-sm">{wh.name}</h3>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            onClick={() => handleTestWebhook(wh)}
-                                                            disabled={!wh.is_active || testingWebhook === wh.id}
-                                                            className="p-1.5 rounded-soft hover:bg-blue-50 transition-colors disabled:opacity-50"
-                                                            title="Enviar prueba"
-                                                        >
-                                                            {testingWebhook === wh.id ? (
-                                                                <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
-                                                            ) : (
-                                                                <Send className="w-4 h-4 text-blue-500" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleToggleWebhook(wh.id!, wh.is_active)}
-                                                            className="p-1.5 rounded-soft hover:bg-secondary-theme transition-colors"
-                                                            title={wh.is_active ? 'Desactivar' : 'Activar'}
-                                                        >
-                                                            {wh.is_active ? (
-                                                                <ToggleRight className="w-5 h-5 text-emerald-500" />
-                                                            ) : (
-                                                                <ToggleLeft className="w-5 h-5 text-gray-400" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => openWebhookModal(wh)}
-                                                            className="p-1.5 rounded-soft hover:bg-secondary-theme transition-colors"
-                                                            title="Editar"
-                                                        >
-                                                            <ChevronRight className="w-4 h-4 text-primary-theme/50" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteWebhook(wh.id!)}
-                                                            className="p-1.5 rounded-soft hover:bg-red-50 transition-colors"
-                                                            title="Eliminar"
-                                                        >
-                                                            <Trash2 className="w-4 h-4 text-red-400" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-primary-theme/40 font-mono truncate mb-2 pl-5">{wh.url}</p>
-                                                <div className="flex items-center gap-2 flex-wrap pl-5">
-                                                    {wh.events.length > 0 ? wh.events.map(ev => (
-                                                        <span key={ev} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200">
-                                                            {ev}
-                                                        </span>
-                                                    )) : (
-                                                        <span className="text-xs text-primary-theme/30">Sin eventos seleccionados</span>
-                                                    )}
-                                                    {wh.last_triggered_at && (
-                                                        <span className="text-xs text-primary-theme/30 ml-auto">
-                                                            Último envío: {new Date(wh.last_triggered_at).toLocaleString()}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div className="mt-4 p-3 bg-amber-50/80 rounded-soft border border-amber-200/50">
-                                    <p className="text-xs text-amber-700">
-                                        <strong>💡 Tip:</strong> En n8n, usa el nodo "Webhook" y pega la URL generada por n8n aquí. Selecciona los eventos que deseas recibir y n8n procesará la información automáticamente.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Webhook Create/Edit Modal */}
-                            {showWebhookModal && (
-                                <div className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                                    <div className="bg-primary-theme rounded-soft shadow-premium-lg w-full max-w-lg animate-scale-in">
-                                        <div className="flex items-center justify-between p-6 border-b border-theme">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
-                                                    <Webhook className="w-5 h-5 text-orange-500" />
-                                                </div>
-                                                <h2 className="text-lg font-bold text-primary-theme">
-                                                    {editingWebhook ? 'Editar Webhook' : 'Nuevo Webhook'}
-                                                </h2>
-                                            </div>
-                                            <button onClick={closeWebhookModal} className="p-2 hover:bg-secondary-theme rounded-soft transition-colors">
-                                                <X className="w-5 h-5 text-primary-theme/50" />
-                                            </button>
-                                        </div>
-
-                                        <div className="p-6 space-y-5">
-                                            <div>
-                                                <label className="block text-sm font-medium text-primary-theme mb-2">Nombre</label>
-                                                <input
-                                                    type="text"
-                                                    value={webhookForm.name}
-                                                    onChange={(e) => setWebhookForm(prev => ({ ...prev, name: e.target.value }))}
-                                                    placeholder="Ej: n8n - Notificaciones"
-                                                    className="input-premium w-full"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-primary-theme mb-2">URL del Webhook</label>
-                                                <input
-                                                    type="url"
-                                                    value={webhookForm.url}
-                                                    onChange={(e) => setWebhookForm(prev => ({ ...prev, url: e.target.value }))}
-                                                    placeholder="https://tu-n8n-instance.com/webhook/..."
-                                                    className="input-premium w-full font-mono text-sm"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-primary-theme mb-2">Secret (opcional)</label>
-                                                <input
-                                                    type="password"
-                                                    value={webhookForm.secret}
-                                                    onChange={(e) => setWebhookForm(prev => ({ ...prev, secret: e.target.value }))}
-                                                    placeholder="Tu clave secreta para verificar webhooks"
-                                                    className="input-premium w-full"
-                                                />
-                                                <p className="text-xs text-primary-theme/40 mt-1">Se envía como header <code className="bg-secondary-theme px-1 rounded text-xs">X-Webhook-Secret</code></p>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-primary-theme mb-2">Eventos a escuchar</label>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {WEBHOOK_EVENTS.map(ev => (
-                                                        <label
-                                                            key={ev.value}
-                                                            className={cn(
-                                                                'flex items-center gap-2 p-2.5 rounded-soft border cursor-pointer transition-all text-sm',
-                                                                webhookForm.events.includes(ev.value)
-                                                                    ? 'bg-orange-50 border-orange-300 text-orange-700'
-                                                                    : 'bg-secondary-theme border-theme text-primary-theme/60 hover:bg-primary-theme/50'
-                                                            )}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={webhookForm.events.includes(ev.value)}
-                                                                onChange={() => toggleWebhookEvent(ev.value)}
-                                                                className="sr-only"
-                                                            />
-                                                            <div className={cn(
-                                                                'w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0',
-                                                                webhookForm.events.includes(ev.value)
-                                                                    ? 'bg-orange-500 border-orange-500'
-                                                                    : 'border-gray-300'
-                                                            )}>
-                                                                {webhookForm.events.includes(ev.value) && (
-                                                                    <Check className="w-3 h-3 text-white" />
-                                                                )}
-                                                            </div>
-                                                            {ev.label}
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-end gap-3 p-6 border-t border-theme">
-                                            <button onClick={closeWebhookModal} className="btn-premium-secondary">Cancelar</button>
-                                            <button
-                                                onClick={handleSaveWebhook}
-                                                disabled={savingWebhook || !webhookForm.name.trim() || !webhookForm.url.trim()}
-                                                className="btn-premium-primary flex items-center gap-2"
-                                            >
-                                                {savingWebhook ? (
-                                                    <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                                                ) : (
-                                                    <><Save className="w-4 h-4" /> {editingWebhook ? 'Guardar' : 'Crear Webhook'}</>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="flex items-center gap-4 flex-wrap">
-                                <button
-                                    onClick={saveIntegrations}
-                                    disabled={isSavingIntegrations}
-                                    className="btn-premium-primary flex items-center gap-2"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    {isSavingIntegrations ? 'Guardando...' : 'Guardar Integraciones'}
-                                </button>
-
-                                {saveStatus === 'success' && (
-                                    <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft">
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        Integraciones guardadas correctamente
-                                    </div>
-                                )}
-
-                                {saveStatus === 'error' && (
-                                    <div className="flex items-center gap-2 text-red-600 text-sm animate-fade-in bg-red-50 px-4 py-2 rounded-soft">
-                                        <AlertCircle className="w-4 h-4" />
-                                        Error al guardar. Intenta nuevamente.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Notifications Settings */}
                     {activeTab === 'notifications' && (
                         <div className="card-premium p-6">
@@ -3311,251 +2689,6 @@ export default function Settings() {
                     )}
 
 
-
-                    {/* AI Settings */}
-                    {activeTab === 'ai' && (
-                        <div className="space-y-6">
-                            {/* Hybrid Router Header */}
-                            <div className="card-premium p-6 bg-secondary-theme/30 border-theme">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-violet-600 rounded-soft flex items-center justify-center shadow-lg shadow-violet-200">
-                                            <Zap className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold text-primary-theme">Citenly Hybrid Intelligence</h2>
-                                            <p className="text-sm text-primary-theme/50">Motor de ruteo inteligente de modelos AI</p>
-                                            <button 
-                                                onClick={() => navigate('/app/ai-credits')}
-                                                className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#FF2E88] hover:bg-[#FF2E88]/5 px-3 py-1.5 rounded-full transition-all border border-[#FF2E88]/20 w-fit"
-                                            >
-                                                <History className="w-3 h-3" />
-                                                Ver Historial Detallado de Consumos
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-bold text-primary-theme/40 uppercase tracking-widest">Atención Automática</span>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={aiAutoRespond}
-                                                onChange={(e) => setAiAutoRespond(e.target.checked)}
-                                            />
-                                            <div className="w-11 h-6 bg-charcoal/20 dark:bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {[
-                                        { id: 'eco', title: 'Ahorro Máximo', desc: 'Fuerza al sistema a mantenerse en Nivel 1 (Ideal para bajo presupuesto).', icon: ToggleLeft, color: 'emerald' },
-                                        { id: 'auto', title: 'Híbrido Automático', desc: 'Enrutador inteligente (Recomendado). La opción más rentable.', icon: Sparkles, color: 'violet', badge: 'Popular' },
-                                        { id: 'pro', title: 'Máximo Poder', desc: 'Fuerza el uso de modelos Pro siempre (Máxima precisión).', icon: Zap, color: 'orange' },
-                                    ].map((strat) => (
-                                        <button
-                                            key={strat.id}
-                                            onClick={() => setAiStrategy(strat.id as any)}
-                                            className={cn(
-                                                "p-4 rounded-soft border-2 text-left transition-all relative group",
-                                                aiStrategy === strat.id 
-                                                    ? `bg-primary-theme border-[#FF2E88] shadow-md ring-1 ring-[#FF2E88]/50`
-                                                    : "bg-secondary-theme border-theme hover:border-[#FF2E88]/30"
-                                            )}
-                                        >
-                                            {strat.badge && (
-                                                <span className="absolute -top-2 -right-2 bg-violet-600 text-[10px] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
-                                                    {strat.badge}
-                                                </span>
-                                            )}
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className={cn(
-                                                    "w-8 h-8 rounded-full flex items-center justify-center",
-                                                    aiStrategy === strat.id ? `bg-${strat.color}-500 text-white` : "bg-secondary-theme text-primary-theme/40"
-                                                )}>
-                                                    <strat.icon className="w-4 h-4" />
-                                                </div>
-                                                <h3 className={cn("font-bold text-sm", aiStrategy === strat.id ? `text-[#FF2E88]` : "text-primary-theme")}>
-                                                    {strat.title}
-                                                </h3>
-                                            </div>
-                                            <p className="text-xs text-primary-theme/50 leading-relaxed">{strat.desc}</p>
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <div className="mt-8 pt-6 border-t border-violet-100 flex items-center gap-4">
-                                    <button
-                                        onClick={handleSaveAI}
-                                        disabled={savingAI}
-                                        className="btn-premium-primary bg-violet-600 hover:bg-violet-700 flex items-center gap-2 shadow-lg shadow-violet-200"
-                                    >
-                                        {savingAI ? (
-                                            <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-                                        ) : (
-                                            <><Save className="w-4 h-4" /> Guardar Configuración</>
-                                        )}
-                                    </button>
-                                    {aiSaved && (
-                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
-                                            <CheckCircle2 className="w-4 h-4" />
-                                            ¡Configuración guardada!
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Unified Credits Dashboard */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="card-premium p-6 border-l-4 border-l-[#FF2E88] bg-secondary-theme/50">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-primary-50 rounded-soft flex items-center justify-center">
-                                                <CreditCard className="w-5 h-5 text-primary-600" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-primary-theme">Citenly Credits</h3>
-                                                <p className="text-xs text-primary-theme/50">Saldo unificado de inteligencia artificial</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-2xl font-bold text-primary-theme">{(aiCreditsLimit + aiCreditsExtra) - aiCreditsUsed}</span>
-                                            <p className="text-[10px] text-primary-theme/40 font-bold uppercase">Créditos Disponibles</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="h-3 bg-charcoal/5 rounded-full overflow-hidden">
-                                            <div
-                                                className={cn(
-                                                    "h-full transition-all duration-500",
-                                                    (aiCreditsUsed / (aiCreditsLimit + aiCreditsExtra)) > 0.9 ? "bg-rose-500" : "bg-primary-500"
-                                                )}
-                                                style={{ width: `${Math.min(100, (aiCreditsUsed / (aiCreditsLimit + aiCreditsExtra)) * 100)}%` }}
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-4 text-center">
-                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
-                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Plan</p>
-                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsLimit}</p>
-                                            </div>
-                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
-                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Cargas</p>
-                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsExtra}</p>
-                                            </div>
-                                            <div className="bg-secondary-theme/50 p-3 rounded-soft border border-theme">
-                                                <p className="text-[10px] text-primary-theme/40 font-bold uppercase mb-1">Consumo</p>
-                                                <p className="text-sm font-bold text-primary-theme">{aiCreditsUsed}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="card-premium p-6 bg-secondary-theme/50 flex flex-col justify-center">
-                                    <h3 className="text-sm font-bold text-primary-theme mb-4 uppercase tracking-wider text-primary-theme/40">Tabla de Costos Híbridos</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-2 bg-emerald-50/50 rounded-soft border border-emerald-100">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-6 h-6 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">N1</span>
-                                                <span className="text-xs font-semibold text-emerald-800">Flash Mini - GPT-5.4</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-emerald-700">1x Créditos</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 bg-violet-50/50 rounded-soft border border-violet-100">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-6 h-6 bg-violet-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">N2</span>
-                                                <span className="text-xs font-semibold text-violet-800">Standard - GPT-5.4</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-violet-700">8x Créditos</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 bg-orange-50/50 rounded-soft border border-orange-100">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-6 h-6 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">N3</span>
-                                                <span className="text-xs font-semibold text-orange-800">Sovereign Pro - GPT-5</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-orange-700">60x Créditos</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Credit Recharge */}
-                            <div id="ai-credits-packs" className="card-premium p-6">
-                                <div className="flex items-center justify-between mb-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-soft flex items-center justify-center shadow-lg">
-                                            <Plus className="w-6 h-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-lg font-bold text-primary-theme">Recarga de Citenly Credits</h2>
-                                            <p className="text-sm text-primary-theme/50">Selecciona el paquete que mejor se adapte a tu clínica</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {(() => {
-                                        const currentPacks = paymentRegion === 'international' ? LS_CREDIT_PACKS : CREDIT_PACKS;
-                                        const currencySymbol = paymentRegion === 'international' ? 'US$' : '$';
-                                        
-                                        return Object.entries(currentPacks).map(([packId, pack]: [string, any]) => (
-                                            <div key={packId} className="group p-6 bg-secondary-theme border border-theme rounded-soft hover:shadow-premium-lg hover:border-[#FF2E88]/30 transition-all flex flex-col relative overflow-hidden">
-                                                <div className="mb-6">
-                                                    <h3 className="text-lg font-bold text-primary-theme">{pack.name}</h3>
-                                                    <div className="flex items-baseline gap-1 mt-2">
-                                                        <span className="text-3xl font-black text-violet-600">
-                                                            {currencySymbol}{pack.price.toLocaleString()}
-                                                        </span>
-                                                        <span className="text-[10px] text-primary-theme/40 font-bold uppercase tracking-widest">{paymentRegion === 'international' ? 'USD' : 'CLP'}</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex-grow space-y-3 mb-6">
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-primary-theme/70"><strong>{pack.credits.toLocaleString()}</strong> Citenly Credits</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-primary-theme/70">Uso Híbrido (N1, N2, N3)</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                        <span className="text-sm text-primary-theme/70">Sin fecha de vencimiento</span>
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleBuyCredits(packId)}
-                                                    className="w-full py-3 bg-charcoal text-white rounded-soft font-bold text-sm hover:bg-violet-600 transition-colors shadow-sm group-hover:shadow-violet-200"
-                                                >
-                                                    Seleccionar Pack
-                                                </button>
-                                            </div>
-                                        ))
-                                    })()}
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center justify-center gap-4 py-4 border-t border-dashed border-theme">
-                                <button
-                                    onClick={saveIntegrations}
-                                    disabled={isSavingIntegrations}
-                                    className="btn-premium-primary flex items-center gap-2"
-                                >
-                                    {isSavingIntegrations ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    Guardar Configuración Citenly
-                                </button>
-                                {saveStatus === 'success' && (
-                                    <span className="text-emerald-600 text-sm font-bold animate-fade-in flex items-center gap-1">
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        Guardado
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
 
                     {/* Tags Settings */}
                     {activeTab === 'tags' && (

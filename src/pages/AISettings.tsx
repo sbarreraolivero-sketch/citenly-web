@@ -103,37 +103,43 @@ export default function AISettings() {
     const currencySymbol = paymentRegion === 'international' ? 'US$' : '$'
 
     return (
-        <div className="space-y-6 pb-20">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-[#FF2E88]/70 mb-1">Agente IA</p>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <SlidersHorizontal className="w-6 h-6 text-[#FF2E88]" />
-                        Ajustes de IA
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-1">Motor de ruteo inteligente, créditos y comportamiento del agente.</p>
+        <div className="space-y-6 pb-20 animate-fade-in">
+            {/* Banner — Agente IA (sky) */}
+            <div className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl overflow-hidden shadow-soft-md">
+                <div className="p-6 sm:p-8">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs font-black uppercase tracking-widest text-sky-200 mb-2">Agente IA</p>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Ajustes de IA</h1>
+                            <p className="text-sm text-sky-100/80 font-light mt-1">Motor de ruteo inteligente, créditos y comportamiento del agente.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleSaveAI}
+                                disabled={savingModel || isLoading}
+                                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50 border border-white/20"
+                            >
+                                {savingModel ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                Guardar
+                            </button>
+                            <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center shrink-0">
+                                <SlidersHorizontal className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={handleSaveAI}
-                    disabled={savingModel || isLoading}
-                    className="flex items-center gap-2 bg-[#FF2E88] text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#e0007a] transition-colors disabled:opacity-50"
-                >
-                    {savingModel ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Guardar
-                </button>
             </div>
 
             {isLoading ? (
-                <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#FF2E88]" /></div>
+                <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-sky-500" /></div>
             ) : (
                 <>
                     {/* Estado del agente */}
-                    <div className="bg-white/[0.04] border border-white/10 rounded-xl p-5 flex items-center justify-between">
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className={cn('w-2.5 h-2.5 rounded-full', aiAutoRespond ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400')} />
+                            <div className={cn('w-2.5 h-2.5 rounded-full', aiAutoRespond ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400')} />
                             <div>
-                                <p className="text-sm font-bold text-white">Agente IA {aiAutoRespond ? 'activo' : 'en pausa'}</p>
+                                <p className="text-sm font-bold text-gray-900">Agente IA {aiAutoRespond ? 'activo' : 'en pausa'}</p>
                                 <p className="text-xs text-gray-500">
                                     {aiAutoRespond ? 'Responde automáticamente a los mensajes de WhatsApp' : 'El agente no responderá hasta que lo reactives'}
                                 </p>
@@ -141,16 +147,16 @@ export default function AISettings() {
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" className="sr-only peer" checked={aiAutoRespond} onChange={(e) => setAiAutoRespond(e.target.checked)} />
-                            <div className="w-12 h-6 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                            <div className="w-12 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
                         </label>
                     </div>
 
                     {/* Selector de modelo */}
-                    <div className="bg-white/[0.04] border border-white/10 rounded-xl overflow-hidden">
-                        <div className="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
                             <Sparkles className="w-5 h-5 text-[#FF2E88]" />
                             <div>
-                                <h2 className="text-base font-bold text-white">Motor de IA</h2>
+                                <h2 className="text-base font-bold text-gray-900">Motor de IA</h2>
                                 <p className="text-xs text-gray-500">Selecciona cómo el agente usa los modelos de lenguaje</p>
                             </div>
                         </div>
@@ -161,18 +167,18 @@ export default function AISettings() {
                                 className={cn(
                                     'flex flex-col p-4 rounded-xl border-2 transition-all text-left',
                                     aiActiveModel === 'mini'
-                                        ? 'bg-emerald-500/10 border-emerald-500/40'
-                                        : 'bg-white/[0.03] border-white/10 hover:border-white/20'
+                                        ? 'bg-emerald-50 border-emerald-400'
+                                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                                 )}
                             >
-                                <div className={cn('w-10 h-10 rounded-xl mb-3 flex items-center justify-center', aiActiveModel === 'mini' ? 'bg-emerald-500' : 'bg-white/10')}>
-                                    <Zap className="w-5 h-5 text-white" />
+                                <div className={cn('w-10 h-10 rounded-xl mb-3 flex items-center justify-center', aiActiveModel === 'mini' ? 'bg-emerald-500' : 'bg-gray-200')}>
+                                    <Zap className={cn('w-5 h-5', aiActiveModel === 'mini' ? 'text-white' : 'text-gray-500')} />
                                 </div>
-                                <h3 className="text-sm font-bold text-white mb-1">Ahorro Máximo</h3>
-                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">GPT-4o Mini</p>
+                                <h3 className="text-sm font-bold text-gray-900 mb-1">Ahorro Máximo</h3>
+                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-2">GPT-4o Mini</p>
                                 <p className="text-xs text-gray-500">Ideal para agendamientos simples. Más créditos por el mismo precio.</p>
                                 {aiActiveModel === 'mini' && (
-                                    <div className="mt-3 py-1 px-2 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase text-center">✓ Activo</div>
+                                    <div className="mt-3 py-1 px-2 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase text-center">✓ Activo</div>
                                 )}
                             </button>
 
@@ -182,21 +188,21 @@ export default function AISettings() {
                                 className={cn(
                                     'flex flex-col p-4 rounded-xl border-2 transition-all text-left relative',
                                     aiActiveModel === 'hybrid'
-                                        ? 'bg-[#FF2E88]/10 border-[#FF2E88]/40'
-                                        : 'bg-white/[0.03] border-white/10 hover:border-white/20'
+                                        ? 'bg-pink-50 border-[#FF2E88]/50'
+                                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                                 )}
                             >
                                 {aiActiveModel !== 'hybrid' && (
                                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#FF2E88] text-white text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">Recomendado</div>
                                 )}
-                                <div className={cn('w-10 h-10 rounded-xl mb-3 flex items-center justify-center', aiActiveModel === 'hybrid' ? 'bg-[#FF2E88]' : 'bg-white/10')}>
-                                    <RefreshCw className="w-5 h-5 text-white" />
+                                <div className={cn('w-10 h-10 rounded-xl mb-3 flex items-center justify-center', aiActiveModel === 'hybrid' ? 'bg-[#FF2E88]' : 'bg-gray-200')}>
+                                    <RefreshCw className={cn('w-5 h-5', aiActiveModel === 'hybrid' ? 'text-white' : 'text-gray-500')} />
                                 </div>
-                                <h3 className="text-sm font-bold text-white mb-1">Híbrido Automático</h3>
+                                <h3 className="text-sm font-bold text-gray-900 mb-1">Híbrido Automático</h3>
                                 <p className="text-[10px] font-bold text-[#FF2E88] uppercase tracking-widest mb-2">IA Router</p>
                                 <p className="text-xs text-gray-500">Elige el modelo ideal según la complejidad del mensaje.</p>
                                 {aiActiveModel === 'hybrid' && (
-                                    <div className="mt-3 py-1 px-2 rounded-full bg-[#FF2E88]/20 text-[#FF2E88] text-[10px] font-black uppercase text-center">✓ Activo</div>
+                                    <div className="mt-3 py-1 px-2 rounded-full bg-pink-100 text-[#FF2E88] text-[10px] font-black uppercase text-center">✓ Activo</div>
                                 )}
                             </button>
 
@@ -206,62 +212,62 @@ export default function AISettings() {
                                 className={cn(
                                     'flex flex-col p-4 rounded-xl border-2 transition-all text-left',
                                     aiActiveModel === 'pro'
-                                        ? 'bg-purple-500/10 border-purple-500/40'
-                                        : 'bg-white/[0.03] border-white/10 hover:border-white/20'
+                                        ? 'bg-purple-50 border-purple-400'
+                                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                                 )}
                             >
-                                <div className={cn('w-10 h-10 rounded-xl mb-3 flex items-center justify-center', aiActiveModel === 'pro' ? 'bg-purple-500' : 'bg-white/10')}>
-                                    <Cpu className="w-5 h-5 text-white" />
+                                <div className={cn('w-10 h-10 rounded-xl mb-3 flex items-center justify-center', aiActiveModel === 'pro' ? 'bg-purple-600' : 'bg-gray-200')}>
+                                    <Cpu className={cn('w-5 h-5', aiActiveModel === 'pro' ? 'text-white' : 'text-gray-500')} />
                                 </div>
-                                <h3 className="text-sm font-bold text-white mb-1">Máximo Poder</h3>
-                                <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2">GPT-4o Exclusivo</p>
+                                <h3 className="text-sm font-bold text-gray-900 mb-1">Máximo Poder</h3>
+                                <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-2">GPT-4o Exclusivo</p>
                                 <p className="text-xs text-gray-500">GPT-4o completo para casos complejos y alta precisión.</p>
                                 {aiActiveModel === 'pro' && (
-                                    <div className="mt-3 py-1 px-2 rounded-full bg-purple-500/20 text-purple-400 text-[10px] font-black uppercase text-center">✓ Activo</div>
+                                    <div className="mt-3 py-1 px-2 rounded-full bg-purple-100 text-purple-700 text-[10px] font-black uppercase text-center">✓ Activo</div>
                                 )}
                             </button>
                         </div>
                     </div>
 
                     {/* Uso de créditos */}
-                    <div className="bg-white/[0.04] border border-white/10 rounded-xl overflow-hidden">
-                        <div className="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
                             <CreditCard className="w-5 h-5 text-[#FF2E88]" />
                             <div>
-                                <h2 className="text-base font-bold text-white">Créditos de IA</h2>
+                                <h2 className="text-base font-bold text-gray-900">Créditos de IA</h2>
                                 <p className="text-xs text-gray-500">Uso del ciclo actual</p>
                             </div>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="flex items-end justify-between mb-1">
-                                <span className="text-sm text-gray-400">{totalUsed.toLocaleString()} / {totalCredits.toLocaleString()} créditos usados</span>
-                                <span className={cn('text-sm font-bold', usagePct >= 90 ? 'text-red-400' : usagePct >= 70 ? 'text-amber-400' : 'text-emerald-400')}>
+                                <span className="text-sm text-gray-600">{totalUsed.toLocaleString()} / {totalCredits.toLocaleString()} créditos usados</span>
+                                <span className={cn('text-sm font-bold', usagePct >= 90 ? 'text-red-600' : usagePct >= 70 ? 'text-amber-600' : 'text-emerald-600')}>
                                     {usagePct.toFixed(0)}%
                                 </span>
                             </div>
-                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                 <div
                                     className={cn('h-full rounded-full transition-all', usagePct >= 90 ? 'bg-red-500' : usagePct >= 70 ? 'bg-amber-500' : 'bg-emerald-500')}
                                     style={{ width: `${usagePct}%` }}
                                 />
                             </div>
                             <div className="grid grid-cols-3 gap-3 text-center">
-                                <div className="bg-white/[0.03] border border-white/10 rounded-lg p-3">
-                                    <p className="text-xs text-gray-600 mb-1">Mini (×1)</p>
-                                    <p className="text-lg font-bold text-white">{aiMessagesUsed}</p>
+                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                    <p className="text-xs text-gray-400 mb-1">Mini (×1)</p>
+                                    <p className="text-lg font-bold text-gray-900">{aiMessagesUsed}</p>
                                 </div>
-                                <div className="bg-white/[0.03] border border-white/10 rounded-lg p-3">
-                                    <p className="text-xs text-gray-600 mb-1">Standard (×8)</p>
-                                    <p className="text-lg font-bold text-white">{aiMessagesUsedStandard}</p>
+                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                    <p className="text-xs text-gray-400 mb-1">Standard (×8)</p>
+                                    <p className="text-lg font-bold text-gray-900">{aiMessagesUsedStandard}</p>
                                 </div>
-                                <div className="bg-white/[0.03] border border-white/10 rounded-lg p-3">
-                                    <p className="text-xs text-gray-600 mb-1">Pro (×60)</p>
-                                    <p className="text-lg font-bold text-white">{aiMessagesUsedPro}</p>
+                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                    <p className="text-xs text-gray-400 mb-1">Pro (×60)</p>
+                                    <p className="text-lg font-bold text-gray-900">{aiMessagesUsedPro}</p>
                                 </div>
                             </div>
 
                             {aiCreditsExtraBalance > 0 && (
-                                <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
                                     <Check className="w-3.5 h-3.5" />
                                     {aiCreditsExtraBalance.toLocaleString()} créditos extra disponibles
                                 </div>
@@ -270,20 +276,20 @@ export default function AISettings() {
                     </div>
 
                     {/* Packs de créditos */}
-                    <div className="bg-white/[0.04] border border-white/10 rounded-xl overflow-hidden">
-                        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Info className="w-5 h-5 text-[#FF2E88]" />
-                                <h2 className="text-base font-bold text-white">Comprar Créditos Extra</h2>
+                                <h2 className="text-base font-bold text-gray-900">Comprar Créditos Extra</h2>
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setPaymentRegion('chile')}
-                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'chile' ? 'bg-[#FF2E88]/20 border-[#FF2E88]/40 text-[#FF2E88]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white')}
+                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'chile' ? 'bg-pink-50 border-[#FF2E88]/40 text-[#FF2E88]' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-900')}
                                 >CLP</button>
                                 <button
                                     onClick={() => setPaymentRegion('international')}
-                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'international' ? 'bg-[#FF2E88]/20 border-[#FF2E88]/40 text-[#FF2E88]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white')}
+                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'international' ? 'bg-pink-50 border-[#FF2E88]/40 text-[#FF2E88]' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-900')}
                                 >USD</button>
                             </div>
                         </div>
@@ -292,11 +298,11 @@ export default function AISettings() {
                                 <button
                                     key={packId}
                                     onClick={() => handleBuyCredits(packId)}
-                                    className="flex flex-col items-start p-4 bg-white/[0.03] border border-white/10 rounded-xl hover:border-[#FF2E88]/40 hover:bg-[#FF2E88]/5 transition-all text-left group"
+                                    className="flex flex-col items-start p-4 bg-gray-50 border border-gray-200 rounded-xl hover:border-[#FF2E88]/40 hover:bg-pink-50 transition-all text-left group"
                                 >
-                                    <p className="text-xs font-black uppercase tracking-widest text-gray-600 mb-1">{pack.credits?.toLocaleString() || '—'} créditos</p>
-                                    <p className="text-xl font-bold text-white mb-1">{currencySymbol}{(pack.price || pack.priceCLP || 0).toLocaleString()}</p>
-                                    <p className="text-[10px] text-gray-600">{pack.label || packId}</p>
+                                    <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">{pack.credits?.toLocaleString() || '—'} créditos</p>
+                                    <p className="text-xl font-bold text-gray-900 mb-1">{currencySymbol}{(pack.price || pack.priceCLP || 0).toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400">{pack.label || packId}</p>
                                 </button>
                             ))}
                         </div>

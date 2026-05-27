@@ -181,12 +181,16 @@ export async function redirectToLemonCreditsCheckout(clinicId: string, email: st
 // ──────────────────────────────────────────────
 // Reminder Packs (USD) — por unidad
 // ──────────────────────────────────────────────
-export type ReminderPackId = 'reminder_100' | 'reminder_300' | 'reminder_500'
+// ──────────────────────────────────────────────
+// Reminder Packs (USD) — fixed bundles
+// Pricing: Pack 50=$9 · Pack 350=$19 · Unlimited=$29
+// ──────────────────────────────────────────────
+export type ReminderPackId = 'reminders_50' | 'reminders_350' | 'reminders_unlimited'
 
-export const REMINDER_PACKS: Record<ReminderPackId, { id: ReminderPackId; name: string; credits: number; price: number; pricePerUnit: number }> = {
-    reminder_100: { id: 'reminder_100', name: 'Pack 100',     credits: 100,  price: 14,  pricePerUnit: 0.14 },
-    reminder_300: { id: 'reminder_300', name: 'Pack 300',     credits: 300,  price: 36,  pricePerUnit: 0.12 },
-    reminder_500: { id: 'reminder_500', name: 'Pack 500',     credits: 500,  price: 55,  pricePerUnit: 0.11 },
+export const REMINDER_PACKS: Record<ReminderPackId, { id: ReminderPackId; name: string; credits: number; price: number; label: string }> = {
+    reminders_50:        { id: 'reminders_50',        name: 'Pack Básico',     credits: 50,   price: 9,  label: '50 recordatorios' },
+    reminders_350:       { id: 'reminders_350',       name: 'Pack Estándar',   credits: 350,  price: 19, label: '350 recordatorios' },
+    reminders_unlimited: { id: 'reminders_unlimited', name: 'Pack Ilimitado',  credits: 9999, price: 29, label: 'Recordatorios ilimitados (mes)' },
 }
 
 export async function redirectToLemonReminderPackCheckout(clinicId: string, email: string, packId: ReminderPackId) {
@@ -194,7 +198,7 @@ export async function redirectToLemonReminderPackCheckout(clinicId: string, emai
         body: {
             clinic_id: clinicId,
             email: email,
-            type: 'reminders_pack',
+            type: 'reminders',
             plan_or_pack_id: packId,
             success_url: `${window.location.origin}/app/reminders?payment=success`,
         },
@@ -215,7 +219,8 @@ export async function redirectToLemonRemindersCheckout(clinicId: string, email: 
             clinic_id: clinicId,
             email: email,
             type: 'reminders',
-            quantity,
+            plan_or_pack_id: 'reminders',
+            quantity: Math.max(10, quantity),
             success_url: `${window.location.origin}/app/reminders?payment=success`,
         },
     })
@@ -226,5 +231,37 @@ export async function redirectToLemonRemindersCheckout(clinicId: string, email: 
     }
 
     if (!data?.url) throw new Error('No se recibió una URL de pago válida')
+    window.location.href = data.url
+}
+
+// ──────────────────────────────────────────────
+// Campaign Credits (USD) — US$0.15/crédito, mín 50
+// ──────────────────────────────────────────────
+export async function redirectToLemonCampaignCreditsCheckout(
+    clinicId: string,
+    email: string,
+    quantity: number
+) {
+    const { data, error } = await supabase.functions.invoke('lemonsqueezy-create-checkout', {
+        body: {
+            clinic_id: clinicId,
+            email: email,
+            type: 'campaign_credits',
+            plan_or_pack_id: 'campaign_credits',
+            quantity: Math.max(50, quantity),
+            success_url: `${window.location.origin}/app/campaigns?payment=success`,
+        },
+    })
+
+    if (error) {
+        console.error('Error creating campaign credits checkout:', error)
+        throw new Error(error.message || 'Error al conectar con LemonSqueezy')
+    }
+
+    if (!data?.url) {
+        const msg = data?.details || data?.error || 'No se recibió una URL de pago válida'
+        throw new Error(msg)
+    }
+
     window.location.href = data.url
 }

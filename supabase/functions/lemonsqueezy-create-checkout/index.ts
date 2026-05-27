@@ -10,32 +10,44 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 /**
- * LemonSqueezy Variant IDs — replace these with real IDs from your LS dashboard.
- * To find them: Dashboard → Store → Products → Click product → Copy variant ID from URL.
+ * LemonSqueezy Variant IDs — configure via LS dashboard secrets.
+ * Dashboard → Store → Products → Click product → Copy variant ID from URL.
  */
 const VARIANT_IDS: Record<string, string> = {
-    // Subscription Plans (Fill these when you have them)
-    'essence':      Deno.env.get("LS_VARIANT_ESSENCE") || "1460445",
-    'radiance':     Deno.env.get("LS_VARIANT_RADIANCE") || "1460476",
-    'prestige':     Deno.env.get("LS_VARIANT_PRESTIGE") || "1460482",
-    
+    // Subscription Plans
+    'core':       Deno.env.get("LS_VARIANT_CORE")       || "1460445",
+    'starter':    Deno.env.get("LS_VARIANT_STARTER")    || "1460476",
+    'pro':        Deno.env.get("LS_VARIANT_PRO")        || "1460482",
+    'enterprise': Deno.env.get("LS_VARIANT_ENTERPRISE") || "1460485",
+    // Legacy plan IDs — backward compat
+    'essence':    Deno.env.get("LS_VARIANT_STARTER")    || "1460476",
+    'radiance':   Deno.env.get("LS_VARIANT_PRO")        || "1460482",
+    'prestige':   Deno.env.get("LS_VARIANT_ENTERPRISE") || "1460485",
     // AI Credit Packs (GPT-4o mini)
-    'pack_500':     Deno.env.get("LS_VARIANT_PACK_500") || "1460484",
-    'pack_1500':    Deno.env.get("LS_VARIANT_PACK_1500") || "1460490",
-    'pack_4000':    Deno.env.get("LS_VARIANT_PACK_4000") || "1460493",
-    
+    'pack_500':    Deno.env.get("LS_VARIANT_PACK_500")   || "1460484",
+    'pack_1500':   Deno.env.get("LS_VARIANT_PACK_1500")  || "1460490",
+    'pack_4000':   Deno.env.get("LS_VARIANT_PACK_4000")  || "1460493",
     // AI Credit Packs (GPT-4o premium)
-    'pack_500_4o':  Deno.env.get("LS_VARIANT_PACK_500_4O") || "1460498",
+    'pack_500_4o':  Deno.env.get("LS_VARIANT_PACK_500_4O")  || "1460498",
     'pack_1500_4o': Deno.env.get("LS_VARIANT_PACK_1500_4O") || "1460501",
     'pack_4000_4o': Deno.env.get("LS_VARIANT_PACK_4000_4O") || "1460505",
+    // Reminder Units — per-unit purchase ($1.50 USD / 10 units)
+    'reminders': Deno.env.get("LS_VARIANT_REMINDERS") || "",
+    // Reminder Packs — fixed-quantity bundles
+    'reminders_50':        Deno.env.get("LS_VARIANT_REMINDERS_50")        || "",
+    'reminders_350':       Deno.env.get("LS_VARIANT_REMINDERS_350")       || "",
+    'reminders_unlimited': Deno.env.get("LS_VARIANT_REMINDERS_UNLIMITED") || "",
+    // Campaign Credits — US$0.15/crédito, mín 50
+    'campaign_credits': Deno.env.get("LS_VARIANT_CAMPAIGN_CREDITS") || "",
 };
 
 interface RequestBody {
     clinic_id: string;
     email: string;
-    type: 'subscription' | 'ai_credits';
-    plan_or_pack_id: string;  // e.g. 'essence', 'pack_500', 'pack_1500_4o'
-    model?: 'mini' | '4o';    // for credits only
+    type: 'subscription' | 'ai_credits' | 'reminders' | 'campaign_credits';
+    plan_or_pack_id: string;
+    model?: 'mini' | '4o';
+    quantity?: number;
     success_url?: string;
 }
 
@@ -59,7 +71,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body: RequestBody = await req.json();
-        const { clinic_id, email, type, plan_or_pack_id, model, success_url } = body;
+        const { clinic_id, email, type, plan_or_pack_id, model, quantity, success_url } = body;
 
         if (!clinic_id || !email || !plan_or_pack_id) {
             return new Response(
@@ -69,83 +81,99 @@ Deno.serve(async (req: Request) => {
         }
 
         if (!LEMONSQUEEZY_API_KEY) {
-            console.error("LEMONSQUEEZY_API_KEY is not configured");
             return new Response(
                 JSON.stringify({ error: "Server configuration error: Missing LemonSqueezy API key" }),
                 { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
-        // Resolve the variant ID
         const variantId = VARIANT_IDS[plan_or_pack_id];
-        if (!variantId || variantId.startsWith("PLACEHOLDER")) {
-            console.error(`Variant ID not configured for: ${plan_or_pack_id}`);
+        if (!variantId) {
             return new Response(
-                JSON.stringify({ error: `Product variant not configured: ${plan_or_pack_id}. Please configure LS_VARIANT_* secrets.` }),
+                JSON.stringify({ error: `Product variant not configured: ${plan_or_pack_id}. Please set LS_VARIANT_* secrets.` }),
                 { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
-        // Determine credits metadata for credit packs
         const creditsMap: Record<string, number> = {
             'pack_500': 500, 'pack_1500': 1500, 'pack_4000': 4000,
             'pack_500_4o': 500, 'pack_1500_4o': 1500, 'pack_4000_4o': 4000,
         };
 
-        // Build custom_data for webhook processing
+        // Fixed quantities for reminder packs
+        const reminderPackQtyMap: Record<string, number> = {
+            'reminders_50': 50, 'reminders_350': 350, 'reminders_unlimited': 9999,
+        };
+
         const customData: Record<string, string> = {
             clinic_id: clinic_id,
             type: type,
         };
 
+        // lsCustomPrice: override variant price for variable-quantity products (cents USD)
+        let lsCustomPrice: number | undefined;
+
         if (type === 'ai_credits') {
             customData.credits = String(creditsMap[plan_or_pack_id] || 0);
             customData.model = model || 'mini';
+        } else if (type === 'reminders') {
+            const fixedQty = reminderPackQtyMap[plan_or_pack_id];
+            if (fixedQty !== undefined) {
+                customData.quantity = String(fixedQty);
+            } else {
+                // Per-unit: US$0.15/unit → custom_price cents = units * 15
+                const units = Math.max(10, quantity || 10);
+                const roundedUnits = Math.ceil(units / 10) * 10;
+                customData.quantity = String(roundedUnits);
+                lsCustomPrice = roundedUnits * 15;
+            }
+        } else if (type === 'campaign_credits') {
+            // US$0.15/crédito · mín 50 → custom_price cents = credits * 15
+            const credits = Math.max(50, quantity || 50);
+            const roundedCredits = Math.ceil(credits / 10) * 10;
+            customData.quantity = String(roundedCredits);
+            lsCustomPrice = roundedCredits * 15;
         } else {
             customData.plan = plan_or_pack_id;
         }
 
-        // Build LemonSqueezy checkout payload (JSON:API format)
+        const checkoutData: Record<string, unknown> = {
+            email: email,
+            custom: customData,
+        };
+
+        const checkoutAttributes: Record<string, unknown> = {
+            checkout_data: checkoutData,
+            checkout_options: {
+                embed: false,
+                media: true,
+                logo: true,
+                desc: true,
+                discount: true,
+                locale: "es",
+            },
+            product_options: {
+                redirect_url: success_url || `${SUPABASE_URL.replace('.supabase.co', '')}/app/settings?payment=success`,
+            },
+        };
+
+        if (lsCustomPrice !== undefined) {
+            checkoutAttributes.custom_price = lsCustomPrice;
+        }
+
         const checkoutPayload = {
             data: {
                 type: "checkouts",
-                attributes: {
-                    checkout_data: {
-                        email: email,
-                        custom: customData,
-                    },
-                    checkout_options: {
-                        embed: false,
-                        media: true,
-                        logo: true,
-                        desc: true,
-                        discount: true,
-                        locale: "es",
-                    },
-                    product_options: {
-                        redirect_url: success_url || `${SUPABASE_URL.replace('.supabase.co', '')}/app/settings?payment=success`,
-                    },
-                },
+                attributes: checkoutAttributes,
                 relationships: {
-                    store: {
-                        data: {
-                            type: "stores",
-                            id: LEMONSQUEEZY_STORE_ID,
-                        },
-                    },
-                    variant: {
-                        data: {
-                            type: "variants",
-                            id: variantId,
-                        },
-                    },
+                    store: { data: { type: "stores", id: LEMONSQUEEZY_STORE_ID } },
+                    variant: { data: { type: "variants", id: variantId } },
                 },
             },
         };
 
-        console.log(`Creating LemonSqueezy checkout: clinic=${clinic_id}, type=${type}, variant=${variantId}`);
+        console.log(`Creating LS checkout: clinic=${clinic_id}, type=${type}, variant=${variantId}`);
 
-        // Call LemonSqueezy API
         const lsResponse = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
             method: "POST",
             headers: {
@@ -157,11 +185,11 @@ Deno.serve(async (req: Request) => {
         });
 
         if (!lsResponse.ok) {
-            const errorData = await lsResponse.json();
-            console.error("LemonSqueezy API error:", JSON.stringify(errorData));
+            const errorText = await lsResponse.text();
+            console.error(`LemonSqueezy API error (${lsResponse.status}):`, errorText);
             return new Response(
-                JSON.stringify({ error: "Failed to create checkout", details: errorData }),
-                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                JSON.stringify({ success: false, error: `Error de LemonSqueezy (${lsResponse.status})`, details: errorText }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
@@ -169,23 +197,15 @@ Deno.serve(async (req: Request) => {
         const checkoutUrl = lsData.data?.attributes?.url;
 
         if (!checkoutUrl) {
-            console.error("No checkout URL returned:", lsData);
             return new Response(
                 JSON.stringify({ error: "No checkout URL returned from LemonSqueezy" }),
                 { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
-        console.log(`Checkout created successfully: ${checkoutUrl}`);
-
         return new Response(
-            JSON.stringify({
-                url: checkoutUrl,
-                checkout_id: lsData.data?.id,
-            }),
-            {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
+            JSON.stringify({ url: checkoutUrl, checkout_id: lsData.data?.id }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     } catch (error: any) {
         console.error("Internal error:", error);
@@ -195,3 +215,8 @@ Deno.serve(async (req: Request) => {
         );
     }
 });
+
+// Silence unused import warning
+const _supabase = createClient;
+void _supabase;
+void SUPABASE_SERVICE_ROLE_KEY;

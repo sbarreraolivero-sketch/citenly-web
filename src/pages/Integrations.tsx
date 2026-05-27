@@ -185,27 +185,31 @@ export default function Integrations() {
     }
 
     return (
-        <div className="space-y-6 pb-20">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-[#FF2E88]/70 mb-1">Agente IA</p>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <Plug className="w-6 h-6 text-[#FF2E88]" />
-                        Integraciones
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-1">Conecta tu número de WhatsApp Business y automatizaciones externas.</p>
+        <div className="space-y-6 pb-20 animate-fade-in">
+            {/* Banner — Agente IA (sky) */}
+            <div className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl overflow-hidden shadow-soft-md">
+                <div className="p-6 sm:p-8">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs font-black uppercase tracking-widest text-sky-200 mb-2">Agente IA</p>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Integraciones</h1>
+                            <p className="text-sm text-sky-100/80 font-light mt-1">Conecta tu número de WhatsApp Business y automatizaciones externas.</p>
+                        </div>
+                        <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center shrink-0">
+                            <Plug className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* YCloud */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/10 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                        <MessageSquare className="w-5 h-5 text-emerald-400" />
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
-                        <h2 className="text-base font-bold text-white">YCloud WhatsApp API</h2>
+                        <h2 className="text-base font-bold text-gray-900">YCloud WhatsApp API</h2>
                         <p className="text-xs text-gray-500">Conecta tu número de WhatsApp Business</p>
                     </div>
                 </div>
@@ -217,9 +221,9 @@ export default function Integrations() {
                             placeholder="yc_xxxxxxxxxxxxxxxxxxxxxx"
                             value={yCloudApiKey}
                             onChange={(e) => setYCloudApiKey(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#FF2E88]/40 transition-all"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 focus:border-[#FF2E88]/50 transition-all"
                         />
-                        <p className="text-xs text-gray-600 mt-1.5">Obtén tu API Key desde ycloud.com</p>
+                        <p className="text-xs text-gray-400 mt-1.5">Obtén tu API Key desde ycloud.com</p>
                     </div>
                     <div>
                         <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Número de WhatsApp</label>
@@ -228,9 +232,9 @@ export default function Integrations() {
                             placeholder="+56912345678"
                             value={yCloudPhoneNumber}
                             onChange={(e) => setYCloudPhoneNumber(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#FF2E88]/40 transition-all"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 focus:border-[#FF2E88]/50 transition-all"
                         />
-                        <p className="text-xs text-gray-600 mt-1.5">Número registrado en YCloud, con código de país</p>
+                        <p className="text-xs text-gray-400 mt-1.5">Número registrado en YCloud, con código de país</p>
                     </div>
                     <div>
                         <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Webhook Secret</label>
@@ -239,10 +243,10 @@ export default function Integrations() {
                             placeholder="whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                             value={yCloudWebhookSecret}
                             onChange={(e) => setYCloudWebhookSecret(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#FF2E88]/40 transition-all"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 focus:border-[#FF2E88]/50 transition-all"
                         />
-                        <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1.5">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <p className="text-xs text-gray-400 mt-1.5 flex items-center gap-1.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                             Firma HMAC-SHA256 — YCloud → Developer → Webhooks → Signing Secret
                         </p>
                     </div>
@@ -253,36 +257,36 @@ export default function Integrations() {
                                 type="text"
                                 value={webhookUrl}
                                 disabled
-                                className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-gray-500"
+                                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-gray-500"
                             />
                             <button
                                 onClick={copyWebhookUrl}
-                                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-gray-400 hover:text-white hover:border-white/20 transition-all"
+                                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-all"
                             >
-                                {copiedWebhook ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                                {copiedWebhook ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                                 {copiedWebhook ? 'Copiado' : 'Copiar'}
                             </button>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1.5">Configura esta URL en YCloud → Developer → Webhooks</p>
+                        <p className="text-xs text-gray-400 mt-1.5">Configura esta URL en YCloud → Developer → Webhooks</p>
                     </div>
                 </div>
             </div>
 
             {/* Webhooks */}
-            <div className="bg-white/[0.04] border border-white/10 rounded-xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-4">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
-                            <Webhook className="w-5 h-5 text-orange-400" />
+                        <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <Webhook className="w-5 h-5 text-orange-500" />
                         </div>
                         <div>
-                            <h2 className="text-base font-bold text-white">Webhooks</h2>
+                            <h2 className="text-base font-bold text-gray-900">Webhooks</h2>
                             <p className="text-xs text-gray-500">Conecta con n8n, Make, Zapier y otras automatizaciones</p>
                         </div>
                     </div>
                     <button
                         onClick={() => openWebhookModal()}
-                        className="flex items-center gap-2 bg-[#FF2E88]/20 text-[#FF2E88] border border-[#FF2E88]/30 text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-[#FF2E88]/30 transition-colors"
+                        className="flex items-center gap-2 bg-[#FF2E88] text-white text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-[#e0287a] transition-colors"
                     >
                         <Plus className="w-4 h-4" />
                         Añadir
@@ -290,55 +294,55 @@ export default function Integrations() {
                 </div>
                 <div className="p-5">
                     {webhooks.length === 0 ? (
-                        <div className="text-center py-10 border-2 border-dashed border-white/10 rounded-xl">
-                            <Globe className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+                        <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                            <Globe className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                             <p className="text-gray-500 text-sm font-medium mb-1">No hay webhooks configurados</p>
-                            <p className="text-gray-600 text-xs">Añade un webhook para enviar eventos a herramientas externas</p>
+                            <p className="text-gray-400 text-xs">Añade un webhook para enviar eventos a herramientas externas</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {webhooks.map((wh) => (
                                 <div
                                     key={wh.id}
-                                    className={cn('border rounded-xl p-4 transition-all', wh.is_active ? 'border-white/10 bg-white/[0.03]' : 'border-white/5 bg-white/[0.01] opacity-60')}
+                                    className={cn('border rounded-xl p-4 transition-all', wh.is_active ? 'border-gray-200 bg-gray-50' : 'border-gray-100 bg-gray-50/50 opacity-60')}
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-3">
-                                            <div className={cn('w-2.5 h-2.5 rounded-full', wh.is_active ? 'bg-emerald-400' : 'bg-gray-600')} />
-                                            <h3 className="font-bold text-white text-sm">{wh.name}</h3>
+                                            <div className={cn('w-2.5 h-2.5 rounded-full', wh.is_active ? 'bg-emerald-500' : 'bg-gray-300')} />
+                                            <h3 className="font-bold text-gray-900 text-sm">{wh.name}</h3>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button onClick={() => handleTestWebhook(wh)} disabled={!wh.is_active || testingWebhook === wh.id} className="p-1.5 rounded-lg hover:bg-blue-500/10 transition-colors disabled:opacity-50" title="Enviar prueba">
-                                                {testingWebhook === wh.id ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" /> : <Send className="w-4 h-4 text-blue-400" />}
+                                            <button onClick={() => handleTestWebhook(wh)} disabled={!wh.is_active || testingWebhook === wh.id} className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50" title="Enviar prueba">
+                                                {testingWebhook === wh.id ? <Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> : <Send className="w-4 h-4 text-blue-500" />}
                                             </button>
-                                            <button onClick={() => handleToggleWebhook(wh.id!, wh.is_active)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title={wh.is_active ? 'Desactivar' : 'Activar'}>
-                                                {wh.is_active ? <ToggleRight className="w-5 h-5 text-emerald-400" /> : <ToggleLeft className="w-5 h-5 text-gray-600" />}
+                                            <button onClick={() => handleToggleWebhook(wh.id!, wh.is_active)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title={wh.is_active ? 'Desactivar' : 'Activar'}>
+                                                {wh.is_active ? <ToggleRight className="w-5 h-5 text-emerald-500" /> : <ToggleLeft className="w-5 h-5 text-gray-400" />}
                                             </button>
-                                            <button onClick={() => openWebhookModal(wh)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="Editar">
-                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                            <button onClick={() => openWebhookModal(wh)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Editar">
+                                                <ChevronRight className="w-4 h-4 text-gray-400" />
                                             </button>
-                                            <button onClick={() => handleDeleteWebhook(wh.id!)} className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="Eliminar">
+                                            <button onClick={() => handleDeleteWebhook(wh.id!)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Eliminar">
                                                 <Trash2 className="w-4 h-4 text-red-400" />
                                             </button>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-600 font-mono truncate mb-2 pl-5">{wh.url}</p>
+                                    <p className="text-xs text-gray-400 font-mono truncate mb-2 pl-5">{wh.url}</p>
                                     <div className="flex items-center gap-2 flex-wrap pl-5">
                                         {wh.events.length > 0 ? wh.events.map(ev => (
-                                            <span key={ev} className="text-xs bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded-full border border-orange-500/20">{ev}</span>
+                                            <span key={ev} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200">{ev}</span>
                                         )) : (
-                                            <span className="text-xs text-gray-600">Sin eventos seleccionados</span>
+                                            <span className="text-xs text-gray-400">Sin eventos seleccionados</span>
                                         )}
                                         {wh.last_triggered_at && (
-                                            <span className="text-xs text-gray-600 ml-auto">Último: {new Date(wh.last_triggered_at).toLocaleString('es-CL')}</span>
+                                            <span className="text-xs text-gray-400 ml-auto">Último: {new Date(wh.last_triggered_at).toLocaleString('es-CL')}</span>
                                         )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
-                    <div className="mt-5 p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                        <p className="text-xs text-amber-400">
+                    <div className="mt-5 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                        <p className="text-xs text-amber-700">
                             <strong>Tip:</strong> En n8n, usa el nodo "Webhook" y pega la URL generada por n8n aquí. Selecciona los eventos que deseas recibir.
                         </p>
                     </div>
@@ -350,17 +354,17 @@ export default function Integrations() {
                 <button
                     onClick={saveIntegrations}
                     disabled={isSaving}
-                    className="flex items-center gap-2 bg-[#FF2E88] text-white font-bold text-sm px-6 py-3 rounded-xl hover:bg-[#e0007a] transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 bg-[#FF2E88] text-white font-bold text-sm px-6 py-3 rounded-xl hover:bg-[#e0287a] transition-colors disabled:opacity-50"
                 >
                     {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</> : <><Save className="w-4 h-4" /> Guardar Integraciones</>}
                 </button>
                 {saveStatus === 'success' && (
-                    <div className="flex items-center gap-2 text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 rounded-xl">
+                    <div className="flex items-center gap-2 text-emerald-700 text-sm bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl">
                         <CheckCircle2 className="w-4 h-4" /> Guardado correctamente
                     </div>
                 )}
                 {saveStatus === 'error' && (
-                    <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-xl">
+                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2.5 rounded-xl">
                         <AlertCircle className="w-4 h-4" /> Error al guardar
                     </div>
                 )}
@@ -368,13 +372,13 @@ export default function Integrations() {
 
             {/* Modal */}
             {showWebhookModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-[#111827] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg">
-                        <div className="flex items-center justify-between p-6 border-b border-white/10">
-                            <h3 className="text-base font-bold text-white">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-xl w-full max-w-lg">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                            <h3 className="text-base font-bold text-gray-900">
                                 {editingWebhook ? 'Editar Webhook' : 'Nuevo Webhook'}
                             </h3>
-                            <button onClick={closeWebhookModal} className="text-gray-500 hover:text-white transition-colors">
+                            <button onClick={closeWebhookModal} className="text-gray-400 hover:text-gray-700 transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -386,7 +390,7 @@ export default function Integrations() {
                                     placeholder="Mi automatización n8n"
                                     value={webhookForm.name}
                                     onChange={(e) => setWebhookForm(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#FF2E88]/40 transition-all"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 focus:border-[#FF2E88]/50 transition-all"
                                 />
                             </div>
                             <div>
@@ -396,7 +400,7 @@ export default function Integrations() {
                                     placeholder="https://n8n.mi-dominio.com/webhook/..."
                                     value={webhookForm.url}
                                     onChange={(e) => setWebhookForm(prev => ({ ...prev, url: e.target.value }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#FF2E88]/40 transition-all"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 focus:border-[#FF2E88]/50 transition-all"
                                 />
                             </div>
                             <div>
@@ -410,7 +414,7 @@ export default function Integrations() {
                                                 onChange={() => toggleWebhookEvent(ev.value)}
                                                 className="w-4 h-4 accent-[#FF2E88] rounded"
                                             />
-                                            <span className="text-xs text-gray-400 group-hover:text-white transition-colors">{ev.label}</span>
+                                            <span className="text-xs text-gray-600 group-hover:text-gray-900 transition-colors">{ev.label}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -422,23 +426,23 @@ export default function Integrations() {
                                     placeholder="Para verificar la autenticidad del webhook"
                                     value={webhookForm.secret}
                                     onChange={(e) => setWebhookForm(prev => ({ ...prev, secret: e.target.value }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#FF2E88]/40 transition-all"
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/20 focus:border-[#FF2E88]/50 transition-all"
                                 />
                             </div>
                             <div className="flex items-center justify-between pt-2">
                                 <div className="flex items-center gap-2">
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" className="sr-only peer" checked={webhookForm.is_active} onChange={(e) => setWebhookForm(prev => ({ ...prev, is_active: e.target.checked }))} />
-                                        <div className="w-10 h-5 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[3px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
+                                        <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#FF2E88] after:content-[''] after:absolute after:top-0.5 after:left-[3px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
                                     </label>
-                                    <span className="text-sm text-gray-400">Activo</span>
+                                    <span className="text-sm text-gray-600">Activo</span>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={closeWebhookModal} className="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-white border border-white/10 hover:border-white/20 transition-all">Cancelar</button>
+                                    <button onClick={closeWebhookModal} className="px-4 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 transition-all">Cancelar</button>
                                     <button
                                         onClick={handleSaveWebhook}
                                         disabled={savingWebhook || !webhookForm.name.trim() || !webhookForm.url.trim()}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-[#FF2E88] text-white hover:bg-[#e0007a] disabled:opacity-50 transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-[#FF2E88] text-white hover:bg-[#e0287a] disabled:opacity-50 transition-all"
                                     >
                                         {savingWebhook ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                         {editingWebhook ? 'Guardar cambios' : 'Crear webhook'}

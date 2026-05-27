@@ -368,11 +368,12 @@ export default function Reminders() {
 
                             <div className="grid md:grid-cols-3 gap-5">
                                 {(Object.values(REMINDER_PACKS)).map(pack => {
-                                    const clpPrice = pack.id === 'reminder_100' ? 14000 : pack.id === 'reminder_300' ? 36000 : 55000
+                                    const clpPrice = pack.id === 'reminders_50' ? 9000 : pack.id === 'reminders_350' ? 19000 : 29000
                                     const displayPrice = paymentRegion === 'international' ? `US$${pack.price}` : `$${clpPrice.toLocaleString('es-CL')}`
+                                    const creditsDisplay = pack.credits >= 9999 ? '∞' : pack.credits
                                     const pricePerUnit = paymentRegion === 'international'
-                                        ? `US$${pack.pricePerUnit.toFixed(2)}/recordatorio`
-                                        : `$${Math.round(clpPrice / pack.credits)}/recordatorio`
+                                        ? (pack.credits >= 9999 ? 'Ilimitados' : `US$${(pack.price / pack.credits).toFixed(2)}/recordatorio`)
+                                        : (pack.credits >= 9999 ? 'Ilimitados' : `$${Math.round(clpPrice / pack.credits)}/recordatorio`)
 
                                     return (
                                         <div key={pack.id} className="card-premium overflow-hidden flex flex-col">
@@ -391,7 +392,7 @@ export default function Reminders() {
                                                 <ul className="space-y-2 mb-6 flex-1">
                                                     <li className="flex items-center gap-2 text-sm text-secondary-theme">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                                                        {pack.credits} recordatorios WhatsApp
+                                                        {creditsDisplay} recordatorios WhatsApp
                                                     </li>
                                                     <li className="flex items-center gap-2 text-sm text-secondary-theme">
                                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
