@@ -361,7 +361,6 @@ export default function Landing() {
                             {' '}en un solo lugar.
                         </h2>
                         <p className="text-white/60 mt-3 text-lg">No es solo un chatbot. Es el sistema operativo de tu centro.</p>
-                        <p className="text-white/50 mt-1 text-base">Todas estas funcionalidades incluidas desde el <strong className="text-white">Plan Core · US$39/mes</strong></p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {MODULES.map((mod, i) => (
