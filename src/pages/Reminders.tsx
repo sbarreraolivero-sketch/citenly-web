@@ -161,7 +161,7 @@ export default function Reminders() {
                         <div className="flex-1">
                             <p className="text-xs font-black uppercase tracking-widest text-sky-200 mb-2">Clínica</p>
                             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Recordatorios Automáticos</h1>
-                            <p className="text-sm text-sky-100/80 font-light mt-1">WhatsApp automático 24h y 2h antes de cada cita.</p>
+                            <p className="text-sm text-sky-100/80 font-light mt-1">WhatsApp automático: 24h antes, 2h antes y solicitud de confirmación.</p>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
                             <div className="hidden sm:flex items-center gap-5">
@@ -235,6 +235,7 @@ export default function Reminders() {
                                     {[
                                         { field: 'reminder_24h_before' as const, label: '24 horas antes', desc: 'Recuerda la cita el día anterior' },
                                         { field: 'reminder_2h_before' as const, label: '2 horas antes', desc: 'Recordatorio de confirmación final' },
+                                        { field: 'reminder_1h_before' as const, label: 'Confirmación', desc: 'Solicita al cliente confirmar la cita' },
                                     ].map(item => (
                                         <div key={item.field} className={cn(
                                             'flex items-center justify-between p-4 rounded-xl border-2 transition-all',
@@ -358,6 +359,14 @@ export default function Reminders() {
                                         description="Mensaje enviado 2 horas antes de la cita."
                                         value={localTemplates.template_2h}
                                         onChange={(val) => setLocalTemplates(p => ({ ...p, template_2h: val }))}
+                                    />
+                                </div>
+                                <div className="p-4 bg-secondary-theme/50 rounded-xl border border-theme">
+                                    <TemplateSelector
+                                        label="Plantilla: Confirmación"
+                                        description="Mensaje que solicita al cliente confirmar su cita."
+                                        value={localTemplates.template_1h}
+                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_1h: val }))}
                                     />
                                 </div>
                             </div>
