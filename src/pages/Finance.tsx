@@ -714,7 +714,7 @@ const Finance = () => {
                         <div className="card-soft p-6">
                             <h3 className="font-semibold text-charcoal mb-4">Recientes</h3>
                             <div className="space-y-4">
-                                {transactions.slice(0, 5).map((tx) => (
+                                {transactions.filter(tx => tx.patient_name !== 'Bloqueo de Agenda').slice(0, 5).map((tx) => (
                                     <div key={tx.id} className="flex items-center justify-between text-sm">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
