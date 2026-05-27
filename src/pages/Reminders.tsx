@@ -3,7 +3,7 @@ import { Bell, Clock, CheckCircle2, XCircle, Package, Loader2, AlertCircle, Tren
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { PLANS } from '@/lib/mercadopago'
+import { PLANS, normalizePlanId } from '@/lib/mercadopago'
 import { REMINDER_PACKS, redirectToLemonReminderPackCheckout, type ReminderPackId } from '@/lib/lemonsqueezy'
 
 type Tab = 'overview' | 'logs' | 'packs'
@@ -31,7 +31,7 @@ interface ReminderSettings {
 }
 
 export default function Reminders() {
-    const { profile, subscription } = useAuth()
+    const { profile, subscription, member } = useAuth()
     const [tab, setTab] = useState<Tab>('overview')
     const [logs, setLogs] = useState<ReminderLog[]>([])
     const [settings, setSettings] = useState<ReminderSettings | null>(null)
@@ -40,9 +40,11 @@ export default function Reminders() {
     const [purchasingPack, setPurchasingPack] = useState<string | null>(null)
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
 
-    const planId = (subscription?.plan || 'core') as keyof typeof PLANS
+    const isAdminOrOwner = member?.role === 'owner' || profile?.role === 'owner' || member?.role === 'admin' || profile?.role === 'admin'
+    const planId = normalizePlanId(subscription?.plan)
     const planData = PLANS[planId] ?? PLANS.core
-    const monthlyLimit = planData.remindersPerMonth
+    // Admins/owners always get unlimited access regardless of plan
+    const monthlyLimit = isAdminOrOwner ? -1 : planData.remindersPerMonth
 
     const fetchData = useCallback(async () => {
         if (!profile?.clinic_id) return

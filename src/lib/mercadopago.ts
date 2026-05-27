@@ -192,6 +192,18 @@ export const PLANS = {
 
 export type PlanId = keyof typeof PLANS
 
+// Maps legacy DB plan IDs (essence/radiance/prestige) to current IDs
+export function normalizePlanId(plan: string | null | undefined): PlanId {
+    const legacy: Record<string, PlanId> = {
+        essence: 'starter',
+        radiance: 'pro',
+        prestige: 'enterprise',
+        freemium: 'core',
+    }
+    const normalized = legacy[plan ?? ''] ?? plan ?? 'core'
+    return (normalized in PLANS ? normalized : 'core') as PlanId
+}
+
 // ──────────────────────────────────────────────
 // CLP Credit Packs — GPT-4o-mini (económico)
 // ──────────────────────────────────────────────
