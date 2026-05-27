@@ -12,8 +12,13 @@ import {
     ChevronDown,
     Trash2,
     Calendar,
-    Lightbulb
+    Lightbulb,
+    Pencil,
+    Check,
+    Search,
+    User,
 } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClinicTimezone } from '@/hooks/useClinicTimezone'
 import { financeService, type FinanceStats, type Expense, type Income } from '@/services/financeService'
@@ -76,6 +81,16 @@ const Finance = () => {
     const [filterType, setFilterType] = useState<'day' | 'week' | 'month' | 'year'>('month')
     const [showExportMenu, setShowExportMenu] = useState(false)
 
+    // Patient selector for income modal
+    const [incomePatientSearch, setIncomePatientSearch] = useState('')
+    const [incomePatientName, setIncomePatientName] = useState('')
+    const [patientSuggestions, setPatientSuggestions] = useState<{ id: string; name: string }[]>([])
+    const [showPatientSuggestions, setShowPatientSuggestions] = useState(false)
+
+    // Inline amount editing for transactions
+    const [editingAmountId, setEditingAmountId] = useState<string | null>(null)
+    const [editingAmountValue, setEditingAmountValue] = useState('')
+
     const exportMenuRef = useRef<HTMLDivElement>(null)
 
     // ── Close export dropdown on click-outside ──
@@ -135,6 +150,42 @@ const Finance = () => {
             style: 'currency',
             currency: 'MXN'
         }).format(amount)
+    }
+
+    // ── Patient search for income modal ──
+    useEffect(() => {
+        if (!incomePatientSearch.trim() || incomePatientSearch.length < 2) {
+            setPatientSuggestions([])
+            return
+        }
+        const search = async () => {
+            const { data } = await (supabase as any)
+                .from('patients')
+                .select('id, first_name, last_name')
+                .eq('clinic_id', clinicId)
+                .ilike('first_name', `%${incomePatientSearch}%`)
+                .limit(6)
+            if (data) {
+                setPatientSuggestions(data.map((p: any) => ({ id: p.id, name: `${p.first_name} ${p.last_name || ''}`.trim() })))
+                setShowPatientSuggestions(true)
+            }
+        }
+        const t = setTimeout(search, 250)
+        return () => clearTimeout(t)
+    }, [incomePatientSearch, clinicId])
+
+    // ── Inline amount editing ──
+    const handleSaveAmount = async (appointmentId: string) => {
+        const amount = parseFloat(editingAmountValue)
+        if (isNaN(amount) || amount < 0) return
+        try {
+            await financeService.updateTransactionPrice(appointmentId, amount)
+            toast.success('Monto actualizado')
+            setEditingAmountId(null)
+            loadData()
+        } catch {
+            toast.error('Error al actualizar el monto')
+        }
     }
 
     // ── Export handlers ──
@@ -331,7 +382,8 @@ const Finance = () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const form = e.target as any
-        const description = form.description.value
+        const rawDescription = form.description.value
+        const description = incomePatientName ? `${rawDescription} — Clienta: ${incomePatientName}` : rawDescription
         const amount = parseFloat(form.amount.value)
         const category = form.category.value
         const date = form.date.value
@@ -346,6 +398,8 @@ const Finance = () => {
             })
             toast.success('Ingreso registrado exitosamente')
             setShowIncomeModal(false)
+            setIncomePatientName('')
+            setIncomePatientSearch('')
             loadData()
         } catch (error) {
             console.error('Error adding income:', error)
@@ -688,190 +742,216 @@ const Finance = () => {
                 )}
 
                 {activeTab === 'transactions' && (
-                    <div className="card-soft overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-silk-beige/30 text-charcoal/70 uppercase text-xs">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">Fecha</th>
-                                        <th className="px-6 py-3 font-medium">Paciente</th>
-                                        <th className="px-6 py-3 font-medium">Servicio</th>
-                                        <th className="px-6 py-3 font-medium">Monto</th>
-                                        <th className="px-6 py-3 font-medium">Estado</th>
-                                        <th className="px-6 py-3 font-medium text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-silk-beige">
-                                    {transactions.map((tx) => (
-                                        <tr key={tx.id} className="hover:bg-ivory/50">
-                                            <td className="px-6 py-3 text-charcoal/80">
-                                                {formatInTz(tx.appointment_date, 'dd/MM/yyyy HH:mm')}
-                                            </td>
-                                            <td className="px-6 py-3 font-medium text-charcoal">
-                                                {tx.patient_name}
-                                            </td>
-                                            <td className="px-6 py-3 text-charcoal/60">
-                                                {tx.service || '-'}
-                                            </td>
-                                            <td className="px-6 py-3 font-medium text-charcoal">
-                                                {formatCurrency(tx.price || 0)}
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <span className={cn(
-                                                    "px-2 py-1 rounded-full text-xs font-medium",
-                                                    tx.payment_status === 'paid' ? "bg-emerald-100 text-emerald-700" :
-                                                        tx.payment_status === 'pending' ? "bg-amber-100 text-amber-700" :
-                                                            "bg-gray-100 text-gray-600"
-                                                )}>
-                                                    {translateStatus(tx.payment_status)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3 text-right">
-                                                {tx.payment_status === 'pending' && (
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <button
-                                                            className="text-xs text-primary-600 font-medium hover:underline"
-                                                            onClick={() => handleRegisterPayment(tx.id)}
-                                                        >
-                                                            Registrar Pago
-                                                        </button>
-                                                        <button
-                                                            className="text-xs text-red-500 font-medium hover:underline"
-                                                            onClick={() => handleClearTransaction(tx.id)}
-                                                        >
-                                                            Eliminar
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                {tx.payment_status === 'paid' && (
-                                                    <button
-                                                        className="text-xs text-red-600 font-medium hover:underline flex items-center gap-1 justify-end w-full"
-                                                        onClick={() => handleDeletePayment(tx.id)}
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                        Eliminar Pago
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {transactions.length === 0 && (
-                                        <tr>
-                                            <td colSpan={6} className="px-6 py-8 text-center text-charcoal/50">
-                                                No se encontraron transacciones en este período
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                        <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                                <CreditCard className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Transacciones de citas</h3>
+                                <p className="text-xs text-gray-500">{transactions.filter(tx => tx.patient_name !== 'Bloqueo de Agenda').length} registros en el período</p>
+                            </div>
+                        </div>
+                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {transactions
+                                .filter(tx => tx.patient_name !== 'Bloqueo de Agenda')
+                                .map((tx) => (
+                                <div key={tx.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    {/* Avatar */}
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF2E88]/10 to-violet-100 dark:from-[#FF2E88]/20 dark:to-violet-900/20 flex items-center justify-center flex-shrink-0 border border-[#FF2E88]/10">
+                                        <User className="w-4 h-4 text-[#FF2E88]" />
+                                    </div>
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{tx.patient_name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{tx.service || 'Sin servicio'} · {formatInTz(tx.appointment_date, 'dd MMM yyyy, HH:mm')}</p>
+                                    </div>
+                                    {/* Monto con edición inline */}
+                                    <div className="flex-shrink-0">
+                                        {editingAmountId === tx.id ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="100"
+                                                    value={editingAmountValue}
+                                                    onChange={(e) => setEditingAmountValue(e.target.value)}
+                                                    className="w-28 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF2E88]/30"
+                                                    autoFocus
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSaveAmount(tx.id); if (e.key === 'Escape') setEditingAmountId(null) }}
+                                                />
+                                                <button onClick={() => handleSaveAmount(tx.id)} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => setEditingAmountId(null)} className="p-1 text-gray-400 hover:bg-gray-100 rounded">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatCurrency(tx.price || 0)}</span>
+                                                <button
+                                                    onClick={() => { setEditingAmountId(tx.id); setEditingAmountValue(String(tx.price || 0)) }}
+                                                    className="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded transition-colors"
+                                                    title="Editar monto"
+                                                >
+                                                    <Pencil className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Estado */}
+                                    <span className={cn(
+                                        "flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold",
+                                        tx.payment_status === 'paid' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                                        tx.payment_status === 'pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                                        "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                    )}>
+                                        {translateStatus(tx.payment_status)}
+                                    </span>
+                                    {/* Acciones */}
+                                    <div className="flex-shrink-0 flex items-center gap-1">
+                                        {tx.payment_status === 'pending' && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleRegisterPayment(tx.id)}
+                                                    className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-100 transition-colors"
+                                                >
+                                                    Cobrar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleClearTransaction(tx.id)}
+                                                    className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </>
+                                        )}
+                                        {tx.payment_status === 'paid' && (
+                                            <button
+                                                onClick={() => handleDeletePayment(tx.id)}
+                                                className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Revertir pago"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                            {transactions.filter(tx => tx.patient_name !== 'Bloqueo de Agenda').length === 0 && (
+                                <div className="py-16 text-center">
+                                    <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <CreditCard className="w-7 h-7 text-gray-300 dark:text-gray-600" />
+                                    </div>
+                                    <p className="text-sm text-gray-500">No hay transacciones en este período</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
 
                 {activeTab === 'expenses' && (
-                    <div className="card-soft overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-silk-beige/30 text-charcoal/70 uppercase text-xs">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">Fecha</th>
-                                        <th className="px-6 py-3 font-medium">Concepto</th>
-                                        <th className="px-6 py-3 font-medium">Categoría</th>
-                                        <th className="px-6 py-3 font-medium text-right">Monto</th>
-                                        <th className="px-6 py-3 font-medium text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-silk-beige">
-                                    {expenses.map((expense) => (
-                                        <tr key={expense.id} className="hover:bg-ivory/50">
-                                            <td className="px-6 py-3 text-charcoal/80">
-                                                {formatInTz(expense.date, 'dd/MM/yyyy')}
-                                            </td>
-                                            <td className="px-6 py-3 font-medium text-charcoal">
-                                                {expense.description}
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <span className="bg-gray-100 text-charcoal/70 px-2 py-1 rounded text-xs capitalize">
-                                                    {translateCategoryExpense(expense.category)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3 font-medium text-right text-red-600">
-                                                -{formatCurrency(expense.amount)}
-                                            </td>
-                                            <td className="px-6 py-3 text-right">
-                                                <button
-                                                    onClick={() => handleDeleteExpense(expense.id, expense.description)}
-                                                    className="text-charcoal/40 hover:text-red-500 transition-colors inline-flex items-center gap-1 text-xs"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                    Eliminar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {expenses.length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} className="px-6 py-8 text-center text-charcoal/50">
-                                                No hay gastos registrados en este período
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                    <TrendingDown className="w-4 h-4 text-red-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Gastos</h3>
+                                    <p className="text-xs text-gray-500">{expenses.length} registros</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowExpenseModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors">
+                                <Plus className="w-3.5 h-3.5" /> Nuevo Gasto
+                            </button>
+                        </div>
+                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {expenses.map((expense) => (
+                                <div key={expense.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0 border border-red-100 dark:border-red-800">
+                                        <TrendingDown className="w-4 h-4 text-red-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{expense.description}</p>
+                                        <p className="text-xs text-gray-500">{formatInTz(expense.date, 'dd MMM yyyy')}</p>
+                                    </div>
+                                    <span className="flex-shrink-0 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-full">
+                                        {translateCategoryExpense(expense.category)}
+                                    </span>
+                                    <span className="flex-shrink-0 text-sm font-bold text-red-600 dark:text-red-400">
+                                        -{formatCurrency(expense.amount)}
+                                    </span>
+                                    <button
+                                        onClick={() => handleDeleteExpense(expense.id, expense.description)}
+                                        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ))}
+                            {expenses.length === 0 && (
+                                <div className="py-16 text-center">
+                                    <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <TrendingDown className="w-7 h-7 text-gray-300 dark:text-gray-600" />
+                                    </div>
+                                    <p className="text-sm text-gray-500">No hay gastos registrados en este período</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
 
                 {activeTab === 'incomes' && (
-                    <div className="card-soft overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-silk-beige/30 text-charcoal/70 uppercase text-xs">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">Fecha</th>
-                                        <th className="px-6 py-3 font-medium">Concepto</th>
-                                        <th className="px-6 py-3 font-medium">Categoría</th>
-                                        <th className="px-6 py-3 font-medium text-right">Monto</th>
-                                        <th className="px-6 py-3 font-medium text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-silk-beige">
-                                    {incomes.map((income) => (
-                                        <tr key={income.id} className="hover:bg-ivory/50">
-                                            <td className="px-6 py-3 text-charcoal/80">
-                                                {formatInTz(income.date, 'dd/MM/yyyy')}
-                                            </td>
-                                            <td className="px-6 py-3 font-medium text-charcoal">
-                                                {income.description}
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <span className="bg-gray-100 text-charcoal/70 px-2 py-1 rounded text-xs capitalize">
-                                                    {translateCategoryIncome(income.category)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3 font-medium text-right text-emerald-600">
-                                                +{formatCurrency(income.amount)}
-                                            </td>
-                                            <td className="px-6 py-3 text-right">
-                                                <button
-                                                    onClick={() => handleDeleteIncome(income.id, income.description)}
-                                                    className="text-charcoal/40 hover:text-red-500 transition-colors inline-flex items-center gap-1 text-xs"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                    Eliminar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {incomes.length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} className="px-6 py-8 text-center text-charcoal/50">
-                                                No hay ingresos registrados en este período
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Otros Ingresos</h3>
+                                    <p className="text-xs text-gray-500">{incomes.length} registros</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowIncomeModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-100 transition-colors">
+                                <Plus className="w-3.5 h-3.5" /> Nuevo Ingreso
+                            </button>
+                        </div>
+                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {incomes.map((income) => (
+                                <div key={income.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0 border border-emerald-100 dark:border-emerald-800">
+                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{income.description}</p>
+                                        <p className="text-xs text-gray-500">{formatInTz(income.date, 'dd MMM yyyy')}</p>
+                                    </div>
+                                    <span className="flex-shrink-0 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-full">
+                                        {translateCategoryIncome(income.category)}
+                                    </span>
+                                    <span className="flex-shrink-0 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                        +{formatCurrency(income.amount)}
+                                    </span>
+                                    <button
+                                        onClick={() => handleDeleteIncome(income.id, income.description)}
+                                        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ))}
+                            {incomes.length === 0 && (
+                                <div className="py-16 text-center">
+                                    <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <TrendingUp className="w-7 h-7 text-gray-300 dark:text-gray-600" />
+                                    </div>
+                                    <p className="text-sm text-gray-500">No hay ingresos registrados en este período</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -879,57 +959,62 @@ const Finance = () => {
 
             {/* Modal de Gastos */}
             {showExpenseModal && (
-                <div className="fixed inset-0 bg-charcoal/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-soft w-full max-w-md p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-charcoal">Registrar Nuevo Gasto</h3>
-                            <button onClick={() => setShowExpenseModal(false)}>
-                                <X className="w-5 h-5 text-charcoal/50 hover:text-charcoal" />
+                <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                                    <TrendingDown className="w-4 h-4 text-red-500" />
+                                </div>
+                                <h3 className="text-base font-bold text-gray-900">Nuevo Gasto</h3>
+                            </div>
+                            <button onClick={() => setShowExpenseModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                <X className="w-4 h-4 text-gray-400" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleAddExpense} className="space-y-4">
+                        <form onSubmit={handleAddExpense} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Descripción</label>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Descripción</label>
                                 <input
                                     name="description"
                                     required
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
                                     placeholder="Ej. Compra de insumos"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-1">Monto</label>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Monto</label>
                                     <input
                                         name="amount"
                                         type="number"
                                         required
                                         min="0"
                                         step="0.01"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
                                         placeholder="0.00"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-1">Fecha</label>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Fecha</label>
                                     <input
                                         name="date"
                                         type="date"
                                         required
                                         defaultValue={new Date().toISOString().split('T')[0]}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Categoría</label>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Categoría</label>
                                 <select
                                     name="category"
                                     required
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400"
                                 >
                                     {(Object.entries(CATEGORY_LABELS_EXPENSE)).map(([val, label]) => (
                                         <option key={val} value={val}>{label}</option>
@@ -937,15 +1022,15 @@ const Finance = () => {
                                 </select>
                             </div>
 
-                            <div className="flex justify-end gap-2 mt-6">
+                            <div className="flex gap-3 pt-2">
                                 <button
                                     type="button"
                                     onClick={() => setShowExpenseModal(false)}
-                                    className="btn-secondary"
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"
                                 >
                                     Cancelar
                                 </button>
-                                <button type="submit" className="btn-primary">
+                                <button type="submit" className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-colors">
                                     Guardar Gasto
                                 </button>
                             </div>
@@ -956,57 +1041,105 @@ const Finance = () => {
 
             {/* Modal de Ingresos */}
             {showIncomeModal && (
-                <div className="fixed inset-0 bg-charcoal/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-soft w-full max-w-md p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-emerald-700">Registrar Nuevo Ingreso</h3>
-                            <button onClick={() => setShowIncomeModal(false)}>
-                                <X className="w-5 h-5 text-charcoal/50 hover:text-charcoal" />
+                <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                                </div>
+                                <h3 className="text-base font-bold text-gray-900">Nuevo Ingreso</h3>
+                            </div>
+                            <button onClick={() => { setShowIncomeModal(false); setIncomePatientName(''); setIncomePatientSearch('') }} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                <X className="w-4 h-4 text-gray-400" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleAddIncome} className="space-y-4">
+                        <form onSubmit={handleAddIncome} className="p-6 space-y-4">
+                            {/* Selector de clienta */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Descripción</label>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Clienta (opcional)</label>
+                                {incomePatientName ? (
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
+                                        <User className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                                        <span className="text-sm font-semibold text-emerald-700 flex-1">{incomePatientName}</span>
+                                        <button type="button" onClick={() => { setIncomePatientName(''); setIncomePatientSearch('') }} className="text-emerald-400 hover:text-emerald-600">
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={incomePatientSearch}
+                                            onChange={(e) => setIncomePatientSearch(e.target.value)}
+                                            onFocus={() => incomePatientSearch.length >= 2 && setShowPatientSuggestions(true)}
+                                            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
+                                            placeholder="Buscar clienta por nombre..."
+                                        />
+                                        {showPatientSuggestions && patientSuggestions.length > 0 && (
+                                            <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
+                                                {patientSuggestions.map(p => (
+                                                    <button
+                                                        key={p.id}
+                                                        type="button"
+                                                        onClick={() => { setIncomePatientName(p.name); setIncomePatientSearch(''); setShowPatientSuggestions(false) }}
+                                                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-gray-50 text-left transition-colors"
+                                                    >
+                                                        <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                                            <User className="w-3 h-3 text-emerald-600" />
+                                                        </div>
+                                                        {p.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Descripción</label>
                                 <input
                                     name="description"
                                     required
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                    placeholder="Ej. Venta de producto individual"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
+                                    placeholder="Ej. Venta crema hidratante"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-1">Monto</label>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Monto</label>
                                     <input
                                         name="amount"
                                         type="number"
                                         required
                                         min="0"
                                         step="0.01"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
                                         placeholder="0.00"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-1">Fecha</label>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Fecha</label>
                                     <input
                                         name="date"
                                         type="date"
                                         required
                                         defaultValue={new Date().toISOString().split('T')[0]}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-charcoal mb-1">Categoría</label>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Categoría</label>
                                 <select
                                     name="category"
                                     required
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
                                 >
                                     {(Object.entries(CATEGORY_LABELS_INCOME)).map(([val, label]) => (
                                         <option key={val} value={val}>{label}</option>
@@ -1014,15 +1147,15 @@ const Finance = () => {
                                 </select>
                             </div>
 
-                            <div className="flex justify-end gap-2 mt-6">
+                            <div className="flex gap-3 pt-2">
                                 <button
                                     type="button"
-                                    onClick={() => setShowIncomeModal(false)}
-                                    className="btn-secondary"
+                                    onClick={() => { setShowIncomeModal(false); setIncomePatientName(''); setIncomePatientSearch('') }}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"
                                 >
                                     Cancelar
                                 </button>
-                                <button type="submit" className="btn-primary !bg-emerald-600 border-none">
+                                <button type="submit" className="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors">
                                     Guardar Ingreso
                                 </button>
                             </div>
