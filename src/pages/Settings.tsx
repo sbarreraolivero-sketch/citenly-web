@@ -113,7 +113,7 @@ export default function Settings() {
     // Upselling state for new service
     const [newUpsellEnabled, setNewUpsellEnabled] = useState(false)
     const [newUpsellDays, setNewUpsellDays] = useState<string>('7')
-    const [newUpsellMessage, setNewUpsellMessage] = useState('')
+    const [newUpsellTemplate, setNewUpsellTemplate] = useState('')
 
     // Professional assignment state for service modal
     const [clinicProfessionals, setClinicProfessionals] = useState<any[]>([])
@@ -332,7 +332,7 @@ export default function Settings() {
                         upselling: {
                             enabled: s.upselling_enabled,
                             daysAfter: s.upselling_days_after || 0,
-                            message: s.upselling_message || ''
+                            message: s.upselling_template || ""
                         }
                     })))
                 } else {
@@ -612,7 +612,7 @@ export default function Settings() {
         setNewServicePrice(service.price.toString())
         setNewUpsellEnabled(service.upselling?.enabled || false)
         setNewUpsellDays(service.upselling?.daysAfter?.toString() || '7')
-        setNewUpsellMessage(service.upselling?.message || '')
+        setNewUpsellTemplate(service.upselling?.message || '')
         setShowServiceModal(true)
 
         // Load assigned professionals for this service
@@ -648,7 +648,7 @@ export default function Settings() {
                 price: parseFloat(newServicePrice) || 0,
                 upselling_enabled: newUpsellEnabled,
                 upselling_days_after: parseInt(newUpsellDays) || 0,
-                upselling_message: newUpsellMessage
+                upselling_template: newUpsellTemplate
             }
 
             let savedServiceId = editingServiceId
@@ -671,7 +671,7 @@ export default function Settings() {
                     upselling: {
                         enabled: serviceData.upselling_enabled,
                         daysAfter: serviceData.upselling_days_after,
-                        message: serviceData.upselling_message
+                        message: serviceData.upselling_template
                     }
                 } : s))
             } else {
@@ -695,7 +695,7 @@ export default function Settings() {
                     upselling: {
                         enabled: data.upselling_enabled,
                         daysAfter: data.upselling_days_after || 0,
-                        message: data.upselling_message || ''
+                        message: data.upselling_template || ''
                     }
                 }])
             }
@@ -736,7 +736,7 @@ export default function Settings() {
             setNewServicePrice('')
             setNewUpsellEnabled(false)
             setNewUpsellDays('7')
-            setNewUpsellMessage('')
+            setNewUpsellTemplate('')
             setAssignedProfessionals({})
             setPrimaryProfessional('')
             setEditingServiceId(null)
@@ -804,11 +804,11 @@ export default function Settings() {
 
                 {/* Sidebar Navigation */}
                 <div className={cn(
-                    "w-full md:w-64 flex-shrink-0",
-                    !showMobileList && "hidden md:block" // hide on mobile if viewing content
+                    "w-full md:w-60 flex-shrink-0",
+                    !showMobileList && "hidden md:block"
                 )}>
-                    <div className="card-premium p-2">
-                        {availableTabs.map((tab) => (
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                        {availableTabs.map((tab, idx) => (
                             <button
                                 key={tab.id}
                                 onClick={() => {
@@ -816,18 +816,19 @@ export default function Settings() {
                                     if (window.innerWidth < 768) setShowMobileList(false)
                                 }}
                                 className={cn(
-                                    'w-full flex items-center gap-3 px-4 py-3 rounded-soft text-left transition-colors',
+                                    'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-l-[3px]',
+                                    idx > 0 && 'border-t border-gray-100 dark:border-gray-800',
                                     activeTab === tab.id && !showMobileList
-                                        ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold border border-[var(--accent-primary)]/20'
-                                        : 'text-secondary-theme hover:bg-secondary-theme hover:text-primary-theme'
+                                        ? 'border-l-[#FF2E88] bg-[#FF2E88]/5 text-[#FF2E88] font-bold'
+                                        : 'border-l-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
                                 )}
                             >
-                                <tab.icon className="w-5 h-5" />
-                                {tab.label}
+                                <tab.icon className={cn('w-4.5 h-4.5 flex-shrink-0', activeTab === tab.id && !showMobileList ? 'text-[#FF2E88]' : 'text-gray-400')} />
+                                <span className="text-sm">{tab.label}</span>
                                 <ChevronRight
                                     className={cn(
-                                        'w-4 h-4 ml-auto transition-transform',
-                                        activeTab === tab.id && !showMobileList && 'rotate-90 hidden md:block'
+                                        'w-3.5 h-3.5 ml-auto transition-transform text-gray-300',
+                                        activeTab === tab.id && !showMobileList && 'rotate-90 hidden md:block text-[#FF2E88]/40'
                                     )}
                                 />
                             </button>
@@ -845,8 +846,17 @@ export default function Settings() {
                         <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
                             <MyProfile />
 
-                            <div className="card-premium p-6 space-y-4 max-w-3xl w-full">
-                                <h3 className="font-medium text-primary-theme">Seguridad</h3>
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden max-w-3xl w-full">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                        <Key className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Seguridad</h3>
+                                        <p className="text-xs text-gray-500">Actualiza tu contraseña de acceso</p>
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-4">
                                 <div className="space-y-4 w-full">
                                     <div className="w-full">
                                         <label className="block text-sm font-medium text-primary-theme mb-2">Nueva Contraseña</label>
@@ -889,12 +899,13 @@ export default function Settings() {
                                             )}
                                         </button>
                                         {passwordSaved && (
-                                            <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-soft">
+                                            <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
                                                 <CheckCircle2 className="w-4 h-4" />
                                                 ¡Contraseña actualizada!
                                             </div>
                                         )}
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -903,8 +914,17 @@ export default function Settings() {
                     {/* Clinic Settings */}
                     {activeTab === 'clinic' && (
                         <div className="space-y-6">
-                            <div className="card-premium p-6">
-                                <h2 className="text-lg font-semibold text-primary-theme mb-6">Información de la Clínica</h2>
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                        <Building2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Información de la Clínica</h2>
+                                        <p className="text-xs text-gray-500">Datos básicos de tu establecimiento</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
 
                                 <div className="bg-secondary-theme p-4 rounded-soft border border-theme mb-8">
                                     <div className="flex items-center gap-3 mb-4">
@@ -1190,11 +1210,11 @@ export default function Settings() {
                                     </div>
                                 </div>
 
-                                <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
+                                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center gap-4">
                                     <button
                                         onClick={handleSaveClinic}
                                         disabled={savingClinic}
-                                        className="btn-premium-primary flex items-center gap-2"
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#FF2E88] text-white text-sm font-bold rounded-xl hover:bg-[#E61E75] transition-colors disabled:opacity-50"
                                     >
                                         {savingClinic ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -1203,28 +1223,28 @@ export default function Settings() {
                                         )}
                                     </button>
                                     {clinicSaved && (
-                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
+                                        <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
                                             <CheckCircle2 className="w-4 h-4" />
                                             ¡Cambios guardados!
                                         </div>
                                     )}
                                 </div>
+                                </div>
                             </div>
 
                             {/* Clinic Templates - Independent Card */}
-                            <div className="card-premium p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-[#FF2E88] to-[#FF4DA6] rounded-soft flex items-center justify-center shadow-lg shadow-[#FF2E88]/20">
-                                        <MessageSquare className="w-5 h-5 text-white" />
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                                        <MessageSquare className="w-4 h-4 text-[#FF2E88]" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-semibold text-primary-theme">Plantillas de la Clínica</h2>
-                                        <p className="text-sm text-primary-theme/50">Configura los mensajes automáticos que se envían a tus pacientes</p>
+                                        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Plantillas de la Clínica</h2>
+                                        <p className="text-xs text-gray-500">Mensajes automáticos aprobados por META</p>
                                     </div>
                                 </div>
-
-                                <div className="space-y-5">
-                                    <div className="p-4 bg-secondary-theme/50 rounded-soft border border-theme">
+                                <div className="p-6 space-y-4">
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                                         <TemplateSelector
                                             label="Plantilla: Encuesta de Satisfacción"
                                             description="Se envía automáticamente horas después de que finaliza la cita."
@@ -1233,7 +1253,7 @@ export default function Settings() {
                                         />
                                     </div>
 
-                                    <div className="p-4 bg-secondary-theme/50 rounded-soft border border-theme">
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                                         <TemplateSelector
                                             label="Plantilla: Reactivación de Pacientes"
                                             description="Se envía a pacientes que no han visitado en meses para ofrecer un nuevo servicio y recuperar la relación."
@@ -1245,51 +1265,62 @@ export default function Settings() {
                             </div>
 
                             {/* Services */}
-                            <div className="card-premium p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-lg font-semibold text-primary-theme">Servicios</h2>
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                                            <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Servicios</h2>
+                                            <p className="text-xs text-gray-500">Tratamientos que ofrece tu clínica</p>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={() => {
                                             setAssignedProfessionals({})
                                             setPrimaryProfessional('')
                                             setShowServiceModal(true)
                                         }}
-                                        className="btn-premium-secondary flex items-center gap-2 text-primary-500"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF2E88] text-white text-xs font-bold rounded-lg hover:bg-[#E61E75] transition-colors"
                                     >
-                                        <Plus className="w-4 h-4" />
-                                        Agregar Servicio
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Agregar
                                     </button>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="p-4 space-y-2">
                                     {services.map((service) => (
                                         <div
                                             key={service.id}
-                                            className="flex items-center gap-4 p-4 bg-secondary-theme rounded-soft"
+                                            className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                                         >
-                                            <div className="flex-1">
-                                                <p className="font-medium text-primary-theme">{service.name}</p>
-                                                <p className="text-sm text-primary-theme/50">
-                                                    {service.duration} minutos · {currencySymbols[currency]}{service.price.toLocaleString()} {currency}
+                                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                <Sparkles className="w-4 h-4 text-violet-500" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{service.name}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    {service.duration} min · {currencySymbols[currency]}{service.price.toLocaleString()} {currency}
                                                 </p>
                                                 {service.upselling?.enabled && (
-                                                    <p className="text-xs text-primary-500 mt-1 flex items-center gap-1">
+                                                    <p className="text-xs text-[#FF2E88] mt-1 flex items-center gap-1">
                                                         <Zap className="w-3 h-3" />
-                                                        Upselling: {service.upselling.daysAfter} días después
+                                                        Upselling activo — {service.upselling.daysAfter} días después
                                                     </p>
                                                 )}
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-1">
                                                 <button
                                                     onClick={() => handleEditService(service)}
-                                                    className="p-2 text-primary-theme/40 hover:text-primary-500 hover:bg-primary-50 rounded-soft transition-colors"
+                                                    className="p-2 text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-lg transition-colors"
                                                     title="Editar servicio"
                                                 >
-                                                    <CreditCard className="w-4 h-4" /> {/* Using generic icon, maybe Edit/Pencil is better but relying on import */}
+                                                    <MessageSquare className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteService(service.id)}
-                                                    className="p-2 text-primary-theme/40 hover:text-red-500 hover:bg-red-50 rounded-soft transition-colors"
+                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                                     title="Eliminar servicio"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -1298,14 +1329,20 @@ export default function Settings() {
                                         </div>
                                     ))}
                                     {services.length === 0 && (
-                                        <p className="text-center text-primary-theme/50 py-8">No hay servicios configurados. Agrega tu primer servicio.</p>
+                                        <div className="py-12 text-center">
+                                            <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                                <Sparkles className="w-7 h-7 text-gray-300 dark:text-gray-600" />
+                                            </div>
+                                            <p className="text-sm text-gray-500">No hay servicios configurados aún.</p>
+                                            <p className="text-xs text-gray-400 mt-1">Agrega tu primer servicio para que el agente IA pueda ofrecer citas.</p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Add/Edit Service Modal */}
                             {showServiceModal && (
-                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+                                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] animate-fade-in">
                                     <div className="bg-primary-theme rounded-soft p-6 w-full max-w-md shadow-xl border border-theme">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-semibold text-primary-theme">{editingServiceId ? 'Editar Servicio' : 'Nuevo Servicio'}</h3>
@@ -1318,7 +1355,7 @@ export default function Settings() {
                                                     setNewServicePrice('');
                                                     setNewUpsellEnabled(false);
                                                     setNewUpsellDays('7');
-                                                    setNewUpsellMessage('');
+                                                    setNewUpsellTemplate('');
                                                 }}
                                                 className="p-2 hover:bg-secondary-theme rounded-soft transition-colors"
                                             >
@@ -1396,13 +1433,14 @@ export default function Settings() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-primary-theme mb-2">Mensaje de seguimiento</label>
-                                                        <textarea
-                                                            placeholder="Ej: ¿Te gustaría agendar tu próxima sesión? Los mejores resultados se obtienen con tratamientos periódicos."
-                                                            value={newUpsellMessage}
-                                                            onChange={(e) => setNewUpsellMessage(e.target.value)}
-                                                            rows={3}
-                                                            className="input-premium resize-none"
+                                                        <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg px-3 py-2 mb-3">
+                                                            ⚠️ Usa una plantilla aprobada por META para evitar bloqueos de WhatsApp.
+                                                        </p>
+                                                        <TemplateSelector
+                                                            label="Plantilla de Upselling"
+                                                            description="Selecciona la plantilla aprobada por META que se enviará como seguimiento post-tratamiento."
+                                                            value={newUpsellTemplate}
+                                                            onChange={setNewUpsellTemplate}
                                                         />
                                                     </div>
                                                 </div>
@@ -1518,87 +1556,89 @@ export default function Settings() {
                                 </div>
                             )}
 
-                            <div className="card-premium p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-primary-100 rounded-soft flex items-center justify-center">
-                                            <CreditCard className="w-6 h-6 text-primary-600" />
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                            <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-bold text-primary-theme">Tu Suscripción</h2>
-                                            <p className="text-sm text-primary-theme/50">Gestiona tu plan y facturación</p>
+                                            <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Tu Suscripción</h2>
+                                            <p className="text-xs text-gray-500">Plan activo y facturación</p>
                                         </div>
                                     </div>
-                                    <div className={cn(
-                                        "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider",
-                                        subscription?.status === 'trial' ? 'bg-amber-100 text-amber-700' :
-                                        subscription?.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                        'bg-charcoal/10 text-primary-theme/60'
+                                    <span className={cn(
+                                        "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide",
+                                        subscription?.status === 'trial' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                        subscription?.status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                        'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
                                     )}>
                                         {subscription?.status === 'trial' ? 'En Prueba' :
-                                         subscription?.status === 'active' ? 'Plan Activo' : 'Inactivo'}
-                                    </div>
+                                         subscription?.status === 'active' ? 'Activo' : 'Inactivo'}
+                                    </span>
                                 </div>
 
-                                <div className="bg-secondary-theme border border-theme rounded-soft p-6 mb-8">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                        <div>
-                                            <p className="text-xs font-bold text-primary-theme/40 uppercase tracking-widest mb-1">Plan Actual</p>
-                                            <h3 className="text-3xl font-black text-primary-theme capitalize tracking-tight">
-                                                Plan {subscription?.plan || 'Essence (Trial)'}
-                                            </h3>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <Sparkles className="w-4 h-4 text-primary-500" />
-                                                <p className="text-sm font-medium text-primary-theme/70">
-                                                    {subscription?.plan === 'core' ? 'Gestión completa sin IA conversacional' :
-                                                     subscription?.plan === 'starter' ? 'Agente IA WhatsApp para independientes' :
-                                                     subscription?.plan === 'pro' ? 'IA completa, recordatorios y citas ilimitadas' :
-                                                     subscription?.plan === 'enterprise' ? 'Infraestructura completa para múltiples sedes' :
-                                                     'Prueba gratuita - 7 días de acceso total'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-3xl font-black text-primary-theme">
-                                                {paymentRegion === 'international' ? 'US$' : '$'}
-                                                {subscription?.plan && subscription.plan !== 'trial' 
-                                                    ? (paymentRegion === 'international' 
-                                                        ? LS_PLANS[subscription.plan as LSPlanId]?.price
-                                                        : PLANS[subscription.plan as PlanId]?.price)
-                                                    : '0'}
-                                                <span className="text-sm font-medium text-primary-theme/40 ml-1">
-                                                    {paymentRegion === 'international' ? 'USD' : 'CLP'} / mes
-                                                </span>
-                                            </p>
-                                            {subscription?.trialEndsAt && (
-                                                <div className="mt-2 flex items-center justify-end gap-2 text-amber-600">
-                                                    <Clock className="w-4 h-4" />
-                                                    <p className="text-xs font-bold">
-                                                        Termina en {Math.max(0, Math.ceil((new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} días
+                                <div className="p-6">
+                                    <div className="bg-gradient-to-r from-gray-50 to-gray-50/50 dark:from-gray-800/50 dark:to-gray-800/20 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Plan Actual</p>
+                                                <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 capitalize tracking-tight">
+                                                    Plan {subscription?.plan || 'Trial'}
+                                                </h3>
+                                                <div className="flex items-center gap-2 mt-1.5">
+                                                    <Sparkles className="w-3.5 h-3.5 text-[#FF2E88]" />
+                                                    <p className="text-xs font-medium text-gray-500">
+                                                        {subscription?.plan === 'core' ? 'Gestión completa sin IA conversacional' :
+                                                         subscription?.plan === 'starter' ? 'Agente IA WhatsApp para independientes' :
+                                                         subscription?.plan === 'pro' ? 'IA completa, recordatorios y citas ilimitadas' :
+                                                         subscription?.plan === 'enterprise' ? 'Infraestructura completa para múltiples sedes' :
+                                                         'Prueba gratuita · 7 días de acceso total'}
                                                     </p>
                                                 </div>
-                                            )}
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-2xl font-black text-gray-900 dark:text-gray-100">
+                                                    {paymentRegion === 'international' ? 'US$' : '$'}
+                                                    {subscription?.plan && subscription.plan !== 'trial'
+                                                        ? (paymentRegion === 'international'
+                                                            ? LS_PLANS[subscription.plan as LSPlanId]?.price
+                                                            : PLANS[subscription.plan as PlanId]?.price)
+                                                        : '0'}
+                                                    <span className="text-xs font-medium text-gray-400 ml-1">
+                                                        {paymentRegion === 'international' ? 'USD' : 'CLP'}/mes
+                                                    </span>
+                                                </p>
+                                                {subscription?.trialEndsAt && (
+                                                    <div className="mt-1 flex items-center justify-end gap-1.5 text-amber-600 dark:text-amber-400">
+                                                        <Clock className="w-3.5 h-3.5" />
+                                                        <p className="text-xs font-bold">
+                                                            Termina en {Math.max(0, Math.ceil((new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} días
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex flex-wrap gap-4">
-                                    {subscription?.status === 'trial' && (
-                                        <button 
-                                            onClick={() => document.getElementById('compare-plans')?.scrollIntoView({ behavior: 'smooth' })}
-                                            className="btn-premium-primary"
+                                    <div className="flex flex-wrap gap-3">
+                                        {subscription?.status === 'trial' && (
+                                            <button
+                                                onClick={() => document.getElementById('compare-plans')?.scrollIntoView({ behavior: 'smooth' })}
+                                                className="px-4 py-2 bg-[#FF2E88] text-white text-sm font-bold rounded-xl hover:bg-[#E61E75] transition-colors"
+                                            >
+                                                Activar Plan Premium
+                                            </button>
+                                        )}
+                                        <a
+                                            href="https://www.mercadopago.com.mx/subscriptions"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                         >
-                                            Activar Plan Premium
-                                        </button>
-                                    )}
-                                    <a 
-                                        href="https://www.mercadopago.com.mx/subscriptions" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="btn-premium-secondary"
-                                    >
-                                        Gestionar en Mercado Pago
-                                    </a>
+                                            Gestionar en Mercado Pago
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1809,9 +1849,18 @@ export default function Settings() {
 
                     {/* Schedule Settings */}
                     {activeTab === 'schedule' && (
-                        <div className="space-y-8 animate-fade-in">
-                            <div className="card-premium p-6">
-                                <h2 className="text-lg font-semibold text-primary-theme mb-6">Horarios de Atención</h2>
+                        <div className="space-y-6 animate-fade-in">
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                                        <Clock className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Horarios de Atención</h2>
+                                        <p className="text-xs text-gray-500">Días y horas en que tu clínica está abierta</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
 
                                 <div className="space-y-3">
                                     {dayOrder.map((day) => {
@@ -1964,11 +2013,11 @@ export default function Settings() {
                                     })}
                                 </div>
 
-                                <div className="mt-6 pt-6 border-t border-theme flex items-center gap-4">
+                                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center gap-4">
                                     <button
                                         onClick={handleSaveSchedule}
                                         disabled={savingSchedule}
-                                        className="btn-premium-primary flex items-center gap-2"
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#FF2E88] text-white text-sm font-bold rounded-xl hover:bg-[#E61E75] transition-colors disabled:opacity-50"
                                     >
                                         {savingSchedule ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -1977,24 +2026,26 @@ export default function Settings() {
                                         )}
                                     </button>
                                     {scheduleSaved && (
-                                        <div className="flex items-center gap-2 text-[#FF2E88] text-sm animate-fade-in bg-[#FF2E88]/10 px-4 py-2 rounded-soft border border-[#FF2E88]/20">
+                                        <div className="flex items-center gap-2 text-emerald-600 text-sm animate-fade-in bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
                                             <CheckCircle2 className="w-4 h-4" />
                                             ¡Horarios guardados!
                                         </div>
                                     )}
                                 </div>
+                                </div>
                             </div>
 
-                            <div className="card-premium p-6">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-14 h-14 bg-[#FF2E88]/5 rounded-2xl flex items-center justify-center border border-[#FF2E88]/10 shadow-[0_8px_16px_rgba(255,46,136,0.08)]">
-                                        <Calendar className="w-7 h-7 text-[#FF2E88]" />
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                                        <Calendar className="w-4 h-4 text-[#FF2E88]" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-[#0B0B0F] tracking-tight">Días de Cierre Especial</h2>
-                                        <p className="text-sm text-[#0B0B0F]/50 font-medium">Bloquea días específicos (feriados o vacaciones) para que la IA no agende citas.</p>
+                                        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Días de Cierre Especial</h2>
+                                        <p className="text-xs text-gray-500">Bloquea feriados o vacaciones para que la IA no agende citas</p>
                                     </div>
                                 </div>
+                                <div className="p-6">
 
                                 <div className="bg-[#FFF5F9] border border-[#FF2E88]/20 rounded-2xl p-6 mb-8">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2084,150 +2135,121 @@ export default function Settings() {
                                         </div>
                                     )}
                                 </div>
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {/* Notifications Settings */}
                     {activeTab === 'notifications' && (
-                        <div className="card-premium p-6">
-                            <h2 className="text-lg font-semibold text-primary-theme mb-2">Configuración de Notificaciones</h2>
-                            <p className="text-sm text-primary-theme/50 mb-6">Elige qué notificaciones recibir en tu panel</p>
-
-                            {notificationsSaved && (
-                                <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-soft flex items-center gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                                    <p className="text-sm text-emerald-700 font-medium">¡Preferencias de notificaciones guardadas exitosamente!</p>
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                                    <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                                 </div>
-                            )}
-
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
-                                    <div>
-                                        <p className="font-medium text-primary-theme">Nuevas Citas</p>
-                                        <p className="text-sm text-primary-theme/50">Cuando se agenda una nueva cita</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.new_appointment}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, new_appointment: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
-                                    <div>
-                                        <p className="font-medium text-primary-theme">Citas Confirmadas</p>
-                                        <p className="text-sm text-primary-theme/50">Cuando un paciente confirma su cita</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.confirmed}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, confirmed: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
-                                    <div>
-                                        <p className="font-medium text-primary-theme">Citas Canceladas</p>
-                                        <p className="text-sm text-primary-theme/50">Cuando se cancela una cita</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.cancelled}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, cancelled: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
-                                    <div>
-                                        <p className="font-medium text-primary-theme">Recordatorios Pendientes</p>
-                                        <p className="text-sm text-primary-theme/50">Citas que necesitan confirmación</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.pending_reminder}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, pending_reminder: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
-                                    <div>
-                                        <p className="font-medium text-primary-theme">Nuevos Mensajes</p>
-                                        <p className="text-sm text-primary-theme/50">Mensajes que requieren atención</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.new_message}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, new_message: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft">
-                                    <div>
-                                        <p className="font-medium text-primary-theme">Encuestas Respondidas</p>
-                                        <p className="text-sm text-primary-theme/50">Cuando un paciente responde una encuesta</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.survey_response}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, survey_response: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 bg-secondary-theme rounded-soft border border-orange-200">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-medium text-primary-theme">Derivación a Humano</p>
-                                            <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-medium">IA Agent</span>
-                                        </div>
-                                        <p className="text-sm text-primary-theme/50">Cuando el Asistente de IA requiere de un humano para continuar el chat</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={notifPrefs.ai_handoff}
-                                            onChange={(e) => setNotifPrefs({ ...notifPrefs, ai_handoff: e.target.checked })}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-charcoal/15 dark:bg-white/10 rounded-full peer peer-checked:bg-[#FF2E88] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner" />
-                                    </label>
+                                <div>
+                                    <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Notificaciones</h2>
+                                    <p className="text-xs text-gray-500">Elige qué alertas recibir en tu panel</p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 pt-6 border-t border-theme">
+                            {notificationsSaved && (
+                                <div className="mx-6 mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">¡Preferencias guardadas!</p>
+                                </div>
+                            )}
+
+                            <div className="p-6 space-y-3">
+                                {[
+                                    { key: 'new_appointment' as const, label: 'Nuevas Citas', desc: 'Cuando se agenda una nueva cita', color: 'sky' },
+                                    { key: 'confirmed' as const, label: 'Citas Confirmadas', desc: 'Cuando un paciente confirma su cita', color: 'emerald' },
+                                    { key: 'cancelled' as const, label: 'Citas Canceladas', desc: 'Cuando se cancela una cita', color: 'red' },
+                                    { key: 'pending_reminder' as const, label: 'Recordatorios Pendientes', desc: 'Citas que necesitan confirmación', color: 'amber' },
+                                    { key: 'new_message' as const, label: 'Nuevos Mensajes', desc: 'Mensajes que requieren atención', color: 'violet' },
+                                    { key: 'survey_response' as const, label: 'Encuestas Respondidas', desc: 'Cuando un paciente responde una encuesta', color: 'emerald' },
+                                ].map(({ key, label, desc }) => (
+                                    <div
+                                        key={key}
+                                        className={cn(
+                                            'flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer',
+                                            notifPrefs[key]
+                                                ? 'border-[#FF2E88]/30 bg-[#FF2E88]/5 dark:bg-[#FF2E88]/10'
+                                                : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'
+                                        )}
+                                        onClick={() => setNotifPrefs({ ...notifPrefs, [key]: !notifPrefs[key] })}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', notifPrefs[key] ? 'bg-[#FF2E88]' : 'bg-gray-300 dark:bg-gray-600')} />
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{desc}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); setNotifPrefs({ ...notifPrefs, [key]: !notifPrefs[key] }) }}
+                                            style={{ width: '48px', height: '26px' }}
+                                            className={cn(
+                                                'relative rounded-full transition-all duration-200 border-2 flex-shrink-0',
+                                                notifPrefs[key] ? 'bg-[#FF2E88] border-[#FF2E88]' : 'bg-gray-200 dark:bg-white/10 border-transparent'
+                                            )}
+                                        >
+                                            <span className={cn(
+                                                'absolute top-[3px] w-[16px] h-[16px] bg-white rounded-full shadow transition-all duration-200',
+                                                notifPrefs[key] ? 'left-[24px]' : 'left-[3px]'
+                                            )} />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {/* AI Handoff - special item */}
+                                <div
+                                    className={cn(
+                                        'flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer',
+                                        notifPrefs.ai_handoff
+                                            ? 'border-orange-300/60 bg-orange-50 dark:bg-orange-900/10'
+                                            : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'
+                                    )}
+                                    onClick={() => setNotifPrefs({ ...notifPrefs, ai_handoff: !notifPrefs.ai_handoff })}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', notifPrefs.ai_handoff ? 'bg-orange-400' : 'bg-gray-300 dark:bg-gray-600')} />
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Derivación a Humano</p>
+                                                <span className="bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 text-[10px] px-2 py-0.5 rounded-full font-bold">IA Agent</span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Cuando el asistente de IA requiere intervención humana</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setNotifPrefs({ ...notifPrefs, ai_handoff: !notifPrefs.ai_handoff }) }}
+                                        style={{ width: '48px', height: '26px' }}
+                                        className={cn(
+                                            'relative rounded-full transition-all duration-200 border-2 flex-shrink-0',
+                                            notifPrefs.ai_handoff ? 'bg-orange-400 border-orange-400' : 'bg-gray-200 dark:bg-white/10 border-transparent'
+                                        )}
+                                    >
+                                        <span className={cn(
+                                            'absolute top-[3px] w-[16px] h-[16px] bg-white rounded-full shadow transition-all duration-200',
+                                            notifPrefs.ai_handoff ? 'left-[24px]' : 'left-[3px]'
+                                        )} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="px-6 pb-6">
                                 <button
                                     onClick={handleSaveNotifications}
                                     disabled={savingNotifications}
-                                    className="btn-premium-primary flex items-center gap-2"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#FF2E88] text-white text-sm font-bold rounded-xl hover:bg-[#E61E75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {savingNotifications ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
                                     ) : (
-                                        <><Save className="w-4 h-4" /> Guardar Notificaciones</>
+                                        <><Save className="w-4 h-4" /> Guardar Preferencias</>
                                     )}
                                 </button>
                             </div>
@@ -2238,11 +2260,20 @@ export default function Settings() {
                     {/* Tags Settings */}
                     {activeTab === 'tags' && (
                         <div className="space-y-6 animate-fade-in">
-                            <div>
-                                <h2 className="text-lg font-semibold text-primary-theme mb-1">Etiquetas de Pacientes</h2>
-                                <p className="text-sm text-primary-theme/50">Personaliza las etiquetas para organizar a tus pacientes.</p>
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                        <Tag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Etiquetas de Pacientes</h2>
+                                        <p className="text-xs text-gray-500">Personaliza las etiquetas para organizar a tus pacientes</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <TagManager />
+                                </div>
                             </div>
-                            <TagManager />
                         </div>
                     )}
                 </div>

@@ -141,7 +141,7 @@ const PLANS = [
     {
         id: 'core', name: 'Core', icon: Sparkles,
         tagline: 'Gestión completa sin IA conversacional.',
-        priceUSD: 33,
+        priceUSD: 39,
         description: 'Todo lo necesario para gestionar tu centro sin depender de mensajería manual.',
         gradient: 'from-slate-500 to-slate-700',
         highlight: false,
@@ -151,7 +151,7 @@ const PLANS = [
     {
         id: 'starter', name: 'Starter', icon: Zap,
         tagline: 'Para esteticistas independientes.',
-        priceUSD: 89,
+        priceUSD: 99,
         description: 'Agente IA en WhatsApp + gestión completa para quien trabaja sola o con un equipo pequeño.',
         gradient: 'from-emerald-500 to-emerald-700',
         highlight: false,
@@ -161,7 +161,7 @@ const PLANS = [
     {
         id: 'pro', name: 'Pro', icon: Zap,
         tagline: 'Para centros estéticos en crecimiento.',
-        priceUSD: 149,
+        priceUSD: 169,
         description: 'La solución completa para captar, retener y automatizar tu clínica de estética.',
         gradient: 'from-[#FF2E88] to-[#c0236a]',
         highlight: true,
@@ -172,8 +172,8 @@ const PLANS = [
     {
         id: 'enterprise', name: 'Enterprise', icon: Crown,
         tagline: 'Redes de salones y multi-sucursal.',
-        priceUSD: 349,
-        description: 'Infraestructura empresarial para controlar y escalar múltiples sedes desde un solo panel.',
+        priceUSD: 299,
+        description: 'Infraestructura empresarial para controlar hasta 2 sucursales desde un solo panel. Más sucursales, contactar ventas.',
         gradient: 'from-[#1a1a2e] to-[#0f0f23]',
         highlight: false,
         features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', '12.000 créditos IA/mes', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
@@ -361,7 +361,7 @@ export default function Landing() {
                             {' '}en un solo lugar.
                         </h2>
                         <p className="text-white/60 mt-3 text-lg">No es solo un chatbot. Es el sistema operativo de tu centro.</p>
-                        <p className="text-white/50 mt-1 text-base">Todas estas funcionalidades incluidas desde el <strong className="text-white">Plan Core · US$33/mes</strong></p>
+                        <p className="text-white/50 mt-1 text-base">Todas estas funcionalidades incluidas desde el <strong className="text-white">Plan Core · US$39/mes</strong></p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {MODULES.map((mod, i) => (
@@ -429,7 +429,7 @@ export default function Landing() {
                             </div>
                             <div className="space-y-4">
                                 {[
-                                    ['Desde US$89 / mes', 'Plan Starter — sin contrato, sin finiquito, sin cotizaciones previsionales'],
+                                    ['Desde US$99 / mes', 'Plan Starter — sin contrato, sin finiquito, sin cotizaciones previsionales'],
                                     ['Responde en menos de 5 segundos, 24/7', 'Incluidos domingos, festivos y madrugadas'],
                                     ['Siempre en su mejor versión', 'Sin fatiga, sin errores por distracción, sin mal día'],
                                     ['Sin interrupciones operativas', 'Cuando tu equipo falla, la clínica sigue atendiendo'],

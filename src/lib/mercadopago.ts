@@ -207,10 +207,11 @@ export function normalizePlanId(plan: string | null | undefined): PlanId {
 // ──────────────────────────────────────────────
 // CLP Credit Packs — GPT-4o-mini (económico)
 // ──────────────────────────────────────────────
+// Válidos 30 días desde la compra · No acumulables
 export const CREDIT_PACKS = {
-    'pack_500':  { id: 'pack_500',  name: 'Pack Inicial',    credits: 500,  price: 5000,  description: '500 Créditos de IA' },
-    'pack_1500': { id: 'pack_1500', name: 'Pack Pro',        credits: 1500, price: 12000, description: '1.500 Créditos de IA' },
-    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 4000, price: 25000, description: '4.000 Créditos de IA' },
+    'pack_500':  { id: 'pack_500',  name: 'Pack Inicial',    credits: 500,  price: 7000,  description: '500 mensajes de IA' },
+    'pack_1500': { id: 'pack_1500', name: 'Pack Pro',        credits: 2000, price: 14000, description: '2.000 mensajes de IA' },
+    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 5000, price: 28000, description: '5.000 mensajes de IA' },
 } as const
 
 // ──────────────────────────────────────────────

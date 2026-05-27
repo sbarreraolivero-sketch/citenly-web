@@ -15,29 +15,29 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
  */
 const VARIANT_IDS: Record<string, string> = {
     // Subscription Plans
-    'core':       Deno.env.get("LS_VARIANT_CORE")       || "1460445",
-    'starter':    Deno.env.get("LS_VARIANT_STARTER")    || "1460476",
-    'pro':        Deno.env.get("LS_VARIANT_PRO")        || "1460482",
-    'enterprise': Deno.env.get("LS_VARIANT_ENTERPRISE") || "1460485",
+    'core':       Deno.env.get("LS_VARIANT_CORE")       || "1712277",
+    'starter':    Deno.env.get("LS_VARIANT_STARTER")    || "1460445",
+    'pro':        Deno.env.get("LS_VARIANT_PRO")        || "1460476",
+    'enterprise': Deno.env.get("LS_VARIANT_ENTERPRISE") || "1460482",
     // Legacy plan IDs — backward compat
-    'essence':    Deno.env.get("LS_VARIANT_STARTER")    || "1460476",
-    'radiance':   Deno.env.get("LS_VARIANT_PRO")        || "1460482",
-    'prestige':   Deno.env.get("LS_VARIANT_ENTERPRISE") || "1460485",
-    // AI Credit Packs (GPT-4o mini)
-    'pack_500':    Deno.env.get("LS_VARIANT_PACK_500")   || "1460484",
+    'essence':    Deno.env.get("LS_VARIANT_STARTER")    || "1460445",
+    'radiance':   Deno.env.get("LS_VARIANT_PRO")        || "1460476",
+    'prestige':   Deno.env.get("LS_VARIANT_ENTERPRISE") || "1460482",
+    // AI Credit Packs (mini): Pack Inicial 500, Pack Pro 2000, Pack Enterprise 5000
+    'pack_500':    Deno.env.get("LS_VARIANT_PACK_500")   || "1460498",
     'pack_1500':   Deno.env.get("LS_VARIANT_PACK_1500")  || "1460490",
-    'pack_4000':   Deno.env.get("LS_VARIANT_PACK_4000")  || "1460493",
-    // AI Credit Packs (GPT-4o premium)
+    'pack_4000':   Deno.env.get("LS_VARIANT_PACK_4000")  || "1460505",
+    // AI Credit Packs (4o premium) — mismos IDs por ahora
     'pack_500_4o':  Deno.env.get("LS_VARIANT_PACK_500_4O")  || "1460498",
-    'pack_1500_4o': Deno.env.get("LS_VARIANT_PACK_1500_4O") || "1460501",
+    'pack_1500_4o': Deno.env.get("LS_VARIANT_PACK_1500_4O") || "1460490",
     'pack_4000_4o': Deno.env.get("LS_VARIANT_PACK_4000_4O") || "1460505",
-    // Reminder Units — per-unit purchase ($1.50 USD / 10 units)
+    // Reminder Units — per-unit purchase
     'reminders': Deno.env.get("LS_VARIANT_REMINDERS") || "",
     // Reminder Packs — fixed-quantity bundles
-    'reminders_50':        Deno.env.get("LS_VARIANT_REMINDERS_50")        || "",
-    'reminders_350':       Deno.env.get("LS_VARIANT_REMINDERS_350")       || "",
-    'reminders_unlimited': Deno.env.get("LS_VARIANT_REMINDERS_UNLIMITED") || "",
-    // Campaign Credits — US$0.15/crédito, mín 50
+    'reminders_50':        Deno.env.get("LS_VARIANT_REMINDERS_50")        || "1712284",
+    'reminders_350':       Deno.env.get("LS_VARIANT_REMINDERS_350")       || "1712305",
+    'reminders_unlimited': Deno.env.get("LS_VARIANT_REMINDERS_UNLIMITED") || "1712321",
+    // Campaign Credits
     'campaign_credits': Deno.env.get("LS_VARIANT_CAMPAIGN_CREDITS") || "",
 };
 
@@ -96,13 +96,13 @@ Deno.serve(async (req: Request) => {
         }
 
         const creditsMap: Record<string, number> = {
-            'pack_500': 500, 'pack_1500': 1500, 'pack_4000': 4000,
-            'pack_500_4o': 500, 'pack_1500_4o': 1500, 'pack_4000_4o': 4000,
+            'pack_500': 500, 'pack_1500': 2000, 'pack_4000': 5000,
+            'pack_500_4o': 500, 'pack_1500_4o': 2000, 'pack_4000_4o': 5000,
         };
 
         // Fixed quantities for reminder packs
         const reminderPackQtyMap: Record<string, number> = {
-            'reminders_50': 50, 'reminders_350': 350, 'reminders_unlimited': 9999,
+            'reminders_50': 50, 'reminders_350': 150, 'reminders_unlimited': 9999,
         };
 
         const customData: Record<string, string> = {

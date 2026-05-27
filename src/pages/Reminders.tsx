@@ -231,29 +231,42 @@ export default function Reminders() {
                             {/* Toggle settings */}
                             <div className="card-premium p-6">
                                 <h2 className="text-base font-black text-primary-theme mb-5">Recordatorios Activos</h2>
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {[
                                         { field: 'reminder_24h_before' as const, label: '24 horas antes', desc: 'Recuerda la cita el día anterior' },
                                         { field: 'reminder_2h_before' as const, label: '2 horas antes', desc: 'Recordatorio de confirmación final' },
-                                        { field: 'reminder_1h_before' as const, label: '1 hora antes', desc: 'Alerta de última hora' },
                                     ].map(item => (
-                                        <div key={item.field} className="flex items-center justify-between p-4 bg-secondary-theme rounded-xl border border-theme">
-                                            <div>
-                                                <p className="text-sm font-bold text-primary-theme">{item.label}</p>
-                                                <p className="text-xs text-secondary-theme">{item.desc}</p>
+                                        <div key={item.field} className={cn(
+                                            'flex items-center justify-between p-4 rounded-xl border-2 transition-all',
+                                            settings?.[item.field]
+                                                ? 'border-sky-400/60 bg-sky-500/5'
+                                                : 'border-sky-200/30 bg-secondary-theme'
+                                        )}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={cn(
+                                                    'w-2.5 h-2.5 rounded-full shrink-0 transition-colors',
+                                                    settings?.[item.field] ? 'bg-sky-400' : 'bg-secondary-theme'
+                                                )} />
+                                                <div>
+                                                    <p className="text-sm font-bold text-primary-theme">{item.label}</p>
+                                                    <p className="text-xs text-secondary-theme">{item.desc}</p>
+                                                </div>
                                             </div>
                                             <button
                                                 onClick={() => updateSetting(item.field, !settings?.[item.field])}
                                                 disabled={savingSettings || monthlyLimit === 0}
                                                 className={cn(
-                                                    'relative w-12 h-6 rounded-full transition-colors shrink-0',
-                                                    settings?.[item.field] ? 'bg-emerald-500' : 'bg-white/10',
-                                                    (savingSettings || monthlyLimit === 0) && 'opacity-50 cursor-not-allowed'
+                                                    'relative w-13 h-7 rounded-full transition-all duration-200 shrink-0 border-2',
+                                                    settings?.[item.field]
+                                                        ? 'bg-sky-500 border-sky-400'
+                                                        : 'bg-gray-200 dark:bg-white/10 border-transparent',
+                                                    (savingSettings || monthlyLimit === 0) && 'opacity-40 cursor-not-allowed'
                                                 )}
+                                                style={{ width: '52px', height: '28px' }}
                                             >
                                                 <span className={cn(
-                                                    'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform',
-                                                    settings?.[item.field] ? 'translate-x-7' : 'translate-x-1'
+                                                    'absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full shadow-md transition-all duration-200',
+                                                    settings?.[item.field] ? 'left-[27px]' : 'left-[3px]'
                                                 )} />
                                             </button>
                                         </div>
@@ -347,14 +360,6 @@ export default function Reminders() {
                                         onChange={(val) => setLocalTemplates(p => ({ ...p, template_2h: val }))}
                                     />
                                 </div>
-                                <div className="p-4 bg-secondary-theme/50 rounded-xl border border-theme">
-                                    <TemplateSelector
-                                        label="Plantilla: 1 hora antes"
-                                        description="Último recordatorio antes de la cita."
-                                        value={localTemplates.template_1h}
-                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_1h: val }))}
-                                    />
-                                </div>
                             </div>
                             <div className="mt-5 pt-5 border-t border-theme">
                                 <button
@@ -446,7 +451,7 @@ export default function Reminders() {
 
                             <div className="grid md:grid-cols-3 gap-5">
                                 {(Object.values(REMINDER_PACKS)).map(pack => {
-                                    const clpPrice = pack.id === 'reminders_50' ? 9000 : pack.id === 'reminders_350' ? 19000 : 29000
+                                    const clpPrice = pack.id === 'reminders_50' ? 8000 : pack.id === 'reminders_350' ? 17000 : 26000
                                     const displayPrice = paymentRegion === 'international' ? `US$${pack.price}` : `$${clpPrice.toLocaleString('es-CL')}`
                                     const creditsDisplay = pack.credits >= 9999 ? '∞' : pack.credits
                                     const pricePerUnit = paymentRegion === 'international'

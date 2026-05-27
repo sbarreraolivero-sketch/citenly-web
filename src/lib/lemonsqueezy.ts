@@ -32,7 +32,7 @@ export const LS_PLANS = {
         name: 'Core',
         tagline: 'Gestión completa sin IA conversacional.',
         promise: 'Todo lo que necesitas para administrar tu clínica estética.',
-        price: 33,
+        price: 39,
         currency: 'USD',
         monthlyAppointmentsMonthly: 0,
         maxUsers: 1,
@@ -59,7 +59,7 @@ export const LS_PLANS = {
         name: 'Starter',
         tagline: 'Ideal para esteticistas independientes.',
         promise: 'Agrega el agente IA que atiende y agenda por WhatsApp, 24/7.',
-        price: 89,
+        price: 99,
         currency: 'USD',
         monthlyAppointmentsMonthly: 50,
         maxUsers: 2,
@@ -85,7 +85,7 @@ export const LS_PLANS = {
         name: 'Pro',
         tagline: 'Para clínicas en pleno crecimiento.',
         promise: 'IA completa, recordatorios, campañas y citas ilimitadas.',
-        price: 149,
+        price: 169,
         currency: 'USD',
         monthlyAppointmentsMonthly: -1,
         maxUsers: 5,
@@ -112,8 +112,8 @@ export const LS_PLANS = {
         id: 'enterprise',
         name: 'Enterprise',
         tagline: 'Para redes de salones y multi-sucursal.',
-        promise: 'Infraestructura completa para escalar múltiples sedes.',
-        price: 349,
+        promise: 'Infraestructura completa para escalar múltiples sedes (hasta 2 sucursales).',
+        price: 299,
         currency: 'USD',
         monthlyAppointmentsMonthly: -1,
         maxUsers: 999999,
@@ -122,6 +122,7 @@ export const LS_PLANS = {
         remindersPerMonth: -1,
         features: [
             'Todo lo de Pro, más:',
+            'Hasta 2 sucursales incluidas',
             'Usuarios y agendas ilimitados',
             'Multi-sucursal con dashboard unificado',
             '12.000 créditos IA incluidos/mes',
@@ -130,6 +131,7 @@ export const LS_PLANS = {
             'Super Administrador',
             'Soporte prioritario 24/7',
         ],
+        note: 'Para más de 2 sucursales, contactar ventas.',
         cta: 'Contactar Ventas',
     },
 } as const
@@ -138,11 +140,12 @@ export type LSPlanId = keyof typeof LS_PLANS
 
 // ──────────────────────────────────────────────
 // USD Credit Packs — GPT-4o-mini
+// Válidos 30 días desde la compra · No acumulables
 // ──────────────────────────────────────────────
 export const LS_CREDIT_PACKS = {
-    'pack_500':  { id: 'pack_500',  name: 'Pack Inicial',    credits: 500,  price: 5,  description: '500 Créditos de IA' },
-    'pack_1500': { id: 'pack_1500', name: 'Pack Pro',        credits: 1500, price: 12, description: '1.500 Créditos de IA' },
-    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 4000, price: 25, description: '4.000 Créditos de IA' },
+    'pack_500':  { id: 'pack_500',  name: 'Pack Inicial',    credits: 500,  price: 8,  description: '500 mensajes de IA',  variantId: '1460498' },
+    'pack_1500': { id: 'pack_1500', name: 'Pack Pro',        credits: 2000, price: 16, description: '2.000 mensajes de IA', variantId: '1460490' },
+    'pack_4000': { id: 'pack_4000', name: 'Pack Enterprise', credits: 5000, price: 32, description: '5.000 mensajes de IA', variantId: '1460505' },
 } as const
 
 // ──────────────────────────────────────────────
@@ -187,10 +190,10 @@ export async function redirectToLemonCreditsCheckout(clinicId: string, email: st
 // ──────────────────────────────────────────────
 export type ReminderPackId = 'reminders_50' | 'reminders_350' | 'reminders_unlimited'
 
-export const REMINDER_PACKS: Record<ReminderPackId, { id: ReminderPackId; name: string; credits: number; price: number; label: string }> = {
-    reminders_50:        { id: 'reminders_50',        name: 'Pack Básico',     credits: 50,   price: 9,  label: '50 recordatorios' },
-    reminders_350:       { id: 'reminders_350',       name: 'Pack Estándar',   credits: 150,  price: 19, label: '150 recordatorios' },
-    reminders_unlimited: { id: 'reminders_unlimited', name: 'Pack Ilimitado',  credits: 9999, price: 29, label: 'Recordatorios ilimitados (mes)' },
+export const REMINDER_PACKS: Record<ReminderPackId, { id: ReminderPackId; name: string; credits: number; price: number; label: string; variantId: string }> = {
+    reminders_50:        { id: 'reminders_50',        name: 'Pack Básico',    credits: 50,   price: 9,  label: '50 recordatorios',              variantId: '1712284' },
+    reminders_350:       { id: 'reminders_350',       name: 'Pack Estándar',  credits: 150,  price: 19, label: '150 recordatorios',             variantId: '1712305' },
+    reminders_unlimited: { id: 'reminders_unlimited', name: 'Pack Ilimitado', credits: 9999, price: 29, label: 'Recordatorios ilimitados (mes)', variantId: '1712321' },
 }
 
 export async function redirectToLemonReminderPackCheckout(clinicId: string, email: string, packId: ReminderPackId) {
