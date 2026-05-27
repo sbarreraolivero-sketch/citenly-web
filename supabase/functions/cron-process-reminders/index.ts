@@ -1,13 +1,12 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient } from "npm:@supabase/supabase-js@2"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -162,6 +161,16 @@ serve(async (req) => {
                     continue
                 }
 
+                // Idempotency check: skip if already sent (use .limit(1), NOT .maybeSingle() — maybeSingle returns null with >1 row)
+                const { data: existingLog24h } = await supabaseClient
+                    .from('reminder_logs')
+                    .select('id')
+                    .eq('appointment_id', appt.id)
+                    .eq('type', '24h')
+                    .eq('status', 'sent')
+                    .limit(1)
+                if (existingLog24h && existingLog24h.length > 0) continue
+
                 // SEND WHATSAPP
                 try {
                     const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
@@ -314,13 +323,15 @@ serve(async (req) => {
                 let sentCount = 0
 
                 for (const appt of (appointments || [])) {
-                    // Check if reminder was already sent RECENTLY (e.g., in last 6 hours)
-                    // If so, skip (avoid duplicates)
-                    if (appt.reminder_sent && appt.reminder_sent_at) {
-                        const lastSent = new Date(appt.reminder_sent_at).getTime()
-                        const diffHours = (nowUTC.getTime() - lastSent) / (1000 * 60 * 60)
-                        if (diffHours < 6) continue
-                    }
+                    // Idempotency: skip if 2h reminder already sent (use .limit(1), NOT .maybeSingle())
+                    const { data: existingLog2h } = await supabaseClient
+                        .from('reminder_logs')
+                        .select('id')
+                        .eq('appointment_id', appt.id)
+                        .eq('type', '2h')
+                        .eq('status', 'sent')
+                        .limit(1)
+                    if (existingLog2h && existingLog2h.length > 0) continue
 
                     // Strict Hour Check safely
                     const apptDate = new Date(appt.appointment_date)
@@ -328,7 +339,7 @@ serve(async (req) => {
 
                     if (apptHour !== targetHour) continue
 
-                    // SEND WHATSAPP (Reused logic - copy paste for safety in this constrained env)
+                    // SEND WHATSAPP
                     try {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })

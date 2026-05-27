@@ -1501,10 +1501,21 @@ const callGemini = async (key: string, model: string, msgs: Msg[], useFns = true
 };
 
 const callAI = async (model: string, msgs: Msg[], useFns = true, customFunctions: any[] = []): Promise<any> => {
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 
-    // Strategy 1: OpenRouter (Primary)
+    // Strategy 1: OpenAI (Primary)
+    if (OPENAI_API_KEY && model.startsWith("gpt")) {
+        try {
+            return await callOpenAI(OPENAI_API_KEY, model, msgs, useFns, customFunctions);
+        } catch (e) {
+            console.error("OpenAI Error:", e.message);
+            // Fallthrough to OpenRouter
+        }
+    }
+
+    // Strategy 2: OpenRouter (Fallback)
     if (OPENROUTER_API_KEY) {
         try {
             let orModel = model;
@@ -1516,11 +1527,11 @@ const callAI = async (model: string, msgs: Msg[], useFns = true, customFunctions
             return await callOpenRouter(OPENROUTER_API_KEY, orModel, msgs, useFns, customFunctions);
         } catch (e) { 
             console.error("OpenRouter Error:", e.message);
-            throw e;
+            // Fallthrough to Gemini
         }
     }
 
-    // Strategy 2: Gemini Direct
+    // Strategy 3: Gemini Direct
     if (model.startsWith("gemini") && GOOGLE_AI_API_KEY) {
         try { return await callGemini(GOOGLE_AI_API_KEY, model, msgs, useFns, customFunctions); }
         catch (e) { console.warn("Gemini direct failed:", e.message); }
@@ -1546,22 +1557,59 @@ const sendWA = async (key: string, to: string, from: string, msg: string) => {
 };
 
 // =============================================
+// HMAC Signature Verification (per-clinic)
+// =============================================
+const verifyYCloudSignature = async (rawBody: string, signatureHeader: string, secret: string): Promise<boolean> => {
+    try {
+        // Header format: t={timestamp},s={hex_signature}
+        const parts: Record<string, string> = {};
+        for (const segment of signatureHeader.split(',')) {
+            const idx = segment.indexOf('=');
+            if (idx > -1) parts[segment.slice(0, idx)] = segment.slice(idx + 1);
+        }
+        const timestamp = parts['t'];
+        const signature = parts['s'];
+        if (!timestamp || !signature) return false;
+
+        // Payload: {timestamp}.{rawBody}
+        const encoder = new TextEncoder();
+        const payload = `${timestamp}.${rawBody}`;
+
+        // Key: full secret string as UTF-8 — do NOT base64-decode, YCloud uses the raw whsec_... string
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+        const signatureBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+        const computedHex = Array.from(new Uint8Array(signatureBytes))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+
+        return computedHex === signature;
+    } catch (e) {
+        console.error('HMAC verification error:', e);
+        return false;
+    }
+};
+
+// =============================================
 // Main Webhook Handler
 // =============================================
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
+    if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: corsHeaders });
 
     const sb = getSupabase();
 
-    if (req.method === "GET") {
-        const { data } = await sb.from("debug_logs").select("*").order("created_at", { ascending: false }).limit(100);
-        return new Response(JSON.stringify(data), { headers: corsHeaders });
-    }
-
     try {
+        const rawBody = await req.text();
+
         let p: YCloudPayload;
         try {
-            p = await req.json();
+            p = JSON.parse(rawBody);
         } catch (e) {
             console.warn("Received empty or non-JSON body, ignoring.");
             return new Response(JSON.stringify({ status: "ok", message: "Empty body ignored" }), { headers: corsHeaders });
@@ -1592,6 +1640,25 @@ Deno.serve(async (req) => {
         const to = msgObj.to;
         const from = normalizePhone(msgObj.from); // Normalize user phone immediately
         const msgId = msgObj.id;
+
+        // HMAC per-clinic verification
+        // Secret lives in clinic_settings.ycloud_webhook_secret — if not set, accept with warning (permissive onboarding)
+        const { data: clinicSecret } = await sb
+            .from("clinic_settings")
+            .select("ycloud_webhook_secret")
+            .eq("ycloud_phone_number", to)
+            .maybeSingle();
+
+        if (clinicSecret?.ycloud_webhook_secret) {
+            const signatureHeader = req.headers.get("ycloud-signature") || "";
+            const isValid = await verifyYCloudSignature(rawBody, signatureHeader, clinicSecret.ycloud_webhook_secret);
+            if (!isValid) {
+                console.warn(`[HMAC] Invalid signature for ${to}`);
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            }
+        } else {
+            console.warn(`[HMAC] No webhook secret configured for ${to} — accepting without verification`);
+        }
 
         // Deduplication
         const { data: exists } = await sb.from("messages").select("id").eq("ycloud_message_id", msgId).limit(1).maybeSingle();
@@ -1991,6 +2058,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 const dynamicFns = getFunctions(ownerEmail);
 
                 let res = await callAI(optimalModel, msgs, true, dynamicFns);
+                let assistant = res.choices[0].message;
 
                 // Track usage (Ledger System)
                 const newBalance = (clinic.ai_credits_balance || 0) - creditCost;
@@ -2010,8 +2078,6 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     description: `Consumo IA N${tier}: ${optimalModel}`,
                     metadata: { tier, model: optimalModel, message_id: msgRowId }
                 });
-
-                const reply = assistant.content || "Error. ¿Puedes repetir?";
                 let funcResult: Record<string, unknown> | null = null;
                 let allFuncResults: Record<string, unknown>[] = [];
 
@@ -2037,8 +2103,8 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     maxCalls--;
                 }
 
-                const reply = assistant.content || "Error. ¿Puedes repetir?";
-                await saveMsg(sb, clinic.id, from, reply, "outbound", {
+                const finalReply = assistant.content || "Error. ¿Puedes repetir?";
+                await saveMsg(sb, clinic.id, from, finalReply, "outbound", {
                     ai_generated: true,
                     ai_model: optimalModel,
                     ai_tier: tier,
@@ -2047,7 +2113,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     ai_function_result: allFuncResults.length > 0 ? allFuncResults : null
                 });
 
-                await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply);
+                await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, finalReply);
                 await debugLog(sb, `Citenly AI Response Sent`, { to: from, msgId: msgRowId, tier, model: optimalModel });
             } catch (err) {
                 console.error("Async Process Error:", err);

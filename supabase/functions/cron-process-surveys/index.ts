@@ -1,13 +1,13 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+
+import { createClient } from "npm:@supabase/supabase-js@2"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -86,21 +86,23 @@ serve(async (req) => {
                 continue
             }
 
-            // Verify if Clinic has API Key
+            // Verify if Clinic has API Key and phone number
             const ycloudKey = appointment.clinic_settings?.ycloud_api_key
-            if (!ycloudKey) {
-                console.log(`Skipping appointment ${appointment.id}: No YCloud API Key.`)
+            const ycloudPhone = appointment.clinic_settings?.ycloud_phone_number
+            if (!ycloudKey || !ycloudPhone) {
+                console.log(`Skipping appointment ${appointment.id}: No YCloud API Key or phone number.`)
                 results.push({ id: appointment.id, status: 'skipped', reason: 'no_api_key' })
                 continue
             }
 
             // Send Survey (Reusable logic from send-whatsapp-survey)
             try {
-                // Template: Use dynamic template from clinic_settings, fallback to 'satisfaction_survey'
+                // Empty string is falsy, so '' falls back to default template name
                 const surveyTemplateName = appointment.clinic_settings?.template_survey || 'satisfaction_survey'
 
                 // {{1}} = Patient Name
                 const messagePayload = {
+                    from: ycloudPhone,
                     to: appointment.phone_number,
                     type: 'template',
                     template: {

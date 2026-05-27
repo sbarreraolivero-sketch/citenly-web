@@ -8,7 +8,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     // 1. CORS Inmediato
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders, status: 200 });

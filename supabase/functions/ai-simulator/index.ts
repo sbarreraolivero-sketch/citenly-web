@@ -8,7 +8,13 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info"
 };
 
-interface Msg { role: "system" | "user" | "assistant" | "function"; content: string; name?: string; function_call?: { name: string; arguments: string }; }
+interface Msg {
+    role: "system" | "user" | "assistant" | "tool";
+    content: string | null;
+    name?: string;
+    tool_call_id?: string;
+    tool_calls?: { id: string; type: "function"; function: { name: string; arguments: string } }[];
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -16,41 +22,56 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 const getSupabase = () => createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 
 // =============================================
-// OpenAI Function Definitions (Same as webhook)
+// OpenAI Tool Definitions — formato moderno tools/tool_choice
 // =============================================
-const functions = [
-    {
+const tools = [
+    { type: "function", function: {
         name: "check_availability",
         description: "Verifica disponibilidad de horarios. Infiere el servicio de la conversación.",
         parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio" }, professional_name: { type: "string", description: "Nombre del profesional (opcional)" } }, required: ["date"] }
-    },
-    {
+    }},
+    { type: "function", function: {
         name: "create_appointment",
         description: "Crea nueva cita cuando paciente confirma fecha, hora y servicio",
         parameters: { type: "object", properties: { patient_name: { type: "string" }, date: { type: "string" }, time: { type: "string" }, service_name: { type: "string" }, professional_name: { type: "string", description: "Profesional solicitado (opcional)" } }, required: ["patient_name", "date", "time", "service_name"] }
-    },
-    {
+    }},
+    { type: "function", function: {
         name: "get_services",
         description: "Lista servicios disponibles con precios y duración",
         parameters: { type: "object", properties: {}, required: [] }
-    },
-    {
+    }},
+    { type: "function", function: {
         name: "get_knowledge",
         description: "Busca información detallada en la base de conocimiento (precios, tratamientos, cuidados, valores, promociones). ÚSALO SIEMPRE ante preguntas sobre costos o temas específicos que no estén en tu configuración básica.",
         parameters: { type: "object", properties: { query: { type: "string", description: "Palabras clave simplificadas para la búsqueda (ej: 'precios', 'labios', 'cuidados', 'promocion')" } }, required: ["query"] }
-    },
-    {
+    }},
+    { type: "function", function: {
         name: "tag_patient",
-        description: "Asigna una etiqueta al paciente para segmentación y marketing. ÚSALA PROACTIVAMENTE cuando: (1) El paciente muestra interés en un servicio específico → etiqueta 'Interés [Servicio]' (ej: 'Interés Microblading'). (2) El paciente agenda una cita → etiqueta 'Cliente [Servicio]'. (3) Detectas una condición relevante → etiqueta descriptiva (ej: 'Piel Sensible', 'Primera Vez'). (4) El paciente es recurrente → 'Cliente Frecuente'. (5) El paciente refiere a alguien → 'Referidor'. Puedes llamar esta función múltiples veces para asignar varias etiquetas. La etiqueta se crea automáticamente si no existe.",
+        description: "Asigna una etiqueta al paciente para segmentación y marketing.",
         parameters: {
             type: "object",
             properties: {
-                tag_name: { type: "string", description: "Nombre de la etiqueta. Usa formato capitalizado y descriptivo. Ej: 'Interés Microblading', 'Cliente Frecuente', 'VIP', 'Piel Sensible', 'Primera Vez'" },
-                tag_color: { type: "string", description: "Color hex de la etiqueta. Usa: #10B981 (verde) para clientes activos, #3B82F6 (azul) para intereses, #F59E0B (amarillo) para alertas, #EF4444 (rojo) para condiciones médicas, #8B5CF6 (morado) para VIP/especiales, #EC4899 (rosado) para servicios estéticos. Opcional, default azul." }
+                tag_name: { type: "string", description: "Nombre de la etiqueta. Ej: 'Interés Microblading', 'Cliente Frecuente', 'VIP'" },
+                tag_color: { type: "string", description: "Color hex opcional. Default: #3B82F6 (azul)" }
             },
             required: ["tag_name"]
         }
-    }
+    }},
+    { type: "function", function: {
+        name: "escalate_to_human",
+        description: "Escala la conversación a un agente humano cuando el paciente lo solicita o la situación lo requiere.",
+        parameters: { type: "object", properties: { reason: { type: "string", description: "Motivo de la escalación" } }, required: ["reason"] }
+    }},
+    { type: "function", function: {
+        name: "reschedule_appointment",
+        description: "Reagenda una cita existente a una nueva fecha y hora.",
+        parameters: { type: "object", properties: { appointment_id: { type: "string" }, new_date: { type: "string", description: "YYYY-MM-DD" }, new_time: { type: "string", description: "HH:MM" } }, required: ["new_date", "new_time"] }
+    }},
+    { type: "function", function: {
+        name: "confirm_appointment",
+        description: "Confirma una cita pendiente de confirmación.",
+        parameters: { type: "object", properties: { appointment_id: { type: "string" } }, required: [] }
+    }}
 ];
 
 // =============================================
@@ -315,9 +336,9 @@ const callOpenAI = async (key: string, model: string, msgs: Msg[], useFns = true
         body: JSON.stringify({
             model,
             messages: msgs,
-            ...(useFns ? { functions, function_call: "auto" } : {}),
+            ...(useFns ? { tools, tool_choice: "auto" } : {}),
             temperature: 0.5,
-            max_tokens: 800
+            max_completion_tokens: 800
         })
     });
     if (!r.ok) throw new Error(`OpenAI Error: ${await r.text()}`);
@@ -434,13 +455,25 @@ ${clinic.ai_behavior_rules || ""}`;
         let assistant = res.choices[0].message;
         let loopCount = 0;
 
-        while (assistant.function_call && loopCount < 5) {
-            const funcName = assistant.function_call.name;
-            let funcArgs = {};
-            try { funcArgs = JSON.parse(assistant.function_call.arguments); } catch {}
-            const result = await processFunc(sb, clinic_id, simulatedPhone, funcName, funcArgs, clinicTz, clinic);
-            msgs.push({ role: "assistant", content: "", function_call: assistant.function_call });
-            msgs.push({ role: "function", name: funcName, content: JSON.stringify(result) });
+        while (assistant.tool_calls && assistant.tool_calls.length > 0 && loopCount < 5) {
+            msgs.push({ role: "assistant", content: null, tool_calls: assistant.tool_calls });
+            for (const toolCall of assistant.tool_calls) {
+                const funcName = toolCall.function.name;
+                let funcArgs = {};
+                try { funcArgs = JSON.parse(toolCall.function.arguments); } catch {}
+                let result: any;
+                // Simulator stubs for new tools
+                if (funcName === "escalate_to_human") {
+                    result = { success: true, message: "[SIMULADOR] Escalación a humano registrada. En producción esto notificaría al equipo." };
+                } else if (funcName === "reschedule_appointment") {
+                    result = { success: true, message: "[SIMULADOR] Cita reagendada correctamente." };
+                } else if (funcName === "confirm_appointment") {
+                    result = { success: true, message: "[SIMULADOR] Cita confirmada correctamente." };
+                } else {
+                    result = await processFunc(sb, clinic_id, simulatedPhone, funcName, funcArgs, clinicTz, clinic);
+                }
+                msgs.push({ role: "tool", tool_call_id: toolCall.id, content: JSON.stringify(result) });
+            }
             res = await callOpenAI(openaiKey, clinic.openai_model || "gpt-4o-mini", msgs);
             assistant = res.choices[0].message;
             loopCount++;
