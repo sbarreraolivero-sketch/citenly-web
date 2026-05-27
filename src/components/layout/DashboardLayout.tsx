@@ -48,7 +48,7 @@ interface Notification {
 const navigationSections = [
     {
         label: 'Principal',
-        accent: { label: 'text-sky-400/70', active: 'bg-sky-500/[0.18]', dot: 'bg-sky-400', icon: 'text-sky-300' },
+        accent: { label: 'text-[#FF4DA6]/70', active: 'bg-[#FF2E88]/[0.18]', dot: 'bg-[#FF2E88]', icon: 'text-[#FF4DA6]' },
         items: [
             { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
             { name: 'Mensajes', href: '/app/messages', icon: MessageSquare },
@@ -57,7 +57,7 @@ const navigationSections = [
     },
     {
         label: 'Clínica',
-        accent: { label: 'text-[#FF2E88]/70', active: 'bg-[#FF2E88]/[0.18]', dot: 'bg-[#FF2E88]', icon: 'text-[#FF4DA6]' },
+        accent: { label: 'text-sky-400/70', active: 'bg-sky-500/[0.18]', dot: 'bg-sky-400', icon: 'text-sky-300' },
         items: [
             { name: 'Contactos', href: '/app/patients', icon: Users },
             { name: 'CRM', href: '/app/crm', icon: Target },

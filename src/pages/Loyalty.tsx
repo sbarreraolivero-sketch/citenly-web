@@ -49,12 +49,13 @@ export default function Loyalty() {
 
     const [patientAmounts, setPatientAmounts] = useState<Record<string, string>>({});
     const [pendingAdjustments, setPendingAdjustments] = useState<Record<string, number>>({});
+    const [clinicPhone, setClinicPhone] = useState<string | null>(null);
 
     const fetchData = async () => {
         if (!profile?.clinic_id) return
         setLoading(true)
         try {
-            const [s, pData, rData, tData] = await Promise.all([
+            const [s, pData, rData, tData, clinicData] = await Promise.all([
                 loyaltyService.getSettings(profile.clinic_id),
                 (supabase as any)
                     .from('patients')
@@ -67,8 +68,16 @@ export default function Loyalty() {
                     .select('*, patients(name)')
                     .eq('clinic_id', profile.clinic_id)
                     .order('created_at', { ascending: false })
-                    .limit(50)
+                    .limit(50),
+                (supabase as any)
+                    .from('clinic_settings')
+                    .select('ycloud_phone_number')
+                    .eq('id', profile.clinic_id)
+                    .single()
             ])
+            if (clinicData.data?.ycloud_phone_number) {
+                setClinicPhone(clinicData.data.ycloud_phone_number)
+            }
             setSettings(s)
             setPatients(pData.data || [])
             setRewards(rData || [])
@@ -165,10 +174,18 @@ export default function Loyalty() {
         }
     };
 
-    const copyReferralLink = (code: string) => {
-        const link = `${window.location.origin}/r/${code}`
+    const copyReferralLink = (code: string, patientName?: string) => {
+        let link: string
+        if (clinicPhone) {
+            // Genera enlace de WhatsApp con mensaje pre-escrito incluyendo el código de referido
+            const cleanPhone = clinicPhone.replace(/[^0-9]/g, '')
+            const text = encodeURIComponent(`¡Hola! Me contacto de parte de ${patientName || 'un cliente'} 🌟 Mi código de referido es *${code}*. ¡Quiero conocer sus servicios!`)
+            link = `https://wa.me/${cleanPhone}?text=${text}`
+        } else {
+            link = `${window.location.origin}/r/${code}`
+        }
         navigator.clipboard.writeText(link)
-        toast.success('¡Enlace mágico copiado!')
+        toast.success('¡Enlace mágico de WhatsApp copiado!')
     }
 
     if (loading) {
@@ -186,39 +203,33 @@ export default function Loyalty() {
 
     return (
         <div className="space-y-6 animate-fade-in pb-20">
-            {/* Header Banner: Premium Glow Style */}
-            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-5 sm:p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
-                
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-8 relative z-10">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                        <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
-                            <Star className="w-8 h-8 text-[#FF2E88]" />
+            {/* Banner — Marketing */}
+            <div className="bg-gradient-to-br from-violet-500 to-violet-700 rounded-2xl overflow-hidden shadow-soft-md mb-8">
+                <div className="p-6 sm:p-8">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs font-black uppercase tracking-widest text-violet-200 mb-2">Marketing</p>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Fidelización</h1>
+                            <p className="text-sm text-violet-100/80 font-light mt-1">Premia a tus mejores pacientes y fomenta el crecimiento orgánico de forma automática.</p>
                         </div>
-                        <div>
-                            <div className="flex flex-wrap items-center gap-3 mb-1">
-                                <h1 className="text-2xl sm:text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">Fidelización</h1>
-                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20 whitespace-nowrap">Customer Loyalty</span>
+                        <div className="flex items-center gap-4 flex-wrap justify-end">
+                            <div className="hidden sm:flex items-center gap-3">
+                                <div className="bg-white/15 rounded-xl px-4 py-2.5 text-center border border-white/20">
+                                    <p className="text-xs font-black uppercase tracking-widest text-violet-200 mb-0.5">{settings?.loyalty_points_name || 'Saldo'}</p>
+                                    <p className="text-xl font-black text-white">{stats.totalPointsDist.toLocaleString()}</p>
+                                </div>
+                                <div className="bg-white/15 rounded-xl px-4 py-2.5 text-center border border-white/20">
+                                    <p className="text-xs font-black uppercase tracking-widest text-violet-200 mb-0.5">Referidores</p>
+                                    <p className="text-xl font-black text-white">{stats.totalReferrals}</p>
+                                </div>
+                                <div className="bg-white/15 rounded-xl px-4 py-2.5 text-center border border-white/20">
+                                    <p className="text-xs font-black uppercase tracking-widest text-violet-200 mb-0.5">Recompensas</p>
+                                    <p className="text-xl font-black text-white">{stats.activeAlerts}</p>
+                                </div>
                             </div>
-                            <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
-                                Gestiona el programa de lealtad de tu clínica. Premia a tus mejores pacientes y fomenta el crecimiento orgánico de forma automática.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                        <div className="flex-1 sm:flex-none bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl p-3 sm:p-4 min-w-[100px] sm:min-w-[140px] border border-[#FF2E88]/20 shadow-lg">
-                            <p className="text-secondary-theme text-[8px] sm:text-[10px] font-black uppercase tracking-widest mb-1">{settings?.loyalty_points_name || 'Saldo'} Total</p>
-                            <p className="text-lg sm:text-2xl font-black text-[#0B0B0F] dark:text-white">{stats.totalPointsDist.toLocaleString()}</p>
-                        </div>
-                        <div className="flex-1 sm:flex-none bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl p-3 sm:p-4 min-w-[100px] sm:min-w-[140px] border border-[#FF2E88]/20 shadow-lg">
-                            <p className="text-secondary-theme text-[8px] sm:text-[10px] font-black uppercase tracking-widest mb-1">Referidores</p>
-                            <p className="text-lg sm:text-2xl font-black text-[#0B0B0F] dark:text-white">{stats.totalReferrals}</p>
-                        </div>
-                        <div className="flex-1 sm:flex-none bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl p-3 sm:p-4 min-w-[100px] sm:min-w-[140px] border border-[#FF2E88]/20 shadow-lg">
-                            <p className="text-secondary-theme text-[8px] sm:text-[10px] font-black uppercase tracking-widest mb-1">Recompensas</p>
-                            <p className="text-lg sm:text-2xl font-black text-[#0B0B0F] dark:text-white">{stats.activeAlerts}</p>
+                            <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center shrink-0">
+                                <Star className="w-6 h-6 text-white" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -377,7 +388,7 @@ export default function Loyalty() {
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
-                                                copyReferralLink(patient.referral_code || '');
+                                                copyReferralLink(patient.referral_code || '', patient.name);
                                             }}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[var(--accent-primary)]/20 transition-colors"
                                             title="Copiar enlace para el paciente"

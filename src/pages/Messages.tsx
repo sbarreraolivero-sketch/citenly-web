@@ -66,6 +66,7 @@ export default function Messages() {
                 .select('phone_number, content, direction, created_at, is_read')
                 .eq('clinic_id', profile.clinic_id)
                 .order('created_at', { ascending: false })
+                .limit(500)
 
             if (error && error.message?.includes('is_read')) {
                 console.warn('is_read column missing, falling back to basic query')
@@ -74,6 +75,7 @@ export default function Messages() {
                     .select('phone_number, content, direction, created_at')
                     .eq('clinic_id', profile.clinic_id)
                     .order('created_at', { ascending: false })
+                    .limit(500)
                 
                 if (fallbackError) throw fallbackError
                 msgs = fallbackMsgs
@@ -314,54 +316,30 @@ export default function Messages() {
         }
     }
 
-    // Send manual message via YCloud
+    // Send manual message via Edge Function (API key stays server-side)
     const handleSend = async () => {
         if (!newMessage.trim() || !selectedPhone || !profile?.clinic_id || sending) return
         setSending(true)
         try {
-            // Get clinic settings for YCloud API key
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: clinic } = await (supabase as any)
-                .from('clinic_settings')
-                .select('ycloud_api_key, ycloud_phone_number')
-                .eq('id', profile.clinic_id)
-                .single()
-
-            if (!clinic?.ycloud_api_key || !clinic?.ycloud_phone_number) {
-                alert('Configura tu API Key de YCloud en Ajustes primero.')
-                return
-            }
-
-            // Send via YCloud API
-            const res = await fetch('https://api.ycloud.com/v2/whatsapp/messages', {
+            const { data: { session } } = await supabase.auth.getSession()
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-message`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-API-Key': clinic.ycloud_api_key },
-                body: JSON.stringify({
-                    from: clinic.ycloud_phone_number,
-                    to: selectedPhone,
-                    type: 'text',
-                    text: { body: newMessage.trim() }
-                })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token}`,
+                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({ to: selectedPhone, message: newMessage.trim() })
             })
 
-            if (!res.ok) throw new Error('Error al enviar mensaje')
-
-            // Save to database
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase as any).from('messages').insert({
-                clinic_id: profile.clinic_id,
-                phone_number: selectedPhone, // Kept original variable
-                direction: 'outbound',
-                content: newMessage.trim(), // Kept original variable
-                ai_generated: false, // Manual message
-                campaign_id: null // Explicitly null for manual messages
-            })
+            const result = await res.json()
+            if (!res.ok) throw new Error(result.error || 'Error al enviar mensaje')
 
             setNewMessage('')
-            // The real-time subscription will pick up the new message
+            // La suscripción en tiempo real recoge el mensaje nuevo desde la BD
         } catch (e) {
             console.error('Send error:', e)
-            alert('Error al enviar mensaje. Verifica tu configuración de YCloud.')
+            alert('Error al enviar mensaje. Verifica tu configuración de WhatsApp en Ajustes.')
         } finally {
             setSending(false)
         }
@@ -432,7 +410,31 @@ export default function Messages() {
     }
 
     return (
-        <div className="h-[calc(100vh-7rem)] flex flex-col md:flex-row gap-6 animate-fade-in">
+        <div className="flex flex-col h-[calc(100vh-7rem)] animate-fade-in gap-4">
+            {/* Banner — Principal */}
+            <div className="bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-2xl overflow-hidden shadow-soft-md flex-shrink-0">
+                <div className="p-5 sm:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs font-black uppercase tracking-widest text-pink-200 mb-1.5">Principal</p>
+                            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Mensajes</h1>
+                            <p className="text-sm text-pink-100/80 font-light mt-0.5 hidden sm:block">Bandeja de entrada de conversaciones de WhatsApp con tus pacientes.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="hidden sm:flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-lg border border-white/20">
+                                <Bot className="w-3.5 h-3.5 text-pink-200" />
+                                <span className="text-xs font-semibold text-white">IA activa</span>
+                            </div>
+                            <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0">
+                                <MessageSquare className="w-5 h-5 text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Chat panels */}
+            <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
             {/* Conversations List */}
             <div className={cn(
                 "w-full md:w-80 flex-shrink-0 card-premium flex-col h-full",
@@ -733,17 +735,18 @@ export default function Messages() {
             {/* Contact Info Sidebar */}
             {showSidebar && sidebarPhone && profile?.clinic_id && (
                 <div className="fixed inset-0 z-50 flex justify-end md:relative md:inset-auto md:z-0">
-                    <div 
-                        className="absolute inset-0 bg-charcoal/20 backdrop-blur-sm md:hidden" 
+                    <div
+                        className="absolute inset-0 bg-charcoal/20 backdrop-blur-sm md:hidden"
                         onClick={() => setShowSidebar(false)}
                     />
-                    <ContactInfoSidebar 
+                    <ContactInfoSidebar
                         phoneNumber={sidebarPhone}
                         clinicId={profile.clinic_id}
                         onClose={() => setShowSidebar(false)}
                     />
                 </div>
             )}
+            </div>{/* end chat panels */}
         </div>
     )
 }

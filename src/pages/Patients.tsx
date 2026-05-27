@@ -159,39 +159,31 @@ export default function Patients() {
                 />
             ) : (
                 <div className="space-y-6 animate-fade-in relative min-h-screen pb-20">
-                    {/* Header Banner: Premium Glow Style (Parity with Appointments) */}
-                    <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[24px] p-5 sm:p-8 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-8">
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2E88]/5 rounded-full -mr-48 -mt-48 blur-3xl pointer-events-none group-hover:bg-[#FF2E88]/10 transition-colors duration-700" />
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
-                        
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-8 relative z-10">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                                <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-xl border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
-                                    <UserIcon className="w-8 h-8 text-[#FF2E88]" />
+                    {/* Banner — Clínica */}
+                    <div className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl overflow-hidden shadow-soft-md mb-8">
+                        <div className="p-6 sm:p-8">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                    <p className="text-xs font-black uppercase tracking-widest text-sky-200 mb-2">Clínica</p>
+                                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Contactos</h1>
+                                    <p className="text-sm text-sky-100/80 font-light mt-1">Gestiona tu base de datos de pacientes y prospectos. Organiza tu clínica para que la IA actúe con precisión.</p>
                                 </div>
-                                <div>
-                                    <div className="flex flex-wrap items-center gap-3 mb-1">
-                                        <h1 className="text-2xl sm:text-3xl font-black text-[#0B0B0F] dark:text-white tracking-tight">Contactos</h1>
-                                        <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20 whitespace-nowrap">Base de Datos</span>
+                                <div className="flex items-center gap-3 flex-wrap justify-end">
+                                    <CSVUploader onSuccess={fetchContacts} />
+                                    <button
+                                        onClick={() => {
+                                            setEditingPatient(null)
+                                            setIsFormOpen(true)
+                                        }}
+                                        className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-colors border border-white/20"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Nuevo Contacto
+                                    </button>
+                                    <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center shrink-0">
+                                        <UserIcon className="w-6 h-6 text-white" />
                                     </div>
-                                    <p className="text-[#0B0B0F]/70 dark:text-white/70 text-sm max-w-2xl font-medium leading-relaxed">
-                                        Gestiona tu base de datos de pacientes y prospectos de forma inteligente. Organiza tu clínica para que la IA actúe con precisión.
-                                    </p>
                                 </div>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-4">
-                                <CSVUploader onSuccess={fetchContacts} />
-                                <button
-                                    onClick={() => {
-                                        setEditingPatient(null)
-                                        setIsFormOpen(true)
-                                    }}
-                                    className="flex-1 sm:flex-none bg-[#FF2E88] text-white px-4 sm:px-8 py-3 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_rgba(255,46,136,0.3)] hover:shadow-[0_15px_30px_rgba(255,46,136,0.4)] hover:-translate-y-1 active:translate-y-0.5 flex items-center justify-center gap-3"
-                                >
-                                    <Plus className="w-5 h-5 stroke-[3]" />
-                                    Nuevo Contacto
-                                </button>
                             </div>
                         </div>
                     </div>

@@ -125,39 +125,35 @@ export default function Reminders() {
 
     return (
         <div className="animate-fade-in space-y-6">
-            {/* Banner */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 p-6 shadow-xl">
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10" />
-                <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shrink-0">
-                            <Bell className="w-6 h-6 text-white" />
+            {/* Banner — Clínica */}
+            <div className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl overflow-hidden shadow-soft-md">
+                <div className="p-6 sm:p-8">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs font-black uppercase tracking-widest text-sky-200 mb-2">Clínica</p>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Recordatorios Automáticos</h1>
+                            <p className="text-sm text-sky-100/80 font-light mt-1">WhatsApp automático 24h y 2h antes de cada cita.</p>
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-200/70">Clínica</span>
-                                <span className="px-2 py-0.5 bg-white/15 text-white text-[10px] font-black rounded-full uppercase tracking-widest">
-                                    Recordatorios
-                                </span>
+                        <div className="flex items-center gap-4 shrink-0">
+                            <div className="hidden sm:flex items-center gap-5">
+                                <div className="text-center">
+                                    <p className="text-2xl font-black text-white">{sentThisMonth}</p>
+                                    <p className="text-sky-200/70 text-xs font-bold">Este mes</p>
+                                </div>
+                                {monthlyLimit > 0 && (
+                                    <div className="text-center">
+                                        <p className="text-2xl font-black text-white">{monthlyLimit}</p>
+                                        <p className="text-sky-200/70 text-xs font-bold">Límite mensual</p>
+                                    </div>
+                                )}
+                                <div className="text-center">
+                                    <p className="text-2xl font-black text-white">{successRate}%</p>
+                                    <p className="text-sky-200/70 text-xs font-bold">Éxito</p>
+                                </div>
                             </div>
-                            <h1 className="text-2xl font-black text-white tracking-tight">Recordatorios Automáticos</h1>
-                            <p className="text-emerald-100/70 text-sm mt-0.5">WhatsApp automático 24h y 2h antes de cada cita.</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-6 shrink-0">
-                        <div className="text-center">
-                            <p className="text-2xl font-black text-white">{sentThisMonth}</p>
-                            <p className="text-emerald-200/60 text-xs font-bold">Este mes</p>
-                        </div>
-                        {monthlyLimit > 0 && (
-                            <div className="text-center">
-                                <p className="text-2xl font-black text-white">{monthlyLimit}</p>
-                                <p className="text-emerald-200/60 text-xs font-bold">Límite mensual</p>
+                            <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center shrink-0">
+                                <Bell className="w-6 h-6 text-white" />
                             </div>
-                        )}
-                        <div className="text-center">
-                            <p className="text-2xl font-black text-white">{successRate}%</p>
-                            <p className="text-emerald-200/60 text-xs font-bold">Éxito</p>
                         </div>
                     </div>
                 </div>

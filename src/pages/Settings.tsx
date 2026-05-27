@@ -876,20 +876,17 @@ export default function Settings() {
 
     return (
         <div className="animate-fade-in relative min-h-[calc(100vh-7rem)] p-4 md:p-8">
-            {/* Header Banner */}
-            <div className="bg-gradient-to-br from-[#FFF0F7] via-[#FFF5F9] to-white dark:from-[#0B0B0F] dark:via-[#12040B] dark:to-[#0B0B0F] rounded-[20px] px-5 py-4 sm:px-8 sm:py-5 text-[#0B0B0F] border border-[#FF2E88]/30 relative overflow-hidden group shadow-[0_0_30px_rgba(255,46,136,0.1)] mb-6 flex-shrink-0">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF2E88]/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
-                <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 bg-white dark:bg-black rounded-xl flex items-center justify-center shadow-lg border border-[#FF2E88]/20 shrink-0 transform group-hover:rotate-6 transition-transform duration-500">
-                            <ShieldCheck className="w-5 h-5 text-[#FF2E88]" />
+            {/* Banner — Configuración */}
+            <div className="bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl overflow-hidden shadow-soft-md mb-6 flex-shrink-0">
+                <div className="p-5 sm:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs font-black uppercase tracking-widest text-amber-200 mb-1.5">Configuración</p>
+                            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Ajustes</h1>
+                            <p className="text-sm text-amber-100/80 font-light mt-0.5 hidden sm:block">Personaliza tu clínica, equipo, integraciones y plan de suscripción.</p>
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2.5">
-                                <h1 className="text-lg sm:text-xl font-black text-[#0B0B0F] dark:text-white tracking-tight">Ajustes</h1>
-                                <span className="px-2.5 py-0.5 bg-[#FF2E88]/10 text-[#FF2E88] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#FF2E88]/20 whitespace-nowrap">Configuración</span>
-                            </div>
-                            <p className="text-[#0B0B0F]/60 dark:text-white/60 text-xs font-medium leading-tight hidden sm:block">Personaliza tu clínica, equipo, integraciones y plan de suscripción</p>
+                        <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-5 h-5 text-white" />
                         </div>
                     </div>
                 </div>
