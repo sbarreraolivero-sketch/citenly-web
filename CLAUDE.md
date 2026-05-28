@@ -358,6 +358,44 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **Fix:** dos queries separadas — una **sin límite** para los totales del resumen, otra con `.limit(200)` para la tabla de display
 - Footer ahora muestra **"Mostrando N de M transacciones de \{mes\}"** dejando claro que la tabla es un subset
 
+### Cambios realizados — mayo 2026 (sesión 10)
+
+#### Sistema de permisos individuales por miembro de equipo
+
+**Motivación:** el sistema anterior solo tenía permisos globales por rol en `clinic_settings.staff_permissions`; no era posible darle accesos distintos a dos profesionales del mismo equipo.
+
+**DB — migración `20260528000001_member_permissions.sql`:**
+- Columna `permissions JSONB DEFAULT NULL` en `clinic_members`. `NULL` = usar defaults del rol (sin cambio de comportamiento para miembros existentes).
+- RPC `update_member_permissions(p_member_id UUID, p_permissions JSONB)` con `SECURITY DEFINER`:
+  - Valida que el caller sea owner/admin activo de la clínica
+  - Bloquea modificar permisos de owners y admins (server-side)
+  - Aplicada directamente en producción vía `supabase db query --linked`
+
+**`src/lib/permissions.ts` (archivo nuevo):**
+- Tipos `PageKey` (15 páginas), `ActionKey` (8 acciones), `MemberPermissions`
+- Defaults por rol: `professional` (8 páginas: dashboard/messages/templates/patients/appointments/reminders/knowledge_base/ai_settings; 5 acciones: no eliminar, no exportar); `receptionist` (7 páginas: +crm, -knowledge_base/-ai_settings; 6 acciones: +appointments_delete)
+- `getEffectivePermissions(role, stored)`: owner/admin → full; stored null → defaults del rol; si no → los almacenados
+- `PAGE_SECTIONS` y `ACTION_SECTIONS` exportados para la UI del modal
+
+**`src/hooks/usePermissions.ts` (archivo nuevo):**
+- `canAccess(page)`: normaliza `knowledge-base` → `knowledge_base` automáticamente; fail-open (retorna `true`) mientras el auth context carga; owner/admin siempre `true`
+- `can(action)`: misma lógica sobre `ActionKey`
+- Lee `member.permissions` del contexto de auth — no hace fetch propio
+
+**`DashboardLayout.tsx` — simplificación:**
+- Eliminado el state `staffPermissions` + el useEffect que leía `clinic_settings.staff_permissions` en cada carga
+- `getVisibleItems()` ahora llama `canAccess(pageKey)` del hook, una sola línea
+
+**`Team.tsx` — UI de permisos individuales:**
+- Botón **Permisos** (`SlidersHorizontal`) en columna de acciones, visible para admin/owner en filas que no sean owner/admin
+- Badge **Personalizado** (ámbar) junto al nombre del miembro si `permissions != null`
+- Modal `PermissionsModal`: header con nombre + badge de rol + botón "Restaurar defaults del rol"; body scrollable con dos grupos de toggles (Acceso a secciones / Acciones permitidas); guarda vía RPC `update_member_permissions`; actualiza estado local sin reload
+- Sección de permisos por rol renombrada a "Permisos por Defecto por Rol" con descripción aclaratoria
+
+**`teamService.ts`:**
+- Campo `permissions?: MemberPermissions | null` en `ClinicMember`
+- Método `updateMemberPermissions(memberId, permissions)` usando el RPC
+
 ### Cambios realizados — mayo 2026 (sesión 7, cierre)
 
 #### Deployos pendientes ejecutados
@@ -416,6 +454,10 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 - [ ] **React Query** — infraestructura lista en `main.tsx` (`QueryClientProvider`), pendiente adoptar en fetches de componentes
 - [ ] **`switchClinic()`** en `AuthContext.tsx` usa `window.location.reload()` — reemplazar por reset de estado limpio
 - [ ] **Configurar Resend** — `send-invite-email` ya llama a Resend, solo falta configurar `RESEND_API_KEY` como secret en Supabase y verificar dominio de envío
+
+## Tareas completadas (verificadas en sesión 10)
+
+- [x] **Sistema de permisos individuales por miembro** (sesión 10) — `permissions JSONB` en `clinic_members`, RPC `update_member_permissions`, `lib/permissions.ts`, `hooks/usePermissions.ts`, modal en `Team.tsx`, sidebar usa `canAccess()`
 
 ## Tareas completadas (verificadas en sesión 9)
 
