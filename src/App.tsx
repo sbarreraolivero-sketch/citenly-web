@@ -20,7 +20,7 @@ const Finance = lazy(() => import('./pages/Finance'))
 const RetentionEngine = lazy(() => import('./pages/RetentionEngine'))
 const Loyalty = lazy(() => import('./pages/Loyalty'))
 const Templates = lazy(() => import('./pages/Templates'))
-const AICreditsPage = lazy(() => import('./pages/AICredits'))
+// AICreditsPage eliminado — historial ahora vive en AISettings
 const Reminders = lazy(() => import('./pages/Reminders'))
 const Demo = lazy(() => import('./pages/Demo'))
 const Pricing = lazy(() => import('./pages/Pricing'))
@@ -227,7 +227,6 @@ function MainRoutes() {
                             </SubscriptionGuard>
                         } />
                         <Route path="settings" element={<Settings />} />
-                        <Route path="ai-credits" element={<AICreditsPage />} />
                     </Route>
 
                     {/* Legacy redirects */}

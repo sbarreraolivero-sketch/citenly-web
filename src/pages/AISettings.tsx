@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 import { CREDIT_PACKS, redirectToCreditsCheckout } from '@/lib/mercadopago'
 import { LS_CREDIT_PACKS, redirectToLemonCreditsCheckout } from '@/lib/lemonsqueezy'
+import { AITransactionHistory } from '@/components/dashboard/AITransactionHistory'
 
 export default function AISettings() {
     const { profile, user } = useAuth()
@@ -23,7 +24,7 @@ export default function AISettings() {
     const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
     const [aiCreditsUnlimited, setAiCreditsUnlimited] = useState(false)
 
-    const [tierBreakdown, setTierBreakdown] = useState({ t1: 0, t2: 0, t3: 0 })
+    const [tierBreakdown, setTierBreakdown] = useState({ t1: 0, t2: 0, t3: 0, c1: 0, c2: 0, c3: 0 })
 
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
@@ -68,18 +69,19 @@ export default function AISettings() {
 
                     const { data: txs } = await (supabase as any)
                         .from('ai_credit_transactions')
-                        .select('metadata')
-                        .eq('clinic_id', profile.clinic_id)
+                        .select('metadata, amount')
+                        .eq('clinic_id', creditSource.parent_clinic_id || profile.clinic_id)
                         .eq('type', 'usage')
                         .gte('created_at', cycleStart.toISOString())
 
                     if (txs) {
-                        const counts = { t1: 0, t2: 0, t3: 0 }
+                        const counts = { t1: 0, t2: 0, t3: 0, c1: 0, c2: 0, c3: 0 }
                         for (const tx of txs) {
                             const tier = tx.metadata?.tier
-                            if (tier === 1) counts.t1++
-                            else if (tier === 2) counts.t2++
-                            else if (tier === 3) counts.t3++
+                            const cost = Math.abs(tx.amount || 0)
+                            if (tier === 1) { counts.t1++; counts.c1 += cost }
+                            else if (tier === 2) { counts.t2++; counts.c2 += cost }
+                            else if (tier === 3) { counts.t3++; counts.c3 += cost }
                         }
                         setTierBreakdown(counts)
                     }
@@ -125,8 +127,8 @@ export default function AISettings() {
     }
 
     const totalCredits = aiCreditsMonthlyLimit + aiCreditsExtraBalance
-    // Para unlimited: usar el total calculado desde transacciones (más preciso que ai_credits_used congelado)
-    const tierTotal = tierBreakdown.t1 * 1 + tierBreakdown.t2 * 8 + tierBreakdown.t3 * 60
+    // Suma de costos reales desde DB (no multiplicación por costos fijos que puede ser inconsistente)
+    const tierTotal = tierBreakdown.c1 + tierBreakdown.c2 + tierBreakdown.c3
     const totalUsed = aiCreditsUnlimited ? tierTotal : aiCreditsUsed
     const creditsAvailable = Math.max(0, totalCredits - totalUsed)
     const usagePct = Math.min(100, (totalUsed / (totalCredits || 1)) * 100)
@@ -368,7 +370,7 @@ export default function AISettings() {
                                     <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
                                     <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between items-center">
                                         <span className="text-[10px] text-gray-500">Créditos</span>
-                                        <span className="text-xs font-black text-emerald-700">{(tierBreakdown.t1 * 1).toLocaleString()}</span>
+                                        <span className="text-xs font-black text-emerald-700">{tierBreakdown.c1.toLocaleString()}</span>
                                     </div>
                                 </div>
 
@@ -387,7 +389,7 @@ export default function AISettings() {
                                     <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
                                     <div className="mt-2 pt-2 border-t border-pink-100 flex justify-between items-center">
                                         <span className="text-[10px] text-gray-500">Créditos</span>
-                                        <span className="text-xs font-black text-[#FF2E88]">{(tierBreakdown.t2 * 8).toLocaleString()}</span>
+                                        <span className="text-xs font-black text-[#FF2E88]">{tierBreakdown.c2.toLocaleString()}</span>
                                     </div>
                                 </div>
 
@@ -406,7 +408,7 @@ export default function AISettings() {
                                     <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
                                     <div className="mt-2 pt-2 border-t border-purple-100 flex justify-between items-center">
                                         <span className="text-[10px] text-gray-500">Créditos</span>
-                                        <span className="text-xs font-black text-purple-700">{(tierBreakdown.t3 * 60).toLocaleString()}</span>
+                                        <span className="text-xs font-black text-purple-700">{tierBreakdown.c3.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -486,6 +488,13 @@ export default function AISettings() {
                             })}
                         </div>
                     </div>
+
+                    {/* Historial de transacciones */}
+                    {profile?.clinic_id && (
+                        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden p-1">
+                            <AITransactionHistory clinicId={profile.clinic_id} />
+                        </div>
+                    )}
                 </>
             )}
         </div>
