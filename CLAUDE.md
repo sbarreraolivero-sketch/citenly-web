@@ -339,6 +339,29 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **`AISettings.tsx`:** si la clínica tiene `parent_clinic_id`, hace segunda query al padre para mostrar créditos del pool compartido
 - **Activar sucursal:** `UPDATE clinic_settings SET parent_clinic_id = '<id_padre>' WHERE id = '<id_sucursal>'`
 
+### Cambios realizados — mayo 2026 (sesión 7, cierre)
+
+#### Deployos pendientes ejecutados
+- `send-whatsapp-message`, `cron-monthly-credit-recharge`, `cron-process-surveys` — todos deployados
+
+#### pg_cron `cron-expire-extra-credits` configurado
+- Job ID 16, schedule `0 2 * * *`, llama a la función sin Authorization header (verify_jwt=false)
+- Comando: `SELECT net.http_post(url := 'https://hubjqllcmbzoojyidgcu.supabase.co/functions/v1/cron-expire-extra-credits', headers := '{"Content-Type":"application/json"}'::jsonb, body := '{}'::jsonb)`
+
+#### Auditoría RLS completada
+- Tablas sin políticas encontradas: `demo_requests` (tabla HQ interna, se deja bloqueada) y `dental_procedures`
+- Fix: `CREATE POLICY clinic_members_select ON dental_procedures FOR SELECT USING (clinic_id IN (SELECT clinic_id FROM clinic_members WHERE user_id = auth.uid()))`
+
+#### reminder_settings — defaults corregidos
+- `reminder_24h_before` y `reminder_2h_before`: `DEFAULT true` → `DEFAULT false` en tabla `reminder_settings`
+- Las clínicas nuevas ya no tendrán recordatorios activos por defecto
+
+#### Bugs verificados como ya resueltos
+- **CRM kanban:** línea 613 ya tiene `p.stage_id === stage.id || (stageIdx === 0 && !p.stage_id)` ✓
+- **Loyalty Magic Link:** `copyReferralLink` ya genera `https://wa.me/{phone}?text=...` cuando hay `ycloud_phone_number` ✓
+- **Elizabeth duplicados:** solo existe 1 registro activo (ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`) — los duplicados ya no estaban ✓
+- **cron-process-reminders idempotencia:** ya usa `.limit(1)` en lugar de `.maybeSingle()`, con comentario explícito ✓
+
 ---
 
 ## Estado actual de configuración
@@ -365,19 +388,9 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 
 ### Alta prioridad — seguridad
 - [ ] **HMAC per-clínica en webhook:** implementar `verifyYCloudSignature(rawBody, header, secret)` donde el secret viene de `clinic_settings.ycloud_webhook_secret`. Requiere migración DB (`ALTER TABLE clinic_settings ADD COLUMN ycloud_webhook_secret TEXT`) y campo en Settings → WhatsApp.
-- [ ] **Deploar** `send-whatsapp-message` (nuevo Edge Function creado pero no deployado)
-- [ ] **Deploar** `cron-monthly-credit-recharge` (corregido, no deployado)
-- [ ] **Deploar** `cron-process-surveys` (corregido, no deployado)
-- [ ] **Auditar tablas sin políticas RLS** — verificar en `information_schema` que todas las tablas con RLS habilitada tengan al menos una política SELECT
-- [ ] **pg_cron para `cron-expire-extra-credits`** — configurar job diario en Supabase (ej: `SELECT cron.schedule('expire-credits', '0 2 * * *', $$SELECT net.http_post(...)$$)`)
 
 ### Alta prioridad — bugs
 - [ ] **ai-simulator** — migrar de API deprecada `functions`/`function_call` a `tools`/`tool_choice`
-- [ ] **cron-process-reminders** — verificar si usa `.maybeSingle()` en check de idempotencia (bug que afectó a Vetly — causa duplicados)
-- [ ] **reminder_settings** — cambiar `DEFAULT true` a `DEFAULT false` en columnas de recordatorios para nuevas clínicas
-- [ ] **CRM kanban** — primera columna debe capturar también `stage_id === null` como red de seguridad
-- [ ] **Loyalty Magic Link** — `copyReferralLink` copia URL interna `/r/{code}` que no existe. Generar `https://wa.me/{ycloud_phone}?text=...` en su lugar
-- [ ] **Eliminar** 2 registros duplicados de Elizabeth Microblading de la DB
 
 ### Media prioridad — UX/diseño
 - [ ] **Banners degradado pendientes** — agregar banner estilo Vetly (label sección + título H1 + stats) a las páginas restantes:
