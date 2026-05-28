@@ -23,6 +23,7 @@ interface ClinicData {
     ai_credits_limit: number
     ai_credits_extra: number
     ai_credits_unlimited: boolean
+    ai_credits_extra_expires_at: string | null
     // legacy column names as fallback
     ai_credits_monthly_limit: number
     ai_credits_extra_balance: number
@@ -77,7 +78,7 @@ export default function AdminClinics() {
             const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
             const response = await fetch(
-                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_unlimited,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
+                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_unlimited,ai_credits_extra_expires_at,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
                 {
                     headers: {
                         'apikey': supabaseKey,
@@ -393,6 +394,7 @@ export default function AdminClinics() {
                                                                         creditsUsed={clinic.ai_credits_used ?? 0}
                                                                         creditsLimit={clinic.ai_credits_limit ?? clinic.ai_credits_monthly_limit ?? 2000}
                                                                         creditsExtra={clinic.ai_credits_extra ?? clinic.ai_credits_extra_balance ?? 0}
+                                                                        creditsExpiresAt={clinic.ai_credits_extra_expires_at ?? null}
                                                                         unlimited={clinic.ai_credits_unlimited ?? false}
                                                                     />
                                                                 </div>
@@ -418,12 +420,14 @@ function AdminAIUsage({
     creditsUsed,
     creditsLimit,
     creditsExtra,
+    creditsExpiresAt = null,
     unlimited = false,
 }: {
     clinicId: string
     creditsUsed: number
     creditsLimit: number
     creditsExtra: number
+    creditsExpiresAt?: string | null
     unlimited?: boolean
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
@@ -463,16 +467,22 @@ function AdminAIUsage({
         try {
             const amount = parseInt(addAmount)
             const newExtra = currentExtra + amount
+            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
             const { error } = await (supabase as any)
                 .from('clinic_settings')
-                .update({ ai_credits_extra: newExtra, ai_credits_extra_balance: newExtra })
+                .update({
+                    ai_credits_extra: newExtra,
+                    ai_credits_extra_balance: newExtra,
+                    ai_credits_extra_expires_at: expiresAt,
+                })
                 .eq('id', clinicId)
 
             if (error) throw error
 
             setCurrentExtra(newExtra)
-            alert(`${amount} créditos extra cargados correctamente`)
+            const expDate = new Date(expiresAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
+            alert(`${amount} créditos extra cargados correctamente. Vencen el ${expDate}.`)
         } catch (err) {
             console.error('Error adding credits:', err)
             alert('Error al cargar créditos')
@@ -509,6 +519,14 @@ function AdminAIUsage({
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Créditos Extra</p>
                             <p className="text-2xl font-black text-violet-400">{unlimited ? '∞' : currentExtra.toLocaleString()}</p>
+                            {!unlimited && currentExtra > 0 && creditsExpiresAt && (
+                                <p className="text-[9px] text-amber-400 font-bold mt-0.5">
+                                    Vence {new Date(creditsExpiresAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
+                                </p>
+                            )}
+                            {!unlimited && currentExtra > 0 && !creditsExpiresAt && (
+                                <p className="text-[9px] text-emerald-400 font-bold mt-0.5">Sin vencimiento</p>
+                            )}
                         </div>
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Disponibles</p>
