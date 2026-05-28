@@ -408,6 +408,14 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 ### Alta prioridad — seguridad
 - [ ] **HMAC per-clínica en webhook:** implementar `verifyYCloudSignature(rawBody, header, secret)` donde el secret viene de `clinic_settings.ycloud_webhook_secret`. Requiere migración DB (`ALTER TABLE clinic_settings ADD COLUMN ycloud_webhook_secret TEXT`) y campo en Settings → WhatsApp.
 
+### Alta prioridad — producto
+- [ ] **Actualizar créditos IA de los planes** — los valores nuevos son:
+  - Starter: **4.000 créditos IA/mes** (actualmente 2.000 en Landing y app)
+  - Pro: **8.000 créditos IA/mes** (actualmente 5.000)
+  - Enterprise: **16.000 créditos IA/mes** (actualmente 12.000)
+  - Actualizar en: `Landing.tsx` (array `PLANS`) y `Settings.tsx` (tab Suscripción, sección de planes)
+  - También actualizar el `cron-monthly-credit-recharge` si tiene los límites hardcodeados por plan
+
 ### Alta prioridad — bugs
 - [ ] **ai-simulator** — migrar de API deprecada `functions`/`function_call` a `tools`/`tool_choice`
 

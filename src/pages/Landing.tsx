@@ -646,6 +646,35 @@ export default function Landing() {
                         ))}
                     </div>
 
+                    {/* Garantía */}
+                    <div className="mt-16 reveal">
+                        <div className="max-w-3xl mx-auto bg-white/[0.04] border border-emerald-500/20 rounded-2xl p-8 flex flex-col md:flex-row items-center gap-6">
+                            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                <span className="text-3xl">🔒</span>
+                            </div>
+                            <div className="flex-1 text-center md:text-left">
+                                <h3 className="text-xl font-black text-white uppercase tracking-tight mb-3">GARANTÍA — Prueba Citenly sin riesgo</h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                        <p className="text-sm font-medium text-white/70">Tienes 7 días para probar el sistema completo</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                        <p className="text-sm font-medium text-white/70">Implementación completa por nuestro equipo (llave en mano)</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 justify-center md:justify-start">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                        <p className="text-sm font-medium text-white/70">Si no te ayuda a gestionar mejor tus citas, puedes cancelar.</p>
+                                    </div>
+                                </div>
+                                <div className="mt-5 inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/30">
+                                    0 RIESGO COMPROMETIDO
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Disponible en */}
                     <div className="text-center mt-12 reveal">
                         <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4">Disponible en</p>

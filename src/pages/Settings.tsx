@@ -1833,10 +1833,6 @@ export default function Settings() {
                                         </div>
                                     </div>
                                     
-                                    {/* Implicit Comparison Text */}
-                                    <p className="text-center mt-12 text-sm font-medium text-primary-theme/40 italic">
-                                        "Si no tomas el sistema Radiance hoy, tu clínica seguirá perdiendo clientas que la competencia está capturando por responder más rápido."
-                                    </p>
                                 </div>
                             </div>
                         </div>
