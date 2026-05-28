@@ -2074,18 +2074,17 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 let res = await callAI(optimalModel, msgs, true, dynamicFns);
                 let assistant = res.choices[0].message;
 
-                // Track usage (Ledger System) — skip for unlimited clinics
+                // Track usage — siempre actualizar ai_credits_used para transparencia.
+                // Para unlimited: no descontar ai_credits_balance (no hay límite que agotar).
                 const newBalance = clinic.ai_credits_unlimited
                     ? (clinic.ai_credits_balance || 0)
                     : (clinic.ai_credits_balance || 0) - creditCost;
-                if (!clinic.ai_credits_unlimited) {
-                    await sb.from("clinic_settings")
-                        .update({
-                            ai_credits_used: (clinic.ai_credits_used || 0) + creditCost,
-                            ai_credits_balance: newBalance
-                        })
-                        .eq("id", clinic.id);
-                }
+                await sb.from("clinic_settings")
+                    .update({
+                        ai_credits_used: (clinic.ai_credits_used || 0) + creditCost,
+                        ...(clinic.ai_credits_unlimited ? {} : { ai_credits_balance: newBalance })
+                    })
+                    .eq("id", clinic.id);
 
                 // Record transaction for transparency
                 await sb.from("ai_credit_transactions").insert({

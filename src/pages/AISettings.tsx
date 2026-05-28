@@ -111,7 +111,9 @@ export default function AISettings() {
     }
 
     const totalCredits = aiCreditsMonthlyLimit + aiCreditsExtraBalance
-    const totalUsed = aiCreditsUsed
+    // Para unlimited: usar el total calculado desde transacciones (más preciso que ai_credits_used congelado)
+    const tierTotal = tierBreakdown.t1 * 1 + tierBreakdown.t2 * 8 + tierBreakdown.t3 * 60
+    const totalUsed = aiCreditsUnlimited ? tierTotal : aiCreditsUsed
     const creditsAvailable = Math.max(0, totalCredits - totalUsed)
     const usagePct = Math.min(100, (totalUsed / (totalCredits || 1)) * 100)
 
