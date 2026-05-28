@@ -24,7 +24,7 @@ export default function AISettings() {
     const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
     const [aiCreditsUnlimited, setAiCreditsUnlimited] = useState(false)
 
-    const [tierBreakdown, setTierBreakdown] = useState({ t1: 0, t2: 0, t3: 0, c1: 0, c2: 0, c3: 0 })
+    const [tierBreakdown, setTierBreakdown] = useState({ t1: 0, t2: 0, t3: 0, c1: 0, c2: 0, c3: 0, total: 0 })
 
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
@@ -75,10 +75,11 @@ export default function AISettings() {
                         .gte('created_at', cycleStart.toISOString())
 
                     if (txs) {
-                        const counts = { t1: 0, t2: 0, t3: 0, c1: 0, c2: 0, c3: 0 }
+                        const counts = { t1: 0, t2: 0, t3: 0, c1: 0, c2: 0, c3: 0, total: 0 }
                         for (const tx of txs) {
                             const tier = tx.metadata?.tier
                             const cost = Math.abs(tx.amount || 0)
+                            counts.total += cost // suma TODOS sin importar si tienen tier
                             if (tier === 1) { counts.t1++; counts.c1 += cost }
                             else if (tier === 2) { counts.t2++; counts.c2 += cost }
                             else if (tier === 3) { counts.t3++; counts.c3 += cost }
@@ -127,9 +128,9 @@ export default function AISettings() {
     }
 
     const totalCredits = aiCreditsMonthlyLimit + aiCreditsExtraBalance
-    // Suma de costos reales desde DB (no multiplicación por costos fijos que puede ser inconsistente)
-    const tierTotal = tierBreakdown.c1 + tierBreakdown.c2 + tierBreakdown.c3
-    const totalUsed = aiCreditsUnlimited ? tierTotal : aiCreditsUsed
+    // Para unlimited: suma real de TODAS las transacciones del mes (mismo número que el historial)
+    // Para normales: ai_credits_used de clinic_settings (se actualiza en tiempo real)
+    const totalUsed = aiCreditsUnlimited ? tierBreakdown.total : aiCreditsUsed
     const creditsAvailable = Math.max(0, totalCredits - totalUsed)
     const usagePct = Math.min(100, (totalUsed / (totalCredits || 1)) * 100)
 
