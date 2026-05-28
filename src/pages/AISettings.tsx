@@ -22,6 +22,8 @@ export default function AISettings() {
     const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
     const [aiCreditsUnlimited, setAiCreditsUnlimited] = useState(false)
 
+    const [tierBreakdown, setTierBreakdown] = useState({ t1: 0, t2: 0, t3: 0 })
+
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
     const [isLoading, setIsLoading] = useState(true)
@@ -33,7 +35,7 @@ export default function AISettings() {
             try {
                 const { data: cs } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,ai_credits_unlimited,payment_provider')
+                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,ai_credits_unlimited,payment_provider,created_at')
                     .eq('id', profile.clinic_id)
                     .single()
 
@@ -45,6 +47,30 @@ export default function AISettings() {
                     setAiCreditsExtraBalance(cs.ai_credits_extra || 0)
                     setAiCreditsUsed(cs.ai_credits_used || 0)
                     setAiCreditsUnlimited(cs.ai_credits_unlimited || false)
+
+                    // Inicio del ciclo actual: día de aniversario del mes en curso
+                    const createdDay = new Date(cs.created_at).getDate()
+                    const now = new Date()
+                    let cycleStart = new Date(now.getFullYear(), now.getMonth(), createdDay)
+                    if (cycleStart > now) cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, createdDay)
+
+                    const { data: txs } = await (supabase as any)
+                        .from('ai_credit_transactions')
+                        .select('metadata')
+                        .eq('clinic_id', profile.clinic_id)
+                        .eq('type', 'usage')
+                        .gte('created_at', cycleStart.toISOString())
+
+                    if (txs) {
+                        const counts = { t1: 0, t2: 0, t3: 0 }
+                        for (const tx of txs) {
+                            const tier = tx.metadata?.tier
+                            if (tier === 1) counts.t1++
+                            else if (tier === 2) counts.t2++
+                            else if (tier === 3) counts.t3++
+                        }
+                        setTierBreakdown(counts)
+                    }
                 }
             } catch (err) {
                 console.error('Error loading AI settings:', err)
@@ -293,6 +319,86 @@ export default function AISettings() {
                                     )}
                                 </>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Desglose por modelo */}
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                            <Zap className="w-5 h-5 text-[#FF2E88]" />
+                            <div>
+                                <h2 className="text-base font-bold text-gray-900">Consumo por Modelo</h2>
+                                <p className="text-xs text-gray-500">Mensajes enviados y créditos gastados por tipo de IA este ciclo</p>
+                            </div>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            {/* Cards de tier */}
+                            <div className="grid grid-cols-3 gap-3">
+                                {/* Tier 1 — Mini */}
+                                <div className="border border-emerald-100 bg-emerald-50/50 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center">
+                                            <Zap className="w-3.5 h-3.5 text-white" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-gray-900 leading-none">GPT-4o Mini</p>
+                                            <p className="text-[10px] text-emerald-600 font-bold">×1 crédito / msg</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-2xl font-black text-gray-900">{tierBreakdown.t1.toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
+                                    <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between items-center">
+                                        <span className="text-[10px] text-gray-500">Créditos</span>
+                                        <span className="text-xs font-black text-emerald-700">{(tierBreakdown.t1 * 1).toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                {/* Tier 2 — Standard */}
+                                <div className="border border-pink-100 bg-pink-50/50 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-7 h-7 bg-[#FF2E88] rounded-lg flex items-center justify-center">
+                                            <RefreshCw className="w-3.5 h-3.5 text-white" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-gray-900 leading-none">GPT-4o Standard</p>
+                                            <p className="text-[10px] text-[#FF2E88] font-bold">×8 créditos / msg</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-2xl font-black text-gray-900">{tierBreakdown.t2.toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
+                                    <div className="mt-2 pt-2 border-t border-pink-100 flex justify-between items-center">
+                                        <span className="text-[10px] text-gray-500">Créditos</span>
+                                        <span className="text-xs font-black text-[#FF2E88]">{(tierBreakdown.t2 * 8).toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                {/* Tier 3 — Pro */}
+                                <div className="border border-purple-100 bg-purple-50/50 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-7 h-7 bg-purple-600 rounded-lg flex items-center justify-center">
+                                            <Cpu className="w-3.5 h-3.5 text-white" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-gray-900 leading-none">GPT-4o Pro</p>
+                                            <p className="text-[10px] text-purple-600 font-bold">×60 créditos / msg</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-2xl font-black text-gray-900">{tierBreakdown.t3.toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
+                                    <div className="mt-2 pt-2 border-t border-purple-100 flex justify-between items-center">
+                                        <span className="text-[10px] text-gray-500">Créditos</span>
+                                        <span className="text-xs font-black text-purple-700">{(tierBreakdown.t3 * 60).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Nota explicativa */}
+                            <div className="flex items-start gap-2 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
+                                <Info className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-gray-500 leading-relaxed">
+                                    El agente elige el modelo según la complejidad del mensaje. Mini para respuestas simples, Standard para conversaciones con contexto, Pro para casos que requieren máxima precisión.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
