@@ -27,3 +27,6 @@ verify_jwt = false
 
 [functions.cron-process-surveys]
 verify_jwt = false
+
+[functions.cron-expire-extra-credits]
+verify_jwt = false

@@ -1793,7 +1793,20 @@ Deno.serve(async (req) => {
         if (!clinic.ai_credits_unlimited) {
             const currentUsed = clinic.ai_credits_used || 0;
             const monthlyLimit = clinic.ai_credits_limit || 500;
-            const extraBalance = clinic.ai_credits_extra || 0;
+
+            // Créditos extra vencidos se tratan como 0
+            const extrasExpired = clinic.ai_credits_extra_expires_at
+                ? new Date(clinic.ai_credits_extra_expires_at) < new Date()
+                : false;
+            const extraBalance = extrasExpired ? 0 : (clinic.ai_credits_extra || 0);
+
+            if (extrasExpired && (clinic.ai_credits_extra || 0) > 0) {
+                // Limpiar créditos vencidos en background
+                sb.from("clinic_settings")
+                    .update({ ai_credits_extra: 0, ai_credits_extra_expires_at: null })
+                    .eq("id", clinic.id);
+            }
+
             const totalCreditsAvailable = monthlyLimit + extraBalance;
 
             if (currentUsed >= totalCreditsAvailable) {
@@ -1801,7 +1814,8 @@ Deno.serve(async (req) => {
                     clinic_id: clinic.id,
                     used: currentUsed,
                     limit: monthlyLimit,
-                    extra: extraBalance
+                    extra: extraBalance,
+                    extras_expired: extrasExpired
                 });
                 return new Response(JSON.stringify({ status: "saved_silently", reason: "insufficient_credits" }), { headers: corsHeaders });
             }

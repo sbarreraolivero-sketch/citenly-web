@@ -19,6 +19,7 @@ export default function AISettings() {
 
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
+    const [aiCreditsExtraExpiresAt, setAiCreditsExtraExpiresAt] = useState<string | null>(null)
     const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
     const [aiCreditsUnlimited, setAiCreditsUnlimited] = useState(false)
 
@@ -35,7 +36,7 @@ export default function AISettings() {
             try {
                 const { data: cs } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,ai_credits_unlimited,payment_provider')
+                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_used,ai_credits_unlimited,payment_provider')
                     .eq('id', profile.clinic_id)
                     .single()
 
@@ -45,6 +46,7 @@ export default function AISettings() {
                     setPaymentRegion(cs.payment_provider === 'lemonsqueezy' ? 'international' : 'chile')
                     setAiCreditsMonthlyLimit(cs.ai_credits_limit || 500)
                     setAiCreditsExtraBalance(cs.ai_credits_extra || 0)
+                    setAiCreditsExtraExpiresAt(cs.ai_credits_extra_expires_at || null)
                     setAiCreditsUsed(cs.ai_credits_used || 0)
                     setAiCreditsUnlimited(cs.ai_credits_unlimited || false)
 
@@ -305,6 +307,11 @@ export default function AISettings() {
                                         <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
                                             <p className="text-xs text-gray-400 mb-1">Extra</p>
                                             <p className="text-lg font-bold text-gray-900">{aiCreditsExtraBalance.toLocaleString()}</p>
+                                            {aiCreditsExtraBalance > 0 && aiCreditsExtraExpiresAt && (
+                                                <p className="text-[9px] text-amber-500 font-bold mt-0.5">
+                                                    Vence {new Date(aiCreditsExtraExpiresAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className={cn('border rounded-xl p-3', creditsAvailable <= 0 ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100')}>
                                             <p className={cn('text-xs mb-1', creditsAvailable <= 0 ? 'text-red-400' : 'text-emerald-600')}>Disponibles</p>
@@ -411,7 +418,7 @@ export default function AISettings() {
                                     <h2 className="text-base font-bold text-gray-900">Comprar Créditos Extra</h2>
                                 </div>
                                 <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
-                                    ⏱ Válidos 30 días desde la compra · Se resetean al mes, no acumulables
+                                    ⏱ Válidos 30 días desde la fecha de compra · Expiran automáticamente
                                 </p>
                             </div>
                             <div className="flex gap-2">

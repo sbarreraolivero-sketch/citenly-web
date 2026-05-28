@@ -123,12 +123,15 @@ Deno.serve(async (req: Request) => {
 
             const currentBalance = (settings as any)?.[balanceField] || 0;
             const newBalance = currentBalance + creditsToAdd;
+            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-            // Update balance
+            // Update balance + unified field + expiration
             const { error: updateError } = await supabase
                 .from('clinic_settings')
-                .update({ 
+                .update({
                     [balanceField]: newBalance,
+                    ai_credits_extra: newBalance,
+                    ai_credits_extra_expires_at: expiresAt,
                     payment_provider: 'lemonsqueezy',
                 })
                 .eq('id', clinicId);
