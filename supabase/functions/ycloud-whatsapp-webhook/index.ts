@@ -259,11 +259,10 @@ const getCalendarContext = (now: Date, tz: string): string => {
 const getClinic = async (sb: ReturnType<typeof createClient>, phone: string) => {
     console.log(`[getClinic] Looking up clinic for phone: ${phone}`);
     const normalized = normalizePhone(phone);
-    // Try matching exact, or with +, or without +
     const { data, error } = await sb.from("clinic_settings")
         .select("*")
         .or(`ycloud_phone_number.eq.${phone},ycloud_phone_number.eq.+${normalized},ycloud_phone_number.eq.${normalized}`)
-        .not("ycloud_phone_number", "ilike", "%PENDIENTE%") // Avoid dev/pending accounts
+        .not("ycloud_phone_number", "ilike", "%PENDIENTE%")
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -274,9 +273,25 @@ const getClinic = async (sb: ReturnType<typeof createClient>, phone: string) => 
     }
     if (!data) {
         console.warn(`[getClinic] No clinic found for phone: ${phone} (normalized: ${normalized})`);
-    } else {
-        console.log(`[getClinic] Found clinic: ${data.id} (${data.clinic_name})`);
+        return data;
     }
+
+    // Si es una sucursal (tiene parent_clinic_id), cargar el padre para usar su pool de créditos
+    if (data.parent_clinic_id) {
+        console.log(`[getClinic] Sucursal detectada. Cargando padre ${data.parent_clinic_id} para pool de créditos`);
+        const { data: parent, error: parentError } = await sb.from("clinic_settings")
+            .select("*")
+            .eq("id", data.parent_clinic_id)
+            .single();
+        if (parentError || !parent) {
+            console.error(`[getClinic] Error cargando clínica padre:`, parentError);
+        } else {
+            // La sucursal mantiene su config operativa, pero hereda el pool de créditos del padre
+            data._creditSource = parent;
+        }
+    }
+
+    console.log(`[getClinic] Found clinic: ${data.id} (${data.clinic_name})${data.parent_clinic_id ? ` [sucursal de ${data.parent_clinic_id}]` : ''}`);
     return data;
 };
 
@@ -1790,28 +1805,31 @@ Deno.serve(async (req) => {
         }
 
         // --- UNIFIED AI CREDIT CHECK ---
-        if (!clinic.ai_credits_unlimited) {
-            const currentUsed = clinic.ai_credits_used || 0;
-            const monthlyLimit = clinic.ai_credits_limit || 500;
+        // Para sucursales, los créditos se leen del padre (_creditSource)
+        const creditPool = (clinic as any)._creditSource || clinic;
+
+        if (!creditPool.ai_credits_unlimited) {
+            const currentUsed = creditPool.ai_credits_used || 0;
+            const monthlyLimit = creditPool.ai_credits_limit || 500;
 
             // Créditos extra vencidos se tratan como 0
-            const extrasExpired = clinic.ai_credits_extra_expires_at
-                ? new Date(clinic.ai_credits_extra_expires_at) < new Date()
+            const extrasExpired = creditPool.ai_credits_extra_expires_at
+                ? new Date(creditPool.ai_credits_extra_expires_at) < new Date()
                 : false;
-            const extraBalance = extrasExpired ? 0 : (clinic.ai_credits_extra || 0);
+            const extraBalance = extrasExpired ? 0 : (creditPool.ai_credits_extra || 0);
 
-            if (extrasExpired && (clinic.ai_credits_extra || 0) > 0) {
-                // Limpiar créditos vencidos en background
+            if (extrasExpired && (creditPool.ai_credits_extra || 0) > 0) {
                 sb.from("clinic_settings")
                     .update({ ai_credits_extra: 0, ai_credits_extra_expires_at: null })
-                    .eq("id", clinic.id);
+                    .eq("id", creditPool.id);
             }
 
             const totalCreditsAvailable = monthlyLimit + extraBalance;
 
             if (currentUsed >= totalCreditsAvailable) {
-                await debugLog(sb, `IA silenciosa: Créditos Citenly agotados`, {
+                await debugLog(sb, `IA silenciosa: Créditos agotados`, {
                     clinic_id: clinic.id,
+                    credit_pool_id: creditPool.id,
                     used: currentUsed,
                     limit: monthlyLimit,
                     extra: extraBalance,
@@ -2088,26 +2106,26 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 let res = await callAI(optimalModel, msgs, true, dynamicFns);
                 let assistant = res.choices[0].message;
 
-                // Track usage — siempre actualizar ai_credits_used para transparencia.
-                // Para unlimited: no descontar ai_credits_balance (no hay límite que agotar).
-                const newBalance = clinic.ai_credits_unlimited
-                    ? (clinic.ai_credits_balance || 0)
-                    : (clinic.ai_credits_balance || 0) - creditCost;
+                // Track usage en el pool de créditos (padre si es sucursal, propio si no)
+                const creditPool = (clinic as any)._creditSource || clinic;
+                const newBalance = creditPool.ai_credits_unlimited
+                    ? (creditPool.ai_credits_balance || 0)
+                    : (creditPool.ai_credits_balance || 0) - creditCost;
                 await sb.from("clinic_settings")
                     .update({
-                        ai_credits_used: (clinic.ai_credits_used || 0) + creditCost,
-                        ...(clinic.ai_credits_unlimited ? {} : { ai_credits_balance: newBalance })
+                        ai_credits_used: (creditPool.ai_credits_used || 0) + creditCost,
+                        ...(creditPool.ai_credits_unlimited ? {} : { ai_credits_balance: newBalance })
                     })
-                    .eq("id", clinic.id);
+                    .eq("id", creditPool.id);
 
-                // Record transaction for transparency
+                // Record transaction en el pool (siempre en el padre si es sucursal)
                 await sb.from("ai_credit_transactions").insert({
-                    clinic_id: clinic.id,
+                    clinic_id: creditPool.id,
                     type: 'usage',
                     amount: -creditCost,
                     balance_after: newBalance,
-                    description: `Consumo IA N${tier}: ${optimalModel}`,
-                    metadata: { tier, model: optimalModel, message_id: msgRowId }
+                    description: `Consumo IA N${tier}: ${optimalModel}${clinic.id !== creditPool.id ? ` (sucursal ${clinic.clinic_name})` : ''}`,
+                    metadata: { tier, model: optimalModel, message_id: msgRowId, source_clinic_id: clinic.id }
                 });
                 let funcResult: Record<string, unknown> | null = null;
                 let allFuncResults: Record<string, unknown>[] = [];

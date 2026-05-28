@@ -36,7 +36,7 @@ export default function AISettings() {
             try {
                 const { data: cs } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_used,ai_credits_unlimited,payment_provider')
+                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_used,ai_credits_unlimited,payment_provider,parent_clinic_id')
                     .eq('id', profile.clinic_id)
                     .single()
 
@@ -44,11 +44,23 @@ export default function AISettings() {
                     setAiActiveModel(cs.ai_active_model || 'hybrid')
                     setAiAutoRespond(cs.ai_auto_respond !== false)
                     setPaymentRegion(cs.payment_provider === 'lemonsqueezy' ? 'international' : 'chile')
-                    setAiCreditsMonthlyLimit(cs.ai_credits_limit || 500)
-                    setAiCreditsExtraBalance(cs.ai_credits_extra || 0)
-                    setAiCreditsExtraExpiresAt(cs.ai_credits_extra_expires_at || null)
-                    setAiCreditsUsed(cs.ai_credits_used || 0)
-                    setAiCreditsUnlimited(cs.ai_credits_unlimited || false)
+
+                    // Si es sucursal, leer créditos del pool del padre
+                    let creditSource = cs
+                    if (cs.parent_clinic_id) {
+                        const { data: parent } = await (supabase as any)
+                            .from('clinic_settings')
+                            .select('ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_used,ai_credits_unlimited')
+                            .eq('id', cs.parent_clinic_id)
+                            .single()
+                        if (parent) creditSource = parent
+                    }
+
+                    setAiCreditsMonthlyLimit(creditSource.ai_credits_limit || 500)
+                    setAiCreditsExtraBalance(creditSource.ai_credits_extra || 0)
+                    setAiCreditsExtraExpiresAt(creditSource.ai_credits_extra_expires_at || null)
+                    setAiCreditsUsed(creditSource.ai_credits_used || 0)
+                    setAiCreditsUnlimited(creditSource.ai_credits_unlimited || false)
 
                     // Inicio del ciclo: primer día del mes actual en UTC
                     const now = new Date()
