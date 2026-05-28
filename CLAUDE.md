@@ -53,16 +53,36 @@ Flujo por mensaje entrante:
 - **Deployado** en producción (sesión 5) — incluye filtro franja horaria, fix AM/PM, flujo de pago condicional y soporte `ai_credits_unlimited`
 
 ### Sistema de créditos AI
-- `ai_credits_used`: contador acumulado del ciclo actual
-- `ai_credits_limit`: cupo mensual del plan (no cambia, la recarga resetea `used` a 0)
-- `ai_credits_extra`: créditos extra comprados (se conservan entre ciclos)
-- `ai_credits_balance`: saldo calculado disponible
-- `ai_credits_unlimited`: flag boolean — si `true`, el check de créditos se salta completamente y `ai_credits_used` no se decrementa. `DEFAULT false`. El cron mensual resetea `ai_credits_used = 0` igual para todas las clínicas.
-- El AI se silencia cuando `ai_credits_used >= ai_credits_limit + ai_credits_extra` **y** `ai_credits_unlimited = false`
 
-**Bug crítico resuelto (mayo 2026):** `cron-monthly-credit-recharge` acumulaba `ai_credits_limit` en vez de resetear `ai_credits_used`. Corregido: ahora hace `ai_credits_used = 0` y conserva el límite.
+**Columnas en `clinic_settings`:**
+- `ai_credits_used`: contador acumulado del ciclo actual (siempre se incrementa, incluso para unlimited)
+- `ai_credits_limit`: cupo mensual del plan (no cambia entre ciclos)
+- `ai_credits_extra`: créditos extra vigentes (comprados o cargados desde HQ)
+- `ai_credits_extra_expires_at`: fecha de vencimiento de los extras (NULL = sin vencimiento)
+- `ai_credits_balance`: saldo calculado disponible (solo para clínicas no-unlimited)
+- `ai_credits_unlimited`: boolean DEFAULT false — si `true`, la IA nunca se silencia por créditos
+- `parent_clinic_id`: UUID autorreferencial — si está seteado, la clínica es sucursal y comparte el pool de créditos del padre
 
-**Caso Elizabeth Microblading:** ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`. Es la clínica de la esposa del fundador — tiene `ai_credits_unlimited = true` de forma permanente. `ai_credits_extra = 0` y `ai_credits_extra_balance = 0` (limpiados). Hay 2 registros duplicados de esta clínica que se deben eliminar manualmente.
+**Lógica del check (en el webhook):**
+1. Si la clínica tiene `parent_clinic_id`, cargar la clínica padre como `creditPool`
+2. Si `creditPool.ai_credits_unlimited = true` → no hay corte, continuar
+3. Si `creditPool.ai_credits_extra_expires_at < NOW()` → tratar extras como 0 y limpiarlos en background
+4. Si `creditPool.ai_credits_used >= ai_credits_limit + extraBalance` → silenciar IA
+5. Siempre actualizar `ai_credits_used` en el pool (incluso si unlimited — para tracking)
+6. Insertar registro en `ai_credit_transactions` con `source_clinic_id` si es sucursal
+
+**Expiración de créditos extra (30 días):**
+- Al comprar un pack (MP o LS): `ai_credits_extra_expires_at = NOW() + 30 días`
+- Al cargar desde HQ: ídem — mismo comportamiento que compra real
+- `cron-expire-extra-credits`: corre diariamente, zeroes out extras vencidos y registra transacción `adjustment`
+
+**Cron mensual:** `cron-monthly-credit-recharge` resetea `ai_credits_used = 0` el día de aniversario de cada clínica. No toca `ai_credits_extra` (los extras tienen su propio ciclo de 30 días).
+
+**Tabla `ai_credit_transactions`:** registra consumos (type=`usage`), recargas (type=`monthly_refill`), compras (type=`purchase`), ajustes/expiraciones (type=`adjustment`). Tiene RLS SELECT para `clinic_members`. El desglose por modelo (tier 1/2/3) en `AISettings.tsx` se calcula desde esta tabla.
+
+**Pool multi-sucursal:** configurar con `UPDATE clinic_settings SET parent_clinic_id = '<id_padre>' WHERE id = '<id_sucursal>'`. Los créditos se leen y descontan siempre del padre.
+
+**Caso Elizabeth Microblading:** ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`. Clínica de la esposa del fundador — `ai_credits_unlimited = true` permanente. `ai_credits_extra = 0`, `ai_credits_extra_balance = 0` (limpiados en sesión 5). Hay 2 registros duplicados pendientes de eliminar.
 
 ### Otras Edge Functions relevantes
 
@@ -73,6 +93,7 @@ Flujo por mensaje entrante:
 | `cron-monthly-credit-recharge` | Resetea `ai_credits_used=0` el día de aniversario de cada clínica | false |
 | `cron-process-reminders` | Recordatorios de citas (24h y 2h antes) | false |
 | `cron-process-surveys` | Encuestas post-cita vía WhatsApp template | false |
+| `cron-expire-extra-credits` | Zeroes out ai_credits_extra vencidos, registra adjustment | false |
 | `cron-process-upsell` | Campañas de upsell automático | — |
 | `cron-retention-compute` / `cron-retention-execute` | Motor de retención preventivo | — |
 | `send-whatsapp-message` | Envío manual de mensajes (API key server-side) | — |
@@ -295,21 +316,45 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - `supabase db query --linked "<SQL>"` es la sintaxis correcta para queries remotas
 - `supabase db execute --project-ref` **no existe** en la versión instalada
 
+### Cambios realizados — mayo 2026 (sesión 6)
+
+#### Sistema de créditos AI — refactor completo
+- **RLS `ai_credit_transactions`:** tabla tenía RLS activo sin políticas → frontend recibía array vacío. Fix: `CREATE POLICY clinic_members_select FOR SELECT USING (clinic_id IN (SELECT clinic_id FROM clinic_members WHERE user_id = auth.uid()))`
+- **`AISettings.tsx` — fix consumo real:** contaba mensajes por `ai_model` (siempre 0). Fix: lee `ai_credits_used` de `clinic_settings`. Para cuentas unlimited, `totalUsed` se calcula desde transacciones (`t1×1 + t2×8 + t3×60`)
+- **Desglose por modelo:** nueva sección "Consumo por Modelo" con cards por tier (Mini ×1, Standard ×8, Pro ×60) leyendo `ai_credit_transactions` desde el 1 del mes en UTC
+- **Tracking siempre activo:** webhook siempre incrementa `ai_credits_used` aunque sea unlimited (solo omite decrementar `ai_credits_balance`)
+- **`ai_credits_unlimited`:** flag boolean en DB + webhook + frontend (badge violeta + vista ∞)
+
+#### Expiración de créditos extra (30 días)
+- **DB:** `ai_credits_extra_expires_at timestamptz DEFAULT NULL`
+- **Webhook:** verifica expiración antes del check; si vencido trata extras=0 y limpia en background
+- **`mercadopago-webhook` + `lemonsqueezy-webhook`:** al activar pack → `ai_credits_extra_expires_at = NOW()+30d` + insert en `ai_credit_transactions` type=`purchase`
+- **`cron-expire-extra-credits`:** nueva función diaria; limpia extras vencidos + registra `adjustment`
+- **HQ AdminClinics `handleAddCredits`:** también setea `expires_at = NOW()+30d` (créditos por transferencia = mismas reglas que compra)
+- **UI HQ:** muestra "Vence DD MMM" o "Sin vencimiento" bajo el contador de extras
+
+#### Pool multi-sucursal (`parent_clinic_id`)
+- **DB:** `parent_clinic_id UUID REFERENCES clinic_settings(id) DEFAULT NULL`
+- **Webhook `getClinic()`:** si detecta `parent_clinic_id`, carga el padre y lo almacena en `_creditSource`; el check, el update y el insert en transacciones operan sobre el pool (padre)
+- **`AISettings.tsx`:** si la clínica tiene `parent_clinic_id`, hace segunda query al padre para mostrar créditos del pool compartido
+- **Activar sucursal:** `UPDATE clinic_settings SET parent_clinic_id = '<id_padre>' WHERE id = '<id_sucursal>'`
+
 ---
 
 ## Estado actual de configuración
 
 ### verify_jwt en supabase/config.toml
 ```
-ycloud-whatsapp-webhook: false   (webhook externo)
-mercadopago-webhook: false       (webhook externo)
+ycloud-whatsapp-webhook: false       (webhook externo)
+mercadopago-webhook: false           (webhook externo)
 ycloud-templates: false
 get-ycloud-templates: false
 create-ycloud-template: false
-chat-agent: false                (llamado desde browser)
-ai-simulator: false              (llamado desde browser)
-cron-process-reminders: false    (invocado por pg_cron)
-cron-process-surveys: false      (invocado por pg_cron)
+chat-agent: false                    (llamado desde browser)
+ai-simulator: false                  (llamado desde browser)
+cron-process-reminders: false        (invocado por pg_cron)
+cron-process-surveys: false          (invocado por pg_cron)
+cron-expire-extra-credits: false     (invocado por pg_cron)
 ```
 
 **Regla permanente:** cualquier Edge Function invocada por un webhook externo (YCloud, MercadoPago, LemonSqueezy) o por pg_cron necesita `verify_jwt = false`. Si no está configurado en `config.toml`, Supabase bloquea las requests con 401 antes de que lleguen al código y **no aparecen en los logs de la función**.
@@ -324,6 +369,7 @@ cron-process-surveys: false      (invocado por pg_cron)
 - [ ] **Deploar** `cron-monthly-credit-recharge` (corregido, no deployado)
 - [ ] **Deploar** `cron-process-surveys` (corregido, no deployado)
 - [ ] **Auditar tablas sin políticas RLS** — verificar en `information_schema` que todas las tablas con RLS habilitada tengan al menos una política SELECT
+- [ ] **pg_cron para `cron-expire-extra-credits`** — configurar job diario en Supabase (ej: `SELECT cron.schedule('expire-credits', '0 2 * * *', $$SELECT net.http_post(...)$$)`)
 
 ### Alta prioridad — bugs
 - [ ] **ai-simulator** — migrar de API deprecada `functions`/`function_call` a `tools`/`tool_choice`
