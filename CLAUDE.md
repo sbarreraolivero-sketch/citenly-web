@@ -50,18 +50,19 @@ Flujo por mensaje entrante:
 - Usa imports modernizados (`jsr:`, `npm:`)
 - Tiene `callGemini`, `callOpenRouter`, `callOpenAI` (routing híbrido sin `selectModelTier` formal)
 - **Sin HMAC per-clínica** — pendiente implementar (ver Tareas pendientes)
-- **Modificado localmente** pero no deployado — `git status` muestra `M supabase/functions/ycloud-whatsapp-webhook/index.ts`
+- **Deployado** en producción (sesión 5) — incluye filtro franja horaria, fix AM/PM, flujo de pago condicional y soporte `ai_credits_unlimited`
 
 ### Sistema de créditos AI
 - `ai_credits_used`: contador acumulado del ciclo actual
 - `ai_credits_limit`: cupo mensual del plan (no cambia, la recarga resetea `used` a 0)
 - `ai_credits_extra`: créditos extra comprados (se conservan entre ciclos)
 - `ai_credits_balance`: saldo calculado disponible
-- El AI se silencia cuando `ai_credits_used >= ai_credits_limit + ai_credits_extra`
+- `ai_credits_unlimited`: flag boolean — si `true`, el check de créditos se salta completamente y `ai_credits_used` no se decrementa. `DEFAULT false`. El cron mensual resetea `ai_credits_used = 0` igual para todas las clínicas.
+- El AI se silencia cuando `ai_credits_used >= ai_credits_limit + ai_credits_extra` **y** `ai_credits_unlimited = false`
 
 **Bug crítico resuelto (mayo 2026):** `cron-monthly-credit-recharge` acumulaba `ai_credits_limit` en vez de resetear `ai_credits_used`. Corregido: ahora hace `ai_credits_used = 0` y conserva el límite.
 
-**Caso Elizabeth Microblading:** créditos desbordados → AI silenciada. Fix: resetear `ai_credits_used = 0` manualmente. Clínica real: ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`. Hay 2 registros duplicados de esta clínica que se deben eliminar manualmente.
+**Caso Elizabeth Microblading:** ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`. Es la clínica de la esposa del fundador — tiene `ai_credits_unlimited = true` de forma permanente. `ai_credits_extra = 0` y `ai_credits_extra_balance = 0` (limpiados). Hay 2 registros duplicados de esta clínica que se deben eliminar manualmente.
 
 ### Otras Edge Functions relevantes
 
@@ -269,6 +270,31 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **Fix:** nuevo regex `/(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i` que convierte correctamente: `"5:00 PM"` → `"17:00"`, `"12:00 AM"` → `"00:00"`, `"17:00"` → `"17:00"` (sin cambios)
 - **Cobertura:** maneja `"5:00 PM"`, `"5:00 p.m."`, `"17:00"`, `"17:00 PM"`, `"12:00 AM"`, `"9:00 AM"` → siempre produce `HH:MM` en 24h
 
+### Cambios realizados — mayo 2026 (sesión 5)
+
+#### AISettings.tsx — fix consumo de créditos (bug crítico)
+- **Bug:** el código calculaba `totalUsed` contando mensajes por `ai_model` (`'4o_standard'`, `'mini'`, etc.), pero esos strings no coincidían con los valores reales que guarda el webhook → siempre mostraba 0
+- **Fix:** ahora lee `ai_credits_used` directamente de `clinic_settings` (fuente de verdad)
+- Eliminadas las 3 queries de conteo de mensajes por modelo (lentas e incorrectas)
+- Nuevo bloque de métricas: **Usados · Límite Plan · Extra · Disponibles** (4 cards)
+- Alerta roja cuando `creditsAvailable <= 0` explicando que el agente está en pausa
+- Si `ai_credits_unlimited = true`: muestra badge violeta "Ilimitado" y vista simplificada (Usados / ∞)
+
+#### AdminClinics.tsx (HQ) — soporte ai_credits_unlimited + refresh
+- Fetch REST incluye `ai_credits_unlimited` en el select
+- `AdminAIUsage`: nuevo estado `liveUsed` + función `refreshData()` que relee `ai_credits_used` desde la DB sin recargar toda la página; botón ↻ junto al porcentaje
+- Cuando `unlimited = true`: banner violeta, métricas con `∞`, barra 100% violeta, texto explicativo
+
+#### Sistema ai_credits_unlimited — implementación completa
+- **DB:** `ALTER TABLE clinic_settings ADD COLUMN IF NOT EXISTS ai_credits_unlimited boolean DEFAULT false`
+- **Webhook:** check de créditos envuelto en `if (!clinic.ai_credits_unlimited)` — si es `true`, salta corte y no decrementa `ai_credits_used`. El cron mensual sigue reseteando el contador para todas las clínicas.
+- **Elizabeth Microblading:** `ai_credits_unlimited = true`, `ai_credits_extra = 0`, `ai_credits_extra_balance = 0`
+- **Webhook deployado** a producción con todos los cambios acumulados de sesiones 4 y 5
+
+#### Notas de desarrollo — corrección sintaxis CLI
+- `supabase db query --linked "<SQL>"` es la sintaxis correcta para queries remotas
+- `supabase db execute --project-ref` **no existe** en la versión instalada
+
 ---
 
 ## Estado actual de configuración
@@ -294,7 +320,6 @@ cron-process-surveys: false      (invocado por pg_cron)
 
 ### Alta prioridad — seguridad
 - [ ] **HMAC per-clínica en webhook:** implementar `verifyYCloudSignature(rawBody, header, secret)` donde el secret viene de `clinic_settings.ycloud_webhook_secret`. Requiere migración DB (`ALTER TABLE clinic_settings ADD COLUMN ycloud_webhook_secret TEXT`) y campo en Settings → WhatsApp.
-- [ ] **Deploar webhook modificado** — `ycloud-whatsapp-webhook/index.ts` tiene cambios locales sin deployar (`M` en git status)
 - [ ] **Deploar** `send-whatsapp-message` (nuevo Edge Function creado pero no deployado)
 - [ ] **Deploar** `cron-monthly-credit-recharge` (corregido, no deployado)
 - [ ] **Deploar** `cron-process-surveys` (corregido, no deployado)
@@ -362,7 +387,11 @@ Adaptar para Citenly cuando se requiera escalar ventas.
 ### Supabase MCP
 El MCP conecta al proyecto `ehmncwawzdciajvuallg` (Vetly), **no a Citenly** (`hubjqllcmbzoojyidgcu`). Para queries directas a producción de Citenly, usar scripts Node.js con `.env` o el CLI de Supabase:
 ```bash
-supabase db execute --project-ref hubjqllcmbzoojyidgcu -f query.sql
+# Query directo (el proyecto debe estar linked)
+supabase db query --linked "<SQL>"
+
+# Script Node.js con service role key
+node -e "require('dotenv').config({path:'.env'}); ..."
 ```
 
 ### Deploy de Edge Functions
