@@ -40,6 +40,7 @@ function buildMonthOptions(count = 6) {
 export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState({ consumed: 0, messages: 0, recharged: 0, adjustments: 0, total: 0 });
 
   const monthOptions = buildMonthOptions(6);
   const [selectedMonth, setSelectedMonth] = useState(monthOptions[0].value);
@@ -54,6 +55,26 @@ export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId 
     try {
       setLoading(true);
       const opt = monthOptions.find(m => m.value === selectedMonth)!;
+
+      // Query 1: totales completos sin límite (solo amount y type para el resumen)
+      const { data: allTxs } = await (supabase as any)
+        .from('ai_credit_transactions')
+        .select('type, amount')
+        .eq('clinic_id', clinicId)
+        .gte('created_at', opt.start)
+        .lte('created_at', opt.end);
+
+      if (allTxs) {
+        const s = { consumed: 0, messages: 0, recharged: 0, adjustments: 0, total: (allTxs as any[]).length };
+        for (const tx of allTxs as any[]) {
+          if (tx.type === 'usage') { s.consumed += Math.abs(tx.amount); s.messages++; }
+          else if (tx.type === 'monthly_refill' || tx.type === 'purchase') s.recharged += tx.amount;
+          else if (tx.type === 'adjustment') s.adjustments += tx.amount;
+        }
+        setSummary(s);
+      }
+
+      // Query 2: tabla con límite para display (las más recientes)
       const { data, error } = await supabase
         .from('ai_credit_transactions')
         .select('*')
@@ -71,18 +92,6 @@ export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId 
       setLoading(false);
     }
   };
-
-  // Resumen del mes
-  const totalConsumed = transactions
-    .filter(t => t.type === 'usage')
-    .reduce((acc, t) => acc + Math.abs(t.amount), 0);
-  const totalRecargado = transactions
-    .filter(t => t.type === 'monthly_refill' || t.type === 'purchase')
-    .reduce((acc, t) => acc + t.amount, 0);
-  const totalAjustes = transactions
-    .filter(t => t.type === 'adjustment')
-    .reduce((acc, t) => acc + t.amount, 0);
-  const mensajesEnviados = transactions.filter(t => t.type === 'usage').length;
 
   const getTypeStyle = (type: string) => {
     switch (type) {
@@ -140,27 +149,27 @@ export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId 
         </div>
       </div>
 
-      {/* Tarjetas resumen del mes */}
+      {/* Tarjetas resumen del mes — datos completos sin límite */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-[#FF2E88]/5 border border-[#FF2E88]/15 rounded-xl p-4 text-center">
           <TrendingDown className="w-4 h-4 text-[#FF2E88] mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-primary-theme">{totalConsumed.toLocaleString()}</p>
+          <p className="text-2xl font-black text-primary-theme">{summary.consumed.toLocaleString()}</p>
           <p className="text-[10px] text-primary-theme/50 font-bold uppercase tracking-wider mt-0.5">Créditos usados</p>
         </div>
         <div className="bg-secondary-theme border border-theme/20 rounded-xl p-4 text-center">
           <Zap className="w-4 h-4 text-primary-theme/40 mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-primary-theme">{mensajesEnviados.toLocaleString()}</p>
+          <p className="text-2xl font-black text-primary-theme">{summary.messages.toLocaleString()}</p>
           <p className="text-[10px] text-primary-theme/50 font-bold uppercase tracking-wider mt-0.5">Mensajes IA</p>
         </div>
         <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
           <ArrowDownLeft className="w-4 h-4 text-emerald-600 mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-emerald-700">{totalRecargado.toLocaleString()}</p>
+          <p className="text-2xl font-black text-emerald-700">{summary.recharged.toLocaleString()}</p>
           <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mt-0.5">Recargado</p>
         </div>
-        {totalAjustes !== 0 && (
+        {summary.adjustments !== 0 && (
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-center">
             <Calendar className="w-4 h-4 text-amber-600 mx-auto mb-1.5" />
-            <p className="text-2xl font-black text-amber-700">{totalAjustes.toLocaleString()}</p>
+            <p className="text-2xl font-black text-amber-700">{summary.adjustments.toLocaleString()}</p>
             <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mt-0.5">Ajustes</p>
           </div>
         )}
@@ -246,7 +255,7 @@ export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId 
         {/* Footer */}
         <div className="px-6 py-4 bg-secondary-theme/20 border-t border-theme/30 flex items-center justify-between">
           <p className="text-[10px] text-primary-theme/40 font-bold italic">
-            Mostrando {transactions.length} transacciones de {currentMonthOpt.label}
+            Mostrando {transactions.length} de {summary.total} transacciones de {currentMonthOpt.label}
           </p>
           <div className="flex items-center gap-2 text-[10px] font-black text-primary-theme/40 uppercase tracking-widest">
             <Calendar className="w-3.5 h-3.5" />
