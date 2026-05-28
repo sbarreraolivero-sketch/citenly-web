@@ -415,11 +415,11 @@ export default function AISettings() {
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setPaymentRegion('chile')}
-                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'chile' ? 'bg-pink-50 border-[#FF2E88]/40 text-[#FF2E88]' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-900')}
+                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'chile' ? 'bg-sky-50 border-sky-400 text-sky-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-900')}
                                 >🇨🇱 CLP</button>
                                 <button
                                     onClick={() => setPaymentRegion('international')}
-                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'international' ? 'bg-pink-50 border-[#FF2E88]/40 text-[#FF2E88]' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-900')}
+                                    className={cn('text-xs font-bold px-3 py-1.5 rounded-lg border transition-all', paymentRegion === 'international' ? 'bg-sky-50 border-sky-400 text-sky-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-gray-900')}
                                 >🌍 USD</button>
                             </div>
                         </div>
@@ -429,12 +429,12 @@ export default function AISettings() {
                                 const priceDisplay = `${currencySymbol}${price.toLocaleString('es-CL')}`
                                 const credits = pack.credits?.toLocaleString() || '—'
                                 return (
-                                    <div key={packId} className="flex flex-col border border-gray-200 rounded-2xl overflow-hidden">
-                                        <div className="h-1.5 bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6]" />
+                                    <div key={packId} className="flex flex-col border border-sky-100 rounded-2xl overflow-hidden">
+                                        <div className="h-1.5 bg-gradient-to-r from-sky-500 to-sky-600" />
                                         <div className="p-5 flex flex-col flex-1">
                                             <div className="flex items-center justify-between mb-3">
                                                 <h3 className="text-base font-black text-gray-900">{pack.name}</h3>
-                                                <span className="px-2 py-0.5 bg-pink-50 text-[#FF2E88] text-[10px] font-black rounded-lg border border-pink-100">
+                                                <span className="px-2 py-0.5 bg-sky-50 text-sky-600 text-[10px] font-black rounded-lg border border-sky-100">
                                                     {credits} msgs
                                                 </span>
                                             </div>
@@ -455,7 +455,7 @@ export default function AISettings() {
                                             </ul>
                                             <button
                                                 onClick={() => handleBuyCredits(packId)}
-                                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] text-white font-black text-sm hover:opacity-90 transition-all"
+                                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 text-white font-black text-sm hover:opacity-90 transition-all"
                                             >
                                                 Comprar Pack
                                             </button>
