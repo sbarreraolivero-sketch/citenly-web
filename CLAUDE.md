@@ -405,45 +405,38 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 
 ## Tareas pendientes
 
-### Alta prioridad — seguridad
-- [ ] **HMAC per-clínica en webhook:** implementar `verifyYCloudSignature(rawBody, header, secret)` donde el secret viene de `clinic_settings.ycloud_webhook_secret`. Requiere migración DB (`ALTER TABLE clinic_settings ADD COLUMN ycloud_webhook_secret TEXT`) y campo en Settings → WhatsApp.
-
-### Alta prioridad — producto
-- [ ] **Actualizar créditos IA de los planes** — los valores nuevos son:
-  - Starter: **4.000 créditos IA/mes** (actualmente 2.000 en Landing y app)
-  - Pro: **8.000 créditos IA/mes** (actualmente 5.000)
-  - Enterprise: **16.000 créditos IA/mes** (actualmente 12.000)
-  - Actualizar en: `Landing.tsx` (array `PLANS`) y `Settings.tsx` (tab Suscripción, sección de planes)
-  - También actualizar el `cron-monthly-credit-recharge` si tiene los límites hardcodeados por plan
-
-### Alta prioridad — bugs
-- [ ] **ai-simulator** — migrar de API deprecada `functions`/`function_call` a `tools`/`tool_choice`
-
-### Media prioridad — UX/diseño
-- [ ] **Banners degradado pendientes** — agregar banner estilo Vetly (label sección + título H1 + stats) a las páginas restantes:
-  - Sky (`from-sky-500 to-sky-700`): Dashboard, Mensajes, Plantillas, KnowledgeBase ← ya hecho en AISettings, Integrations, Finance, Reminders
-  - Pink (`from-[#FF2E88] to-[#c0236a]`): Patients/Contactos, CRM, Appointments, RetentionEngine
-  - Violet (`from-violet-500 to-violet-700`): Campaigns, Loyalty
-  - Amber (`from-amber-500 to-amber-700`): Settings
-- [ ] **Dashboard** — tarjetas con cabecera de degradado coloreada por área
-- **Colores de sección del DashboardLayout** (para banners):
-  - Principal/Citas/Pacientes/Mensajes/Finanzas: `from-sky-500 to-sky-700`
-  - Clínica/CRM/Pacientes/Citas/Recordatorios: `from-[#FF2E88] to-[#c0236a]`
-  - Marketing/Campañas/Fidelización: `from-violet-500 to-violet-700`
-  - Configuración: `from-amber-500 to-amber-700`
-
 ### Media prioridad — monetización
 - [ ] **Subscription `manually_active`** — columna para clínicas que pagan por transferencia bancaria (`UPDATE subscriptions SET manually_active = true WHERE clinic_id = '...'`)
 - [ ] **CRM auto-cierre** — `pg_cron` que mueve prospectos con `appointment_date < NOW()` al stage "Cerrado" (diariamente 06:00 UTC)
-- [ ] **Packs de créditos de campaña** — sistema de compra via LemonSqueezy (`campaign_credits_balance` en subscriptions)
+- [ ] **Packs de créditos de campaña** — sistema de compra via LemonSqueezy (`campaign_credits_balance` en subscriptions); la función `redirectToLemonCampaignCreditsCheckout` ya existe en `lemonsqueezy.ts`, falta el balance en DB
 
 ### Baja prioridad — deuda técnica
-- [ ] **Modernizar imports** en Edge Functions restantes (las que aún usen `deno.land/std@0.168.0` o `esm.sh` en lugar de `jsr:` / `npm:`)
 - [ ] **Eliminar** `console.log` de producción (~299 en el webhook)
 - [ ] **`getConversations()`** en `supabase.ts` — carga todos los mensajes sin paginación (función no usada actualmente pero podría serlo)
 - [ ] **React Query** — infraestructura lista en `main.tsx` (`QueryClientProvider`), pendiente adoptar en fetches de componentes
 - [ ] **`switchClinic()`** en `AuthContext.tsx` usa `window.location.reload()` — reemplazar por reset de estado limpio
-- [ ] **Configurar Resend** para emails transaccionales
+- [ ] **Configurar Resend** — `send-invite-email` ya llama a Resend, solo falta configurar `RESEND_API_KEY` como secret en Supabase y verificar dominio de envío
+
+## Tareas completadas (verificadas en sesión 9)
+
+- [x] **HMAC per-clínica en webhook** — `verifyYCloudSignature` implementado; permissive onboarding si no hay secret configurado
+- [x] **ai-simulator migrar a tools/tool_choice** — ya usa `tools` array y `tool_choice: "auto"`
+- [x] **Banners degradado en todas las páginas** — todas las páginas tienen banners con gradientes
+- [x] **Dashboard tarjetas con cabecera degradado** — cards con `bg-gradient-to-br` por área
+- [x] **Créditos IA por plan** (sesión 9) — Starter: 4.000, Pro: 8.000, Enterprise: 16.000 en `Landing.tsx`, `mercadopago.ts` y `lemonsqueezy.ts`
+- [x] **Bug columna créditos** (sesión 9) — `signup-handler`, `mercadopago-webhook` y `lemonsqueezy-webhook` escribían en `ai_credits_monthly_limit` (columna incorrecta); corregido a `ai_credits_limit` que es la que lee el cron y el frontend. Valores actualizados a 4000/8000/16000 con soporte para IDs legacy (essence/radiance/prestige)
+- [x] **Cron tabla incorrecta** (sesión 9) — `cron-monthly-credit-recharge` insertaba en `ai_credits_ledger`; corregido a `ai_credit_transactions` con `type: 'monthly_refill'`
+- [x] **Imports modernizados** (sesión 9) — `chat-agent`, `send-whatsapp-campaign`, `send-whatsapp-message` migrados de `deno.land/std@0.168.0`/`esm.sh` a `jsr:`/`npm:` y `Deno.serve`
+
+### Nota sobre deploy de sesión 9
+Las siguientes funciones fueron modificadas y requieren deploy:
+- `signup-handler` — nueva columna `ai_credits_limit`, valores nuevos
+- `mercadopago-webhook` — nueva columna `ai_credits_limit`, valores nuevos
+- `lemonsqueezy-webhook` — nueva columna `ai_credits_limit`, valores nuevos
+- `cron-monthly-credit-recharge` — tabla corregida a `ai_credit_transactions`
+- `send-whatsapp-message` — imports modernizados
+- `send-whatsapp-campaign` — imports modernizados
+- `chat-agent` — imports modernizados
 
 ---
 

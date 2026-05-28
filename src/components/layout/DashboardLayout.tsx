@@ -33,6 +33,7 @@ import { AIChatWidget } from '../AIChatWidget'
 import { CreditWarningBanner } from './CreditWarningBanner'
 import { cn, getInitials } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePermissions } from '@/hooks/usePermissions'
 import { supabase } from '@/lib/supabase'
 import BranchSwitcher from './BranchSwitcher'
 
@@ -96,13 +97,6 @@ const navigationSections = [
 // Flat list for header title lookup
 const navigation = navigationSections.flatMap(s => s.items)
 
-type StaffPermissions = { professional: string[]; receptionist: string[] }
-
-const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
-    professional: ['dashboard', 'messages', 'templates', 'patients', 'appointments'],
-    receptionist: ['dashboard', 'messages', 'appointments', 'patients'],
-}
-
 const getNotificationIcon = (type: string) => {
     switch (type) {
         case 'new_appointment':
@@ -132,6 +126,7 @@ export default function DashboardLayout() {
     const location = useLocation()
     const navigate = useNavigate()
     const { user, profile, member, signOut } = useAuth()
+    const { canAccess } = usePermissions()
 
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
@@ -142,7 +137,6 @@ export default function DashboardLayout() {
     const [showMobileMenu, setShowMobileMenu] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light')
-    const [staffPermissions, setStaffPermissions] = useState<StaffPermissions>(DEFAULT_STAFF_PERMISSIONS)
 
     // Theme management
     useEffect(() => {
@@ -152,21 +146,6 @@ export default function DashboardLayout() {
         else document.documentElement.classList.remove('dark')
         if (savedTheme !== theme) setTheme(savedTheme)
     }, [])
-
-    // Load staff permissions for nav filtering
-    useEffect(() => {
-        if (!profile?.clinic_id) return
-        ;(supabase as any)
-            .from('clinic_settings')
-            .select('staff_permissions')
-            .eq('id', profile.clinic_id)
-            .single()
-            .then(({ data }: { data: any }) => {
-                if (data?.staff_permissions) {
-                    setStaffPermissions(data.staff_permissions as StaffPermissions)
-                }
-            })
-    }, [profile?.clinic_id])
 
     const toggleTheme = () => {
         const next = theme === 'dark' ? 'light' : 'dark'
@@ -320,20 +299,14 @@ export default function DashboardLayout() {
         (profile as any)?.role === 'receptionist' ? 'Recepción' : 'Staff'
     )
 
-    const isOwnerOrAdmin = member?.role === 'owner' || profile?.role === 'owner' || member?.role === 'admin' || profile?.role === 'admin'
     const ownerEmails = ['claubarreraolivero@gmail.com', 'sebabarreraolivero@gmail.com', 'sebabarrera@gmail.com']
     const isNuclearOwner = user?.email ? ownerEmails.includes(user.email.toLowerCase().trim()) : false
 
     const getVisibleItems = (items: typeof navigationSections[0]['items']) =>
         items.filter(item => {
-            // Owners and admins always see everything
-            if (isOwnerOrAdmin || isNuclearOwner) return true
-            // For staff roles, check configured permissions
+            if (isNuclearOwner) return true
             const pageKey = item.href.replace('/app/', '').split('?')[0]
-            const role = member?.role || (profile as any)?.role
-            if (role === 'professional') return staffPermissions.professional.includes(pageKey)
-            if (role === 'receptionist') return staffPermissions.receptionist.includes(pageKey)
-            return true
+            return canAccess(pageKey)
         })
 
     const renderNavItems = (section: typeof navigationSections[0], collapsed: boolean, onClick?: () => void) => {

@@ -1,12 +1,20 @@
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Mail, Shield, User, Clock, Copy, ChevronDown, Save } from 'lucide-react'
+import { Plus, Trash2, Mail, Shield, User, Clock, Copy, ChevronDown, Save, SlidersHorizontal, RotateCcw, X } from 'lucide-react'
 import { teamService, type ClinicMember } from '@/services/teamService'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
 import { normalizePlanId } from '@/lib/mercadopago'
 import { cn } from '@/lib/utils'
+import {
+    PAGE_SECTIONS,
+    ACTION_SECTIONS,
+    getEffectivePermissions,
+    type MemberPermissions,
+    type PageKey,
+    type ActionKey,
+} from '@/lib/permissions'
 
 type StaffPermissions = { professional: string[]; receptionist: string[] }
 
@@ -22,6 +30,181 @@ const PERMISSION_SECTIONS = [
     { label: 'Agente IA', items: [{ key: 'knowledge-base', name: 'Conocimiento' }, { key: 'integrations', name: 'Integraciones' }, { key: 'ai-settings', name: 'Ajustes IA' }] },
 ]
 
+const ROLE_LABELS: Record<string, string> = {
+    owner: 'Dueño',
+    admin: 'Administrador',
+    professional: 'Profesional',
+    receptionist: 'Recepción',
+}
+
+function PermissionsModal({
+    member,
+    onClose,
+    onSaved,
+}: {
+    member: ClinicMember
+    onClose: () => void
+    onSaved: (memberId: string, permissions: MemberPermissions | null) => void
+}) {
+    const effective = getEffectivePermissions(member.role, member.permissions ?? null)
+    const [pages, setPages] = useState<PageKey[]>(effective.pages)
+    const [actions, setActions] = useState<ActionKey[]>(effective.actions)
+    const [saving, setSaving] = useState(false)
+
+    const togglePage = (key: PageKey) => {
+        setPages(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+    }
+
+    const toggleAction = (key: ActionKey) => {
+        setActions(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+    }
+
+    const handleRestore = () => {
+        const defaults = getEffectivePermissions(member.role, null)
+        setPages(defaults.pages)
+        setActions(defaults.actions)
+    }
+
+    const handleSave = async () => {
+        setSaving(true)
+        try {
+            const newPerms: MemberPermissions = { pages, actions }
+            await teamService.updateMemberPermissions(member.id, newPerms)
+            toast.success('Permisos actualizados')
+            onSaved(member.id, newPerms)
+            onClose()
+        } catch (err: any) {
+            toast.error('Error al guardar: ' + err.message)
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const memberName = member.first_name || member.email
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <div className="bg-primary-theme border border-theme rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-theme shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary)] font-bold">
+                            {memberName[0].toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="font-bold text-primary-theme">{memberName}</p>
+                            <span className={cn(
+                                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                                member.role === 'professional' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                            )}>
+                                {ROLE_LABELS[member.role]}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleRestore}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-secondary-theme border border-theme rounded-lg hover:bg-secondary-theme transition-colors"
+                            title="Restaurar defaults del rol"
+                        >
+                            <RotateCcw size={12} />
+                            Restaurar defaults
+                        </button>
+                        <button onClick={onClose} className="p-1.5 text-secondary-theme hover:text-primary-theme rounded-lg hover:bg-secondary-theme transition-colors">
+                            <X size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="overflow-y-auto flex-1 p-6 space-y-6">
+                    {/* Acceso a secciones */}
+                    <div>
+                        <h3 className="text-xs font-black text-secondary-theme uppercase tracking-widest mb-3">Acceso a secciones</h3>
+                        <div className="space-y-4">
+                            {PAGE_SECTIONS.map(section => (
+                                <div key={section.label}>
+                                    <p className="text-[10px] font-black text-secondary-theme/60 uppercase tracking-widest mb-2">{section.label}</p>
+                                    <div className="space-y-1">
+                                        {section.pages.map(item => (
+                                            <label key={item.key} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-secondary-theme cursor-pointer transition-colors group">
+                                                <span className="text-sm font-medium text-primary-theme">{item.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => togglePage(item.key)}
+                                                    className={cn(
+                                                        'w-10 h-6 rounded-full transition-colors relative shrink-0',
+                                                        pages.includes(item.key) ? 'bg-[var(--accent-primary)]' : 'bg-gray-200 dark:bg-gray-700'
+                                                    )}
+                                                >
+                                                    <span className={cn(
+                                                        'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                                                        pages.includes(item.key) ? 'translate-x-5' : 'translate-x-1'
+                                                    )} />
+                                                </button>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Acciones permitidas */}
+                    <div>
+                        <h3 className="text-xs font-black text-secondary-theme uppercase tracking-widest mb-3">Acciones permitidas</h3>
+                        <div className="space-y-4">
+                            {ACTION_SECTIONS.map(section => (
+                                <div key={section.label}>
+                                    <p className="text-[10px] font-black text-secondary-theme/60 uppercase tracking-widest mb-2">{section.label}</p>
+                                    <div className="space-y-1">
+                                        {section.actions.map(item => (
+                                            <label key={item.key} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-secondary-theme cursor-pointer transition-colors">
+                                                <span className="text-sm font-medium text-primary-theme">{item.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleAction(item.key)}
+                                                    className={cn(
+                                                        'w-10 h-6 rounded-full transition-colors relative shrink-0',
+                                                        actions.includes(item.key) ? 'bg-[var(--accent-primary)]' : 'bg-gray-200 dark:bg-gray-700'
+                                                    )}
+                                                >
+                                                    <span className={cn(
+                                                        'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                                                        actions.includes(item.key) ? 'translate-x-5' : 'translate-x-1'
+                                                    )} />
+                                                </button>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex gap-3 p-6 border-t border-theme shrink-0">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-4 py-2.5 text-secondary-theme bg-secondary-theme rounded-xl hover:bg-secondary-theme/80 transition-colors font-bold text-sm border border-theme"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-white bg-premium-gradient rounded-xl hover:shadow-lg transition-all font-bold text-sm disabled:opacity-50"
+                    >
+                        <Save size={15} />
+                        {saving ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export default function Team() {
     const { member, profile } = useAuth()
     const [members, setMembers] = useState<ClinicMember[]>([])
@@ -35,6 +218,7 @@ export default function Team() {
     const [staffPermissions, setStaffPermissions] = useState<StaffPermissions>(DEFAULT_STAFF_PERMISSIONS)
     const [savingPermissions, setSavingPermissions] = useState(false)
     const [showPermissions, setShowPermissions] = useState(false)
+    const [permissionsModalMember, setPermissionsModalMember] = useState<ClinicMember | null>(null)
 
     // Fallback to profile check if member context is missing
     const isOwner = member?.role === 'owner' || profile?.role === 'owner'
@@ -153,7 +337,6 @@ export default function Team() {
             loadData()
         } catch (error) {
             console.error('Error inviting member:', error)
-            // Error handling improved in service/RPC but good to keep fallback
             toast.error('Error al enviar invitación. Verifica el límite de tu plan.')
         }
     }
@@ -196,6 +379,10 @@ export default function Team() {
             console.error('Error deleting member:', error)
             toast.error('Error al eliminar miembro')
         }
+    }
+
+    const handlePermissionsSaved = (memberId: string, permissions: MemberPermissions | null) => {
+        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, permissions } : m))
     }
 
     return (
@@ -247,7 +434,7 @@ export default function Team() {
                             <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Rol</th>
                             <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Estado</th>
                             <th className="text-left py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Fecha Ingreso</th>
-                            {isOwner && <th className="text-right py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Acciones</th>}
+                            {isAdmin && <th className="text-right py-4 px-6 text-[10px] font-black text-secondary-theme uppercase tracking-widest">Acciones</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-theme">
@@ -264,7 +451,14 @@ export default function Team() {
                                                 {(m.first_name?.[0] || m.email[0]).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-bold text-primary-theme">{m.first_name || 'Sin nombre'}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-bold text-primary-theme">{m.first_name || 'Sin nombre'}</p>
+                                                    {m.permissions != null && (
+                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                                            Personalizado
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-secondary-theme">{m.email}</p>
                                             </div>
                                         </div>
@@ -292,17 +486,29 @@ export default function Team() {
                                     <td className="py-4 px-6 text-xs text-secondary-theme font-medium">
                                         {new Date(m.created_at).toLocaleDateString()}
                                     </td>
-                                    {isOwner && (
+                                    {isAdmin && (
                                         <td className="py-4 px-6 text-right">
-                                            {m.role !== 'owner' && (
-                                                <button
-                                                    onClick={(e) => handleDelete(e, m.id)}
-                                                    className="text-secondary-theme hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
-                                                    title="Eliminar miembro"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            )}
+                                            <div className="flex items-center justify-end gap-1">
+                                                {m.role !== 'owner' && m.role !== 'admin' && (
+                                                    <button
+                                                        onClick={() => setPermissionsModalMember(m)}
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-secondary-theme hover:text-[var(--accent-primary)] border border-theme hover:border-[var(--accent-primary)]/40 rounded-lg hover:bg-[var(--accent-primary)]/5 transition-all"
+                                                        title="Editar permisos individuales"
+                                                    >
+                                                        <SlidersHorizontal size={13} />
+                                                        Permisos
+                                                    </button>
+                                                )}
+                                                {isOwner && m.role !== 'owner' && (
+                                                    <button
+                                                        onClick={(e) => handleDelete(e, m.id)}
+                                                        className="text-secondary-theme hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10"
+                                                        title="Eliminar miembro"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     )}
                                 </tr>
@@ -320,8 +526,8 @@ export default function Team() {
                         className="w-full flex items-center justify-between p-5 hover:bg-secondary-theme transition-colors"
                     >
                         <div>
-                            <p className="font-bold text-primary-theme text-left">Permisos de Acceso por Rol</p>
-                            <p className="text-xs text-secondary-theme mt-0.5 text-left">Define qué secciones pueden ver los profesionales y recepcionistas.</p>
+                            <p className="font-bold text-primary-theme text-left">Permisos por Defecto por Rol</p>
+                            <p className="text-xs text-secondary-theme mt-0.5 text-left">Define los accesos predeterminados para nuevos profesionales y recepcionistas. Los permisos individuales tienen prioridad.</p>
                         </div>
                         <ChevronDown className={cn('w-5 h-5 text-secondary-theme transition-transform', showPermissions && 'rotate-180')} />
                     </button>
@@ -392,12 +598,21 @@ export default function Team() {
                                     className="flex items-center gap-2 bg-[var(--accent-primary)] text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
                                 >
                                     <Save className="w-4 h-4" />
-                                    {savingPermissions ? 'Guardando...' : 'Guardar Permisos'}
+                                    {savingPermissions ? 'Guardando...' : 'Guardar Defaults'}
                                 </button>
                             </div>
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Modal permisos individuales */}
+            {permissionsModalMember && (
+                <PermissionsModal
+                    member={permissionsModalMember}
+                    onClose={() => setPermissionsModalMember(null)}
+                    onSaved={handlePermissionsSaved}
+                />
             )}
 
             {/* Invite Modal */}
@@ -461,7 +676,7 @@ export default function Team() {
                                     </button>
                                 </div>
                             </div>
- 
+
                             <div className="pt-4 flex gap-3">
                                 <button
                                     type="button"
