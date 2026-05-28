@@ -121,8 +121,8 @@ const getFunctions = (ownerEmail?: string) => {
     return [
     {
         name: "check_availability",
-        description: "Verifica disponibilidad para NUEVAS citas. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). NO la uses para confirmar citas ya existentes.",
-        parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado por el paciente (opcional)" } }, required: ["date"] }
+        description: "Verifica disponibilidad para NUEVAS citas. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). NO la uses para confirmar citas ya existentes. Usa time_of_day para filtrar por franja horaria.",
+        parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado por el paciente (opcional)" }, time_of_day: { type: "string", enum: ["morning", "afternoon"], description: "Franja horaria: 'morning' = antes de las 13:00 (mañana), 'afternoon' = desde las 13:00 (tarde/después del almuerzo)" } }, required: ["date"] }
     },
     {
         name: "create_appointment",
@@ -330,7 +330,7 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
 // =============================================
 // Tool Implementations
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicObj?: any) => {
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicObj?: any, timeOfDay?: string) => {
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
@@ -406,6 +406,13 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 const [h, m] = tStart.split(':').map(Number);
                 const tEnd = new Date(2000, 0, 1, h, m + duration).toTimeString().substring(0, 5);
                 return !(tStart < lunch.end && tEnd > lunch.start);
+            })
+            .filter((s: any) => {
+                if (!timeOfDay) return true;
+                const hour = parseInt(s.slot_time.substring(0, 2));
+                if (timeOfDay === 'morning') return hour < 13;
+                if (timeOfDay === 'afternoon') return hour >= 13;
+                return true;
             })
             .map((s: any) => {
                 const t = s.slot_time.substring(0, 5);
@@ -1319,7 +1326,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
     console.log(`[processFunc] Calling: ${name}`, args);
     await debugLog(sb, `Tool execution: ${name}`, { args, phone });
     switch (name) {
-        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic);
+        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string);
         case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone);
         case "get_services": return getServices(sb, clinicId);
         case "confirm_appointment":
@@ -1930,14 +1937,21 @@ ${lagRule}
 8. REGLA ESTRICTA DE MINUTOS: Las citas SOLO se pueden agendar en intervalos de 15 minutos (:00, :15, :30, :45). NUNCA agendes en minutos como :08, :12, :23, etc. Si detectas que un horario disponible tiene minutos irregulares (por arrastre de citas antiguas), redondea siempre al intervalo de 15 minutos más cercano para proponerlo al paciente.
 9. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
 10. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
-   a) Ofrecer Slots: Llama a 'check_availability', muestra opciones y menciona el abono de $10.000.
-   b) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO REAL. 
-       - REGLA DE ORO: SIEMPRE obtén el nombre real del humano. 
+   a) Franja Horaria PRIMERO (regla universal para todas las clínicas): ANTES de llamar a 'check_availability', asegúrate de saber si el paciente prefiere mañana o tarde. Esto es especialmente importante en servicios cortos (evaluaciones, consultas) donde hay muchos horarios disponibles.
+      - Si NO lo mencionó, PREGUNTA: "¿Prefieres un horario en la mañana o en la tarde?"
+      - Mañana = antes de las 13:00. Tarde = después del almuerzo (13:00 en adelante).
+      - Si ya lo indicó (ej: "en la tarde", "después de las 4", "por la mañana", "a las 5 PM"), úsalo directamente sin preguntar de nuevo.
+      - Usa time_of_day='morning' para mañana, time_of_day='afternoon' para tarde.
+      - NUNCA muestres todos los horarios del día juntos: solo la franja solicitada. No lances 20 o 30 horarios de golpe.
+   b) Ofrecer Slots: Llama a 'check_availability' con la franja correspondiente y muestra las opciones disponibles.
+   c) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO REAL.
+       - REGLA DE ORO: SIEMPRE obtén el nombre real del humano.
        - NUNCA uses marcadores de posición como "[Nombre del Paciente]" o "Sin Nombre". Si no sabes el nombre, NO agendes y vuelve a preguntar.
-   c) Registro: CUANDO TENGAS EL NOMBRE REAL Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
-   d) Datos de Pago: NUNCA envíes los datos de transferencia bancaria ANTES de que la herramienta 'create_appointment' te haya devuelto 'success: true'. Es una regla estricta.
-      LOS DATOS OFICIALES PARA EL ABONO ($10.000) SON:
-      ${clinic.transfer_details || "- Solicitar datos de transferencia al equipo humano."}
+   d) Registro: CUANDO TENGAS EL NOMBRE REAL Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
+   e) Confirmación: ${clinic.transfer_details
+        ? `NUNCA envíes los datos de transferencia ANTES de que 'create_appointment' devuelva 'success: true'. Una vez confirmada, envía los datos de pago:\n      ${clinic.transfer_details}`
+        : `Una vez que 'create_appointment' devuelva 'success: true', confirma la cita al paciente con la fecha y hora acordadas.`
+    }
 
 ### REGLA DE ORO DE ETIQUETADO PROACTIVO (CRM):
 - NO ESPERES A QUE AGENDEN: Si el usuario menciona un tratamiento (ej: 'microblading', 'cejas', 'labios', 'pestañas', 'botox', 'ácido'), DEBES llamar INMEDIATAMENTE a la función 'tag_patient' con el nombre del servicio.

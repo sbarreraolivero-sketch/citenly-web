@@ -241,6 +241,34 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **Fetch extendido:** incluye `ai_credits_used`, `ai_credits_limit`, `ai_credits_extra` + fallback a `ai_credits_monthly_limit`, `ai_credits_extra_balance`
 - `planLabels` incluye `essence/radiance/prestige/basic` para clínicas con planes legacy
 
+### Cambios realizados — mayo 2026 (sesión 4)
+
+#### AuthContext.tsx — fix pantalla en blanco al entrar a la app
+- **Bug:** `clinics` state inicializaba con `null` (en vez de `[]`) cuando no había caché en localStorage
+- **Causa del crash:** `BranchSwitcher.tsx` llama `.find()`, `.some()` y `.map()` sobre `clinics` sin null check → TypeError → React mostraba pantalla en blanco
+- **Fix:** `return cached ? JSON.parse(cached) : null` → `return cached ? JSON.parse(cached) : []`
+- **Patrón:** al refrescar funcionaba porque la segunda carga ya tenía clínicas en localStorage (pobladas en la carga anterior antes del crash)
+
+#### ycloud-whatsapp-webhook — filtro de franja horaria (mañana/tarde)
+- **Problema:** servicios con slots de 15 minutos (ej: evaluaciones) generaban 30+ horarios de golpe, confundiendo a la clienta
+- **Fix código:** `checkAvail` acepta nuevo parámetro `timeOfDay?: string`; filtra slots `< 13:00` para `morning` y `>= 13:00` para `afternoon` ANTES del `.map()` de formato
+- **Fix tool:** `check_availability` tiene nuevo parámetro `time_of_day: "morning" | "afternoon"` (opcional, con enum)
+- **Fix processFunc:** pasa `args.time_of_day` al llamar `checkAvail`
+- **Fix prompt (universal — todas las clínicas):** nueva regla en el flujo de reserva: preguntar "¿Prefieres mañana o tarde?" ANTES de llamar `check_availability` si el paciente no lo especificó. Si ya lo indicó (ej: "después de las 4"), usarlo directamente sin preguntar.
+
+#### ycloud-whatsapp-webhook — fix flujo de pago (no hardcodear abono)
+- **Problema:** el paso de reserva mencionaba "abono de $10.000" para todas las clínicas, pero eso es exclusivo de Elizabeth Microblading
+- **Fix prompt:** el paso de confirmación/pago ahora es condicional sobre `clinic.transfer_details`:
+  - Si tiene `transfer_details` → instrucción de pago con los datos reales
+  - Si no → solo confirma la cita al paciente sin mencionar pago
+- **Letras de pasos corregidas:** a) Franja horaria, b) Slots, c) Selección/Nombre, d) Registro (`create_appointment`), e) Confirmación/Pago
+
+#### Bug identificado pendiente de fix — `createAppt` tiempo AM/PM
+- **Síntoma:** `create_appointment` falla silenciosamente y el agente dice "el horario se acaba de ocupar"
+- **Causa raíz:** cuando el modelo envía hora como `"5:00 PM"` (en vez de `"17:00"`), el regex `/\d{1,2}:\d{2}/` extrae `"5:00"` e ignora el PM → padding → `"05:00"` (5 AM). `requestedTimeLabel` queda `"5:00 AM"` ≠ slot disponible `"5:00 PM"` → `isTimeAvailable = false` → `success: false`
+- **Efecto secundario:** el agente crea phantom bookings o le dice a la clienta que el horario se ocupó cuando en realidad el tool falló antes de insertar
+- **Fix pendiente:** reemplazar el parser de hora en `createAppt` (línea ~513) para manejar AM/PM correctamente antes de hacer la comparación
+
 ---
 
 ## Estado actual de configuración
