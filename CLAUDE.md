@@ -339,6 +339,25 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **`AISettings.tsx`:** si la clínica tiene `parent_clinic_id`, hace segunda query al padre para mostrar créditos del pool compartido
 - **Activar sucursal:** `UPDATE clinic_settings SET parent_clinic_id = '<id_padre>' WHERE id = '<id_sucursal>'`
 
+### Cambios realizados — mayo 2026 (sesión 8)
+
+#### Historial de créditos integrado en AISettings
+- **Ruta `/app/ai-credits` eliminada** de `App.tsx` — la página `AICredits.tsx` ya no está en el router
+- **`AITransactionHistory` integrado al final de `AISettings.tsx`** — el historial ahora vive dentro de Ajustes IA
+- **Selector de mes** (últimos 6 meses) con re-fetch automático al cambiar
+- **Cards de resumen** por mes: Créditos usados · Mensajes IA · Recargado · Ajustes
+
+#### Fix de inconsistencia en el total de créditos consumidos
+- **Bug:** `totalUsed` para cuentas unlimited multiplicaba conteos de tier por costos fijos (`t3 × 60`), dando 8,610 cuando el real era diferente
+- **Fix 1:** `tierBreakdown` ahora acumula costos reales (`c1`, `c2`, `c3`, `total`) desde el campo `amount` de la DB, no desde multiplicación de conteos
+- **Fix 2:** `totalUsed = tierBreakdown.total` — suma de `abs(amount)` de **todas** las transacciones del mes, incluyendo las que no tienen `metadata.tier`
+- Resultado: "Usados este ciclo" en Ajustes IA y "Créditos usados" en el historial muestran el mismo número
+
+#### Fix resumen historial — query sin límite para totales
+- **Bug:** el historial tenía `.limit(200)` en la query, lo que hacía que las cards de resumen sumaran solo las 200 transacciones más recientes (incompleto si hay más)
+- **Fix:** dos queries separadas — una **sin límite** para los totales del resumen, otra con `.limit(200)` para la tabla de display
+- Footer ahora muestra **"Mostrando N de M transacciones de \{mes\}"** dejando claro que la tabla es un subset
+
 ### Cambios realizados — mayo 2026 (sesión 7, cierre)
 
 #### Deployos pendientes ejecutados
