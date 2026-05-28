@@ -35,7 +35,7 @@ export default function AISettings() {
             try {
                 const { data: cs } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,ai_credits_unlimited,payment_provider,created_at')
+                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,ai_credits_unlimited,payment_provider')
                     .eq('id', profile.clinic_id)
                     .single()
 
@@ -48,11 +48,9 @@ export default function AISettings() {
                     setAiCreditsUsed(cs.ai_credits_used || 0)
                     setAiCreditsUnlimited(cs.ai_credits_unlimited || false)
 
-                    // Inicio del ciclo actual: día de aniversario del mes en curso
-                    const createdDay = new Date(cs.created_at).getDate()
+                    // Inicio del ciclo: primer día del mes actual en UTC
                     const now = new Date()
-                    let cycleStart = new Date(now.getFullYear(), now.getMonth(), createdDay)
-                    if (cycleStart > now) cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, createdDay)
+                    const cycleStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
 
                     const { data: txs } = await (supabase as any)
                         .from('ai_credit_transactions')
