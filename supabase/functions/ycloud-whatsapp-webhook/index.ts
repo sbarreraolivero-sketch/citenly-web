@@ -1790,23 +1790,21 @@ Deno.serve(async (req) => {
         }
 
         // --- UNIFIED AI CREDIT CHECK ---
-        const firstDayOfMonth = new Date();
-        firstDayOfMonth.setDate(1);
-        firstDayOfMonth.setHours(0, 0, 0, 0);
+        if (!clinic.ai_credits_unlimited) {
+            const currentUsed = clinic.ai_credits_used || 0;
+            const monthlyLimit = clinic.ai_credits_limit || 500;
+            const extraBalance = clinic.ai_credits_extra || 0;
+            const totalCreditsAvailable = monthlyLimit + extraBalance;
 
-        const currentUsed = clinic.ai_credits_used || 0;
-        const monthlyLimit = clinic.ai_credits_limit || 500;
-        const extraBalance = clinic.ai_credits_extra || 0;
-        const totalCreditsAvailable = monthlyLimit + extraBalance;
-
-        if (currentUsed >= totalCreditsAvailable) {
-            await debugLog(sb, `IA silenciosa: Créditos Citenly agotados`, { 
-                clinic_id: clinic.id, 
-                used: currentUsed, 
-                limit: monthlyLimit,
-                extra: extraBalance 
-            });
-            return new Response(JSON.stringify({ status: "saved_silently", reason: "insufficient_credits" }), { headers: corsHeaders });
+            if (currentUsed >= totalCreditsAvailable) {
+                await debugLog(sb, `IA silenciosa: Créditos Citenly agotados`, {
+                    clinic_id: clinic.id,
+                    used: currentUsed,
+                    limit: monthlyLimit,
+                    extra: extraBalance
+                });
+                return new Response(JSON.stringify({ status: "saved_silently", reason: "insufficient_credits" }), { headers: corsHeaders });
+            }
         }
         // ------------------------------
 
@@ -2076,14 +2074,18 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 let res = await callAI(optimalModel, msgs, true, dynamicFns);
                 let assistant = res.choices[0].message;
 
-                // Track usage (Ledger System)
-                const newBalance = (clinic.ai_credits_balance || 0) - creditCost;
-                await sb.from("clinic_settings")
-                    .update({ 
-                        ai_credits_used: (clinic.ai_credits_used || 0) + creditCost,
-                        ai_credits_balance: newBalance 
-                    })
-                    .eq("id", clinic.id);
+                // Track usage (Ledger System) — skip for unlimited clinics
+                const newBalance = clinic.ai_credits_unlimited
+                    ? (clinic.ai_credits_balance || 0)
+                    : (clinic.ai_credits_balance || 0) - creditCost;
+                if (!clinic.ai_credits_unlimited) {
+                    await sb.from("clinic_settings")
+                        .update({
+                            ai_credits_used: (clinic.ai_credits_used || 0) + creditCost,
+                            ai_credits_balance: newBalance
+                        })
+                        .eq("id", clinic.id);
+                }
 
                 // Record transaction for transparency
                 await sb.from("ai_credit_transactions").insert({

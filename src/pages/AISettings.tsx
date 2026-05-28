@@ -20,6 +20,7 @@ export default function AISettings() {
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
     const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
+    const [aiCreditsUnlimited, setAiCreditsUnlimited] = useState(false)
 
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
@@ -32,7 +33,7 @@ export default function AISettings() {
             try {
                 const { data: cs } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,payment_provider')
+                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,ai_credits_unlimited,payment_provider')
                     .eq('id', profile.clinic_id)
                     .single()
 
@@ -43,6 +44,7 @@ export default function AISettings() {
                     setAiCreditsMonthlyLimit(cs.ai_credits_limit || 500)
                     setAiCreditsExtraBalance(cs.ai_credits_extra || 0)
                     setAiCreditsUsed(cs.ai_credits_used || 0)
+                    setAiCreditsUnlimited(cs.ai_credits_unlimited || false)
                 }
             } catch (err) {
                 console.error('Error loading AI settings:', err)
@@ -223,48 +225,73 @@ export default function AISettings() {
                     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
                             <CreditCard className="w-5 h-5 text-[#FF2E88]" />
-                            <div>
+                            <div className="flex-1">
                                 <h2 className="text-base font-bold text-gray-900">Créditos de IA</h2>
                                 <p className="text-xs text-gray-500">Uso del ciclo actual</p>
                             </div>
+                            {aiCreditsUnlimited && (
+                                <span className="flex items-center gap-1.5 px-3 py-1 bg-violet-50 border border-violet-200 rounded-full text-xs font-black text-violet-600 uppercase tracking-wider">
+                                    <Sparkles className="w-3 h-3" /> Ilimitado
+                                </span>
+                            )}
                         </div>
                         <div className="p-5 space-y-4">
-                            <div className="flex items-end justify-between mb-1">
-                                <span className="text-sm text-gray-600">{totalUsed.toLocaleString()} / {totalCredits.toLocaleString()} créditos usados</span>
-                                <span className={cn('text-sm font-bold', usagePct >= 90 ? 'text-red-600' : usagePct >= 70 ? 'text-amber-600' : 'text-emerald-600')}>
-                                    {usagePct.toFixed(0)}%
-                                </span>
-                            </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div
-                                    className={cn('h-full rounded-full transition-all', usagePct >= 90 ? 'bg-red-500' : usagePct >= 70 ? 'bg-amber-500' : 'bg-emerald-500')}
-                                    style={{ width: `${usagePct}%` }}
-                                />
-                            </div>
-                            <div className="grid grid-cols-4 gap-3 text-center">
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Usados</p>
-                                    <p className="text-lg font-bold text-gray-900">{totalUsed.toLocaleString()}</p>
-                                </div>
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Límite Plan</p>
-                                    <p className="text-lg font-bold text-gray-900">{aiCreditsMonthlyLimit.toLocaleString()}</p>
-                                </div>
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Extra</p>
-                                    <p className="text-lg font-bold text-gray-900">{aiCreditsExtraBalance.toLocaleString()}</p>
-                                </div>
-                                <div className={cn('border rounded-xl p-3', creditsAvailable <= 0 ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100')}>
-                                    <p className={cn('text-xs mb-1', creditsAvailable <= 0 ? 'text-red-400' : 'text-emerald-600')}>Disponibles</p>
-                                    <p className={cn('text-lg font-bold', creditsAvailable <= 0 ? 'text-red-600' : 'text-emerald-700')}>{creditsAvailable.toLocaleString()}</p>
-                                </div>
-                            </div>
-
-                            {creditsAvailable <= 0 && (
-                                <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                                    <Zap className="w-3.5 h-3.5" />
-                                    Créditos agotados — el agente IA está en pausa. Compra créditos extra para reactivarlo.
-                                </div>
+                            {aiCreditsUnlimited ? (
+                                <>
+                                    <div className="flex items-center gap-3 px-4 py-3 bg-violet-50 border border-violet-200 rounded-xl">
+                                        <Sparkles className="w-4 h-4 text-violet-500 shrink-0" />
+                                        <p className="text-sm text-violet-700 font-medium">Tu agente IA tiene créditos ilimitados. Nunca se silenciará por falta de créditos.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 text-center">
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                            <p className="text-xs text-gray-400 mb-1">Usados este ciclo</p>
+                                            <p className="text-lg font-bold text-gray-900">{totalUsed.toLocaleString()}</p>
+                                        </div>
+                                        <div className="bg-violet-50 border border-violet-100 rounded-xl p-3">
+                                            <p className="text-xs text-violet-500 mb-1">Disponibles</p>
+                                            <p className="text-lg font-bold text-violet-600">∞</p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex items-end justify-between mb-1">
+                                        <span className="text-sm text-gray-600">{totalUsed.toLocaleString()} / {totalCredits.toLocaleString()} créditos usados</span>
+                                        <span className={cn('text-sm font-bold', usagePct >= 90 ? 'text-red-600' : usagePct >= 70 ? 'text-amber-600' : 'text-emerald-600')}>
+                                            {usagePct.toFixed(0)}%
+                                        </span>
+                                    </div>
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className={cn('h-full rounded-full transition-all', usagePct >= 90 ? 'bg-red-500' : usagePct >= 70 ? 'bg-amber-500' : 'bg-emerald-500')}
+                                            style={{ width: `${usagePct}%` }}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-3 text-center">
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                            <p className="text-xs text-gray-400 mb-1">Usados</p>
+                                            <p className="text-lg font-bold text-gray-900">{totalUsed.toLocaleString()}</p>
+                                        </div>
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                            <p className="text-xs text-gray-400 mb-1">Límite Plan</p>
+                                            <p className="text-lg font-bold text-gray-900">{aiCreditsMonthlyLimit.toLocaleString()}</p>
+                                        </div>
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                                            <p className="text-xs text-gray-400 mb-1">Extra</p>
+                                            <p className="text-lg font-bold text-gray-900">{aiCreditsExtraBalance.toLocaleString()}</p>
+                                        </div>
+                                        <div className={cn('border rounded-xl p-3', creditsAvailable <= 0 ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100')}>
+                                            <p className={cn('text-xs mb-1', creditsAvailable <= 0 ? 'text-red-400' : 'text-emerald-600')}>Disponibles</p>
+                                            <p className={cn('text-lg font-bold', creditsAvailable <= 0 ? 'text-red-600' : 'text-emerald-700')}>{creditsAvailable.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    {creditsAvailable <= 0 && (
+                                        <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                            <Zap className="w-3.5 h-3.5" />
+                                            Créditos agotados — el agente IA está en pausa. Compra créditos extra para reactivarlo.
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

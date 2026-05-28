@@ -22,6 +22,7 @@ interface ClinicData {
     ai_credits_used: number
     ai_credits_limit: number
     ai_credits_extra: number
+    ai_credits_unlimited: boolean
     // legacy column names as fallback
     ai_credits_monthly_limit: number
     ai_credits_extra_balance: number
@@ -76,7 +77,7 @@ export default function AdminClinics() {
             const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
             const response = await fetch(
-                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
+                `${supabaseUrl}/rest/v1/clinic_settings?select=id,clinic_name,created_at,activation_status,subscription_plan,trial_status,billing_status,trial_start_date,trial_end_date,currency,timezone,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_unlimited,ai_credits_monthly_limit,ai_credits_extra_balance,clinic_members(id,email,first_name,last_name,role,status),subscriptions(plan,status,current_period_end,trial_ends_at)&order=created_at.desc`,
                 {
                     headers: {
                         'apikey': supabaseKey,
@@ -392,6 +393,7 @@ export default function AdminClinics() {
                                                                         creditsUsed={clinic.ai_credits_used ?? 0}
                                                                         creditsLimit={clinic.ai_credits_limit ?? clinic.ai_credits_monthly_limit ?? 2000}
                                                                         creditsExtra={clinic.ai_credits_extra ?? clinic.ai_credits_extra_balance ?? 0}
+                                                                        unlimited={clinic.ai_credits_unlimited ?? false}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -416,11 +418,13 @@ function AdminAIUsage({
     creditsUsed,
     creditsLimit,
     creditsExtra,
+    unlimited = false,
 }: {
     clinicId: string
     creditsUsed: number
     creditsLimit: number
     creditsExtra: number
+    unlimited?: boolean
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
     const [isRefreshing, setIsRefreshing] = useState(false)
@@ -479,25 +483,36 @@ function AdminAIUsage({
 
     return (
         <div className="space-y-5">
+            {/* Banner ilimitado */}
+            {unlimited && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-violet-500/10 border border-violet-500/30 rounded-xl">
+                    <Sparkles className="w-4 h-4 text-violet-400 shrink-0" />
+                    <div>
+                        <p className="text-sm font-bold text-violet-300">Créditos Ilimitados Activos</p>
+                        <p className="text-xs text-gray-400">El agente IA nunca se silenciará por falta de créditos. El contador se resetea mensualmente de todas formas.</p>
+                    </div>
+                </div>
+            )}
+
             {/* Barra de uso */}
             <div className="space-y-3">
                 <div className="flex items-end justify-between">
                     <div className="flex gap-6">
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Créditos Usados</p>
-                            <p className={cn("text-2xl font-black", isOverLimit ? "text-red-400" : "text-white")}>{used.toLocaleString()}</p>
+                            <p className={cn("text-2xl font-black", !unlimited && isOverLimit ? "text-red-400" : "text-white")}>{used.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Límite Plan</p>
-                            <p className="text-2xl font-black text-gray-300">{creditsLimit.toLocaleString()}</p>
+                            <p className="text-2xl font-black text-gray-300">{unlimited ? '∞' : creditsLimit.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Créditos Extra</p>
-                            <p className="text-2xl font-black text-violet-400">{currentExtra.toLocaleString()}</p>
+                            <p className="text-2xl font-black text-violet-400">{unlimited ? '∞' : currentExtra.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Disponibles</p>
-                            <p className={cn("text-2xl font-black", remaining === 0 ? "text-red-400" : "text-emerald-400")}>{remaining.toLocaleString()}</p>
+                            <p className={cn("text-2xl font-black", unlimited ? "text-violet-400" : remaining === 0 ? "text-red-400" : "text-emerald-400")}>{unlimited ? '∞' : remaining.toLocaleString()}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -524,16 +539,20 @@ function AdminAIUsage({
                     <div
                         className={cn(
                             "h-full rounded-full transition-all duration-500",
+                            unlimited ? "bg-violet-500" :
                             isOverLimit ? "bg-red-500" :
                             percent > 80 ? "bg-amber-500" :
                             "bg-emerald-500"
                         )}
-                        style={{ width: `${percent}%` }}
+                        style={{ width: unlimited ? '100%' : `${percent}%` }}
                     />
                 </div>
 
                 <p className="text-xs text-gray-500">
-                    Total disponible: <span className="text-gray-300 font-medium">{creditsLimit.toLocaleString()} (plan) + {currentExtra.toLocaleString()} (extra) = {totalLimit.toLocaleString()}</span>
+                    {unlimited
+                        ? <>Contador actual: <span className="text-gray-300 font-medium">{used.toLocaleString()} créditos usados (sin límite de corte)</span></>
+                        : <>Total disponible: <span className="text-gray-300 font-medium">{creditsLimit.toLocaleString()} (plan) + {currentExtra.toLocaleString()} (extra) = {totalLimit.toLocaleString()}</span></>
+                    }
                 </p>
             </div>
 
