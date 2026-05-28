@@ -513,19 +513,21 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
 
     // Validate and clean date/time format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    // Safely handle time
+    // Safely handle time — convert any AM/PM format to 24h before validating
     let cleanTime = args.time || "";
 
-    // Extract HH:MM from something like "12:00 PM"
-    const timeMatch = typeof cleanTime === "string" ? cleanTime.match(/\d{1,2}:\d{2}/) : null;
-    if (timeMatch) {
-        cleanTime = timeMatch[0];
-        if (cleanTime.length === 4) cleanTime = "0" + cleanTime; // pad "9:00" to "09:00"
+    const timeMatchWithPeriod = typeof cleanTime === "string"
+        ? cleanTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i)
+        : null;
+    if (timeMatchWithPeriod) {
+        let h = parseInt(timeMatchWithPeriod[1]);
+        const m = timeMatchWithPeriod[2];
+        const period = (timeMatchWithPeriod[3] || "").toLowerCase().replace(/\./g, "");
+        if (period === "pm" && h !== 12) h += 12; // "5:00 PM" → 17
+        if (period === "am" && h === 12) h = 0;   // "12:00 AM" → 0
+        cleanTime = `${String(h).padStart(2, "0")}:${m}`;
     }
 
-    // Quick handle for "12 PM" -> "12:00"
-    // Though we told the AI strictly 24h format!
-    // We will trust it to send correct format but fallback just in case
     const timeRegex = /^\d{2}:\d{2}$/;
 
     if (!args.date || !args.time || !dateRegex.test(args.date) || !timeRegex.test(cleanTime)) {

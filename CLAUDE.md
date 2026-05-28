@@ -263,11 +263,11 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
   - Si no → solo confirma la cita al paciente sin mencionar pago
 - **Letras de pasos corregidas:** a) Franja horaria, b) Slots, c) Selección/Nombre, d) Registro (`create_appointment`), e) Confirmación/Pago
 
-#### Bug identificado pendiente de fix — `createAppt` tiempo AM/PM
-- **Síntoma:** `create_appointment` falla silenciosamente y el agente dice "el horario se acaba de ocupar"
-- **Causa raíz:** cuando el modelo envía hora como `"5:00 PM"` (en vez de `"17:00"`), el regex `/\d{1,2}:\d{2}/` extrae `"5:00"` e ignora el PM → padding → `"05:00"` (5 AM). `requestedTimeLabel` queda `"5:00 AM"` ≠ slot disponible `"5:00 PM"` → `isTimeAvailable = false` → `success: false`
-- **Efecto secundario:** el agente crea phantom bookings o le dice a la clienta que el horario se ocupó cuando en realidad el tool falló antes de insertar
-- **Fix pendiente:** reemplazar el parser de hora en `createAppt` (línea ~513) para manejar AM/PM correctamente antes de hacer la comparación
+#### ycloud-whatsapp-webhook — fix parser AM/PM en `createAppt`
+- **Síntoma:** `create_appointment` fallaba silenciosamente → agente decía "el horario se acaba de ocupar"
+- **Causa raíz:** regex `/\d{1,2}:\d{2}/` extraía `"5:00"` de `"5:00 PM"` e ignoraba el PM → padding → `"05:00"` (5 AM). `requestedTimeLabel` = `"5:00 AM"` ≠ slot disponible `"5:00 PM"` → `isTimeAvailable = false` → `success: false`
+- **Fix:** nuevo regex `/(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i` que convierte correctamente: `"5:00 PM"` → `"17:00"`, `"12:00 AM"` → `"00:00"`, `"17:00"` → `"17:00"` (sin cambios)
+- **Cobertura:** maneja `"5:00 PM"`, `"5:00 p.m."`, `"17:00"`, `"17:00 PM"`, `"12:00 AM"`, `"9:00 AM"` → siempre produce `HH:MM` en 24h
 
 ---
 
