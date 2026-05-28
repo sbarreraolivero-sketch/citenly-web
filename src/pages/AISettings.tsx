@@ -19,9 +19,7 @@ export default function AISettings() {
 
     const [aiCreditsMonthlyLimit, setAiCreditsMonthlyLimit] = useState(500)
     const [aiCreditsExtraBalance, setAiCreditsExtraBalance] = useState(0)
-    const [aiMessagesUsed, setAiMessagesUsed] = useState(0)
-    const [aiMessagesUsedStandard, setAiMessagesUsedStandard] = useState(0)
-    const [aiMessagesUsedPro, setAiMessagesUsedPro] = useState(0)
+    const [aiCreditsUsed, setAiCreditsUsed] = useState(0)
 
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
@@ -34,7 +32,7 @@ export default function AISettings() {
             try {
                 const { data: cs } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,payment_provider')
+                    .select('ai_active_model,ai_auto_respond,ai_credits_limit,ai_credits_extra,ai_credits_used,payment_provider')
                     .eq('id', profile.clinic_id)
                     .single()
 
@@ -44,17 +42,8 @@ export default function AISettings() {
                     setPaymentRegion(cs.payment_provider === 'lemonsqueezy' ? 'international' : 'chile')
                     setAiCreditsMonthlyLimit(cs.ai_credits_limit || 500)
                     setAiCreditsExtraBalance(cs.ai_credits_extra || 0)
+                    setAiCreditsUsed(cs.ai_credits_used || 0)
                 }
-
-                const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-                const [{ count: cStd }, { count: cPro }, { count: cMini }] = await Promise.all([
-                    (supabase as any).from('messages').select('*', { count: 'exact', head: true }).eq('clinic_id', profile.clinic_id).eq('ai_generated', true).eq('ai_model', '4o_standard').gte('created_at', startOfMonth),
-                    (supabase as any).from('messages').select('*', { count: 'exact', head: true }).eq('clinic_id', profile.clinic_id).eq('ai_generated', true).eq('ai_model', '4o_pro').gte('created_at', startOfMonth),
-                    (supabase as any).from('messages').select('*', { count: 'exact', head: true }).eq('clinic_id', profile.clinic_id).eq('ai_generated', true).or('ai_model.eq.mini,ai_model.is.null').gte('created_at', startOfMonth),
-                ])
-                setAiMessagesUsedStandard(cStd || 0)
-                setAiMessagesUsedPro(cPro || 0)
-                setAiMessagesUsed(cMini || 0)
             } catch (err) {
                 console.error('Error loading AI settings:', err)
             } finally {
@@ -96,7 +85,8 @@ export default function AISettings() {
     }
 
     const totalCredits = aiCreditsMonthlyLimit + aiCreditsExtraBalance
-    const totalUsed = aiMessagesUsed + (aiMessagesUsedStandard * 8) + (aiMessagesUsedPro * 60)
+    const totalUsed = aiCreditsUsed
+    const creditsAvailable = Math.max(0, totalCredits - totalUsed)
     const usagePct = Math.min(100, (totalUsed / (totalCredits || 1)) * 100)
 
     const currentPacks = paymentRegion === 'international' ? LS_CREDIT_PACKS : CREDIT_PACKS
@@ -251,25 +241,29 @@ export default function AISettings() {
                                     style={{ width: `${usagePct}%` }}
                                 />
                             </div>
-                            <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="grid grid-cols-4 gap-3 text-center">
                                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Mini (×1)</p>
-                                    <p className="text-lg font-bold text-gray-900">{aiMessagesUsed}</p>
+                                    <p className="text-xs text-gray-400 mb-1">Usados</p>
+                                    <p className="text-lg font-bold text-gray-900">{totalUsed.toLocaleString()}</p>
                                 </div>
                                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Standard (×8)</p>
-                                    <p className="text-lg font-bold text-gray-900">{aiMessagesUsedStandard}</p>
+                                    <p className="text-xs text-gray-400 mb-1">Límite Plan</p>
+                                    <p className="text-lg font-bold text-gray-900">{aiCreditsMonthlyLimit.toLocaleString()}</p>
                                 </div>
                                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Pro (×60)</p>
-                                    <p className="text-lg font-bold text-gray-900">{aiMessagesUsedPro}</p>
+                                    <p className="text-xs text-gray-400 mb-1">Extra</p>
+                                    <p className="text-lg font-bold text-gray-900">{aiCreditsExtraBalance.toLocaleString()}</p>
+                                </div>
+                                <div className={cn('border rounded-xl p-3', creditsAvailable <= 0 ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100')}>
+                                    <p className={cn('text-xs mb-1', creditsAvailable <= 0 ? 'text-red-400' : 'text-emerald-600')}>Disponibles</p>
+                                    <p className={cn('text-lg font-bold', creditsAvailable <= 0 ? 'text-red-600' : 'text-emerald-700')}>{creditsAvailable.toLocaleString()}</p>
                                 </div>
                             </div>
 
-                            {aiCreditsExtraBalance > 0 && (
-                                <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                                    <Check className="w-3.5 h-3.5" />
-                                    {aiCreditsExtraBalance.toLocaleString()} créditos extra disponibles
+                            {creditsAvailable <= 0 && (
+                                <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                    <Zap className="w-3.5 h-3.5" />
+                                    Créditos agotados — el agente IA está en pausa. Compra créditos extra para reactivarlo.
                                 </div>
                             )}
                         </div>

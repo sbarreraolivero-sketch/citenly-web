@@ -385,6 +385,7 @@ export default function AdminClinics() {
                                                                 <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 md:col-span-3">
                                                                     <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
                                                                         <Sparkles className="w-3.5 h-3.5 text-[#FF2E88]" /> Uso de Créditos IA (Ciclo Actual)
+                                                                        <span className="ml-auto text-[9px] text-gray-500 font-normal normal-case">Fuente: clinic_settings.ai_credits_used</span>
                                                                     </h4>
                                                                     <AdminAIUsage
                                                                         clinicId={clinic.id}
@@ -422,14 +423,35 @@ function AdminAIUsage({
     creditsExtra: number
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const [liveUsed, setLiveUsed] = useState(creditsUsed)
     const [currentExtra, setCurrentExtra] = useState(creditsExtra)
     const [addAmount, setAddAmount] = useState('500')
 
     const totalLimit = creditsLimit + currentExtra
-    const used = creditsUsed
+    const used = liveUsed
     const percent = totalLimit > 0 ? Math.min(100, Math.round((used / totalLimit) * 100)) : 0
     const remaining = Math.max(0, totalLimit - used)
     const isOverLimit = used >= totalLimit
+
+    const refreshData = async () => {
+        setIsRefreshing(true)
+        try {
+            const { data } = await (supabase as any)
+                .from('clinic_settings')
+                .select('ai_credits_used,ai_credits_extra')
+                .eq('id', clinicId)
+                .single()
+            if (data) {
+                setLiveUsed(data.ai_credits_used ?? 0)
+                setCurrentExtra(data.ai_credits_extra ?? 0)
+            }
+        } catch (err) {
+            console.error('Error refreshing credits:', err)
+        } finally {
+            setIsRefreshing(false)
+        }
+    }
 
     const handleAddCredits = async () => {
         if (isUpdating || !addAmount) return
@@ -478,7 +500,15 @@ function AdminAIUsage({
                             <p className={cn("text-2xl font-black", remaining === 0 ? "text-red-400" : "text-emerald-400")}>{remaining.toLocaleString()}</p>
                         </div>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={refreshData}
+                            disabled={isRefreshing}
+                            className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors text-gray-500 hover:text-gray-200 disabled:opacity-40"
+                            title="Refrescar datos de créditos"
+                        >
+                            <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
+                        </button>
                         <span className={cn(
                             "text-sm font-bold px-3 py-1 rounded-full",
                             isOverLimit ? "bg-red-500/20 text-red-400" :
