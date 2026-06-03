@@ -115,8 +115,8 @@ const getOptimalModel = (tier: number, strategy: string = 'auto'): string => {
 // =============================================
 // OpenAI Function Definitions (Agent Tools)
 // =============================================
-const getFunctions = (ownerEmail?: string) => {
-    const isElizabeth = ownerEmail?.toLowerCase() === 'elizabeth.zibaaa@gmail.com';
+const getFunctions = (requireDepositFirst: boolean = false) => {
+    const isElizabeth = requireDepositFirst;
     
     return [
     {
@@ -471,7 +471,7 @@ const getOffset = (timeZone: string = "America/Santiago", date: Date) => {
     } catch (e) { console.error("getOffset error", e); return "-03:00"; }
 };
 
-const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago") => {
+const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago", requireDepositFirst: boolean = false) => {
     const normalizedPhone = normalizePhone(phone);
     let duration = 60;
     let price = 0;
@@ -648,7 +648,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         .eq("clinic_id", clinicId)
         .eq("phone_number", normalizedPhone)
         .eq("service", args.service_name)
-        .in("status", ["pending", "confirmed"])
+        .in("status", ["pending", "pending_deposit", "confirmed"])
         .gte("appointment_date", twentyFourHoursAgo)
         .limit(1)
         .maybeSingle();
@@ -677,13 +677,15 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
     // ---------------------------------------
 
+    const appointmentStatus = requireDepositFirst ? "pending_deposit" : "pending";
+
     const { data, error } = await sb.from("appointments").insert({
         clinic_id: clinicId,
         patient_name: args.patient_name,
         phone_number: normalizedPhone,
         service: args.service_name,
         appointment_date: appointmentDateWithOffset,
-        status: "pending",
+        status: appointmentStatus,
         duration: duration,
         price: price,
         professional_id: professionalId
@@ -720,10 +722,22 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         return { success: false, message: "Error técnico: Cita no guardada correctamente." };
     }
 
+    const dateLabel = d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" });
+    const timeLabel = `${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
+
+    if (requireDepositFirst) {
+        return {
+            success: true,
+            status: "pending_deposit",
+            appointment_id: data.id,
+            message: `Horario reservado provisionalmente.\n\n📅 ${dateLabel}\n🕐 ${timeLabel}\n💆 ${args.service_name}\n\n⚠️ El turno queda reservado por 2 horas. Para confirmarlo definitivamente necesitas recibir el comprobante de transferencia. Una vez que lo envíen y lo verifiques llama a 'confirm_appointment' con response='yes'.`
+        };
+    }
+
     return {
         success: true,
         appointment_id: data.id,
-        message: `¡Cita agendada!\n\n📅 ${d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" })}\n🕐 ${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}\n💆 ${args.service_name}${professionalId ? ' (Profesional Asignado)' : ''}`
+        message: `¡Cita agendada!\n\n📅 ${dateLabel}\n🕐 ${timeLabel}\n💆 ${args.service_name}${professionalId ? ' (Profesional Asignado)' : ''}`
     };
 };
 
@@ -748,7 +762,7 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
         .select("*")
         .eq("clinic_id", clinicId)
         .eq("phone_number", normalizedPhone)
-        .in("status", ["pending", "confirmed"])
+        .in("status", ["pending", "pending_deposit", "confirmed"])
         .gte("appointment_date", twentyFourHoursAgo)
         .order("appointment_date", { ascending: true })
         .limit(1)
@@ -1344,7 +1358,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
     await debugLog(sb, `Tool execution: ${name}`, { args, phone });
     switch (name) {
         case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string);
-        case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone);
+        case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone, !!clinic?.require_deposit_first);
         case "get_services": return getServices(sb, clinicId);
         case "confirm_appointment":
         case "cancel_appointment": return confirmAppt(sb, clinicId, phone, name === "cancel_appointment" ? "no" : args.response as string);
@@ -1980,8 +1994,15 @@ ${lagRule}
        - REGLA DE ORO: SIEMPRE obtén el nombre real del humano.
        - NUNCA uses marcadores de posición como "[Nombre del Paciente]" o "Sin Nombre". Si no sabes el nombre, NO agendes y vuelve a preguntar.
    d) Registro: CUANDO TENGAS EL NOMBRE REAL Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
-   e) Confirmación: ${clinic.transfer_details
-        ? `NUNCA envíes los datos de transferencia ANTES de que 'create_appointment' devuelva 'success: true'. Una vez confirmada, envía los datos de pago:\n      ${clinic.transfer_details}`
+   e) Confirmación: ${clinic.require_deposit_first && clinic.transfer_details
+        ? `FLUJO CON ABONO PREVIO OBLIGATORIO — sigue este orden estrictamente:
+      1. Una vez que 'create_appointment' devuelva 'success: true', el turno queda reservado PROVISIONALMENTE por 2 horas.
+      2. Comunica al cliente que el horario está RESERVADO (no confirmado) y que para asegurarlo debe enviar el comprobante de transferencia. Usa exactamente este mensaje de pago:\n         ${clinic.transfer_details}
+      3. ESPERA a que el cliente envíe una IMAGEN (comprobante). Si solo dice "ya pagué" o "listo" sin imagen, EXIGE la imagen antes de continuar.
+      4. Cuando recibas la imagen, analízala visualmente. Si parece un comprobante bancario válido, llama a 'confirm_appointment' con response='yes'. Si no lo parece, pide que vuelva a enviar.
+      5. NUNCA uses 'confirm_appointment' con 'yes' si no has visto una imagen en este mismo chat.`
+        : clinic.transfer_details
+        ? `NUNCA envíes los datos de transferencia ANTES de que 'create_appointment' devuelva 'success: true'. Una vez agendada, envía los datos de pago:\n      ${clinic.transfer_details}`
         : `Una vez que 'create_appointment' devuelva 'success: true', confirma la cita al paciente con la fecha y hora acordadas.`
     }
 
@@ -2089,19 +2110,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 console.log(`[Hybrid AI] Message classified as N${tier}. Cost: ${creditCost}x. Model: ${optimalModel}`);
                 await debugLog(sb, `Hybrid Router: N${tier}`, { tier, model: optimalModel, cost: creditCost });
 
-                // Try to get owner email for dynamic functions scoping
-                let ownerEmail = undefined;
-                try {
-                    const { data: ownerMember } = await sb.from("clinic_members").select("user_id").eq("clinic_id", clinic.id).eq("role", "owner").limit(1).maybeSingle();
-                    if (ownerMember?.user_id) {
-                        const { data: ownerUser } = await sb.from("users").select("email").eq("id", ownerMember.user_id).limit(1).maybeSingle();
-                        if (ownerUser?.email) ownerEmail = ownerUser.email;
-                    }
-                } catch (e) {
-                    console.error("Error fetching owner email:", e);
-                }
-                
-                const dynamicFns = getFunctions(ownerEmail);
+                const dynamicFns = getFunctions(!!clinic?.require_deposit_first);
 
                 let res = await callAI(optimalModel, msgs, true, dynamicFns);
                 let assistant = res.choices[0].message;

@@ -82,6 +82,7 @@ export default function KnowledgeBase() {
     const [masterPrompt, setMasterPrompt] = useState('')
     const [behaviorRules, setBehaviorRules] = useState('')
     const [transferDetails, setTransferDetails] = useState('')
+    const [requireDepositFirst, setRequireDepositFirst] = useState(false)
     const [savingPrompt, setSavingPrompt] = useState(false)
     const [promptSaved, setPromptSaved] = useState(false)
     const [showPromptSection, setShowPromptSection] = useState(true)
@@ -123,12 +124,13 @@ export default function KnowledgeBase() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data } = await (supabase as any)
                 .from('clinic_settings')
-                .select('ai_personality, ai_behavior_rules, transfer_details')
+                .select('ai_personality, ai_behavior_rules, transfer_details, require_deposit_first')
                 .eq('id', profile.clinic_id)
                 .single()
             if (data?.ai_personality) setMasterPrompt(data.ai_personality)
             if (data?.ai_behavior_rules) setBehaviorRules(data.ai_behavior_rules)
             if (data?.transfer_details) setTransferDetails(data.transfer_details)
+            setRequireDepositFirst(data?.require_deposit_first ?? false)
         } catch (e) {
             console.error('Error fetching master prompt:', e)
         }
@@ -145,6 +147,7 @@ export default function KnowledgeBase() {
                     ai_personality: masterPrompt.trim(),
                     ai_behavior_rules: behaviorRules.trim(),
                     transfer_details: transferDetails.trim(),
+                    require_deposit_first: requireDepositFirst,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', profile.clinic_id)
@@ -548,6 +551,27 @@ export default function KnowledgeBase() {
                                 </div>
                             </GuideBox>
                         </div>
+                        {/* Toggle: Abono previo obligatorio */}
+                        <div className="mt-4 p-4 rounded-xl border border-orange-500/20 bg-orange-500/5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-semibold text-primary-theme flex items-center gap-2">
+                                        <span>🔒</span> Requerir abono antes de confirmar cita
+                                    </p>
+                                    <p className="text-xs text-secondary-theme mt-0.5">
+                                        El agente reserva el slot provisionalmente y pide el comprobante antes de confirmar. Requiere tener datos de pago configurados arriba.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setRequireDepositFirst(!requireDepositFirst)}
+                                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${requireDepositFirst ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${requireDepositFirst ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={handleSaveMasterPrompt}

@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.cron-expire-extra-credits]
 verify_jwt = false
+
+[functions.cron-cancel-pending-deposits]
+verify_jwt = false

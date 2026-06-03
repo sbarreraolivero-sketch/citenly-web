@@ -358,6 +358,45 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **Fix:** dos queries separadas — una **sin límite** para los totales del resumen, otra con `.limit(200)` para la tabla de display
 - Footer ahora muestra **"Mostrando N de M transacciones de \{mes\}"** dejando claro que la tabla es un subset
 
+### Cambios realizados — junio 2026 (sesión 11)
+
+#### Sistema de abono previo configurable (`require_deposit_first`)
+
+**Problema:** el agente creaba la cita con `status: pending` y luego pedía el comprobante, lo que hacía parecer que la cita estaba confirmada antes del pago. Clientes desconfiaban.
+
+**DB — migración `20260603000001_require_deposit_first.sql`:**
+- `require_deposit_first BOOLEAN DEFAULT false` en `clinic_settings`
+- Nuevo valor `'pending_deposit'` en el CHECK constraint de `appointments.status`
+- Índice `idx_appointments_pending_deposit` para que el cron sea eficiente
+- Elizabeth Microblading activada con `require_deposit_first = true` en producción
+
+**Webhook `ycloud-whatsapp-webhook` — cambios:**
+- `getFunctions(requireDepositFirst)` reemplaza el check hardcodeado `isElizabeth` — ahora el comportamiento se activa por DB flag
+- `createAppt` acepta `requireDepositFirst`: cuando es `true`, crea con `status: 'pending_deposit'` y retorna mensaje claro "reservado provisionalmente por 2h"
+- `confirmAppt` busca también en `status = 'pending_deposit'`
+- Auto-reschedule detection incluye `pending_deposit`
+- Prompt paso e): cuando `require_deposit_first = true`, el flujo es: mostrar datos de pago → ESPERAR imagen → verificar visualmente → `confirm_appointment` = `confirmed`
+- Eliminado bloque muerto de fetch del email del owner (ya no se necesita para `getFunctions`)
+- Deployado a producción
+
+**Nueva Edge Function `cron-cancel-pending-deposits`:**
+- Cancela citas `pending_deposit` creadas hace más de 2 horas sin comprobante recibido
+- Job pg_cron ID 17, schedule `0 * * * *` (cada hora)
+- `verify_jwt = false` en config.toml
+
+**Frontend:**
+- `utils.ts`: nuevo `badge-deposit` (naranja) para `getStatusColor` y `'Pend. Abono'` en `getStatusLabel`
+- `index.css`: clase `.badge-deposit` color naranja
+- `Appointments.tsx`: status `pending_deposit` en el tipo, nueva tab "Pend. Abono", ícono `Banknote`, botones "Confirmar Abono" / "Cancelar" en ambas vistas (tabla y tarjeta)
+- `KnowledgeBase.tsx`: toggle "Requerir abono antes de confirmar cita" junto a los datos de transferencia; guarda `require_deposit_first` en `clinic_settings`
+
+**Nuevo flujo para clínicas con `require_deposit_first = true`:**
+1. Cliente elige servicio y horario
+2. `create_appointment` → `status: pending_deposit` (slot bloqueado)
+3. IA: "Tu horario está **reservado** por 2h. Para confirmarlo, envía el comprobante de $X.XXX"
+4. Cliente envía imagen → IA la ve con visión → si es válida, llama `confirm_appointment` → `confirmed`
+5. Si no llega comprobante en 2h → cron cancela automáticamente
+
 ### Cambios realizados — mayo 2026 (sesión 10)
 
 #### Sistema de permisos individuales por miembro de equipo

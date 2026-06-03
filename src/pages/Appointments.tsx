@@ -22,7 +22,8 @@ import {
     ChevronRight,
     Trash2,
     MessageCircle,
-    Lightbulb
+    Lightbulb,
+    Banknote
 } from 'lucide-react'
 import { cn, formatPhoneNumber, getStatusColor, getStatusLabel } from '@/lib/utils'
 import toast, { Toaster } from 'react-hot-toast'
@@ -44,7 +45,7 @@ interface Appointment {
     service: string
     appointment_date: string
     appointment_time: string
-    status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+    status: 'pending' | 'pending_deposit' | 'confirmed' | 'cancelled' | 'completed'
     notes: string | null
     google_event_id?: string | null
     professional_id?: string | null
@@ -64,6 +65,7 @@ interface ClinicProfessional {
 
 const tabs = [
     { id: 'all', label: 'Todas' },
+    { id: 'pending_deposit', label: 'Pend. Abono' },
     { id: 'pending', label: 'Pendientes' },
     { id: 'confirmed', label: 'Confirmadas' },
     { id: 'completed', label: 'Completadas' },
@@ -93,7 +95,7 @@ export default function Appointments() {
         notes: '',
         professional_id: '',
         box_id: '',
-        status: 'confirmed' as 'pending' | 'confirmed' | 'cancelled' | 'completed'
+        status: 'confirmed' as 'pending' | 'pending_deposit' | 'confirmed' | 'cancelled' | 'completed'
     })
     const [services, setServices] = useState<any[]>([])
     const [professionals, setProfessionals] = useState<ClinicProfessional[]>([])
@@ -695,6 +697,8 @@ export default function Appointments() {
                 return <CheckCircle2 className="w-3.5 h-3.5" />
             case 'pending':
                 return <AlertCircle className="w-3.5 h-3.5" />
+            case 'pending_deposit':
+                return <Banknote className="w-3.5 h-3.5" />
             case 'cancelled':
                 return <XCircle className="w-3.5 h-3.5" />
             case 'completed':
@@ -1271,6 +1275,23 @@ export default function Appointments() {
                                         </td>
                                         <td className="py-4 px-6 text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                {appointment.status === 'pending_deposit' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                                                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 rounded-soft transition-all flex items-center gap-1"
+                                                        >
+                                                            <Banknote className="w-3 h-3" />
+                                                            Confirmar Abono
+                                                        </button>
+                                                        <button
+                                                            onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                                                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-soft transition-all"
+                                                        >
+                                                            Cancelar
+                                                        </button>
+                                                    </>
+                                                )}
                                                 {appointment.status === 'pending' && (
                                                     <>
                                                         <button
@@ -1418,6 +1439,23 @@ export default function Appointments() {
 
                                 {/* Footer: Actions */}
                                 <div className="flex gap-2 pt-1 border-t border-theme mt-1 pb-1">
+                                    {appointment.status === 'pending_deposit' && (
+                                        <>
+                                            <button
+                                                onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                                                className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 rounded-xl transition-all flex justify-center items-center gap-1"
+                                            >
+                                                <Banknote className="w-3.5 h-3.5" />
+                                                Conf. Abono
+                                            </button>
+                                            <button
+                                                onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                                                className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </>
+                                    )}
                                     {appointment.status === 'pending' && (
                                         <>
                                             <button

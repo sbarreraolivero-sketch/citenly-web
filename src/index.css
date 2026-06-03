@@ -102,6 +102,10 @@
     @apply badge bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)];
   }
 
+  .badge-deposit {
+    @apply badge bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_10px_rgba(249,115,22,0.1)];
+  }
+
   .badge-confirmed {
     @apply badge bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)];
   }

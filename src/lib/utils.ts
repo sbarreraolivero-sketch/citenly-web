@@ -48,6 +48,7 @@ export function getInitials(name: string): string {
 export function getStatusColor(status: string): string {
     const colors: Record<string, string> = {
         pending: 'badge-pending',
+        pending_deposit: 'badge-deposit',
         confirmed: 'badge-confirmed',
         cancelled: 'badge-cancelled',
         completed: 'badge-completed',
@@ -58,6 +59,7 @@ export function getStatusColor(status: string): string {
 export function getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
         pending: 'Pendiente',
+        pending_deposit: 'Pend. Abono',
         confirmed: 'Confirmada',
         cancelled: 'Cancelada',
         completed: 'Completada',
