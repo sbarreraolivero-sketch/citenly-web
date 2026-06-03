@@ -65,12 +65,12 @@ Deno.serve(async (req) => {
       }
 
       const { error: ledgerError } = await supabase
-        .from('ai_credits_ledger')
+        .from('ai_credit_transactions')
         .insert({
           clinic_id: clinic.id,
           amount: monthlyAllowance,
-          type: 'recharge',
-          description: `Recarga Mensual Automática (Aniversario día ${new Date(clinic.created_at).getDate()})`,
+          type: 'monthly_refill',
+          description: `Recarga mensual automática (aniversario día ${new Date(clinic.created_at).getDate()})`,
           metadata: {
             previous_used: previousUsed,
             monthly_limit: monthlyAllowance,
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
           }
         })
 
-      if (ledgerError) console.error(`Error registrando ledger para ${clinic.id}:`, ledgerError)
+      if (ledgerError) console.error(`Error registrando transacción para ${clinic.id}:`, ledgerError)
 
       console.log(`Recarga exitosa para: ${clinic.clinic_name || clinic.id} (usado anterior: ${previousUsed})`)
     }

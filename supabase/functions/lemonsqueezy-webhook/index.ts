@@ -170,12 +170,12 @@ Deno.serve(async (req: Request) => {
                 // Update clinic settings
                 await supabase
                     .from('clinic_settings')
-                    .update({ 
+                    .update({
                         subscription_plan: plan,
                         payment_provider: 'lemonsqueezy',
                         lemonsqueezy_customer_id: String(payload.data.attributes.customer_id || ''),
                         max_users: maxUsers,
-                        ai_credits_monthly_limit: plan === 'essence' ? 50 : 1000000, // Just a large number for illimited
+                        ai_credits_limit: ['enterprise','prestige'].includes(plan) ? 16000 : ['pro','radiance'].includes(plan) ? 8000 : ['starter','essence'].includes(plan) ? 4000 : 500,
                     })
                     .eq('id', clinicId);
 

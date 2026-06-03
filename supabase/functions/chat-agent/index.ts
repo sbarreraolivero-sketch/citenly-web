@@ -1,5 +1,4 @@
-import "https://deno.land/x/xhr@0.3.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { corsHeaders } from "../_shared/cors.ts";
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
@@ -21,7 +20,7 @@ Sé amable, claro y usa viñetas o pasos simples para explicar.
 Si te piden ayuda técnica compleja, recomienda contactar a 'soporte técnico humano' desde el menú.`,
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     // Manejo de CORS (Preflight)
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });

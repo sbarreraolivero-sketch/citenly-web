@@ -155,7 +155,7 @@ const PLANS = [
         description: 'Agente IA en WhatsApp + gestión completa para quien trabaja sola o con un equipo pequeño.',
         gradient: 'from-emerald-500 to-emerald-700',
         highlight: false,
-        features: ['2 usuarios · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '2.000 créditos IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', 'Campañas básicas (50/mes)'],
+        features: ['2 usuarios · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '4.000 créditos IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', 'Campañas básicas (50/mes)'],
         cta: 'Agendar Implementación',
     },
     {
@@ -166,7 +166,7 @@ const PLANS = [
         gradient: 'from-[#FF2E88] to-[#c0236a]',
         highlight: true,
         badge: 'Más Popular',
-        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', '5.000 créditos IA/mes', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
+        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', '8.000 créditos IA/mes', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
         cta: 'Agendar Implementación',
     },
     {
@@ -176,7 +176,7 @@ const PLANS = [
         description: 'Infraestructura empresarial para controlar hasta 2 sucursales desde un solo panel. Más sucursales, contactar ventas.',
         gradient: 'from-[#1a1a2e] to-[#0f0f23]',
         highlight: false,
-        features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', '12.000 créditos IA/mes', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
+        features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', '16.000 créditos IA/mes', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
         cta: 'Agendar Implementación',
     },
 ]
