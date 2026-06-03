@@ -776,7 +776,23 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
     if (!appt) return { message: "No encontré una cita pendiente para confirmar en este momento (podría ser porque ya está confirmada o no existe)." };
     const status = response === "yes" ? "confirmed" : "cancelled";
     await sb.from("appointments").update({ status, confirmation_received: true, confirmation_response: response }).eq("id", appt.id);
-    return status === "confirmed" ? { message: "¡Cita confirmada! 😊" } : { message: "Cita cancelada. ¿Reagendar?" };
+
+    if (status === "cancelled") return { message: "Cita cancelada. ¿Reagendar?" };
+
+    // Devolver la fecha y hora exactas de la cita confirmada para que el agente
+    // no tenga que inferirlas del historial (evita confusión cuando hay múltiples citas)
+    const apptDate = new Date(appt.appointment_date);
+    const dateLabel = apptDate.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric", timeZone: "America/Santiago" });
+    const timeLabel = apptDate.toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Santiago" });
+    return {
+        message: "¡Cita confirmada! 😊",
+        confirmed_appointment: {
+            date: dateLabel,
+            time: timeLabel,
+            service: appt.service,
+            instruction: `IMPORTANTE: Comunica al paciente que su cita de ${appt.service} quedó confirmada para el ${dateLabel} a las ${timeLabel}. Usa EXACTAMENTE estos datos — NO uses fechas u horas de otros mensajes del chat.`
+        }
+    };
 };
 
 const upsertProspect = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { name?: string; email?: string; service_interest?: string; notes?: string }) => {
