@@ -121,8 +121,8 @@ const getFunctions = (requireDepositFirst: boolean = false) => {
     return [
     {
         name: "check_availability",
-        description: "Verifica disponibilidad para NUEVAS citas. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). NO la uses para confirmar citas ya existentes. Usa time_of_day para filtrar por franja horaria.",
-        parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado por el paciente (opcional)" }, time_of_day: { type: "string", enum: ["morning", "afternoon"], description: "Franja horaria: 'morning' = antes de las 13:00 (mañana), 'afternoon' = desde las 13:00 (tarde/después del almuerzo)" } }, required: ["date"] }
+        description: "Verifica disponibilidad para NUEVAS citas. CRÍTICO: Debes inferir el nombre del servicio del historial de conversación (ej. 'Microblading', 'Cejas'). NO la uses para confirmar citas ya existentes. Usa time_of_day para filtrar por franja horaria y min_time cuando el paciente especifica una hora mínima exacta.",
+        parameters: { type: "object", properties: { date: { type: "string", description: "Fecha YYYY-MM-DD" }, service_name: { type: "string", description: "Nombre del servicio inferido del contexto" }, professional_name: { type: "string", description: "Nombre, cargo o título del profesional solicitado por el paciente (opcional)" }, time_of_day: { type: "string", enum: ["morning", "afternoon"], description: "Franja horaria: 'morning' = antes de las 13:00 (mañana), 'afternoon' = desde las 13:00 (tarde/después del almuerzo)" }, min_time: { type: "string", description: "Hora mínima en formato HH:MM (24h). Úsala cuando el paciente diga 'después de las X', 'a partir de las X', 'no antes de las X'. Ej: 'después de las 5' → '17:00', 'a partir de las 6 PM' → '18:00', 'después de las 3' → '15:00'." } }, required: ["date"] }
     },
     {
         name: "create_appointment",
@@ -345,7 +345,7 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
 // =============================================
 // Tool Implementations
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicObj?: any, timeOfDay?: string) => {
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicObj?: any, timeOfDay?: string, minTime?: string) => {
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
@@ -428,6 +428,11 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 if (timeOfDay === 'morning') return hour < 13;
                 if (timeOfDay === 'afternoon') return hour >= 13;
                 return true;
+            })
+            .filter((s: any) => {
+                if (!minTime) return true;
+                // minTime is "HH:MM" in 24h — keep only slots at or after that time
+                return s.slot_time.substring(0, 5) >= minTime;
             })
             .map((s: any) => {
                 const t = s.slot_time.substring(0, 5);
@@ -1357,7 +1362,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
     console.log(`[processFunc] Calling: ${name}`, args);
     await debugLog(sb, `Tool execution: ${name}`, { args, phone });
     switch (name) {
-        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string);
+        case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string, args.min_time as string | undefined);
         case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone, !!clinic?.require_deposit_first);
         case "get_services": return getServices(sb, clinicId);
         case "confirm_appointment":
@@ -1988,6 +1993,7 @@ ${lagRule}
       - Mañana = antes de las 13:00. Tarde = después del almuerzo (13:00 en adelante).
       - Si ya lo indicó (ej: "en la tarde", "después de las 4", "por la mañana", "a las 5 PM"), úsalo directamente sin preguntar de nuevo.
       - Usa time_of_day='morning' para mañana, time_of_day='afternoon' para tarde.
+      - HORA MÍNIMA EXACTA: Si el paciente menciona una hora específica como límite inferior ("después de las 5", "a partir de las 6", "no antes de las 4:30", "solo después de las 17"), DEBES pasar también min_time en formato HH:MM (24h). Ejemplos: "después de las 5" → min_time='17:00'; "a partir de las 6 PM" → min_time='18:00'; "después de las 3" → min_time='15:00'; "solo después de las 4:30" → min_time='16:30'. Nunca ignores esta restricción horaria del paciente.
       - NUNCA muestres todos los horarios del día juntos: solo la franja solicitada. No lances 20 o 30 horarios de golpe.
    b) Ofrecer Slots: Llama a 'check_availability' con la franja correspondiente y muestra las opciones disponibles.
    c) Selección y Nombre: Pide el horario que más le acomode y su NOMBRE COMPLETO REAL.
