@@ -397,6 +397,33 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 4. Cliente envía imagen → IA la ve con visión → si es válida, llama `confirm_appointment` → `confirmed`
 5. Si no llega comprobante en 2h → cron cancela automáticamente
 
+#### Fix: `min_time` en `check_availability` para restricciones horarias exactas
+
+**Problema:** cuando el cliente decía "después de las 5" o "solo a partir de las 6", el agente usaba `time_of_day='afternoon'` (corte fijo en 13:00) y mostraba slots desde las 4 PM, ignorando la restricción real.
+
+**Fix:**
+- Nuevo parámetro `min_time: string` (formato `HH:MM` 24h) en `checkAvail` y en el schema del tool
+- El filtro aplica `slot_time >= min_time` sobre los slots ya filtrados por `time_of_day`
+- Prompt actualizado: cuando el paciente menciona una hora mínima ("después de las 5", "a partir de las 6 PM", "solo después de las 4:30"), el agente debe pasar `min_time` en formato 24h. Ejemplos: `"después de las 5"` → `min_time='17:00'`; `"a partir de las 6 PM"` → `min_time='18:00'`
+
+#### Fix: `confirmAppt` devuelve fecha/hora exacta — evita confusión con múltiples citas
+
+**Problema:** cuando un cliente tenía más de una cita activa (ej: una de hoy confirmada por recordatorio + una pending_deposit para mañana), al responder "Sí, confirmo", `confirmAppt` actualizaba la cita correcta en la DB pero devolvía solo `"¡Cita confirmada! 😊"` sin datos. El agente entonces buscaba la fecha en el historial del chat y confundía las citas, respondiendo con la fecha incorrecta.
+
+**Fix:** `confirmAppt` ahora devuelve:
+```json
+{
+  "message": "¡Cita confirmada! 😊",
+  "confirmed_appointment": {
+    "date": "miércoles, 3 de junio",
+    "time": "6:00 PM",
+    "service": "Evaluación de Microblading",
+    "instruction": "IMPORTANTE: usa EXACTAMENTE estos datos — NO uses fechas de otros mensajes del chat."
+  }
+}
+```
+El campo `instruction` dentro del resultado del tool obliga al agente a usar los datos correctos y no inferirlos del contexto.
+
 ### Cambios realizados — mayo 2026 (sesión 10)
 
 #### Sistema de permisos individuales por miembro de equipo
