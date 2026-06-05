@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
     Sparkles, ArrowRight, Check, Bot, Calendar, MessageSquare, Bell,
-    TrendingUp, Users, Star, BarChart3, ChevronDown, Zap, Crown,
+    TrendingUp, Users, Star, BarChart3, ChevronDown, Zap, Crown, Gift, Award, Share2,
 } from 'lucide-react'
 import { AIChatWidget } from '../components/AIChatWidget'
 
@@ -380,6 +380,111 @@ export default function Landing() {
                                     <p className="text-sm text-white/70 leading-relaxed">{mod.desc}</p>
                                     {mod.preview}
                                 </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Fidelización ─────────────────────────────────────────── */}
+            <section className="px-6 py-24 bg-[#0D0D17] border-t border-white/5">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16 reveal">
+                        <div className="inline-block px-4 py-1.5 bg-violet-500/10 border border-violet-500/20 text-violet-300 rounded-full text-xs font-black uppercase tracking-widest mb-4">
+                            Fidelización
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl font-black text-white">
+                            Tus clientas vuelven solas.<br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-[#FF2E88]">Y traen amigas.</span>
+                        </h2>
+                        <p className="text-white/60 mt-3 text-lg max-w-2xl mx-auto">
+                            Un programa de puntos, cashback y referidos que premia la lealtad y convierte el boca a boca en un canal medible.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6 mb-12">
+                        {/* Billetera de puntos */}
+                        <div className="reveal reveal-delay-1 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
+                            <div className="bg-gradient-to-br from-violet-600 to-violet-800 p-5 flex items-start justify-between">
+                                <div>
+                                    <p className="text-violet-200 text-xs font-black uppercase tracking-widest mb-1">01</p>
+                                    <h3 className="text-xl font-black text-white">Billetera de Puntos</h3>
+                                </div>
+                                <Gift className="w-8 h-8 text-white/40" />
+                            </div>
+                            <div className="p-5">
+                                <p className="text-sm text-white/70 leading-relaxed mb-4">Cada cita acumula saldo. Tú decides el modo: puntos clásicos, cashback en dinero real o porcentaje de descuento para la próxima visita.</p>
+                                <div className="space-y-2">
+                                    {['Puntos clásicos canjeables', 'Cashback en dinero real', '% descuento próxima cita', 'Ajuste manual por profesional'].map(f => (
+                                        <div key={f} className="flex items-center gap-2">
+                                            <div className="w-4 h-4 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
+                                                <Check className="w-2.5 h-2.5 text-violet-400" strokeWidth={3} />
+                                            </div>
+                                            <span className="text-xs text-white/60 font-medium">{f}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Programa de referidos */}
+                        <div className="reveal reveal-delay-2 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
+                            <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-5 flex items-start justify-between">
+                                <div>
+                                    <p className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-1">02</p>
+                                    <h3 className="text-xl font-black text-white">Programa de Referidos</h3>
+                                </div>
+                                <Share2 className="w-8 h-8 text-white/40" />
+                            </div>
+                            <div className="p-5">
+                                <p className="text-sm text-white/70 leading-relaxed mb-4">Cada clienta tiene un <strong className="text-white">Magic Link</strong> que abre WhatsApp de tu clínica con el código ya escrito. La amiga agenda — ambas ganan puntos automáticamente.</p>
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">Flujo automático</p>
+                                    <div className="space-y-2 text-xs text-white/60">
+                                        <p>① Clienta comparte su Magic Link</p>
+                                        <p>② Amiga abre WhatsApp de la clínica</p>
+                                        <p>③ Agenda su primera cita</p>
+                                        <p className="text-emerald-400 font-bold">④ Ambas reciben bono automáticamente</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Catálogo de recompensas */}
+                        <div className="reveal reveal-delay-3 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
+                            <div className="bg-gradient-to-br from-fuchsia-600 to-fuchsia-800 p-5 flex items-start justify-between">
+                                <div>
+                                    <p className="text-fuchsia-200 text-xs font-black uppercase tracking-widest mb-1">03</p>
+                                    <h3 className="text-xl font-black text-white">Catálogo de Recompensas</h3>
+                                </div>
+                                <Award className="w-8 h-8 text-white/40" />
+                            </div>
+                            <div className="p-5">
+                                <p className="text-sm text-white/70 leading-relaxed mb-4">Define qué pueden canjear tus clientas con el saldo acumulado. Descuentos, tratamientos gratis o productos — tú decides el catálogo.</p>
+                                <div className="space-y-2">
+                                    {['Descuento en dinero ($)', 'Porcentaje de descuento (%)', 'Tratamiento gratuito', 'Ranking de embajadoras'].map(f => (
+                                        <div key={f} className="flex items-center gap-2">
+                                            <div className="w-4 h-4 rounded-full bg-fuchsia-500/20 flex items-center justify-center shrink-0">
+                                                <Check className="w-2.5 h-2.5 text-fuchsia-400" strokeWidth={3} />
+                                            </div>
+                                            <span className="text-xs text-white/60 font-medium">{f}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stats strip */}
+                    <div className="reveal grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        {[
+                            { value: '5×', label: 'más barato retener que adquirir' },
+                            { value: '30%', label: 'más gasto promedio en clientes con puntos' },
+                            { value: '100%', label: 'boca a boca rastreable y con incentivo' },
+                        ].map(s => (
+                            <div key={s.value} className="text-center bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                                <p className="text-2xl font-black text-violet-400">{s.value}</p>
+                                <p className="text-[10px] text-white/40 font-medium mt-1 leading-tight">{s.label}</p>
                             </div>
                         ))}
                     </div>
