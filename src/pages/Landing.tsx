@@ -141,7 +141,7 @@ const PLANS = [
         id: 'core', name: 'Core', icon: Sparkles,
         tagline: 'Gestión completa sin IA conversacional.',
         priceUSD: 39,
-        description: 'Todo lo necesario para gestionar tu centro sin depender de mensajería manual.',
+        description: 'Todo lo necesario para gestionar tu negocio pero sin IA conversacional',
         gradient: 'from-slate-500 to-slate-700',
         highlight: false,
         features: ['1 usuario · 1 agenda', 'Dashboard + métricas', 'Calendario de citas (manual)', 'Fichas de clientas', 'Módulo de finanzas', 'Sistema de referidos'],
@@ -149,12 +149,12 @@ const PLANS = [
     },
     {
         id: 'starter', name: 'Starter', icon: Zap,
-        tagline: 'Para esteticistas independientes.',
-        priceUSD: 99,
-        description: 'Agente IA en WhatsApp + gestión completa para quien trabaja sola o con un equipo pequeño.',
+        tagline: 'Para profesionales independientes.',
+        priceUSD: 67,
+        description: 'Recepcionista IA en WhatsApp entrenada con tu marca + gestión completa para profesionales independientes',
         gradient: 'from-emerald-500 to-emerald-700',
         highlight: false,
-        features: ['2 usuarios · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '4.000 créditos IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', 'Campañas básicas (50/mes)'],
+        features: ['1 usuario · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '4.000 créditos IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', 'Campañas básicas (50/mes)'],
         cta: 'Agendar Implementación',
     },
     {
@@ -450,7 +450,7 @@ export default function Landing() {
                             </div>
                             <div className="space-y-4">
                                 {[
-                                    ['Desde US$99 / mes', 'Plan Starter — sin contrato, sin finiquito, sin cotizaciones previsionales'],
+                                    ['Desde US$67 / mes', 'Plan Starter — sin contrato, sin finiquito, sin cotizaciones previsionales'],
                                     ['Responde en menos de 5 segundos, 24/7', 'Incluidos domingos, festivos y madrugadas'],
                                     ['Siempre en su mejor versión', 'Sin fatiga, sin errores por distracción, sin mal día'],
                                     ['Sin interrupciones operativas', 'Cuando tu equipo falla, la clínica sigue atendiendo'],

@@ -1590,7 +1590,7 @@ export default function Settings() {
                                                     <Sparkles className="w-3.5 h-3.5 text-[#FF2E88]" />
                                                     <p className="text-xs font-medium text-gray-500">
                                                         {subscription?.plan === 'core' ? 'Gestión completa sin IA conversacional' :
-                                                         subscription?.plan === 'starter' ? 'Agente IA WhatsApp para independientes' :
+                                                         subscription?.plan === 'starter' ? 'Recepcionista IA en WhatsApp entrenada con tu marca' :
                                                          subscription?.plan === 'pro' ? 'IA completa, recordatorios y citas ilimitadas' :
                                                          subscription?.plan === 'enterprise' ? 'Infraestructura completa para múltiples sedes' :
                                                          'Prueba gratuita · 7 días de acceso total'}
@@ -1734,7 +1734,7 @@ export default function Settings() {
                                                         "bg-amber-100 text-amber-700"
                                                     )}>
                                                         {planId === 'core' ? 'Gestión sin IA conversacional' :
-                                                         planId === 'starter' ? 'Para esteticistas independientes' :
+                                                         planId === 'starter' ? '1 usuario · 1 agenda con IA' :
                                                          planId === 'pro' ? 'Para clínicas en pleno crecimiento' :
                                                          'Para redes de salones y multi-sucursal'}
                                                     </div>

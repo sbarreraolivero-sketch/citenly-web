@@ -13,7 +13,7 @@ if (MP_PUBLIC_KEY) {
 
 const plans = [
     { id: 'core',       name: 'Core',       price: 33000,  priceUSD: 33,  popular: false },
-    { id: 'starter',    name: 'Starter',    price: 89000,  priceUSD: 89,  popular: false },
+    { id: 'starter',    name: 'Starter',    price: 67000,  priceUSD: 67,  popular: false },
     { id: 'pro',        name: 'Pro',        price: 149000, priceUSD: 149, popular: true  },
     { id: 'enterprise', name: 'Enterprise', price: 349000, priceUSD: 349, popular: false },
 ]
