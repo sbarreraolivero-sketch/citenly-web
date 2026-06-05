@@ -12,10 +12,10 @@ if (MP_PUBLIC_KEY) {
 }
 
 const plans = [
-    { id: 'core',       name: 'Core',       price: 33000,  priceUSD: 33,  popular: false },
-    { id: 'starter',    name: 'Starter',    price: 67000,  priceUSD: 67,  popular: false },
-    { id: 'pro',        name: 'Pro',        price: 149000, priceUSD: 149, popular: true  },
-    { id: 'enterprise', name: 'Enterprise', price: 349000, priceUSD: 349, popular: false },
+    { id: 'enterprise', name: 'Enterprise', price: 282000, priceUSD: 297, popular: false },
+    { id: 'pro',        name: 'Pro',        price: 159000, priceUSD: 167, popular: true  },
+    { id: 'starter',    name: 'Starter',    price: 92000,  priceUSD: 97,  popular: false },
+    { id: 'core',       name: 'Core',       price: 33000,  priceUSD: 39,  popular: false },
 ]
 
 export default function Register() {
@@ -446,7 +446,7 @@ export default function Register() {
                                     <div className="border border-gray-200 rounded-soft p-4 bg-white min-h-[400px]">
                                         <CardPayment
                                             initialization={{
-                                                amount: plans.find(p => p.id === selectedPlan)?.price || 149000
+                                                amount: plans.find(p => p.id === selectedPlan)?.price || 159000
                                             }}
                                             customization={{
                                                 visual: {

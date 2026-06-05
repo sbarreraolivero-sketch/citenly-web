@@ -138,44 +138,47 @@ const MODULES = [
 // ── Plans ────────────────────────────────────────────────────────────────────
 const PLANS = [
     {
+        id: 'enterprise', name: 'Enterprise', icon: Crown,
+        tagline: 'Redes de salones y multi-sucursal.',
+        priceUSD: 297,
+        annualUSD: 2851,
+        description: 'Infraestructura empresarial para controlar hasta 2 sucursales desde un solo panel. Más sucursales, contactar ventas.',
+        gradient: 'from-[#1a1a2e] to-[#0f0f23]',
+        highlight: false,
+        features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', 'Conversaciones ilimitadas', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
+        cta: 'Agendar Implementación',
+    },
+    {
+        id: 'pro', name: 'Pro', icon: Zap,
+        tagline: 'Para centros estéticos en crecimiento.',
+        priceUSD: 167,
+        annualUSD: 1603,
+        description: 'La solución completa para captar, retener y automatizar tu clínica de estética.',
+        gradient: 'from-[#FF2E88] to-[#c0236a]',
+        highlight: true,
+        badge: 'Más Popular',
+        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', 'Conversaciones ilimitadas', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
+        cta: 'Agendar Implementación',
+    },
+    {
+        id: 'starter', name: 'Starter', icon: Zap,
+        tagline: 'Para profesionales independientes.',
+        priceUSD: 97,
+        annualUSD: 931,
+        description: 'Recepcionista IA en WhatsApp entrenada con tu marca + gestión completa para profesionales independientes',
+        gradient: 'from-emerald-500 to-emerald-700',
+        highlight: false,
+        features: ['1 usuario · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '200 conversaciones IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', '¿Más de 100 citas? Pasa a Pro →'],
+        cta: 'Agendar Implementación',
+    },
+    {
         id: 'core', name: 'Core', icon: Sparkles,
         tagline: 'Gestión completa sin IA conversacional.',
         priceUSD: 39,
         description: 'Todo lo necesario para gestionar tu negocio pero sin IA conversacional',
         gradient: 'from-slate-500 to-slate-700',
         highlight: false,
-        features: ['1 usuario · 1 agenda', 'Dashboard + métricas', 'Calendario de citas (manual)', 'Fichas de clientas', 'Módulo de finanzas', 'Sistema de referidos'],
-        cta: 'Agendar Implementación',
-    },
-    {
-        id: 'starter', name: 'Starter', icon: Zap,
-        tagline: 'Para profesionales independientes.',
-        priceUSD: 67,
-        description: 'Recepcionista IA en WhatsApp entrenada con tu marca + gestión completa para profesionales independientes',
-        gradient: 'from-emerald-500 to-emerald-700',
-        highlight: false,
-        features: ['1 usuario · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '4.000 créditos IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', 'Campañas básicas (50/mes)'],
-        cta: 'Agendar Implementación',
-    },
-    {
-        id: 'pro', name: 'Pro', icon: Zap,
-        tagline: 'Para centros estéticos en crecimiento.',
-        priceUSD: 169,
-        description: 'La solución completa para captar, retener y automatizar tu clínica de estética.',
-        gradient: 'from-[#FF2E88] to-[#c0236a]',
-        highlight: true,
-        badge: 'Más Popular',
-        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', '8.000 créditos IA/mes', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
-        cta: 'Agendar Implementación',
-    },
-    {
-        id: 'enterprise', name: 'Enterprise', icon: Crown,
-        tagline: 'Redes de salones y multi-sucursal.',
-        priceUSD: 299,
-        description: 'Infraestructura empresarial para controlar hasta 2 sucursales desde un solo panel. Más sucursales, contactar ventas.',
-        gradient: 'from-[#1a1a2e] to-[#0f0f23]',
-        highlight: false,
-        features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', '16.000 créditos IA/mes', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
+        features: ['1 usuario · 1 agenda', 'Dashboard + métricas', 'Calendario de citas (manual)', 'Fichas de clientas', 'Módulo de finanzas', 'Sistema de referidos', 'Sin recordatorios automáticos', 'Recordatorios desde Plan Starter →'],
         cta: 'Agendar Implementación',
     },
 ]
@@ -450,7 +453,7 @@ export default function Landing() {
                             </div>
                             <div className="space-y-4">
                                 {[
-                                    ['Desde US$67 / mes', 'Plan Starter — sin contrato, sin finiquito, sin cotizaciones previsionales'],
+                                    ['Desde US$97 / mes', 'Plan Starter — sin contrato, sin finiquito, sin cotizaciones previsionales'],
                                     ['Responde en menos de 5 segundos, 24/7', 'Incluidos domingos, festivos y madrugadas'],
                                     ['Siempre en su mejor versión', 'Sin fatiga, sin errores por distracción, sin mal día'],
                                     ['Sin interrupciones operativas', 'Cuando tu equipo falla, la clínica sigue atendiendo'],
@@ -552,6 +555,11 @@ export default function Landing() {
                                         </div>
                                         {currency !== 'USD' && (
                                             <p className="text-white/30 text-[10px] mt-0.5">≈ US${plan.priceUSD}/mes</p>
+                                        )}
+                                        {(plan as any).annualUSD && (
+                                            <p className="text-emerald-400 text-[10px] font-bold mt-1">
+                                                Pago anual: US${(plan as any).annualUSD} · <span className="text-emerald-300">2 meses gratis</span>
+                                            </p>
                                         )}
                                     </div>
                                 </div>

@@ -4,28 +4,56 @@ import { cn } from '@/lib/utils'
 
 const plans = [
     {
-        id: 'core',
-        name: 'Core',
-        tagline: 'Gestión completa sin IA conversacional.',
-        promise: 'Todo lo necesario para gestionar tu negocio pero sin IA conversacional',
-        icon: Star,
-        gradient: 'from-slate-500 to-slate-700',
+        id: 'enterprise',
+        name: 'Enterprise',
+        tagline: 'Para redes de salones y multi-sucursal.',
+        promise: 'Infraestructura completa para escalar múltiples sedes.',
+        icon: Crown,
+        gradient: 'from-amber-500 to-orange-600',
         highlight: false,
         badge: null,
-        cta: 'Comenzar con Core',
-        priceCLP: 33000,
-        priceUSD: 33,
+        cta: 'Contactar Ventas',
+        priceCLP: 282000,
+        priceUSD: 297,
+        annualPriceCLP: 2715000,
+        annualPriceUSD: 2851,
         features: [
-            '1 usuario · 1 agenda',
-            'Dashboard con métricas en tiempo real',
-            'Calendario de citas (gestión manual)',
-            'Fichas de clientes e historial de servicios',
-            'CRM de prospectos',
-            'Sistema de referidos',
-            'Módulo de finanzas y reportes',
+            'Todo lo de Pro, más:',
+            'Usuarios y agendas ilimitados',
+            'Multi-sucursal con dashboard unificado',
+            'Conversaciones ilimitadas',
+            'Recordatorios ilimitados',
+            'IA personalizada por servicio',
+            'Super Administrador',
+            'Soporte prioritario 24/7',
+        ],
+        upsells: [],
+    },
+    {
+        id: 'pro',
+        name: 'Pro',
+        tagline: 'Para clínicas en pleno crecimiento.',
+        promise: 'IA completa, recordatorios, campañas y citas ilimitadas.',
+        icon: Zap,
+        gradient: 'from-[#FF2E88] to-[#c0236a]',
+        highlight: true,
+        badge: 'Más Popular',
+        cta: 'Elegir Pro',
+        priceCLP: 159000,
+        priceUSD: 167,
+        annualPriceCLP: 1527000,
+        annualPriceUSD: 1603,
+        features: [
+            'Todo lo de Starter, más:',
+            'Hasta 5 usuarios',
+            '5 agendas independientes',
+            'IA GPT-4o — citas ilimitadas',
+            'Conversaciones ilimitadas',
+            'Recordatorios automáticos (250/mes)',
+            'Encuestas de satisfacción',
+            'Soporte prioritario',
         ],
         upsells: [
-            'Recordatorios automáticos — packs opcionales',
             'Mensajería masiva de marketing segmentada',
         ],
     },
@@ -39,69 +67,49 @@ const plans = [
         highlight: false,
         badge: null,
         cta: 'Comenzar con Starter',
-        priceCLP: 67000,
-        priceUSD: 67,
+        priceCLP: 92000,
+        priceUSD: 97,
+        annualPriceCLP: 883000,
+        annualPriceUSD: 931,
         features: [
             'Todo lo de Core, más:',
             '1 usuario · 1 agenda',
             'Agente IA WhatsApp (GPT-4o mini)',
-            '4.000 créditos IA incluidos/mes',
+            '200 conversaciones IA/mes',
             'Hasta 100 citas automatizadas/mes',
             '100 recordatorios/mes',
+            '¿Más de 100 citas/mes? Pasa a Pro →',
         ],
         upsells: [
             'Mensajería masiva de marketing segmentada',
         ],
     },
     {
-        id: 'pro',
-        name: 'Pro',
-        tagline: 'Para clínicas en pleno crecimiento.',
-        promise: 'IA completa, recordatorios, campañas y citas ilimitadas.',
-        icon: Zap,
-        gradient: 'from-[#FF2E88] to-[#c0236a]',
-        highlight: true,
-        badge: 'Más Popular',
-        cta: 'Elegir Pro',
-        priceCLP: 149000,
-        priceUSD: 149,
-        features: [
-            'Todo lo de Starter, más:',
-            'Hasta 5 usuarios',
-            '5 agendas independientes',
-            'IA GPT-4o — citas ilimitadas',
-            '4.000 créditos IA incluidos/mes',
-            'Recordatorios automáticos (250/mes)',
-            'Encuestas de satisfacción',
-            'Soporte prioritario',
-        ],
-        upsells: [
-            'Mensajería masiva de marketing segmentada',
-        ],
-    },
-    {
-        id: 'enterprise',
-        name: 'Enterprise',
-        tagline: 'Para redes de salones y multi-sucursal.',
-        promise: 'Infraestructura completa para escalar múltiples sedes.',
-        icon: Crown,
-        gradient: 'from-amber-500 to-orange-600',
+        id: 'core',
+        name: 'Core',
+        tagline: 'Gestión completa sin IA conversacional.',
+        promise: 'Todo lo necesario para gestionar tu negocio pero sin IA conversacional',
+        icon: Star,
+        gradient: 'from-slate-500 to-slate-700',
         highlight: false,
         badge: null,
-        cta: 'Contactar Ventas',
-        priceCLP: 349000,
-        priceUSD: 349,
+        cta: 'Comenzar con Core',
+        priceCLP: 33000,
+        priceUSD: 39,
         features: [
-            'Todo lo de Pro, más:',
-            'Usuarios y agendas ilimitados',
-            'Multi-sucursal con dashboard unificado',
-            '12.000 créditos IA incluidos/mes',
-            'Recordatorios ilimitados',
-            'IA personalizada por servicio',
-            'Super Administrador',
-            'Soporte prioritario 24/7',
+            '1 usuario · 1 agenda',
+            'Dashboard con métricas en tiempo real',
+            'Calendario de citas (gestión manual)',
+            'Fichas de clientes e historial de servicios',
+            'CRM de prospectos',
+            'Sistema de referidos',
+            'Módulo de finanzas y reportes',
+            'Sin recordatorios automáticos',
+            'Recordatorios automáticos desde Plan Starter →',
         ],
-        upsells: [],
+        upsells: [
+            'Mensajería masiva de marketing segmentada',
+        ],
     },
 ]
 
@@ -139,9 +147,14 @@ export default function Pricing() {
     const getPrice = (plan: typeof plans[0]) => {
         const base = currency === 'CLP' ? plan.priceCLP : plan.priceUSD
         if (billingPeriod === 'annual') {
-            return Math.round(base * 10 / 12)
+            return Math.round(base * 0.8)
         }
         return base
+    }
+
+    const getAnnualTotal = (plan: typeof plans[0]) => {
+        if (currency === 'CLP') return (plan as any).annualPriceCLP
+        return (plan as any).annualPriceUSD
     }
 
     const formatPrice = (price: number) => {
@@ -218,7 +231,7 @@ export default function Pricing() {
                                 <>
                                     Anual
                                     <span className="text-[10px] bg-emerald-400 text-emerald-900 px-1.5 py-0.5 rounded-full font-black">
-                                        -17%
+                                        2 meses gratis
                                     </span>
                                 </>
                             )}
@@ -268,9 +281,14 @@ export default function Pricing() {
                                             {formatPrice(getPrice(plan))}
                                         </span>
                                         <span className="text-white/30 text-sm font-medium">/mes</span>
+                                        {billingPeriod === 'annual' && (
+                                            <span className="ml-1 text-[10px] bg-emerald-400/20 text-emerald-400 border border-emerald-400/30 px-2 py-0.5 rounded-full font-black">20% off</span>
+                                        )}
                                     </div>
-                                    {billingPeriod === 'annual' && (
-                                        <p className="text-emerald-400 text-xs font-bold mt-1">2 meses gratis</p>
+                                    {billingPeriod === 'annual' && getAnnualTotal(plan) && (
+                                        <p className="text-emerald-400 text-xs font-bold mt-1">
+                                            Total anual: {formatPrice(getAnnualTotal(plan))} · <span className="text-white/40 font-normal">2 meses gratis</span>
+                                        </p>
                                     )}
                                     <p className="text-white/40 text-xs mt-2 leading-tight">{plan.promise}</p>
                                 </div>
