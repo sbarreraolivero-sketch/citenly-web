@@ -434,6 +434,7 @@ function AdminAIUsage({
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [liveUsed, setLiveUsed] = useState(creditsUsed)
     const [currentExtra, setCurrentExtra] = useState(creditsExtra)
+    const [liveExpiresAt, setLiveExpiresAt] = useState<string | null>(creditsExpiresAt)
     const [addAmount, setAddAmount] = useState('500')
 
     const totalLimit = creditsLimit + currentExtra
@@ -442,17 +443,30 @@ function AdminAIUsage({
     const remaining = Math.max(0, totalLimit - used)
     const isOverLimit = used >= totalLimit
 
+    const getRestHeaders = async () => {
+        const { data: { session } } = await supabase.auth.getSession()
+        return {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+            'Authorization': `Bearer ${session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation',
+        }
+    }
+
     const refreshData = async () => {
         setIsRefreshing(true)
         try {
-            const { data } = await (supabase as any)
-                .from('clinic_settings')
-                .select('ai_credits_used,ai_credits_extra')
-                .eq('id', clinicId)
-                .single()
-            if (data) {
-                setLiveUsed(data.ai_credits_used ?? 0)
-                setCurrentExtra(data.ai_credits_extra ?? 0)
+            const headers = await getRestHeaders()
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const res = await fetch(
+                `${supabaseUrl}/rest/v1/clinic_settings?select=ai_credits_used,ai_credits_extra,ai_credits_extra_expires_at&id=eq.${clinicId}`,
+                { headers }
+            )
+            const rows = await res.json()
+            if (rows?.[0]) {
+                setLiveUsed(rows[0].ai_credits_used ?? 0)
+                setCurrentExtra(rows[0].ai_credits_extra ?? 0)
+                setLiveExpiresAt(rows[0].ai_credits_extra_expires_at ?? null)
             }
         } catch (err) {
             console.error('Error refreshing credits:', err)
@@ -469,23 +483,35 @@ function AdminAIUsage({
             const newExtra = currentExtra + amount
             const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-            const { error } = await (supabase as any)
-                .from('clinic_settings')
-                .update({
-                    ai_credits_extra: newExtra,
-                    ai_credits_extra_balance: newExtra,
-                    ai_credits_extra_expires_at: expiresAt,
-                })
-                .eq('id', clinicId)
+            const headers = await getRestHeaders()
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 
-            if (error) throw error
+            const res = await fetch(
+                `${supabaseUrl}/rest/v1/clinic_settings?id=eq.${clinicId}`,
+                {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({
+                        ai_credits_extra: newExtra,
+                        ai_credits_extra_balance: newExtra,
+                        ai_credits_extra_expires_at: expiresAt,
+                    }),
+                }
+            )
 
-            setCurrentExtra(newExtra)
+            if (!res.ok) {
+                const body = await res.text()
+                throw new Error(`HTTP ${res.status}: ${body}`)
+            }
+
+            // Verificar que realmente se actualizó leyendo desde la DB
+            await refreshData()
+
             const expDate = new Date(expiresAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
             alert(`${amount} créditos extra cargados correctamente. Vencen el ${expDate}.`)
         } catch (err) {
             console.error('Error adding credits:', err)
-            alert('Error al cargar créditos')
+            alert('Error al cargar créditos. Verifica los permisos del panel HQ.')
         } finally {
             setIsUpdating(false)
         }
@@ -519,12 +545,12 @@ function AdminAIUsage({
                         <div>
                             <p className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Créditos Extra</p>
                             <p className="text-2xl font-black text-violet-400">{unlimited ? '∞' : currentExtra.toLocaleString()}</p>
-                            {!unlimited && currentExtra > 0 && creditsExpiresAt && (
+                            {!unlimited && currentExtra > 0 && liveExpiresAt && (
                                 <p className="text-[9px] text-amber-400 font-bold mt-0.5">
-                                    Vence {new Date(creditsExpiresAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
+                                    Vence {new Date(liveExpiresAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}
                                 </p>
                             )}
-                            {!unlimited && currentExtra > 0 && !creditsExpiresAt && (
+                            {!unlimited && currentExtra > 0 && !liveExpiresAt && (
                                 <p className="text-[9px] text-emerald-400 font-bold mt-0.5">Sin vencimiento</p>
                             )}
                         </div>

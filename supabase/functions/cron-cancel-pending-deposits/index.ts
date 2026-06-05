@@ -5,9 +5,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const CRON_SECRET = Deno.env.get("CRON_SECRET") || ""
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Reject requests that don't carry the shared cron secret
+  if (CRON_SECRET) {
+    const incomingSecret = req.headers.get("x-cron-secret") || ""
+    if (incomingSecret !== CRON_SECRET) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
   }
 
   try {

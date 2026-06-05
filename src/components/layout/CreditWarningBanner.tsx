@@ -24,11 +24,17 @@ export function CreditWarningBanner() {
                 // Fetch settings with unified credits
                 const { data: settings } = await (supabase as any)
                     .from('clinic_settings')
-                    .select('ai_credits_used, ai_credits_limit, ai_credits_extra')
+                    .select('ai_credits_used, ai_credits_limit, ai_credits_extra, ai_credits_unlimited')
                     .eq('id', profile.clinic_id)
                     .single()
 
                 if (!settings) return
+
+                // Clínicas con créditos ilimitados nunca muestran el banner
+                if (settings.ai_credits_unlimited) {
+                    setWarning(null)
+                    return
+                }
 
                 const totalLimit = (settings.ai_credits_limit || 500) + (settings.ai_credits_extra || 0)
                 const used = settings.ai_credits_used || 0

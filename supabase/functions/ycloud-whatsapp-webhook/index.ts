@@ -1630,6 +1630,9 @@ const verifyYCloudSignature = async (rawBody: string, signatureHeader: string, s
         const signature = parts['s'];
         if (!timestamp || !signature) return false;
 
+        // Reject requests with a timestamp older than 5 minutes (replay attack protection)
+        if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
+
         // Payload: {timestamp}.{rawBody}
         const encoder = new TextEncoder();
         const payload = `${timestamp}.${rawBody}`;
@@ -2021,7 +2024,12 @@ ${lagRule}
       1. Una vez que 'create_appointment' devuelva 'success: true', el turno queda reservado PROVISIONALMENTE por 2 horas.
       2. Comunica al cliente que el horario está RESERVADO (no confirmado) y que para asegurarlo debe enviar el comprobante de transferencia. Usa exactamente este mensaje de pago:\n         ${clinic.transfer_details}
       3. ESPERA a que el cliente envíe una IMAGEN (comprobante). Si solo dice "ya pagué" o "listo" sin imagen, EXIGE la imagen antes de continuar.
-      4. Cuando recibas la imagen, analízala visualmente. Si parece un comprobante bancario válido, llama a 'confirm_appointment' con response='yes'. Si no lo parece, pide que vuelva a enviar.
+      4. Cuando recibas la imagen, analízala visualmente con estos criterios ESTRICTOS EN ESTE ORDEN:
+         a) ¿Es un comprobante bancario real y legible? Si no lo es, pide que vuelva a enviar.
+         b) ¿El MONTO del comprobante coincide con el monto del abono que solicitaste en el paso 2? El monto correcto es el que aparece en los datos de transferencia que le enviaste al cliente. COMPARA el número en el comprobante contra ese monto exacto.
+            - Si el monto ES DIFERENTE al abono (por ejemplo, pagaron el valor del tratamiento completo en vez del abono): NO llames a 'confirm_appointment'. Responde: "Recibí tu comprobante, pero el monto es distinto al abono de reserva solicitado. Si corresponde a otro concepto, nuestro equipo lo revisará. Para confirmar tu turno, necesitas enviar el comprobante del abono indicado."
+            - Si el monto COINCIDE: pasa al criterio c).
+         c) Solo si AMBAS condiciones se cumplen (comprobante real + monto correcto), llama a 'confirm_appointment' con response='yes'.
       5. NUNCA uses 'confirm_appointment' con 'yes' si no has visto una imagen en este mismo chat.`
         : clinic.transfer_details
         ? `NUNCA envíes los datos de transferencia ANTES de que 'create_appointment' devuelva 'success: true'. Una vez agendada, envía los datos de pago:\n      ${clinic.transfer_details}`

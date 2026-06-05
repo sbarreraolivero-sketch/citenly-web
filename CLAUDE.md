@@ -358,6 +358,71 @@ El payload de YCloud no incluía `from: ycloud_phone_number` → error HTTP 400/
 - **Fix:** dos queries separadas — una **sin límite** para los totales del resumen, otra con `.limit(200)` para la tabla de display
 - Footer ahora muestra **"Mostrando N de M transacciones de \{mes\}"** dejando claro que la tabla es un subset
 
+### Cambios realizados — junio 2026 (sesión 12)
+
+#### Fix: carga de créditos extra desde HQ no persistía en DB
+
+**Síntoma:** al cargar créditos a una clínica desde `AdminClinics.tsx`, el alert decía "cargados correctamente" y el contador se actualizaba visualmente, pero al refrescar la página volvía al valor anterior.
+
+**Causa raíz:** `handleAddCredits` usaba `supabase.from('clinic_settings').update()` — el cliente JS con el JWT del admin HQ. Las RLS policies de `clinic_settings` solo permiten escritura al miembro de esa clínica, no al admin HQ. Supabase silencia el fallo: retorna `{ error: null }` aunque actualice 0 filas, así que el código nunca detectaba el problema y actualizaba el estado local igual.
+
+**Fix en `AdminClinics.tsx`:**
+- `handleAddCredits` ahora usa `fetch()` con método `PATCH` directo a la REST API (mismo patrón que `fetchClinics`)
+- Si el servidor retorna status no-OK, lanza error real con el body
+- Después del PATCH llama `refreshData()` para leer el valor desde la DB y confirmar que realmente se guardó
+- `refreshData` también migrado al patrón REST para consistencia
+- Agregado estado `liveExpiresAt` (antes era solo prop sin estado local) — ahora la fecha de vencimiento se actualiza visualmente al cargar créditos sin recargar página
+
+#### Fix: `CreditWarningBanner` aparecía para clínicas con créditos ilimitados
+
+**Síntoma:** Elizabeth Microblading (`ai_credits_unlimited = true`) veía el banner "¡Citenly Credits agotados! La IA ha dejado de responder" aunque la IA nunca se apaga para cuentas unlimited.
+
+**Causa raíz:** `CreditWarningBanner.tsx` no consultaba `ai_credits_unlimited`. Calculaba el porcentaje `used/totalLimit` y mostraba el banner si superaba 90%, sin importar si la clínica era unlimited. Con `ai_credits_used` alto y `ai_credits_limit` bajo, el porcentaje siempre disparaba la alerta.
+
+**Fix en `CreditWarningBanner.tsx`:**
+- La query ahora incluye `ai_credits_unlimited` en el select
+- Si `settings.ai_credits_unlimited === true`, hace `setWarning(null)` y retorna inmediatamente — el banner nunca aparece
+- El comportamiento para clínicas normales (`unlimited = false`) no cambia
+
+### Cambios realizados — junio 2026 (sesión 13)
+
+#### Revisión de seguridad — 3 fixes en webhooks y crons
+
+##### Fix: `verifyYCloudSignature` — protección contra replay attacks
+
+**Vulnerabilidad:** el timestamp incluido en el header `ycloud-signature` (`t={ts},s={hex}`) se extraía y usaba para construir el payload HMAC, pero nunca se comparaba contra la hora actual. Un atacante con acceso a un webhook válido capturado (logs, proxy) podía reenviarlo horas o días después y pasaba la verificación.
+
+**Fix en `ycloud-whatsapp-webhook/index.ts`:**
+- Después de extraer `timestamp`, se verifica `abs(Date.now()/1000 - parseInt(timestamp)) > 300`
+- Si la diferencia supera 5 minutos → `return false` (rechazado)
+- La ventana de 5 min es estándar en la industria (Stripe, Twilio, YCloud usan el mismo valor)
+
+##### Fix: `lemonsqueezy-webhook` — fail closed sin secret
+
+**Vulnerabilidad:** `verifySignature` retornaba `!LEMONSQUEEZY_WEBHOOK_SECRET`, lo que equivalía a `true` si el secret no estaba configurado. Con el secret ausente en producción, cualquier POST sin firma era aceptado — un atacante podía crear suscripciones o añadir créditos sin pagar.
+
+**Fix en `lemonsqueezy-webhook/index.ts`:**
+- `return !LEMONSQUEEZY_WEBHOOK_SECRET` → `return false`
+- El webhook ahora falla cerrado en ambos casos: sin firma Y sin secret configurado
+
+##### Fix: `cron-cancel-pending-deposits` — header secreto compartido
+
+**Vulnerabilidad:** `verify_jwt = false` (requerido por pg_cron) combinado con CORS `*` dejaba el endpoint invocable por cualquiera que conociera la URL, pudiendo disparar cancelaciones masivas de citas `pending_deposit`.
+
+**Fix en `cron-cancel-pending-deposits/index.ts`:**
+- Lee `CRON_SECRET` desde env vars
+- Si el secret está seteado, valida que el header `x-cron-secret` coincida exactamente; de lo contrario retorna 401
+- El check es condicional (`if (CRON_SECRET)`) — si el secret no está configurado, la función sigue operando sin bloquear el cron (fail-open intencional para no romper producción antes de setear el secreto)
+
+**Pasos de activación requeridos:**
+1. `supabase secrets set CRON_SECRET=<valor> --project-ref hubjqllcmbzoojyidgcu`
+2. Actualizar Job ID 17 en pg_cron para incluir `"x-cron-secret":"<valor>"` en el `headers` JSON
+3. Deploy de las 3 funciones
+
+**Nota:** los fixes #1 (mercadopago-webhook sin verificación de firma) y #4 (AdminClinics URL injection teórico) quedaron pendientes de esta sesión — ver Tareas pendientes.
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 11)
 
 #### Sistema de abono previo configurable (`require_deposit_first`)
@@ -514,12 +579,21 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 - [ ] **CRM auto-cierre** — `pg_cron` que mueve prospectos con `appointment_date < NOW()` al stage "Cerrado" (diariamente 06:00 UTC)
 - [ ] **Packs de créditos de campaña** — sistema de compra via LemonSqueezy (`campaign_credits_balance` en subscriptions); la función `redirectToLemonCampaignCreditsCheckout` ya existe en `lemonsqueezy.ts`, falta el balance en DB
 
+### Media prioridad — seguridad
+- [ ] **`mercadopago-webhook` sin verificación de firma** — `x-signature` se lee pero nunca se valida. MP usa formato `ts=...,v1=...`; implementar HMAC SHA-256 con `MERCADOPAGO_WEBHOOK_SECRET`. Sin esto, cualquier actor puede forjar pagos apuntando a un `clinic_id` conocido.
+
 ### Baja prioridad — deuda técnica
 - [ ] **Eliminar** `console.log` de producción (~299 en el webhook)
 - [ ] **`getConversations()`** en `supabase.ts` — carga todos los mensajes sin paginación (función no usada actualmente pero podría serlo)
 - [ ] **React Query** — infraestructura lista en `main.tsx` (`QueryClientProvider`), pendiente adoptar en fetches de componentes
 - [ ] **`switchClinic()`** en `AuthContext.tsx` usa `window.location.reload()` — reemplazar por reset de estado limpio
 - [ ] **Configurar Resend** — `send-invite-email` ya llama a Resend, solo falta configurar `RESEND_API_KEY` como secret en Supabase y verificar dominio de envío
+
+## Tareas completadas (sesión 13)
+
+- [x] **Replay attack en `verifyYCloudSignature`** — check `abs(now - timestamp) > 300s` agregado
+- [x] **`lemonsqueezy-webhook` fail-open sin secret** — cambiado `return !LEMONSQUEEZY_WEBHOOK_SECRET` → `return false`
+- [x] **`cron-cancel-pending-deposits` sin auth** — guard `x-cron-secret` con `CRON_SECRET` env var (pendiente activar en producción)
 
 ## Tareas completadas (verificadas en sesión 10)
 

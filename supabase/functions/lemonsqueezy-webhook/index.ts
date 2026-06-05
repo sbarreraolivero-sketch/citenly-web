@@ -14,8 +14,8 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
  */
 function verifySignature(payload: string, signature: string | null): boolean {
     if (!signature || !LEMONSQUEEZY_WEBHOOK_SECRET) {
-        console.warn("Missing signature or webhook secret — skipping verification");
-        return !LEMONSQUEEZY_WEBHOOK_SECRET; // Allow if secret not configured (dev mode)
+        console.warn("Missing signature or webhook secret — rejecting request");
+        return false; // Fail closed: never accept without both signature and secret
     }
 
     const hmac = createHmac("sha256", LEMONSQUEEZY_WEBHOOK_SECRET);
