@@ -341,6 +341,17 @@ export default function AISettings() {
                                     )}
                                 </>
                             )}
+
+                            {/* Contexto de uso real */}
+                            <div className="flex items-start gap-2.5 px-4 py-3 bg-sky-50 border border-sky-100 rounded-xl">
+                                <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs font-bold text-sky-800 mb-0.5">¿Qué alcanza con 4.000 créditos?</p>
+                                    <p className="text-[11px] text-sky-700 leading-relaxed">
+                                        Según datos reales de clínicas activas en Citenly, <strong>4.000 créditos equivalen a entre 200 y 250 conversaciones al mes</strong> — más que suficiente para un profesional independiente con ~100 citas mensuales, considerando también consultas que no terminan en cita.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -354,62 +365,48 @@ export default function AISettings() {
                             </div>
                         </div>
                         <div className="p-5 space-y-4">
-                            {/* Cards de tier */}
-                            <div className="grid grid-cols-3 gap-3">
-                                {/* Tier 1 — Mini */}
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* GPT-4o Mini */}
                                 <div className="border border-emerald-100 bg-emerald-50/50 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center">
-                                            <Zap className="w-3.5 h-3.5 text-white" />
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shrink-0">
+                                            <Zap className="w-4 h-4 text-white" />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-gray-900 leading-none">GPT-4o Mini</p>
-                                            <p className="text-[10px] text-emerald-600 font-bold">×1 crédito / msg</p>
+                                            <p className="text-sm font-black text-gray-900 leading-none">GPT-4o Mini</p>
+                                            <p className="text-[10px] text-emerald-600 font-bold">×1 crédito / mensaje</p>
                                         </div>
                                     </div>
-                                    <p className="text-2xl font-black text-gray-900">{tierBreakdown.t1.toLocaleString()}</p>
-                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
-                                    <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between items-center">
-                                        <span className="text-[10px] text-gray-500">Créditos</span>
-                                        <span className="text-xs font-black text-emerald-700">{tierBreakdown.c1.toLocaleString()}</span>
+                                    <p className="text-[11px] text-gray-500 mb-3 leading-snug">
+                                        Saludos, consultas básicas y confirmaciones rápidas. Maneja el grueso de las interacciones con máxima eficiencia.
+                                    </p>
+                                    <p className="text-3xl font-black text-gray-900">{tierBreakdown.t1.toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes este ciclo</p>
+                                    <div className="mt-3 pt-3 border-t border-emerald-100 flex justify-between items-center">
+                                        <span className="text-[10px] text-gray-500 font-medium">Créditos consumidos</span>
+                                        <span className="text-sm font-black text-emerald-700">{tierBreakdown.c1.toLocaleString()}</span>
                                     </div>
                                 </div>
 
-                                {/* Tier 2 — Standard */}
-                                <div className="border border-pink-100 bg-pink-50/50 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-7 h-7 bg-[#FF2E88] rounded-lg flex items-center justify-center">
-                                            <RefreshCw className="w-3.5 h-3.5 text-white" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black text-gray-900 leading-none">GPT-4o Standard</p>
-                                            <p className="text-[10px] text-[#FF2E88] font-bold">×8 créditos / msg</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-2xl font-black text-gray-900">{tierBreakdown.t2.toLocaleString()}</p>
-                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
-                                    <div className="mt-2 pt-2 border-t border-pink-100 flex justify-between items-center">
-                                        <span className="text-[10px] text-gray-500">Créditos</span>
-                                        <span className="text-xs font-black text-[#FF2E88]">{tierBreakdown.c2.toLocaleString()}</span>
-                                    </div>
-                                </div>
-
-                                {/* Tier 3 — Pro */}
+                                {/* GPT-4o Pro (tier 2 + tier 3 combinados) */}
                                 <div className="border border-purple-100 bg-purple-50/50 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-7 h-7 bg-purple-600 rounded-lg flex items-center justify-center">
-                                            <Cpu className="w-3.5 h-3.5 text-white" />
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shrink-0">
+                                            <Cpu className="w-4 h-4 text-white" />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-gray-900 leading-none">GPT-4o Pro</p>
-                                            <p className="text-[10px] text-purple-600 font-bold">×60 créditos / msg</p>
+                                            <p className="text-sm font-black text-gray-900 leading-none">GPT-4o Pro</p>
+                                            <p className="text-[10px] text-purple-600 font-bold">×8–15 créditos / mensaje</p>
                                         </div>
                                     </div>
-                                    <p className="text-2xl font-black text-gray-900">{tierBreakdown.t3.toLocaleString()}</p>
-                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes</p>
-                                    <div className="mt-2 pt-2 border-t border-purple-100 flex justify-between items-center">
-                                        <span className="text-[10px] text-gray-500">Créditos</span>
-                                        <span className="text-xs font-black text-purple-700">{tierBreakdown.c3.toLocaleString()}</span>
+                                    <p className="text-[11px] text-gray-500 mb-3 leading-snug">
+                                        Agendamientos, disponibilidad, verificación de imágenes y comprobantes de pago. Se activa ante casos que requieren razonamiento avanzado.
+                                    </p>
+                                    <p className="text-3xl font-black text-gray-900">{(tierBreakdown.t2 + tierBreakdown.t3).toLocaleString()}</p>
+                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">mensajes este ciclo</p>
+                                    <div className="mt-3 pt-3 border-t border-purple-100 flex justify-between items-center">
+                                        <span className="text-[10px] text-gray-500 font-medium">Créditos consumidos</span>
+                                        <span className="text-sm font-black text-purple-700">{(tierBreakdown.c2 + tierBreakdown.c3).toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -418,7 +415,7 @@ export default function AISettings() {
                             <div className="flex items-start gap-2 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
                                 <Info className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
                                 <p className="text-[11px] text-gray-500 leading-relaxed">
-                                    El agente elige el modelo según la complejidad del mensaje. Mini para respuestas simples, Standard para conversaciones con contexto, Pro para casos que requieren máxima precisión.
+                                    El router IA elige el modelo según la complejidad. <strong className="text-gray-700">Mini</strong> para el 70% de los mensajes (saludos y consultas rápidas) · <strong className="text-gray-700">Pro</strong> para agendamientos, contexto extendido e imágenes.
                                 </p>
                             </div>
                         </div>

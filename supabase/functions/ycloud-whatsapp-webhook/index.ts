@@ -79,9 +79,9 @@ const VERCEL_AI_GATEWAY = Deno.env.get("VERCEL_AI_GATEWAY_URL") || "https://api.
 // Hybrid AI Architecture Constants & Helpers
 // =============================================
 const TIER_COSTS: Record<number, number> = {
-    1: 1,  // N1: Flash Mini
-    2: 8,  // N2: Standard
-    3: 60  // N3: Sovereign Pro
+    1: 1,  // N1: GPT-4o Mini — consultas simples, saludos, confirmaciones
+    2: 8,  // N2: GPT-4o Pro — agendamientos, disponibilidad, ventas
+    3: 15  // N3: GPT-4o Pro — imágenes, verificación de pago, casos complejos
 };
 
 const classifyMessage = (body: string, isImage: boolean): number => {

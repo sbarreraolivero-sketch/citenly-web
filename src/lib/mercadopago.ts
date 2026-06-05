@@ -148,7 +148,7 @@ export const PLANS = {
         monthlyAppointmentsMonthly: 100,
         maxUsers: 1,
         maxAgendas: 1,
-        aiCreditsLimit: 200,
+        aiCreditsLimit: 4000,
         remindersPerMonth: 100,
         features: [
             'Todo lo de Core, más:',

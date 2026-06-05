@@ -78,7 +78,16 @@ Flujo por mensaje entrante:
 
 **Cron mensual:** `cron-monthly-credit-recharge` resetea `ai_credits_used = 0` el día de aniversario de cada clínica. No toca `ai_credits_extra` (los extras tienen su propio ciclo de 30 días).
 
-**Tabla `ai_credit_transactions`:** registra consumos (type=`usage`), recargas (type=`monthly_refill`), compras (type=`purchase`), ajustes/expiraciones (type=`adjustment`). Tiene RLS SELECT para `clinic_members`. El desglose por modelo (tier 1/2/3) en `AISettings.tsx` se calcula desde esta tabla.
+**Tabla `ai_credit_transactions`:** registra consumos (type=`usage`), recargas (type=`monthly_refill`), compras (type=`purchase`), ajustes/expiraciones (type=`adjustment`). Tiene RLS SELECT para `clinic_members`. El desglose por modelo en `AISettings.tsx` se calcula desde esta tabla.
+
+**Costos por tier (TIER_COSTS en webhook):**
+- Tier 1 — GPT-4o Mini: **×1 crédito** — saludos, consultas simples, confirmaciones
+- Tier 2 — GPT-4o Pro: **×8 créditos** — agendamientos, disponibilidad, ventas
+- Tier 3 — GPT-4o Pro: **×15 créditos** — imágenes, verificación de pago, casos complejos (era ×60 antes de sesión 14)
+
+**Display en AISettings.tsx:** 2 cards (Mini + Pro). Tier 2 y Tier 3 se muestran combinados como "GPT-4o Pro" (mensajes = t2+t3, créditos = c2+c3). El routing híbrido sigue usando 3 tiers internamente.
+
+**Referencia real:** 4.000 créditos ≈ 200–250 conversaciones/mes (dato calculado desde cuenta Elizabeth Microblading, 1.548 conversaciones históricas, promedio 16,2 créditos/conversación).
 
 **Pool multi-sucursal:** configurar con `UPDATE clinic_settings SET parent_clinic_id = '<id_padre>' WHERE id = '<id_sucursal>'`. Los créditos se leen y descontan siempre del padre.
 
