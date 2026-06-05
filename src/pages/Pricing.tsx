@@ -48,7 +48,7 @@ const plans = [
             'Hasta 5 usuarios',
             '5 agendas independientes',
             'IA GPT-4o — citas ilimitadas',
-            'Conversaciones ilimitadas',
+            '8.000 créditos IA incluidos/mes',
             'Recordatorios automáticos (250/mes)',
             'Encuestas de satisfacción',
             'Soporte prioritario',
@@ -353,6 +353,16 @@ export default function Pricing() {
                     ))}
                 </div>
             </section>
+
+            {/* Nota contextual créditos */}
+            <div className="px-6 pb-10">
+                <div className="max-w-2xl mx-auto flex items-start gap-3 bg-white/[0.04] border border-white/10 rounded-xl px-5 py-4">
+                    <span className="text-lg shrink-0">💡</span>
+                    <p className="text-sm text-white/60 leading-relaxed">
+                        <strong className="text-white/90">¿Cuánto alcanza con 4.000 créditos?</strong> Según datos reales de clínicas activas en Citenly, equivalen a entre <strong className="text-white/90">200 y 250 conversaciones al mes</strong> — más que suficiente para un profesional independiente con ~100 citas mensuales.
+                    </p>
+                </div>
+            </div>
 
             {/* FAQ */}
             <section className="px-6 pb-20 bg-white/[0.02] border-t border-white/5">

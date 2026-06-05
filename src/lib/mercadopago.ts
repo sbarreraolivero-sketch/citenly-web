@@ -119,7 +119,7 @@ export const PLANS = {
         monthlyAppointmentsMonthly: -1,
         maxUsers: 5,
         maxAgendas: 5,
-        aiCreditsLimit: -1,
+        aiCreditsLimit: 8000,
         remindersPerMonth: 250,
         popular: true,
         features: [
@@ -127,7 +127,7 @@ export const PLANS = {
             'Hasta 5 usuarios',
             '5 agendas independientes',
             'IA GPT-4o — citas ilimitadas',
-            'Conversaciones ilimitadas',
+            '8.000 créditos IA incluidos/mes',
             'Recordatorios automáticos (250/mes)',
             'Encuestas de satisfacción',
             'Soporte prioritario',

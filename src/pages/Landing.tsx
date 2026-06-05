@@ -157,7 +157,7 @@ const PLANS = [
         gradient: 'from-[#FF2E88] to-[#c0236a]',
         highlight: true,
         badge: 'Más Popular',
-        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', 'Conversaciones ilimitadas', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
+        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', '8.000 créditos IA/mes', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
         cta: 'Agendar Implementación',
     },
     {
@@ -695,6 +695,16 @@ export default function Landing() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Nota contextual créditos */}
+                    <div className="max-w-2xl mx-auto mt-10 mb-2 reveal">
+                        <div className="flex items-start gap-3 bg-white/[0.04] border border-white/10 rounded-xl px-5 py-4">
+                            <span className="text-lg shrink-0">💡</span>
+                            <p className="text-sm text-white/60 leading-relaxed">
+                                <strong className="text-white/90">¿Cuánto alcanza con 4.000 créditos?</strong> Según datos reales de clínicas activas en Citenly, equivalen a entre <strong className="text-white/90">200 y 250 conversaciones al mes</strong> — más que suficiente para un profesional independiente con ~100 citas mensuales.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Garantía */}
