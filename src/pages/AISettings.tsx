@@ -29,6 +29,7 @@ export default function AISettings() {
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
     const [selectedAiModel, setSelectedAiModel] = useState<'mini' | '4o'>('mini')
     const [isLoading, setIsLoading] = useState(true)
+    const [poolClinicId, setPoolClinicId] = useState<string | undefined>(undefined)
 
     useEffect(() => {
         if (!profile?.clinic_id) return
@@ -54,7 +55,10 @@ export default function AISettings() {
                             .select('ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_used,ai_credits_unlimited')
                             .eq('id', cs.parent_clinic_id)
                             .single()
-                        if (parent) creditSource = parent
+                        if (parent) {
+                            creditSource = parent
+                            setPoolClinicId(cs.parent_clinic_id)
+                        }
                     }
 
                     setAiCreditsMonthlyLimit(creditSource.ai_credits_limit || 500)
@@ -490,7 +494,7 @@ export default function AISettings() {
                     {/* Historial de transacciones */}
                     {profile?.clinic_id && (
                         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden p-1">
-                            <AITransactionHistory clinicId={profile.clinic_id} />
+                            <AITransactionHistory clinicId={profile.clinic_id} poolClinicId={poolClinicId} />
                         </div>
                     )}
                 </>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
@@ -24,20 +24,24 @@ interface Transaction {
 }
 
 // Genera los últimos N meses como opciones de selector
+// Usa UTC para que coincida exactamente con el ciclo que calcula AISettings
 function buildMonthOptions(count = 6) {
   const now = new Date();
   return Array.from({ length: count }, (_, i) => {
     const d = subMonths(now, i);
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth();
     return {
       label: format(d, 'MMMM yyyy', { locale: es }),
       value: format(d, 'yyyy-MM'),
-      start: startOfMonth(d).toISOString(),
-      end: endOfMonth(d).toISOString(),
+      start: new Date(Date.UTC(year, month, 1)).toISOString(),
+      end: new Date(Date.UTC(year, month + 1, 1) - 1).toISOString(),
     };
   });
 }
 
-export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId }) => {
+export const AITransactionHistory: React.FC<{ clinicId: string; poolClinicId?: string }> = ({ clinicId, poolClinicId }) => {
+  const effectiveClinicId = poolClinicId || clinicId;
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ consumed: 0, messages: 0, recharged: 0, adjustments: 0, total: 0 });
@@ -60,7 +64,7 @@ export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId 
       const { data: allTxs } = await (supabase as any)
         .from('ai_credit_transactions')
         .select('type, amount')
-        .eq('clinic_id', clinicId)
+        .eq('clinic_id', effectiveClinicId)
         .gte('created_at', opt.start)
         .lte('created_at', opt.end);
 
@@ -78,7 +82,7 @@ export const AITransactionHistory: React.FC<{ clinicId: string }> = ({ clinicId 
       const { data, error } = await supabase
         .from('ai_credit_transactions')
         .select('*')
-        .eq('clinic_id', clinicId)
+        .eq('clinic_id', effectiveClinicId)
         .gte('created_at', opt.start)
         .lte('created_at', opt.end)
         .order('created_at', { ascending: false })
