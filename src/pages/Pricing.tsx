@@ -75,10 +75,11 @@ const plans = [
             'Todo lo de Core, más:',
             '1 usuario · 1 agenda',
             'Agente IA WhatsApp (GPT-4o mini)',
-            '200 conversaciones IA/mes',
+            '4.000 créditos IA',
             'Hasta 100 citas automatizadas/mes',
             '100 recordatorios/mes',
             '¿Más de 100 citas/mes? Pasa a Pro →',
+            '✗ Encuesta de satisfacción automatizada',
         ],
         upsells: [
             'Mensajería masiva de marketing segmentada',
@@ -128,7 +129,7 @@ const faqs = [
     },
     {
         question: '¿Desde cuándo comienzan los 7 días de prueba?',
-        answer: 'Tus 7 días de prueba comienzan exclusivamente cuando validamos que el asistente de IA entiende y atiende perfectamente a tu clínica. Nosotros asumimos el costo y tiempo de la configuración inicial.',
+        answer: 'Los 7 días comienzan desde el primer día en que el agente IA atiende clientes reales en producción — no desde que te registras. Nosotros hacemos la implementación completa primero (sin costo), y el período de prueba arranca cuando ya está funcionando para tus clientas.',
     },
     {
         question: '¿Ofrecen descuento por pago anual?',
@@ -308,25 +309,32 @@ export default function Pricing() {
 
                                 {/* Features */}
                                 <ul className="space-y-2.5 flex-1">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-start gap-2.5">
-                                            <div className={cn(
-                                                'w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                                                feature.startsWith('Todo') ? 'bg-white/10' : 'bg-[#FF2E88]/20'
-                                            )}>
-                                                <Check className={cn(
-                                                    'w-2.5 h-2.5',
-                                                    feature.startsWith('Todo') ? 'text-white/40' : 'text-[#FF4DA6]'
-                                                )} />
-                                            </div>
-                                            <span className={cn(
-                                                'text-sm leading-tight',
-                                                feature.startsWith('Todo') ? 'text-white/30 italic' : 'text-white/70'
-                                            )}>
-                                                {feature}
-                                            </span>
-                                        </li>
-                                    ))}
+                                    {plan.features.map((feature, i) => {
+                                        const isExcluded = feature.startsWith('✗')
+                                        const isHeader   = feature.startsWith('Todo')
+                                        const label = isExcluded ? feature.slice(2) : feature
+                                        return (
+                                            <li key={i} className="flex items-start gap-2.5">
+                                                <div className={cn(
+                                                    'w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                                                    isExcluded ? 'bg-red-500/10' :
+                                                    isHeader   ? 'bg-white/10'   : 'bg-[#FF2E88]/20'
+                                                )}>
+                                                    {isExcluded
+                                                        ? <span className="text-red-400/70 text-[9px] font-black leading-none">✕</span>
+                                                        : <Check className={cn('w-2.5 h-2.5', isHeader ? 'text-white/40' : 'text-[#FF4DA6]')} />
+                                                    }
+                                                </div>
+                                                <span className={cn(
+                                                    'text-sm leading-tight',
+                                                    isExcluded ? 'text-white/30 line-through' :
+                                                    isHeader   ? 'text-white/30 italic'       : 'text-white/70'
+                                                )}>
+                                                    {label}
+                                                </span>
+                                            </li>
+                                        )
+                                    })}
                                 </ul>
 
                                 {/* Upsells */}

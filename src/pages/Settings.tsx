@@ -1814,15 +1814,15 @@ export default function Settings() {
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-3 justify-center md:justify-start">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                            <p className="text-sm font-bold text-primary-theme/70">Tienes 7 días para probar el sistema completo</p>
+                                                            <p className="text-sm font-bold text-primary-theme/70">Los 7 días comienzan <span className="text-primary-theme">desde el primer día en que el agente IA atiende clientes reales en producción</span> — no desde el registro.</p>
                                                         </div>
                                                         <div className="flex items-center gap-3 justify-center md:justify-start">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                            <p className="text-sm font-bold text-primary-theme/70">Implementación completa por nuestro equipo (llave en mano)</p>
+                                                            <p className="text-sm font-bold text-primary-theme/70">Implementación completa por nuestro equipo (llave en mano) — nosotros asumimos el tiempo de configuración.</p>
                                                         </div>
                                                         <div className="flex items-center gap-3 justify-center md:justify-start">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                            <p className="text-sm font-bold text-primary-theme/70">Si no te ayuda a gestionar mejor tus citas, puedes cancelar.</p>
+                                                            <p className="text-sm font-bold text-primary-theme/70">Si no te ayuda a gestionar mejor tus citas, puedes cancelar sin costo.</p>
                                                         </div>
                                                     </div>
                                                     <div className="mt-6 inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/30">

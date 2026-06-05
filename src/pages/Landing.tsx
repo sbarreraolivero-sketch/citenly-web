@@ -168,7 +168,7 @@ const PLANS = [
         description: 'Recepcionista IA en WhatsApp entrenada con tu marca + gestión completa para profesionales independientes',
         gradient: 'from-emerald-500 to-emerald-700',
         highlight: false,
-        features: ['1 usuario · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '200 conversaciones IA/mes', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', '¿Más de 100 citas? Pasa a Pro →'],
+        features: ['1 usuario · 1 agenda', 'Todo lo de Core', 'Agente IA WhatsApp', '4.000 créditos IA', 'Hasta 100 citas con IA/mes', '100 recordatorios/mes', '¿Más de 100 citas? Pasa a Pro →', '✗ Encuesta de satisfacción automatizada'],
         cta: 'Agendar Implementación',
     },
     {

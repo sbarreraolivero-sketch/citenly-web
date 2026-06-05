@@ -154,10 +154,11 @@ export const PLANS = {
             'Todo lo de Core, más:',
             '1 usuario · 1 agenda',
             'Agente IA WhatsApp (GPT-4o mini)',
-            '200 conversaciones IA/mes',
+            '4.000 créditos IA',
             'Hasta 100 citas automatizadas/mes',
             '100 recordatorios/mes',
             '¿Más de 100 citas/mes? Pasa a Pro →',
+            '✗ Encuesta de satisfacción automatizada',
         ],
         upsells: [
             'Mensajería masiva de marketing segmentada',
