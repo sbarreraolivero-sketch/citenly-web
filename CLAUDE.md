@@ -82,7 +82,7 @@ Flujo por mensaje entrante:
 
 **Pool multi-sucursal:** configurar con `UPDATE clinic_settings SET parent_clinic_id = '<id_padre>' WHERE id = '<id_sucursal>'`. Los créditos se leen y descontan siempre del padre.
 
-**Caso Elizabeth Microblading:** ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`. Clínica de la esposa del fundador — `ai_credits_unlimited = true` permanente. `ai_credits_extra = 0`, `ai_credits_extra_balance = 0` (limpiados en sesión 5). Hay 2 registros duplicados pendientes de eliminar.
+**Caso Elizabeth Microblading:** ID `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`. Clínica de la esposa del fundador — `ai_credits_unlimited = true` permanente. `ai_credits_extra = 0`, `ai_credits_extra_balance = 0` (limpiados en sesión 5). Los duplicados verificados en sesión 7 ya no existían — solo hay 1 registro activo.
 
 ### Otras Edge Functions relevantes
 
@@ -149,7 +149,18 @@ Los tools disponibles en el simulador deben coincidir con los del webhook princi
 - El simulador detectado por ausencia de `p.whatsappInboundMessage` → bypass de verificación
 
 ### Plans — IDs actuales
-Citenly usa `essence` / `radiance` / `prestige` como IDs de plan en la DB. El frontend también acepta `core`, `starter`, `pro`, `enterprise` (para migración futura). Usar `normalizePlanId()` si existe, o comparar ambos sets.
+Citenly usa `core` / `starter` / `pro` / `enterprise` como IDs de plan en el frontend y en los webhooks de pago. Los IDs legacy `essence` / `radiance` / `prestige` aún pueden existir en la DB para clínicas antiguas — usar `normalizePlanId()` que mapea `essence→starter`, `radiance→pro`, `prestige→enterprise`.
+
+**Precios vigentes (junio 2026):**
+| Plan | USD/mes | CLP/mes | USD anual | Créditos IA |
+|---|---|---|---|---|
+| Core | $39 | $33.000 | — | 0 |
+| Starter | $97 | $92.000 | $931 | 4.000 |
+| Pro | $167 | $159.000 | $1.603 | ilimitados |
+| Enterprise | $297 | $282.000 | $2.851 | ilimitados |
+
+**Orden de presentación en UI:** Enterprise → Pro → Starter → Core (efecto de anclaje).
+**Descuento anual:** 20% (2 meses gratis). `getPrice()` usa `base * 0.8` para el mensual en modo anual.
 
 ### LemonSqueezy — precios variables
 Para productos de precio variable (créditos, recordatorios), usar `custom_price` en centavos USD en `checkoutAttributes`. **Nunca `quantity`** — la API de LS lo rechaza con 400.
@@ -611,7 +622,7 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 - [x] **Imports modernizados** (sesión 9) — `chat-agent`, `send-whatsapp-campaign`, `send-whatsapp-message` migrados de `deno.land/std@0.168.0`/`esm.sh` a `jsr:`/`npm:` y `Deno.serve`
 
 ### Nota sobre deploy de sesión 9
-Las siguientes funciones fueron modificadas y requieren deploy:
+Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fueron deployadas antes de modificar de nuevo:
 - `signup-handler` — nueva columna `ai_credits_limit`, valores nuevos
 - `mercadopago-webhook` — nueva columna `ai_credits_limit`, valores nuevos
 - `lemonsqueezy-webhook` — nueva columna `ai_credits_limit`, valores nuevos
@@ -619,6 +630,48 @@ Las siguientes funciones fueron modificadas y requieren deploy:
 - `send-whatsapp-message` — imports modernizados
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
+
+### Cambios realizados — junio 2026 (sesión 14)
+
+#### Reestructura completa de precios y planes
+
+**Nuevos precios (todos los archivos actualizados en sincronía):**
+- Starter: $67 → **$97 USD** / $67.000 → **$92.000 CLP**
+- Pro: $169 → **$167 USD** / $149.000 → **$159.000 CLP**
+- Enterprise: $299 → **$297 USD** / $349.000 → **$282.000 CLP**
+- Core: $39 USD / $33.000 CLP (sin cambios)
+
+**Precios anuales agregados** (20% off = 2 meses gratis):
+- Starter: $931 USD / $883.000 CLP
+- Pro: $1.603 USD / $1.527.000 CLP
+- Enterprise: $2.851 USD / $2.715.000 CLP
+
+**Archivos modificados:** `lemonsqueezy.ts`, `mercadopago.ts`, `Landing.tsx`, `Pricing.tsx`, `Register.tsx`
+
+**Cambios de copy y UX:**
+- Orden de planes invertido: Enterprise → Pro → Starter → Core (efecto de anclaje)
+- `Pricing.tsx getPrice()`: descuento anual cambiado de `base * 10/12` (~17%) a `base * 0.8` (20%)
+- Toggle anual muestra badge `2 meses gratis` y cada tarjeta en modo anual muestra el total anual
+- Core: features incluyen `'Sin recordatorios automáticos'` y trigger `'Recordatorios desde Plan Starter →'`
+- Starter: trigger `'¿Más de 100 citas/mes? Pasa a Pro →'` visible en features
+- `Pricing.tsx`: render detecta prefijo `'✗'` en features → ícono `✕` rojo + texto tachado (para features no incluidas)
+
+#### Starter features — restauración de créditos + encuesta excluida
+- `'200 conversaciones IA/mes'` → **`'4.000 créditos IA'`** (decisión: mantener créditos para consistencia con AISettings)
+- Agregado `'✗ Encuesta de satisfacción automatizada'` — comunicación visual de lo que NO incluye Starter
+- Aplicado en: `lemonsqueezy.ts`, `mercadopago.ts`, `Pricing.tsx`, `Landing.tsx`
+
+**Regla establecida:** La métrica interna del sistema siempre es **créditos** (columnas DB, webhook, AISettings). En pricing/marketing usar la misma palabra para no crear confusión entre lo que el cliente ve en el plan y lo que ve en su panel.
+
+#### Sección Fidelización en Landing.tsx
+- Agregada sección completa después de "Todo en un solo lugar" (antes de "Cómo funciona")
+- 3 cards: **Billetera de Puntos** (violet), **Programa de Referidos / Magic Link** (indigo), **Catálogo de Recompensas** (fuchsia)
+- Strip de stats: 5× más barato retener · 30% más gasto con puntos · 100% boca a boca rastreable
+- Nuevos imports: `Gift`, `Award`, `Share2` desde lucide-react
+
+#### Garantía — comunicación de los 7 días
+- **Settings.tsx y Pricing.tsx FAQ actualizados:** los 7 días comienzan desde el primer día que el agente IA atiende clientes reales en producción, no desde el registro
+- El equipo hace la implementación primero (sin costo), el trial arranca cuando ya funciona
 
 ---
 
