@@ -73,7 +73,7 @@ export default function Dashboard() {
         lost: 0,
         rate: 0
     })
-    const [satisfactionStats, setSatisfactionStats] = useState({
+    const [satisfactionStats] = useState({
         sent: 0,
         responded: 0,
         nps: 0,
@@ -106,26 +106,26 @@ export default function Dashboard() {
                 const endStr = rangeEnd.toISOString()
                 const clinicId = profile.clinic_id
 
-                // 1. Parallel Fetching of Independent Data (with 10s timeout)
+                // 1. Parallel Fetching of Independent Data (with 15s timeout)
                 const [
                     { data: clinicStats },
                     { data: upcoming },
                     { data: recentMsgs },
                     { data: rankingData },
-                    { data: surveyData }
                 ] = await Promise.race([
                     Promise.all([
                         // A. All pre-calculated stats for this clinic
                         supabase.from('clinic_stats').select('*').eq('clinic_id', clinicId),
-                        
+
                         // B. Upcoming Appointments (Next 5)
                         supabase.from('appointments')
                             .select('id, patient_name, service, appointment_date, status')
                             .eq('clinic_id', clinicId)
+                            .in('status', ['pending', 'confirmed', 'pending_deposit'])
                             .gte('appointment_date', new Date().toISOString())
                             .order('appointment_date', { ascending: true })
                             .limit(5),
-                        
+
                         // C. Recent Messages (Last 3)
                         supabase.from('messages')
                             .select('id, phone_number, content, created_at, direction, status')
@@ -138,14 +138,8 @@ export default function Dashboard() {
                             .select('service')
                             .eq('clinic_id', clinicId)
                             .gte('appointment_date', getDateRange(filterRange).start.toISOString()),
-
-                        // E. Satisfaction Surveys (Month to Date)
-                        supabase.from('satisfaction_surveys')
-                            .select('id, status, rating, created_at')
-                            .eq('clinic_id', clinicId)
-                            .gte('created_at', getDateRange('month').start.toISOString())
                     ]),
-                    new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error('Dashboard timeout')), 10000))
+                    new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error('Dashboard timeout')), 15000))
                 ])
 
                 // 2. Process Stats (Primary: clinic_stats table)
@@ -278,26 +272,8 @@ export default function Dashboard() {
                     // For now, keep conversionStats at 0 or update based on a new stat_type if needed.
                 }
 
-                // Satisfaction Surveys Logic
-                if (surveyData) {
-                    const sent = surveyData.length
-                    const responded = surveyData.filter((s: any) => s.status === 'responded').length
-                    const ratings = surveyData.filter((s: any) => s.status === 'responded' && s.rating).map((s: any) => s.rating!)
-                    const average = ratings.length > 0 ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : 0
-                    let nps = 0
-                    if (ratings.length > 0) {
-                        const promoters = ratings.filter((r: number) => r === 5).length
-                        const detractors = ratings.filter((r: number) => r <= 3).length
-                        nps = Math.round(((promoters - detractors) / ratings.length) * 100)
-                    }
-                    setSatisfactionStats({ sent, responded, nps, average })
-                }
-
             } catch (error: any) {
-                // On timeout, keep existing state visible — don't blank the dashboard
-                if (error?.message !== 'Dashboard timeout') {
-                    console.error('Error fetching dashboard data:', error)
-                }
+                console.error('Error fetching dashboard data:', error?.message || error)
             } finally {
                 setLoading(false)
             }

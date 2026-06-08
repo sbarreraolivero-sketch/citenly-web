@@ -7,11 +7,12 @@ function normalizePageKey(key: string): string {
 }
 
 export function usePermissions() {
-  const { member, loading } = useAuth()
+  const { member, profile, loading } = useAuth()
 
   const canAccess = (page: string): boolean => {
     if (loading) return true
-    const role = member?.role ?? 'professional'
+    // Fallback a profile.role cuando member aún no ha cargado (race condition de auth)
+    const role = member?.role ?? (profile as any)?.role ?? 'professional'
     if (role === 'owner' || role === 'admin') return true
     const stored = (member as any)?.permissions as MemberPermissions | null | undefined
     const perms = getEffectivePermissions(role, stored)
@@ -20,7 +21,7 @@ export function usePermissions() {
 
   const can = (action: ActionKey): boolean => {
     if (loading) return true
-    const role = member?.role ?? 'professional'
+    const role = member?.role ?? (profile as any)?.role ?? 'professional'
     if (role === 'owner' || role === 'admin') return true
     const stored = (member as any)?.permissions as MemberPermissions | null | undefined
     const perms = getEffectivePermissions(role, stored)

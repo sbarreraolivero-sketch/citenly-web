@@ -146,9 +146,9 @@ const getFunctions = (requireDepositFirst: boolean = false) => {
     },
     {
         name: "confirm_appointment",
-        description: isElizabeth 
-            ? "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. CRÍTICO Y ESTRICTO PARA CONFIRMAR: Úsala para confirmar SÓLO si el usuario ha enviado o adjuntado una IMAGEN del comprobante de transferencia. Si el usuario dice que ya pagó pero NO ha enviado una imagen, EXIGE la imagen antes de usar esta función con 'yes'. Úsala con 'no' si el usuario responde a un recordatorio indicando que no podrá asistir."
-            : "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy. Úsala con 'no' si el usuario indica que no podrá asistir.",
+        description: isElizabeth
+            ? "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. CRÍTICO Y ESTRICTO PARA CONFIRMAR: Úsala para confirmar SÓLO si el usuario ha enviado o adjuntado una IMAGEN del comprobante de transferencia. Si el usuario dice que ya pagó pero NO ha enviado una imagen, EXIGE la imagen antes de usar esta función con 'yes'. Úsala con 'no' si el usuario indica que no podrá asistir — ya sea respondiendo a un recordatorio O de forma proactiva (ej: 'voy a cancelar', 'ya no voy', 'no podré asistir')."
+            : "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy. Úsala con 'no' si el usuario indica que no podrá asistir — ya sea por un recordatorio O de forma proactiva.",
         parameters: { type: "object", properties: { response: { type: "string", enum: ["yes", "no"] } }, required: ["response"] }
     },
     {
@@ -1151,7 +1151,7 @@ const rescheduleAppt = async (sb: ReturnType<typeof createClient>, clinicId: str
             .select("*")
             .eq("clinic_id", clinicId)
             .eq("phone_number", normalizedPhone)
-            .in("status", ["pending", "confirmed"])
+            .in("status", ["pending", "pending_deposit", "confirmed"])
             .gte("appointment_date", twentyFourHoursAgo)
             .order("appointment_date", { ascending: true })
             .limit(1)
@@ -1838,7 +1838,13 @@ Deno.serve(async (req) => {
 
         if (prospect?.requires_human) {
             await debugLog(sb, `IA silenciosa: Handoff a humano activo para ${from}`, { phone: from });
-            // Only save the message but DO NOT respond
+            // Auto-cancel appointment silently if client explicitly signals cancellation
+            const bodyLower = body.toLowerCase();
+            const cancelKeywords = ["cancelar", "no podré asistir", "no voy", "no puedo ir", "cancelo", "anular", "no me presento", "no iré"];
+            if (cancelKeywords.some(k => bodyLower.includes(k))) {
+                const cancelResult = await confirmAppt(sb, clinic.id, from, "no");
+                await debugLog(sb, `Auto-cancelación silenciosa para ${from}`, { body, result: cancelResult });
+            }
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
 
@@ -2006,6 +2012,7 @@ ${lagRule}
 7. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
 8. REGLA ESTRICTA DE MINUTOS: Las citas SOLO se pueden agendar en intervalos de 15 minutos (:00, :15, :30, :45). NUNCA agendes en minutos como :08, :12, :23, etc. Si detectas que un horario disponible tiene minutos irregulares (por arrastre de citas antiguas), redondea siempre al intervalo de 15 minutos más cercano para proponerlo al paciente.
 9. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
+9.5. REGLA CRÍTICA DE CANCELACIONES: Cuando el paciente indique que quiere cancelar su cita — "no podré asistir", "voy a cancelar", "ya no voy", "cancelo la hora" u otra variación — DEBES llamar a 'confirm_appointment' con 'response: no' ANTES de responder. NUNCA uses frases como "procederé a cancelar", "cancelaré tu cita" o similares sin haber llamado primero a la herramienta. Si el resultado indica que no hay cita activa, comunícaselo honestamente.
 10. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
    a) Franja Horaria PRIMERO (regla universal para todas las clínicas): ANTES de llamar a 'check_availability', asegúrate de saber si el paciente prefiere mañana o tarde. Esto es especialmente importante en servicios cortos (evaluaciones, consultas) donde hay muchos horarios disponibles.
       - Si NO lo mencionó, PREGUNTA: "¿Prefieres un horario en la mañana o en la tarde?"

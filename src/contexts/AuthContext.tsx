@@ -382,16 +382,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                     }
                                 })
 
-                                supabase.from('clinic_members')
+                                // Await explícito para que setLoading(false) no llegue antes que el member
+                                const { data: memberData } = await supabase
+                                    .from('clinic_members')
                                     .select('*')
                                     .eq('user_id', currentUser.id)
                                     .eq('clinic_id', data.clinic_id)
                                     .single()
-                                    .then(({ data: memberData }) => {
-                                        if (memberData && mounted) {
-                                            setMember((prev: any) => (prev?.id === (memberData as any).id ? prev : (memberData as any)))
-                                        }
-                                    })
+                                if (memberData && mounted) {
+                                    setMember((prev: any) => (prev?.id === (memberData as any).id ? prev : (memberData as any)))
+                                }
                             }
                         } else if (mounted && status === 'not_found' && !window.location.pathname.startsWith('/hq')) {
                             setProfile(null)
