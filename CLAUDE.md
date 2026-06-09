@@ -640,6 +640,58 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
 
+### Cambios realizados — junio 2026 (sesión 16)
+
+#### Landing vertical piloto — `/micropigmentadoras`
+
+**Estrategia:** abandonar landing genérica para crear landings verticales por nicho. Cada profesión tiene su propia página donde el avatar se identifica de inmediato. Piloto: micropigmentación/microblading.
+
+**Archivo:** `public/micropigmentadoras.html` — HTML/CSS/JS puro, sin dependencias de React ni del bundle de Vite.
+
+**Ruta en producción:** `citenly.com/micropigmentadoras`
+- `vercel.json` tiene rewrite específico ANTES del catch-all SPA: `"/micropigmentadoras" → "/micropigmentadoras.html"`
+- El catch-all `/(.*) → /index.html` sigue operando para todas las rutas de la app React
+
+**Imágenes en `public/` (necesarias para el landing):**
+- `box-microblading.png` — fondo parallax sección "Reconoces esto"
+- `dashboard.png` — screenshot del panel Citenly en mac frame
+- `elizabeth.jpeg` — foto de Elizabeth Hernández para testimonio horizontal
+- `movil.jpeg` — captura móvil (disponible pero no usada en la versión actual)
+
+**Estructura del landing:**
+1. Trust bar + Nav sticky
+2. **Hero** — gradiente `#0f0c29 → #302b63 → #24243e`, simulador WhatsApp animado (JS loop), h1 "Deja de perder horas por clientas que no llegan"
+3. **Reconoces esto** — parallax `box-microblading.png` con overlay 74% oscuro, 3 pain cards
+4. **Cómo lo resuelve** — fondo blanco, 4 sol-cards con texto oscuro y badges verdes
+5. **Todo en un solo lugar** — Mac showcase (`dashboard.png`) ancho completo + acordeón de 5 funcionalidades
+6. **ROI** — tabla de valor recuperado + callout con CTA
+7. **Fidelización** — 3 cards violet/indigo/fuchsia + stats strip
+8. **Testimonio** — card horizontal con `elizabeth.jpeg`, Elizabeth Hernández @elizabeth.microblading
+9. **FAQ** — 5 preguntas específicas del nicho
+10. **CTA final** — todos los CTAs apuntan a `citenly.com/demo`
+
+**Acordeón de funcionalidades (5 ítems, primero abierto por defecto):**
+- Asistente de IA · Agenda · Marketing · Contactos · Finanzas
+- JS: `toggleFeat(header)` — solo uno abierto a la vez
+- Subtítulos `.feat-summary` en `rgba(255,255,255,0.65)` para contraste sobre fondo oscuro
+
+**Parallax sección dolores:**
+- CSS: `background: linear-gradient(overlay), url('box-microblading.png') fixed`
+- Fallback mobile `≤768px`: `scroll` en vez de `fixed` (iOS no soporta `background-attachment: fixed`)
+
+**Sección solución (fondo blanco):**
+- `#solucion { background: #ffffff }` — contrasta con secciones oscuras vecinas
+- Textos `#0a0a18`, párrafos `#4b5563`, badges verdes sobre blanco
+- `.sol-card` con sombra sutil y hover con borde magenta
+
+**Patrón para landings verticales futuras:** reutilizar esta estructura HTML como plantilla. Cambiar: nicho en pill/tags, dolores específicos, testimonio, copy de solución, FAQ. La estructura CSS y JS es reutilizable íntegra.
+
+**Notas de deploy:**
+- `git config http.postBuffer 524288000` necesario antes del primer push con imágenes binarias (evita HTTP 400 por buffer insuficiente)
+- Las imágenes en `public/` se suben al repo y Vercel las sirve como archivos estáticos
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 15)
 
 #### Fix: cancelaciones IA no procesadas (2 casos distintos)
