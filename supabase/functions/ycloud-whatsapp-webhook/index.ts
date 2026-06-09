@@ -2030,6 +2030,7 @@ ${lagRule}
         ? `FLUJO CON ABONO PREVIO OBLIGATORIO — sigue este orden estrictamente:
       1. Una vez que 'create_appointment' devuelva 'success: true', el turno queda reservado PROVISIONALMENTE por 2 horas.
       2. Comunica al cliente que el horario está RESERVADO (no confirmado) y que para asegurarlo debe enviar el comprobante de transferencia. Usa exactamente este mensaje de pago:\n         ${clinic.transfer_details}
+      REGLA CRÍTICA ANTI-ALUCINACIÓN: Una vez enviados los datos de pago, NUNCA vuelvas a llamar 'check_availability' para este mismo cliente. Si el cliente dice "okey", "entendido", "voy a transferir" o cualquier confirmación verbal — NO reabras el flujo de agendamiento ni ofrezcas otros horarios. El slot YA está bloqueado en la base de datos a su nombre. Responde únicamente "Perfecto, quedo esperando tu comprobante 🌿✨" y nada más.
       3. ESPERA a que el cliente envíe una IMAGEN (comprobante). Si solo dice "ya pagué" o "listo" sin imagen, EXIGE la imagen antes de continuar.
       4. Cuando recibas la imagen, analízala visualmente con estos criterios ESTRICTOS EN ESTE ORDEN:
          a) ¿Es un comprobante bancario real y legible? Si no lo es, pide que vuelva a enviar.

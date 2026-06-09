@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
     Sparkles, ArrowRight, Check, Bot, Calendar, MessageSquare, Bell,
-    TrendingUp, Users, Star, BarChart3, ChevronDown, Zap, Crown, Gift, Award, Share2,
+    TrendingUp, Users, Star, BarChart3, ChevronDown, Zap, Crown, Gift, Award, Share2, Menu, X,
 } from 'lucide-react'
 import { AIChatWidget } from '../components/AIChatWidget'
 
@@ -199,6 +199,7 @@ const FAQS = [
 export default function Landing() {
     useScrollReveal()
     const [currency, setCurrency] = useState<CurrencyCode>('USD')
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const rate = RATES[currency]
 
     return (
@@ -240,15 +241,13 @@ export default function Landing() {
             <nav className="sticky top-0 z-50 bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF2E88]/20">
-                            <Sparkles className="w-5 h-5 text-white" />
-                        </div>
+                        <img src="/citenly-icon.png" alt="Citenly" className="w-9 h-9 rounded-xl shadow-lg shadow-[#FF2E88]/20" />
                         <span className="text-lg font-black tracking-tight text-white">Citenly</span>
                     </div>
                     <div className="hidden md:flex items-center gap-6 text-sm font-medium text-white/60">
-                        <a href="#modulos"        className="hover:text-white transition-colors">El Producto</a>
-                        <a href="#planes"          className="hover:text-white transition-colors">Precios</a>
-                        <a href="#como-funciona"   className="hover:text-white transition-colors">Cómo funciona</a>
+                        <a href="#modulos"       className="hover:text-white transition-colors">El Producto</a>
+                        <a href="#planes"         className="hover:text-white transition-colors">Precios</a>
+                        <a href="#como-funciona"  className="hover:text-white transition-colors">Cómo funciona</a>
                     </div>
                     <div className="flex items-center gap-3">
                         <Link to="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors hidden md:block">Iniciar sesión</Link>
@@ -257,8 +256,28 @@ export default function Landing() {
                             <span className="sm:hidden">Agendar Demo</span>
                             <ArrowRight className="w-4 h-4" />
                         </Link>
+                        {/* Botón hamburguesa — solo móvil */}
+                        <button
+                            onClick={() => setMobileMenuOpen(o => !o)}
+                            className="md:hidden p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                            aria-label="Abrir menú"
+                        >
+                            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                        </button>
                     </div>
                 </div>
+                {/* Menú desplegable móvil */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t border-white/10 bg-[#0A0A0F]/95 backdrop-blur-md px-6 py-4 flex flex-col gap-1">
+                        <a href="#modulos"      onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">El Producto</a>
+                        <a href="#planes"        onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">Precios</a>
+                        <a href="#como-funciona" onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">Cómo funciona</a>
+                        <Link to="/login"        onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">Iniciar sesión</Link>
+                        <Link to="/demo"         onClick={() => setMobileMenuOpen(false)} className="mt-2 flex items-center justify-center gap-1.5 bg-[#FF2E88] text-white text-sm font-bold px-4 py-3 rounded-xl hover:bg-[#e0007a] transition-colors">
+                            Agendar Reunión Demo <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </div>
+                )}
             </nav>
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
@@ -799,9 +818,7 @@ export default function Landing() {
                     <div className="grid md:grid-cols-4 gap-8 mb-10">
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-xl flex items-center justify-center">
-                                    <Sparkles className="w-4 h-4 text-white" />
-                                </div>
+                                <img src="/citenly-icon.png" alt="Citenly" className="w-8 h-8 rounded-xl" />
                                 <span className="text-base font-black text-white">Citenly</span>
                             </div>
                             <p className="text-sm text-white/40 leading-relaxed">Automatización inteligente para centros de estética y belleza.</p>
