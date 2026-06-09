@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Citenly para Micropigmentadoras — Agenda llena sin cancelaciones</title>
+  <meta name="description" content="Tu asistente confirma citas, cobra el abono y recuerda los retoques. Sin que toques el teléfono." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --pink: #FF2E88;
+      --pink-soft: #FF6BAD;
+      --pink-dim: rgba(255,46,136,0.11);
+      --pink-border: rgba(255,46,136,0.26);
+      --purple: #8B5CF6;
+      --purple-dim: rgba(139,92,246,0.1);
+      --gold: #C9A87C;
+      --emerald: #34D399;
+      --surface: #0C0C18;
+      --surface2: #101020;
+      --surface3: #141430;
+      --border: rgba(255,255,255,0.07);
+      --border-soft: rgba(255,255,255,0.04);
+      --muted: rgba(210,210,235,0.5);
+      --text: #EDEDF8;
+      --max: 1100px;
+      --narrow: 740px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #07070F;
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: 0.4;
+    }
+
+    /* Ambient blobs */
+    .blob { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; will-change: opacity; }
+
+    /* Layout */
+    .wrap        { max-width: var(--max);    margin: 0 auto; padding: 0 32px; }
+    .wrap-narrow { max-width: var(--narrow); margin: 0 auto; padding: 0 32px; }
+    section { padding: 96px 0; position: relative; overflow: hidden; }
+
+    /* ── Trust bar ── */
+    .trust-bar {
+      background: linear-gradient(90deg, rgba(255,46,136,0.05), rgba(139,92,246,0.05));
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; font-size: 12.5px; color: var(--muted);
+    }
+    .trust-bar strong { color: var(--text); font-weight: 700; }
+    .trust-sep { color: rgba(255,255,255,0.12); }
+    .trust-badge {
+      background: var(--pink-dim); border: 1px solid var(--pink-border);
+      color: var(--pink); font-size: 10px; font-weight: 800;
+      padding: 2px 10px; border-radius: 100px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(7,7,15,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { font-size: 19px; font-weight: 900; color: var(--text); letter-spacing: -0.04em; }
+    .nav-logo span { color: var(--pink); }
+    .nav-cta {
+      background: var(--pink); color: #fff;
+      font-size: 13px; font-weight: 700; padding: 9px 22px;
+      border-radius: 100px; text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 20px rgba(255,46,136,0.3);
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(255,46,136,0.48); }
+
+    /* ════ HERO ════ */
+    #hero { padding: 80px 0 72px; }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center; position: relative; z-index: 1;
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--pink-dim); border: 1px solid var(--pink-border);
+      color: var(--pink); font-size: 11px; font-weight: 800;
+      padding: 5px 14px; border-radius: 100px;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 22px;
+    }
+    .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--pink); display: inline-block; animation: blink 2s ease infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    h1 {
+      font-size: clamp(28px, 3.5vw, 48px); font-weight: 900;
+      line-height: 1.07; letter-spacing: -0.04em; color: #fff; margin-bottom: 20px;
+    }
+    h1 em { font-style: normal; color: var(--pink); }
+    .hero-sub {
+      font-size: clamp(15px, 1.7vw, 17px); color: var(--muted);
+      line-height: 1.72; margin-bottom: 36px; max-width: 440px;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--pink); color: #fff;
+      font-size: 15px; font-weight: 800; padding: 15px 32px;
+      border-radius: 100px; text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 48px rgba(255,46,136,0.38);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 64px rgba(255,46,136,0.52); }
+    .btn-arr { transition: transform 0.2s; }
+    .btn-primary:hover .btn-arr { transform: translateX(4px); }
+
+    .hero-microcopy {
+      margin-top: 14px; font-size: 12px; color: var(--muted);
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    }
+    .hero-microcopy span::before { content: '✓ '; color: var(--pink); font-weight: 800; }
+
+    .niche-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 28px; }
+    .niche-tag {
+      background: rgba(255,46,136,0.08); border: 1px solid rgba(255,46,136,0.18);
+      color: rgba(255,107,173,0.8); font-size: 11px; font-weight: 600;
+      padding: 4px 12px; border-radius: 100px;
+    }
+
+    /* ── Phone & chat ── */
+    .hero-right { display: flex; justify-content: center; align-items: center; position: relative; }
+    .hero-right-glow {
+      position: absolute; width: 360px; height: 360px;
+      background: radial-gradient(ellipse, rgba(255,46,136,0.16), transparent 70%);
+      filter: blur(40px); pointer-events: none;
+    }
+    .phone-frame {
+      position: relative; width: 296px;
+      background: #0d0d1c; border: 1.5px solid rgba(255,255,255,0.11);
+      border-radius: 42px; overflow: hidden; z-index: 1;
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.025), 0 32px 80px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .phone-status {
+      background: #0d0d1c; padding: 10px 20px 6px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.55);
+    }
+    .ps-right { display: flex; gap: 5px; align-items: center; }
+    .chat-header {
+      background: #12122a; padding: 10px 14px 11px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .chat-back { color: var(--pink); font-size: 16px; font-weight: 800; margin-right: 2px; }
+    .chat-av {
+      width: 33px; height: 33px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+    }
+    .chat-info-name { font-size: 12.5px; font-weight: 800; color: #fff; line-height: 1.2; }
+    .chat-info-status { font-size: 10px; color: #4ade80; font-weight: 500; }
+    .chat-info-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #4ade80; margin-right: 4px; }
+
+    .chat-body {
+      background: #09091a;
+      background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(255,46,136,0.04), transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(139,92,246,0.04), transparent 50%);
+      padding: 12px 10px; min-height: 330px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .chat-time-label {
+      font-size: 10px; color: rgba(255,255,255,0.22);
+      text-align: center; padding: 2px 0 4px; letter-spacing: 0.03em;
+    }
+
+    /* ── Chat messages: opposite sides ── */
+    .cmsg {
+      max-width: 80%; padding: 9px 13px;
+      border-radius: 18px; font-size: 12.5px; line-height: 1.5;
+      opacity: 0; transform: translateY(6px) scale(0.97);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .cmsg.show { opacity: 1; transform: none; }
+
+    /* Incoming (client Camila) → RIGHT side */
+    .cmsg-in {
+      align-self: flex-end;
+      background: #1d1028;
+      border: 1px solid rgba(255,46,136,0.22);
+      color: var(--text);
+      border-bottom-right-radius: 4px;
+    }
+
+    /* Bot response → LEFT side */
+    .cmsg-bot {
+      align-self: flex-start;
+      background: #121222;
+      border: 1px solid rgba(74,222,128,0.14);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* Read receipt → RIGHT */
+    .cmsg-read {
+      align-self: flex-end;
+      font-size: 10px; color: rgba(255,255,255,0.22);
+      padding: 0 3px;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .cmsg-read.show { opacity: 1; transform: none; }
+
+    /* Typing indicator → LEFT */
+    .typing-ind {
+      display: none; align-self: flex-start;
+      background: #121222; border: 1px solid rgba(74,222,128,0.12);
+      padding: 9px 13px; border-radius: 18px; border-bottom-left-radius: 4px;
+      gap: 4px; align-items: center;
+    }
+    .typing-ind.show { display: flex; }
+    .tdot {
+      width: 5px; height: 5px; background: rgba(74,222,128,0.65);
+      border-radius: 50%; animation: tdot 1.2s ease infinite;
+    }
+    .tdot:nth-child(2) { animation-delay: .18s; }
+    .tdot:nth-child(3) { animation-delay: .36s; }
+    @keyframes tdot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-5px);opacity:1} }
+
+    /* ════ SECTION COMMONS ════ */
+    .section-label {
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--pink); margin-bottom: 10px;
+    }
+    h2 {
+      font-size: clamp(26px, 3vw, 40px); font-weight: 900;
+      letter-spacing: -0.035em; color: #fff; line-height: 1.16; margin-bottom: 14px;
+    }
+    h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #FF2E88 0%, #a855f7 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .section-sub { font-size: 16px; color: var(--muted); max-width: 520px; line-height: 1.72; margin-bottom: 52px; }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0; transform: translateY(26px);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-scale {
+      opacity: 0; transform: scale(0.95);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal-scale.visible { opacity: 1; transform: none; }
+
+    /* ════ DOLORES ════ */
+    #dolores {
+      background:
+        linear-gradient(rgba(5,5,14,0.74), rgba(5,5,14,0.74)),
+        url('box-microblading.png') center 40% / cover fixed;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .pain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; position: relative; z-index: 1; }
+    .pain-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px 24px; position: relative; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .pain-card:hover { border-color: rgba(255,46,136,0.22); transform: translateY(-3px); }
+    .pain-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--pink), transparent);
+    }
+    .pain-num { font-size: 9.5px; font-weight: 800; color: var(--pink); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; }
+    .pain-card h3 { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .pain-card p { font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+    .pain-card p em { color: rgba(235,235,245,0.75); font-style: italic; }
+    .pain-tag { margin-top: 14px; font-size: 12.5px; color: rgba(255,107,173,0.72); font-weight: 600; line-height: 1.5; }
+
+    /* ════ SOLUCIÓN ════ */
+    #solucion { background: #ffffff; border-bottom: 1px solid #e8eaf0; }
+    #solucion h2 { color: #0a0a18; }
+    #solucion .section-label { color: var(--pink); }
+    #solucion .section-sub { color: #4b5563; }
+    #solucion .blob { display: none; }
+    .sol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; position: relative; z-index: 1; }
+    .sol-card {
+      background: #f8f9fc; border: 1px solid #e8eaf0;
+      border-radius: 18px; padding: 26px 28px; position: relative; overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .sol-card:hover { border-color: rgba(255,46,136,0.3); box-shadow: 0 6px 24px rgba(255,46,136,0.1); transform: translateY(-2px); }
+    .sol-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top right, rgba(255,46,136,0.04), transparent 60%);
+      pointer-events: none;
+    }
+    .sol-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 14px; flex-shrink: 0;
+    }
+    .sol-card h3 { font-size: 15.5px; font-weight: 800; color: #0a0a18; margin-bottom: 10px; letter-spacing: -0.02em; line-height: 1.3; }
+    .sol-card p { font-size: 13.5px; color: #4b5563; line-height: 1.7; }
+    .sol-result {
+      margin-top: 14px; font-size: 13px; font-weight: 700;
+      color: #059669; background: rgba(5,150,105,0.09);
+      border: 1px solid rgba(5,150,105,0.22);
+      padding: 8px 14px; border-radius: 8px; display: inline-block;
+      line-height: 1.5;
+    }
+
+    /* ════ TODO EN UN SOLO LUGAR — nueva estructura ════ */
+    #todo {
+      background: #07070F;
+      border-bottom: 1px solid var(--border);
+    }
+    #todo .section-sub { color: rgba(255,255,255,0.8); }
+
+    /* Mac showcase — ancho completo centrado */
+    .mac-showcase {
+      display: flex; justify-content: center;
+      margin-bottom: 56px;
+      position: relative; z-index: 1;
+      filter: drop-shadow(0 32px 72px rgba(0,0,0,0.7));
+    }
+    .mac-showcase::before {
+      content: ''; position: absolute;
+      width: 70%; height: 50%; bottom: -8%; left: 50%; transform: translateX(-50%);
+      background: radial-gradient(ellipse, rgba(255,46,136,0.13), rgba(139,92,246,0.08) 50%, transparent 70%);
+      filter: blur(44px); pointer-events: none; z-index: 0;
+    }
+    .mac-showcase .mac-frame { width: 100%; position: relative; z-index: 1; }
+    .mac-showcase .mac-bar   { width: 100%; }
+    .mac-showcase .mac-screen { width: 100%; }
+    .mac-showcase .mac-foot   { width: 100%; }
+    .mac-showcase .mac-stand  { width: 110px; }
+
+    /* Accordion — columna única, ancho contenido */
+    .feat-grid { max-width: 780px; margin: 0 auto; }
+    .feat-item { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .feat-item:first-child { border-top: 1px solid rgba(255,255,255,0.08); }
+    .feat-header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 22px 0; cursor: pointer; user-select: none;
+      transition: opacity 0.2s;
+    }
+    .feat-header:hover { opacity: 0.8; }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .feat-item.open .feat-icon { background: var(--pink-dim); border-color: var(--pink-border); }
+    .feat-info { flex: 1; min-width: 0; }
+    .feat-title { font-size: 16.5px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.2; }
+    .feat-summary { font-size: 12.5px; color: rgba(255,255,255,0.65); margin-top: 4px; line-height: 1.45; }
+    .feat-chevron {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.4); font-size: 11px;
+      transition: transform 0.35s, border-color 0.3s, background 0.3s, color 0.3s;
+    }
+    .feat-item.open .feat-chevron { transform: rotate(180deg); border-color: var(--pink-border); background: var(--pink-dim); color: var(--pink); }
+    .feat-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.42s cubic-bezier(0.16,1,0.3,1);
+    }
+    .feat-item.open .feat-body { max-height: 300px; }
+    .feat-list {
+      list-style: none; display: flex; flex-direction: column;
+      gap: 10px; padding-bottom: 22px; padding-left: 60px;
+    }
+    .feat-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: rgba(210,210,235,0.72); line-height: 1.55;
+    }
+    .feat-list li::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--pink); flex-shrink: 0; margin-top: 8px;
+    }
+
+    .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; position: relative; z-index: 1; }
+    .module-card {
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .module-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-2px); }
+    .module-header { padding: 20px 22px; display: flex; align-items: flex-start; justify-content: space-between; }
+    .module-header-text {}
+    .module-num { font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-bottom: 5px; }
+    .module-title { font-size: 16px; font-weight: 900; color: #fff; line-height: 1.2; letter-spacing: -0.02em; }
+    .module-emoji { font-size: 22px; opacity: 0.6; }
+    .module-body { padding: 18px 22px 22px; }
+    .module-desc { font-size: 13.5px; color: rgba(210,210,235,0.65); line-height: 1.68; margin-bottom: 14px; }
+    .module-preview {
+      background: rgba(255,255,255,0.06); border-radius: 12px;
+      padding: 12px; font-size: 11.5px; line-height: 1.55;
+    }
+
+    /* gradient variants */
+    .mg-1 { background: linear-gradient(135deg, #065f46, #047857); }
+    .mg-2 { background: linear-gradient(135deg, #9d174d, #be185d); }
+    .mg-3 { background: linear-gradient(135deg, #6d28d9, #7c3aed); }
+    .mg-4 { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+    .mg-5 { background: linear-gradient(135deg, #b45309, #d97706); }
+    .mg-6 { background: linear-gradient(135deg, #9f1239, #e11d48); }
+    .module-num.mg-1 { color: #6ee7b7; }
+    .module-num.mg-2 { color: #fbcfe8; }
+    .module-num.mg-3 { color: #ddd6fe; }
+    .module-num.mg-4 { color: #bfdbfe; }
+    .module-num.mg-5 { color: #fde68a; }
+    .module-num.mg-6 { color: #fecdd3; }
+
+    /* preview rows */
+    .prev-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(255,255,255,0.07); border-radius: 8px;
+      padding: 6px 10px; margin-bottom: 4px; color: rgba(240,240,245,0.85);
+    }
+    .prev-row:last-child { margin-bottom: 0; }
+    .prev-badge { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 100px; }
+    .badge-green  { background: rgba(52,211,153,0.2);  color: #34d399; }
+    .badge-amber  { background: rgba(251,191,36,0.2);  color: #fbbf24; }
+    .badge-blue   { background: rgba(96,165,250,0.2);  color: #60a5fa; }
+    .badge-rose   { background: rgba(251,113,133,0.2); color: #fb7185; }
+
+    .prev-flow-step { padding: 5px 0; font-size: 11.5px; color: rgba(210,210,235,0.7); }
+    .prev-flow-step.highlight { color: #4ade80; font-weight: 700; }
+
+    /* ════ ROI ════ */
+    #roi { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .roi-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 28px;
+      border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+    }
+    .roi-table th {
+      background: rgba(255,255,255,0.03); padding: 12px 20px;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); text-align: left; border-bottom: 1px solid var(--border);
+    }
+    .roi-table td { padding: 15px 20px; font-size: 14.5px; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+    .roi-table tr:last-child td { border-bottom: none; }
+    .roi-table td:last-child { color: #4ade80; font-weight: 700; }
+    .roi-callout {
+      background: linear-gradient(135deg, rgba(255,46,136,0.09), rgba(139,92,246,0.07));
+      border: 1px solid var(--pink-border); border-radius: 18px; padding: 28px 32px; text-align: center;
+    }
+    .roi-callout p { font-size: 15.5px; color: var(--text); line-height: 1.72; }
+    .roi-callout strong { color: var(--pink); font-weight: 700; }
+
+    /* ════ FIDELIZACIÓN ════ */
+    #fidelizacion {
+      background: linear-gradient(180deg, #07070F, #0b0b18);
+      border-bottom: 1px solid var(--border);
+    }
+    .fid-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .fid-card {
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .fid-card:hover { transform: translateY(-3px); }
+    .fid-header { padding: 22px 22px 16px; }
+    .fid-num { font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-bottom: 5px; }
+    .fid-title { font-size: 17px; font-weight: 900; color: #fff; letter-spacing: -0.02em; line-height: 1.2; }
+    .fid-body { padding: 18px 22px 24px; }
+    .fid-desc { font-size: 13.5px; color: rgba(210,210,235,0.65); line-height: 1.68; margin-bottom: 16px; }
+    .fid-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .fid-list li {
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: 12.5px; color: rgba(210,210,235,0.7); line-height: 1.5;
+    }
+    .fid-check {
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px; font-size: 9px; font-weight: 800;
+    }
+    .fh-violet { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+    .fh-indigo { background: linear-gradient(135deg, #4338ca, #3730a3); }
+    .fh-fuchsia{ background: linear-gradient(135deg, #a21caf, #86198f); }
+    .fid-card:nth-child(1) { border-color: rgba(124,58,237,0.2); }
+    .fid-card:nth-child(2) { border-color: rgba(67,56,202,0.2); }
+    .fid-card:nth-child(3) { border-color: rgba(162,28,175,0.2); }
+    .fid-card:nth-child(1):hover { border-color: rgba(124,58,237,0.4); }
+    .fid-card:nth-child(2):hover { border-color: rgba(67,56,202,0.4); }
+    .fid-card:nth-child(3):hover { border-color: rgba(162,28,175,0.4); }
+    .check-violet  { background: rgba(124,58,237,0.2);  color: #a78bfa; }
+    .check-indigo  { background: rgba(67,56,202,0.2);   color: #818cf8; }
+    .check-fuchsia { background: rgba(162,28,175,0.2);  color: #e879f9; }
+    .fid-flow {
+      background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .fid-flow-label { font-size: 9.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(210,210,235,0.3); margin-bottom: 10px; }
+    .fid-flow-step { font-size: 11.5px; color: rgba(210,210,235,0.65); padding: 3px 0; }
+    .fid-flow-step.hl { color: #4ade80; font-weight: 700; }
+
+    /* Stats bar */
+    .fid-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px;
+    }
+    .fid-stat {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px; text-align: center;
+    }
+    .fid-stat-val { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: -0.03em; }
+    .fid-stat-val span { color: var(--pink); }
+    .fid-stat-label { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+    /* ════ TESTIMONIO ════ */
+    #testimonio { background: #07070F; border-bottom: 1px solid var(--border); }
+
+    /* Horizontal card */
+    .t-card {
+      display: grid; grid-template-columns: 280px 1fr;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 28px; overflow: hidden;
+      max-width: 920px; margin: 0 auto; position: relative;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+    .t-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 2;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+    }
+
+    /* Left: image column */
+    .t-img-col {
+      position: relative; overflow: hidden; min-height: 420px;
+    }
+    .t-img-col img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block;
+    }
+    .t-img-col::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, transparent 60%, var(--surface2) 100%),
+                  linear-gradient(to bottom, transparent 70%, rgba(7,7,15,0.6) 100%);
+    }
+    .t-img-badge {
+      position: absolute; bottom: 20px; left: 20px; z-index: 2;
+      background: rgba(7,7,15,0.75); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .t-name  { font-size: 14px; font-weight: 800; color: #fff; line-height: 1.3; }
+    .t-role  { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .t-ig {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--pink); text-decoration: none; font-weight: 600;
+      margin-top: 5px; transition: opacity 0.2s;
+    }
+    .t-ig:hover { opacity: 0.75; }
+
+    /* Right: text column */
+    .t-text-col { padding: 44px 48px; display: flex; flex-direction: column; justify-content: center; }
+    .t-quote { font-size: 60px; line-height: 0.7; color: var(--pink); opacity: 0.2; font-family: Georgia, serif; display: block; margin-bottom: 16px; }
+    .t-stars { color: #FBBF24; font-size: 15px; letter-spacing: 3px; margin-bottom: 18px; }
+    .t-text {
+      font-size: clamp(14px, 1.5vw, 16px); color: rgba(237,237,248,0.85);
+      line-height: 1.8; font-weight: 400;
+    }
+    .t-text strong { color: #fff; font-weight: 700; }
+    .t-text p + p { margin-top: 14px; }
+
+    /* ════ FAQ ════ */
+    #faq { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .faq-list { margin-top: 48px; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-item:first-child { border-top: 1px solid var(--border); }
+    .faq-q {
+      font-size: 15px; font-weight: 700; color: #fff;
+      cursor: pointer; display: flex; justify-content: space-between;
+      align-items: center; gap: 20px; padding: 22px 0; user-select: none;
+    }
+    .faq-ch {
+      width: 22px; height: 22px; border: 1.5px solid var(--border);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: var(--muted); font-size: 11px;
+      transition: transform 0.3s, border-color 0.3s, background 0.3s;
+    }
+    .faq-item.open .faq-ch { transform: rotate(180deg); border-color: var(--pink-border); background: var(--pink-dim); color: var(--pink); }
+    .faq-a {
+      font-size: 14px; color: var(--muted); line-height: 1.78;
+      max-height: 0; overflow: hidden; transition: max-height 0.38s cubic-bezier(0.16,1,0.3,1), padding-bottom 0.3s;
+    }
+    .faq-item.open .faq-a { max-height: 280px; padding-bottom: 22px; }
+
+    /* ════ CTA FINAL ════ */
+    #cta-final { padding: 100px 0; background: #07070F; overflow: hidden; }
+    .cta-card {
+      background: linear-gradient(135deg, rgba(18,18,38,0.92), rgba(14,14,28,0.92));
+      border: 1px solid rgba(255,255,255,0.09); border-radius: 28px;
+      padding: 72px 56px; text-align: center; max-width: 640px; margin: 0 auto;
+      position: relative; z-index: 1;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    }
+    .cta-card h2 { font-size: clamp(23px, 3vw, 36px); margin-bottom: 14px; }
+    .cta-card > p { font-size: 16px; color: var(--muted); max-width: 460px; margin: 0 auto 36px; line-height: 1.75; }
+    .cta-micro {
+      margin-top: 16px; font-size: 12px; color: var(--muted);
+      display: flex; justify-content: center; gap: 22px; flex-wrap: wrap;
+    }
+    .cta-micro span::before { content: '✓ '; color: var(--pink); font-weight: 800; }
+
+    footer {
+      border-top: 1px solid var(--border); padding: 26px 32px;
+      text-align: center; font-size: 13px; color: var(--muted);
+    }
+    footer a { color: var(--pink); text-decoration: none; }
+
+    .sticky-cta {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+      background: rgba(7,7,15,0.95); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border); z-index: 200;
+    }
+    .sticky-cta a {
+      display: block; background: var(--pink); color: #fff;
+      font-size: 15px; font-weight: 800; text-align: center;
+      padding: 15px; border-radius: 100px; text-decoration: none;
+    }
+
+    /* Hero entry */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none} }
+    .ha1 { animation: fadeUp .7s cubic-bezier(.16,1,.3,1) both; }
+    .ha2 { animation: fadeUp .7s .12s cubic-bezier(.16,1,.3,1) both; }
+    .ha3 { animation: fadeUp .7s .24s cubic-bezier(.16,1,.3,1) both; }
+    .ha4 { animation: fadeUp .7s .36s cubic-bezier(.16,1,.3,1) both; }
+    .ha5 { animation: fadeUp .7s .50s cubic-bezier(.16,1,.3,1) both; }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-left { text-align: center; }
+      .hero-left .hero-pill { margin: 0 auto 22px; display: inline-flex; }
+      .hero-sub { margin-left: auto; margin-right: auto; }
+      .hero-microcopy { justify-content: center; }
+      .niche-tags { justify-content: center; }
+      .hero-right { order: -1; }
+      .phone-frame { width: 258px; }
+      .pain-grid { grid-template-columns: 1fr; }
+      .sol-grid { grid-template-columns: 1fr; }
+      .module-grid { grid-template-columns: 1fr 1fr; }
+      .fid-grid { grid-template-columns: 1fr; }
+      .fid-stats { grid-template-columns: 1fr 1fr; }
+    }
+    #dolores .section-sub { color: rgba(255,255,255,0.78); }
+
+    /* ════ PRODUCT DEVICES ════ */
+    .device-showcase {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Glow ambiental detrás de los devices */
+    .device-showcase::before {
+      content: '';
+      position: absolute;
+      width: 70%; height: 60%;
+      bottom: -10%;
+      left: 50%; transform: translateX(-50%);
+      background: radial-gradient(ellipse, rgba(255,46,136,0.13) 0%, rgba(139,92,246,0.09) 40%, transparent 70%);
+      filter: blur(48px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Mac ── */
+    .mac-frame {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 40px 80px rgba(0,0,0,0.7));
+    }
+    .mac-bar {
+      width: 100%;
+      background: linear-gradient(180deg, #3a3a3c, #2c2c2e);
+      border-radius: 10px 10px 0 0;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-bottom: none;
+      padding: 9px 14px;
+      display: flex; align-items: center; gap: 6px;
+      position: relative;
+    }
+    .mac-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .mac-bar-title {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.38);
+      white-space: nowrap; letter-spacing: 0.01em;
+    }
+    .mac-screen {
+      width: 720px;
+      background: #000;
+      border-left: 1px solid rgba(255,255,255,0.12);
+      border-right: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden; line-height: 0;
+    }
+    .mac-screen img { width: 100%; display: block; object-fit: cover; }
+    .mac-base { display: flex; flex-direction: column; align-items: center; }
+    .mac-foot {
+      width: 720px; height: 16px;
+      background: linear-gradient(180deg, #2c2c2e, #1c1c1e);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+    }
+    .mac-stand {
+      width: 120px; height: 14px;
+      background: linear-gradient(180deg, #232325, #1a1a1c);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    /* ── iPhone ── */
+    .iphone-frame {
+      position: relative; z-index: 2;
+      margin-left: -24px;
+      margin-bottom: 30px;
+      width: 148px;
+      background: linear-gradient(160deg, #2a2a2e, #1a1a1e);
+      border-radius: 36px;
+      border: 1.5px solid rgba(255,255,255,0.14);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 28px 64px rgba(0,0,0,0.75),
+        0 0 0 1px rgba(0,0,0,0.5);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 12px 6px 14px;
+      overflow: hidden;
+    }
+    .iphone-notch {
+      width: 56px; height: 20px;
+      background: #0a0a0e;
+      border-radius: 0 0 14px 14px;
+      margin-bottom: 6px; flex-shrink: 0;
+      position: relative; z-index: 1;
+    }
+    .iphone-screen {
+      width: 100%; border-radius: 18px;
+      overflow: hidden; line-height: 0; flex: 1;
+      background: #000;
+    }
+    .iphone-screen img { width: 100%; display: block; object-fit: cover; }
+    .iphone-home {
+      width: 42px; height: 4px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 100px;
+      margin-top: 10px; flex-shrink: 0;
+    }
+
+    @media (max-width: 960px) {
+      .mac-screen { width: 520px; }
+      .mac-foot   { width: 520px; }
+      .mac-stand  { width: 90px; }
+    }
+
+    @media (max-width: 640px) {
+      .device-showcase { flex-direction: column; align-items: center; gap: 28px; }
+      .mac-screen { width: calc(100vw - 48px); }
+      .mac-foot   { width: calc(100vw - 48px); }
+      .mac-stand  { width: 80px; }
+      .iphone-frame { margin-left: 0; margin-bottom: 0; width: 160px; }
+    }
+
+    /* Parallax fallback — fixed backgrounds no funcionan en iOS */
+    @media (max-width: 768px) {
+      #dolores {
+        background:
+          linear-gradient(rgba(5,5,14,0.74), rgba(5,5,14,0.74)),
+          url('box-microblading.png') center 40% / cover scroll;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .sticky-cta { display: block; }
+      section { padding: 72px 0; }
+      nav { padding: 14px 20px; }
+      .t-card { grid-template-columns: 1fr; }
+      .t-img-col { min-height: 300px; }
+      .t-text-col { padding: 32px 24px; }
+      .cta-card { padding: 44px 24px; }
+      .module-grid { grid-template-columns: 1fr; }
+      .fid-stats { grid-template-columns: 1fr; }
+      .wrap, .wrap-narrow { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <strong>Citenly</strong>
+  <span class="trust-sep">·</span>
+  <span>Para micropigmentadoras en Chile y LATAM</span>
+  <span class="trust-sep">·</span>
+  <span class="trust-badge">Garantía 7 días</span>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Citenly<span>.</span></div>
+  <a href="https://citenly.com/demo" class="nav-cta">Agendar reunión gratis</a>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section id="hero">
+  <!-- ambient blobs -->
+  <div class="blob" style="width:650px;height:450px;background:radial-gradient(ellipse,rgba(255,46,136,0.09),transparent 70%);top:-120px;right:-160px;"></div>
+  <div class="blob" style="width:480px;height:480px;background:radial-gradient(ellipse,rgba(139,92,246,0.07),transparent 70%);bottom:-80px;left:-140px;"></div>
+
+  <div class="wrap">
+    <div class="hero-inner">
+
+      <!-- LEFT -->
+      <div class="hero-left">
+        <div class="hero-pill ha1"><span class="pill-dot"></span> Para micropigmentadoras</div>
+
+        <h1 class="ha2">
+          Deja de perder tardes<br>por clientas que<br><em>no llegan.</em>
+        </h1>
+
+        <p class="hero-sub ha3">
+          Citenly cobra el abono antes de separar el horario, responde tu WhatsApp mientras trabajas y <strong>recuerda a tus clientas cuándo toca el retoque</strong>. Tú solo llegas a trabajar.
+        </p>
+
+        <div class="ha4">
+          <a href="https://citenly.com/demo" class="btn-primary">Quiero ver cómo funciona <span class="btn-arr">→</span></a>
+          <div class="hero-microcopy">
+            <span>Sin tarjeta de crédito</span>
+            <span>Reunión de 20 min</span>
+            <span>Configuras el mismo día</span>
+          </div>
+        </div>
+
+        <div class="niche-tags ha5">
+          <span class="niche-tag">Microblading</span>
+          <span class="niche-tag">Powder Brows</span>
+          <span class="niche-tag">Nanobrows</span>
+          <span class="niche-tag">Micropigmentación labial</span>
+          <span class="niche-tag">Delineado permanente</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: chat en vivo -->
+      <div class="hero-right ha3">
+        <div class="hero-right-glow"></div>
+        <div class="phone-frame">
+
+          <!-- Status bar -->
+          <div class="phone-status">
+            <span>22:47</span>
+            <div class="ps-right">
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="4" width="2" height="6" rx="1"/><rect x="3" y="2.5" width="2" height="7.5" rx="1"/><rect x="6" y="1" width="2" height="9" rx="1"/><rect x="9" y="0" width="2" height="10" rx="1"/></svg>
+              <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x=".5" y=".5" width="18" height="9" rx="2.5" stroke="currentColor" opacity=".35"/><rect x="1.5" y="1.5" width="14" height="7" rx="1.5" fill="currentColor" opacity=".65"/><path d="M20 3.5V6.5C20.8 6.17 21.5 5.15 21.5 5C21.5 4.85 20.8 3.83 20 3.5Z" fill="currentColor" opacity=".4"/></svg>
+            </div>
+          </div>
+
+          <!-- Chat header -->
+          <div class="chat-header">
+            <span class="chat-back">‹</span>
+            <div class="chat-av">✦</div>
+            <div>
+              <div class="chat-info-name">Asistente Citenly</div>
+              <div><span class="chat-info-dot"></span><span class="chat-info-status">en línea</span></div>
+            </div>
+          </div>
+
+          <!-- Chat messages -->
+          <div class="chat-body" id="chatBody">
+            <div class="chat-time-label" id="timeLabel" style="opacity:0">22:47 · Tú estás dormida 💤</div>
+
+            <!-- client = RIGHT (.cmsg-in), bot = LEFT (.cmsg-bot) -->
+            <div class="cmsg cmsg-in"  id="m1">Hola, ¿tienen disponibilidad el viernes para microblading? 🙏</div>
+            <div class="typing-ind"    id="t1"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+            <div class="cmsg cmsg-bot" id="m2">Hola Camila ✨ Sí, tenemos el viernes. ¿Prefieres mañana o tarde?</div>
+
+            <div class="cmsg cmsg-in"  id="m3">En la tarde, después de las 4</div>
+            <div class="typing-ind"    id="t2"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+            <div class="cmsg cmsg-bot" id="m4">Perfecto. Disponible: 16:30 y 17:00. ¿Cuál te acomoda?</div>
+
+            <div class="cmsg cmsg-in"  id="m5">Las 17:00 👍</div>
+            <div class="typing-ind"    id="t3"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+            <div class="cmsg cmsg-bot" id="m6">Listo 🎉 Para confirmar tu hora te pido un abono de $30.000. Te mando los datos 💳</div>
+
+            <div class="cmsg cmsg-read" id="m7">✓✓ Leído · 22:51</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DOLORES ══════════════ -->
+<section id="dolores">
+  <div class="blob" style="width:500px;height:300px;background:radial-gradient(ellipse,rgba(255,46,136,0.06),transparent);top:0;right:-80px;"></div>
+  <div class="wrap">
+    <div class="reveal"><div class="section-label">Reconoces esto</div></div>
+    <div class="reveal"><h2>Los dolores que solo entiende<br>una <em>micropigmentadora</em></h2></div>
+    <div class="reveal"><p class="section-sub">Porque tu trabajo tiene problemas que las apps genéricas no conocen.</p></div>
+
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <div class="pain-num">01</div>
+        <h3>Separas 3 horas. La clienta no llega.</h3>
+        <p>Preparas tu espacio. Organizas tu kit. Son las 3 PM y te llega un WhatsApp: <em>"Ay, se me olvidó, ¿puedo reagendar?"</em></p>
+        <p class="pain-tag">Ese tiempo no se recupera. Ese ingreso tampoco.</p>
+      </div>
+
+      <div class="pain-card reveal">
+        <div class="pain-num">02</div>
+        <h3>Tu WhatsApp no descansa aunque tú sí.</h3>
+        <p>Son las 10:47 PM. Terminaste de trabajar. Te llega: <em>"Hola, ¿tienen disponibilidad esta semana?"</em></p>
+        <p class="pain-tag">Si no respondes, agenda con otra. Si respondes, nunca desconectas.</p>
+      </div>
+
+      <div class="pain-card reveal">
+        <div class="pain-num">03</div>
+        <h3>Clientas que se van y no vuelven para el retoque.</h3>
+        <p>Hiciste un trabajo precioso. La clienta quedó encantada. Han pasado 15 meses y no apareció — no porque no quiera, sino porque nadie le recordó que era el momento.</p>
+        <p class="pain-tag">Esa clienta existe. Solo necesita que alguien la llame.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ SOLUCIÓN ══════════════ -->
+<section id="solucion">
+  <div class="blob" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(139,92,246,0.07),transparent);bottom:-80px;left:-160px;"></div>
+  <div class="wrap">
+    <div class="reveal"><div class="section-label">Cómo lo resuelve Citenly</div></div>
+    <div class="reveal"><h2>Tu asistente trabaja<br>mientras tú estás en <em>sesión</em></h2></div>
+    <div class="reveal"><p class="section-sub">Lo que Citenly hace por ti — y el resultado que ves desde el primer mes.</p></div>
+
+    <div class="sol-grid">
+
+      <div class="sol-card reveal">
+        <div class="sol-icon" style="background:rgba(255,46,136,0.12);">💳</div>
+        <h3>Cobra el abono antes de confirmar el horario</h3>
+        <p>Cuando una clienta elige su hora, Citenly le pide el abono automáticamente por WhatsApp. El slot solo queda reservado cuando el pago llega.</p>
+        <span class="sol-result">✓ Tus horas tienen valor antes de que empieces a trabajar</span>
+      </div>
+
+      <div class="sol-card reveal">
+        <div class="sol-icon" style="background:rgba(52,211,153,0.1);">💬</div>
+        <h3>Responde tu WhatsApp cuando tú no puedes</h3>
+        <p>El asistente atiende consultas, responde preguntas de tus servicios y agenda citas. A las 11 PM, el domingo, durante una sesión. Sin que toques el teléfono.</p>
+        <span class="sol-result">✓ Tu agenda sigue llenándose aunque estés dormida</span>
+      </div>
+
+      <div class="sol-card reveal">
+        <div class="sol-icon" style="background:rgba(251,191,36,0.1);">🔔</div>
+        <h3>Recuerda el retoque en el momento justo</h3>
+        <p>Citenly registra cada sesión y le avisa a tu clienta cuándo toca volver para el retoque. Sin que tengas que acordarte ni mandar un solo mensaje.</p>
+        <span class="sol-result">✓ Clientas que vuelven solas, sin que las persigas</span>
+      </div>
+
+      <div class="sol-card reveal">
+        <div class="sol-icon" style="background:rgba(96,165,250,0.1);">📅</div>
+        <h3>Confirma cada cita 24h y 2h antes</h3>
+        <p>Dos recordatorios automáticos por WhatsApp. Si la clienta no puede, lo sabe con tiempo suficiente para que puedas ofrecer el horario a otra.</p>
+        <span class="sol-result">✓ Menos tardes vacías, más agenda aprovechada</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ TODO EN UN SOLO LUGAR ══════════════ -->
+<section id="todo">
+  <div class="blob" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(255,46,136,0.06),transparent);top:-80px;right:-160px;"></div>
+  <div class="wrap">
+
+    <!-- Header centrado -->
+    <div style="text-align:center;margin-bottom:56px;">
+      <div class="reveal"><div class="section-label" style="text-align:center;">Todo en un solo lugar</div></div>
+      <div class="reveal"><h2>Todo lo que necesitas para tu<br><em>micropigmentación</em> en un solo lugar.</h2></div>
+      <div class="reveal"><p class="section-sub" style="margin:0 auto;text-align:center;">No es solo un agente de WhatsApp. Es el sistema completo para que trabajes tranquila.</p></div>
+    </div>
+
+    <!-- Dashboard Mac — ancho completo -->
+    <div class="mac-showcase reveal">
+      <div class="mac-frame">
+        <div class="mac-bar">
+          <span class="mac-dot" style="background:#FF5F57;"></span>
+          <span class="mac-dot" style="background:#FFBD2E;"></span>
+          <span class="mac-dot" style="background:#28C840;"></span>
+          <span class="mac-bar-title">Citenly — Panel de Control</span>
+        </div>
+        <div class="mac-screen">
+          <img src="dashboard.png" alt="Panel Citenly" loading="lazy" />
+        </div>
+        <div class="mac-base">
+          <div class="mac-foot"></div>
+          <div class="mac-stand"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion funcionalidades -->
+    <div class="feat-grid reveal">
+
+      <div class="feat-item open">
+        <div class="feat-header" onclick="toggleFeat(this)">
+          <div class="feat-icon">✦</div>
+          <div class="feat-info">
+            <div class="feat-title">Asistente de IA</div>
+            <div class="feat-summary">Atiende, responde y gestiona a tus clientas en tu nombre</div>
+          </div>
+          <div class="feat-chevron">▾</div>
+        </div>
+        <div class="feat-body">
+          <ul class="feat-list">
+            <li>Atención 24/7 sin descansos ni días libres</li>
+            <li>Modelo de IA avanzado entrenado 100% con toda la información de tu marca</li>
+            <li>Lectura avanzada de audios e imágenes enviados por WhatsApp</li>
+            <li>Entiende flujos de atención para que atienda tal como lo harías tú, o mejor</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="feat-item">
+        <div class="feat-header" onclick="toggleFeat(this)">
+          <div class="feat-icon">📅</div>
+          <div class="feat-info">
+            <div class="feat-title">Agenda</div>
+            <div class="feat-summary">Reservas automáticas, abono previo y recordatorios sin intervención tuya</div>
+          </div>
+          <div class="feat-chevron">▾</div>
+        </div>
+        <div class="feat-body">
+          <ul class="feat-list">
+            <li>Disponibilidad en tiempo real, actualizada al instante</li>
+            <li>Abono previo automático antes de confirmar la reserva</li>
+            <li>Recordatorios y confirmaciones automáticas 24h y 2h antes de cada cita</li>
+            <li>Reagendamiento automático</li>
+            <li>Bloqueo de horas y días</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="feat-item">
+        <div class="feat-header" onclick="toggleFeat(this)">
+          <div class="feat-icon">🎯</div>
+          <div class="feat-info">
+            <div class="feat-title">Marketing</div>
+            <div class="feat-summary">Campañas segmentadas, reactivación y referidos automáticos</div>
+          </div>
+          <div class="feat-chevron">▾</div>
+        </div>
+        <div class="feat-body">
+          <ul class="feat-list">
+            <li>Campañas masivas por WhatsApp segmentadas por interés</li>
+            <li>Etiqueta a cada contacto según lo que preguntó — microblading, labial, powder brows</li>
+            <li>Recupera clientas que mostraron interés pero nunca agendaron con promociones segmentadas</li>
+            <li>Encuesta automática post-sesión para construir reputación</li>
+            <li>Automatización de referidos — cada clienta, una embajadora de tu marca</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="feat-item">
+        <div class="feat-header" onclick="toggleFeat(this)">
+          <div class="feat-icon">👥</div>
+          <div class="feat-info">
+            <div class="feat-title">Contactos</div>
+            <div class="feat-summary">Historial completo de cada clienta en un solo lugar</div>
+          </div>
+          <div class="feat-chevron">▾</div>
+        </div>
+        <div class="feat-body">
+          <ul class="feat-list">
+            <li>CRM completo con historial de citas, servicios y conversaciones</li>
+            <li>Etiquetas e intereses para segmentar campañas futuras</li>
+            <li>Notas y observaciones por clienta</li>
+            <li>Búsqueda y filtros rápidos</li>
+            <li>Galería con imágenes antes/después por clienta</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="feat-item">
+        <div class="feat-header" onclick="toggleFeat(this)">
+          <div class="feat-icon">💰</div>
+          <div class="feat-info">
+            <div class="feat-title">Finanzas</div>
+            <div class="feat-summary">Ingresos, gastos y resumen mensual de tu negocio</div>
+          </div>
+          <div class="feat-chevron">▾</div>
+        </div>
+        <div class="feat-body">
+          <ul class="feat-list">
+            <li>Registro de ingresos vinculado a cada cita cobrada</li>
+            <li>Control de gastos con categorías y resumen mensual</li>
+            <li>Ganancia neta y margen en tiempo real</li>
+            <li>Historial de transacciones exportable</li>
+          </ul>
+        </div>
+      </div>
+
+    </div><!-- .feat-grid -->
+  </div>
+</section>
+
+<!-- ══════════════ ROI ══════════════ -->
+<section id="roi">
+  <div class="blob" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(201,168,124,0.06),transparent);top:-60px;right:-160px;"></div>
+  <div class="wrap-narrow">
+    <div class="reveal"><div class="section-label">El número que importa</div></div>
+    <div class="reveal"><h2>Una cita recuperada<br>puede <em>pagarlo todo.</em></h2></div>
+    <div class="reveal"><p class="section-sub">Haz la cuenta tú misma.</p></div>
+
+    <div class="reveal">
+      <table class="roi-table">
+        <thead><tr><th>Si Citenly evita o recupera…</th><th>Valor recuperado</th></tr></thead>
+        <tbody>
+          <tr><td>1 clienta que dejó de llegar a última hora</td><td>$80.000 – $200.000</td></tr>
+          <tr><td>2 clientas que no habían vuelto para el retoque</td><td>$160.000 – $400.000</td></tr>
+          <tr><td>1 clienta nueva agendada de noche mientras dormías</td><td>$80.000 – $200.000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="roi-callout reveal">
+      <p>Citenly Starter cuesta <strong>$97 USD al mes.</strong></p>
+      <p style="margin-top:12px;">Si evita una sola cancelación de última hora al mes, <strong>ya se pagó solo.</strong> Si recupera dos retoques olvidados, estás en ganancia desde la primera semana.</p>
+      <a href="https://citenly.com/demo" class="btn-primary" style="margin-top:24px;font-size:14px;display:inline-flex;">
+        Quiero ver cómo funciona <span class="btn-arr">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FIDELIZACIÓN ══════════════ -->
+<section id="fidelizacion">
+  <div class="blob" style="width:700px;height:500px;background:radial-gradient(ellipse,rgba(139,92,246,0.07),transparent);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:52px;">
+      <div class="reveal"><div class="section-label" style="text-align:center;">Fidelización</div></div>
+      <div class="reveal">
+        <h2>Tus clientas vuelven solas.<br><em>Y traen amigas.</em></h2>
+      </div>
+      <div class="reveal"><p class="section-sub" style="margin:0 auto;text-align:center;">Un programa de puntos y referidos pensado para micropigmentadoras. Premia la lealtad y convierte el boca a boca en algo que puedes medir.</p></div>
+    </div>
+
+    <div class="fid-grid">
+
+      <div class="fid-card reveal-scale">
+        <div class="fid-header fh-violet">
+          <div class="fid-num" style="color:#c4b5fd;">01</div>
+          <div class="fid-title">Billetera de Puntos</div>
+        </div>
+        <div class="fid-body">
+          <p class="fid-desc">Cada sesión acumula puntos. Tú decides cómo canjearlos — descuento en el próximo retoque, cashback en pesos o un regalo de tu catálogo.</p>
+          <ul class="fid-list">
+            <li><span class="fid-check check-violet">✓</span>Puntos por cada sesión completada</li>
+            <li><span class="fid-check check-violet">✓</span>Descuento en el próximo retoque</li>
+            <li><span class="fid-check check-violet">✓</span>Cashback en dinero real</li>
+            <li><span class="fid-check check-violet">✓</span>Tú ajustas el valor de cada punto</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="fid-card reveal-scale">
+        <div class="fid-header fh-indigo">
+          <div class="fid-num" style="color:#a5b4fc;">02</div>
+          <div class="fid-title">Programa de Referidos</div>
+        </div>
+        <div class="fid-body">
+          <p class="fid-desc">Cada clienta tiene su <strong style="color:#fff;">Magic Link</strong> — un enlace que abre tu WhatsApp con su código ya escrito. La amiga agenda, ambas ganan puntos. Sin hacer nada.</p>
+          <div class="fid-flow">
+            <div class="fid-flow-label">Flujo automático</div>
+            <div class="fid-flow-step">① Clienta comparte su Magic Link</div>
+            <div class="fid-flow-step">② Su amiga abre tu WhatsApp</div>
+            <div class="fid-flow-step">③ Agenda su primera cita</div>
+            <div class="fid-flow-step hl">④ Ambas reciben puntos automáticamente ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fid-card reveal-scale">
+        <div class="fid-header fh-fuchsia">
+          <div class="fid-num" style="color:#f0abfc;">03</div>
+          <div class="fid-title">Catálogo de Recompensas</div>
+        </div>
+        <div class="fid-body">
+          <p class="fid-desc">Crea el catálogo de lo que pueden canjear tus clientas. Un retoque gratis, un descuento especial o un producto de tu marca.</p>
+          <ul class="fid-list">
+            <li><span class="fid-check check-fuchsia">✓</span>Descuento en retoque o sesión nueva</li>
+            <li><span class="fid-check check-fuchsia">✓</span>Sesión de regalo al acumular X puntos</li>
+            <li><span class="fid-check check-fuchsia">✓</span>Productos de cuidado post-micropig</li>
+            <li><span class="fid-check check-fuchsia">✓</span>Tú defines los canjes disponibles</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="fid-stats">
+      <div class="fid-stat reveal">
+        <div class="fid-stat-val">5<span>×</span></div>
+        <div class="fid-stat-label">más barato retener una clienta que conseguir una nueva</div>
+      </div>
+      <div class="fid-stat reveal">
+        <div class="fid-stat-val">+30<span>%</span></div>
+        <div class="fid-stat-label">más gasto promedio de clientas con programa de puntos</div>
+      </div>
+      <div class="fid-stat reveal">
+        <div class="fid-stat-val">100<span>%</span></div>
+        <div class="fid-stat-label">del boca a boca rastreable con el programa de referidos</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ TESTIMONIO ══════════════ -->
+<section id="testimonio">
+  <div class="blob" style="width:500px;height:500px;background:radial-gradient(ellipse,rgba(255,46,136,0.06),transparent);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="wrap-narrow" style="text-align:center;position:relative;z-index:1;">
+    <div class="reveal"><div class="section-label">Testimonio real</div></div>
+    <div class="reveal"><h2 style="margin-bottom:48px;">No tienes que creerle a Citenly.<br><em>Créele a ella.</em></h2></div>
+
+    <div class="t-card reveal-scale">
+
+      <!-- Columna izquierda: imagen -->
+      <div class="t-img-col">
+        <img src="elizabeth.jpeg" alt="Elizabeth Hernández, Micropigmentadora" />
+        <div class="t-img-badge">
+          <div class="t-name">Elizabeth Hernández</div>
+          <div class="t-role">Micropigmentadora · Chile</div>
+          <a href="https://instagram.com/elizabeth.microblading" target="_blank" rel="noopener" class="t-ig">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            @elizabeth.microblading
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna derecha: texto -->
+      <div class="t-text-col">
+        <span class="t-quote">"</span>
+        <div class="t-stars">★★★★★</div>
+        <div class="t-text">
+          <p>Antes perdía dos o tres tardes al mes porque las clientas confirmaban y luego simplemente no llegaban. Sin avisar, sin cancelar — nada. Yo esperaba con todo listo, y nada.</p>
+          <p>Desde que uso Citenly, pedir el abono antes lo cambió todo. Las clientas saben que para separar el horario hay que confirmar con un pago. Y las que no están dispuestas... de todas formas tampoco iban a llegar.</p>
+          <p>Pero lo que más me sorprendió fue algo que no esperaba: <strong>el asistente empezó a avisarles a mis clientas que les tocaba el retoque.</strong> Tenía chicas que llevaban más de un año sin aparecer y de repente me escribían porque les llegó el mensaje. Eso no lo planifiqué — simplemente pasó solo.</p>
+          <p>Ahora mi agenda la maneja Citenly. Yo me dedico a trabajar.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FAQ ══════════════ -->
+<section id="faq">
+  <div class="wrap-narrow">
+    <div class="reveal"><div class="section-label">Preguntas frecuentes</div></div>
+    <div class="reveal"><h2>Lo que toda micropigmentadora<br>pregunta antes de empezar</h2></div>
+
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Puedo pedir el abono antes de que la hora quede separada? <span class="faq-ch">▾</span></div>
+        <div class="faq-a">Sí. Puedes configurar Citenly para que el asistente pida el abono antes de confirmar la cita. Si la clienta no paga, el horario no queda separado. Es la forma más directa de evitar que te dejen esperando.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">¿El asistente puede responder preguntas sobre mis técnicas — powder brows, nanobrows, retoque? <span class="faq-ch">▾</span></div>
+        <div class="faq-a">Sí. Tú le cuentas a Citenly todo sobre tus servicios: precios, técnicas, preguntas frecuentes. El asistente responde con lo que tú le enseñaste — en tu tono, con tus precios, con tu estilo.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Funciona con mi WhatsApp actual? <span class="faq-ch">▾</span></div>
+        <div class="faq-a">Citenly se conecta al mismo número que ya tienes. Tus clientas siguen escribiéndote al mismo WhatsApp de siempre. La diferencia es que ahora hay alguien respondiendo cuando tú no puedes.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Y si una clienta quiere hablar directamente conmigo? <span class="faq-ch">▾</span></div>
+        <div class="faq-a">En cualquier momento el asistente puede pasarte la conversación. Si una clienta pregunta algo que no está en tu configuración, o simplemente pide hablar contigo, la conversación llega directo a ti.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Necesito instalar algo o contratar un técnico? <span class="faq-ch">▾</span></div>
+        <div class="faq-a">No. El equipo de Citenly hace la configuración contigo en una reunión de onboarding. La mayoría de las micropigmentadoras queda operando el mismo día. Sin saber de tecnología.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cuándo empieza la garantía de 7 días? <span class="faq-ch">▾</span></div>
+        <div class="faq-a">Desde el día en que tu asistente atiende su primera clienta real — no desde que te registras. Primero dejamos todo configurado y funcionando, y la garantía empieza cuando ya está operando de verdad en tu negocio.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CTA FINAL ══════════════ -->
+<section id="cta-final">
+  <div class="blob" style="width:700px;height:700px;background:radial-gradient(ellipse,rgba(255,46,136,0.08),transparent);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <div class="wrap">
+    <div class="cta-card reveal-scale">
+      <div class="section-label" style="text-align:center;margin-bottom:14px;">Sin compromiso</div>
+      <h2>¿Quieres ver cómo funciona<br>para tu <em>micropigmentación?</em></h2>
+      <p>Agenda una reunión de 20 minutos. Te mostramos cómo quedaría configurado para tus servicios, tu WhatsApp y tu agenda.</p>
+      <a href="https://citenly.com/demo" class="btn-primary" style="font-size:15px;">
+        Agendar mi reunión gratuita <span class="btn-arr">→</span>
+      </a>
+      <div class="cta-micro">
+        <span>Solo 20 minutos</span>
+        <span>Configuras el mismo día</span>
+        <span>Garantía 7 días</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 Citenly · Para micropigmentadoras y artistas de cejas · <a href="#">Términos</a> · <a href="#">Privacidad</a></p>
+</footer>
+
+<!-- Sticky mobile CTA -->
+<div class="sticky-cta">
+  <a href="https://citenly.com/demo">Agendar reunión gratis →</a>
+</div>
+
+<script>
+  /* Feature accordion */
+  function toggleFeat(header) {
+    const item = header.closest('.feat-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.feat-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  /* FAQ */
+  function toggleFaq(el) {
+    const item = el.closest('.faq-item');
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!open) item.classList.add('open');
+  }
+  document.querySelector('.faq-item')?.classList.add('open');
+
+  /* Scroll reveal with auto-stagger per group */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const delay = parseInt(el.dataset.delay || 0);
+      setTimeout(() => el.classList.add('visible'), delay);
+      obs.unobserve(el);
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -36px 0px' });
+
+  document.querySelectorAll('.reveal, .reveal-scale').forEach((el, globalIdx) => {
+    const siblings = [...(el.parentElement?.querySelectorAll('.reveal, .reveal-scale') || [])];
+    const localIdx = siblings.indexOf(el);
+    el.dataset.delay = localIdx * 90;
+    obs.observe(el);
+  });
+
+  /* ── Live chat animation ── */
+  const SCRIPT = [
+    { t: 200,   a: 'label' },
+    { t: 600,   a: 'show', id: 'm1' },
+    { t: 1500,  a: 'type', id: 't1' },
+    { t: 2800,  a: 'hide', id: 't1' },
+    { t: 2860,  a: 'show', id: 'm2' },
+    { t: 4000,  a: 'show', id: 'm3' },
+    { t: 4900,  a: 'type', id: 't2' },
+    { t: 6100,  a: 'hide', id: 't2' },
+    { t: 6160,  a: 'show', id: 'm4' },
+    { t: 7300,  a: 'show', id: 'm5' },
+    { t: 8100,  a: 'type', id: 't3' },
+    { t: 9600,  a: 'hide', id: 't3' },
+    { t: 9660,  a: 'show', id: 'm6' },
+    { t: 10900, a: 'show', id: 'm7' },
+  ];
+  const RESTART = 4500;
+  let chatTimers = [];
+
+  function clearChat() {
+    chatTimers.forEach(clearTimeout);
+    chatTimers = [];
+    document.getElementById('timeLabel').style.opacity = '0';
+    ['m1','m2','m3','m4','m5','m6','m7'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+    ['t1','t2','t3'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+    document.getElementById('chatBody').scrollTop = 0;
+  }
+
+  function runChat() {
+    clearChat();
+    SCRIPT.forEach(step => {
+      const tid = setTimeout(() => {
+        const el = document.getElementById(step.id || '');
+        if (step.a === 'label') {
+          const l = document.getElementById('timeLabel');
+          l.style.transition = 'opacity .5s'; l.style.opacity = '1';
+        } else if (step.a === 'show') {
+          el?.classList.add('show');
+          setTimeout(() => document.getElementById('chatBody').scrollTop = 9999, 60);
+        } else if (step.a === 'type') {
+          el?.classList.add('show');
+          setTimeout(() => document.getElementById('chatBody').scrollTop = 9999, 60);
+        } else if (step.a === 'hide') {
+          el?.classList.remove('show');
+        }
+      }, step.t);
+      chatTimers.push(tid);
+    });
+    const last = SCRIPT[SCRIPT.length - 1].t;
+    chatTimers.push(setTimeout(runChat, last + RESTART));
+  }
+
+  const phoneObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { runChat(); phoneObs.disconnect(); }
+  }, { threshold: 0.35 });
+  const cb = document.getElementById('chatBody');
+  if (cb) phoneObs.observe(cb);
+</script>
+</body>
+</html>
