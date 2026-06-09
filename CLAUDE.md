@@ -46,11 +46,11 @@ Flujo por mensaje entrante:
 6. Verificación de créditos AI antes de responder
 7. Respuesta vía YCloud API
 
-**Estado actual del webhook (mayo 2026):**
+**Estado actual del webhook (junio 2026):**
 - Usa imports modernizados (`jsr:`, `npm:`)
 - Tiene `callGemini`, `callOpenRouter`, `callOpenAI` (routing híbrido sin `selectModelTier` formal)
 - **Sin HMAC per-clínica** — pendiente implementar (ver Tareas pendientes)
-- **Deployado** en producción (sesión 5) — incluye filtro franja horaria, fix AM/PM, flujo de pago condicional y soporte `ai_credits_unlimited`
+- **Deployado** en producción (sesión 15) — incluye auto-cancelación silenciosa en `requires_human`, fix `rescheduleAppt` con `pending_deposit`, regla 9.5 de cancelaciones en prompt
 
 ### Sistema de créditos AI
 
@@ -639,6 +639,44 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - `send-whatsapp-message` — imports modernizados
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
+
+### Cambios realizados — junio 2026 (sesión 15)
+
+#### Fix: cancelaciones IA no procesadas (2 casos distintos)
+
+**Caso 1 — Ingrid Florez (`56987928944`), clínica Elizabeth Microblading:**
+- Su prospecto tenía `requires_human = true` desde el 25 de abril (escalada a humano)
+- Cuando escribió "Voy a cancelar la hora de las cejas" el 2 de junio, el webhook retornó `saved_silently` sin llegar al AI → la cita (29 de mayo, `status: pending`) quedó sin cancelar
+- **Fix DB:** cita ID `9428f178-3387-4758-980f-a49a7676030f` puesta en `status: cancelled` directamente en producción
+- **Fix webhook:** cuando `requires_human = true`, si el mensaje contiene keywords de cancelación ("cancelar", "no podré asistir", "no voy", "no puedo ir", etc.), se llama `confirmAppt(no)` silenciosamente antes de retornar `saved_silently`
+
+**Caso 2 — Mónica Espejo Muñoz (`56968341920`):**
+- El 7 de junio la IA dijo "Procederé a cancelar tu cita para el lunes a las 18:00" **sin llamar al tool `confirm_appointment`** — hallucination pura
+- La cita de Mónica no existe en la DB (problema previo no investigable sin logs del 28 de mayo)
+- **Fix prompt:** regla 9.5 agregada — "NUNCA uses frases como 'procederé a cancelar' sin haber llamado primero a `confirm_appointment` con `response: no`"
+- **Fix tool description:** `confirm_appointment` (versiones Elizabeth y general) ahora dice explícitamente "ya sea respondiendo a un recordatorio O de forma proactiva"
+
+**Fix adicional — `rescheduleAppt` perdía citas `pending_deposit`:**
+- El filtro `.in("status", ["pending", "confirmed"])` no incluía `pending_deposit`
+- Para clínicas con `require_deposit_first = true`, las citas recién agendadas (status `pending_deposit`) eran invisibles para reagendar
+- Fix: `.in("status", ["pending", "pending_deposit", "confirmed"])`
+
+#### Fix: race condition de auth → sidebar limitado y dashboard en 0
+
+**Síntoma:** al entrar a Elizabeth Microblading (y posiblemente otras clínicas), el sidebar mostraba solo ítems de nivel `professional` y todas las métricas del dashboard aparecían en cero.
+
+**Causa raíz — `AuthContext.tsx`:** el fetch de `clinic_members` estaba en `.then()` (fire-and-forget). La secuencia era: fetch profile → `setLoading(false)` → luego (en paralelo) fetch member. El componente montaba con `member = null` y `loading = false`, por lo que `usePermissions` tomaba el rol por defecto `'professional'`.
+
+**Fix `AuthContext.tsx`:** el fetch de `clinic_members` convertido a `await` dentro del handler de `onAuthStateChange`. `setLoading(false)` solo corre después de que `member` ya está seteado.
+
+**Fix `usePermissions.ts`:** fallback adicional `profile?.role` entre `member?.role` y `'professional'`, como defensa en profundidad ante futuros re-renders intermedios.
+
+**Fix `Dashboard.tsx`:**
+- Eliminada query a `satisfaction_surveys` (tabla no existe en producción → rompía el `Promise.all` completo)
+- Agregado filtro `.in('status', ['pending', 'confirmed', 'pending_deposit'])` en upcoming appointments (antes mostraba también citas canceladas)
+- Timeout `Promise.race` extendido de 10s a 15s
+
+---
 
 ### Cambios realizados — junio 2026 (sesión 14)
 
