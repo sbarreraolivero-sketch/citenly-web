@@ -640,6 +640,69 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
 
+### Cambios realizados — junio 2026 (sesión 17)
+
+#### KB Elizabeth Microblading — limpieza completa de precios y servicios
+
+**Documentos actualizados (`knowledge_base`, clinic_id `1ab32091-...`):**
+- **Ofertas de mayo eliminadas** en los 3 documentos que las contenían ("Precios/Valores", "Servicios", "Preguntas frecuentes") — las promociones "oferta hasta el 31 de Mayo $79.000" ya no existen en ningún documento
+- **Micropigmentación de Labios eliminada** — Elizabeth no realiza este servicio por el momento. Los 3 documentos fueron actualizados: se eliminó la descripción completa del servicio, el FAQ de labios y el precio. Todos incluyen una nota `⚠️ SERVICIO NO DISPONIBLE: Elizabeth NO está realizando Micropigmentación de Labios por el momento. Responder únicamente que no está disponible.`
+- **Precios corregidos** (conflicto resuelto entre "Servicios" y "Precios/Valores"):
+  - Microblading de Cejas: **$89.000**
+  - Retoque de Microblading: $50.000 (sin cambios)
+  - Micropigmentación de Ojos: **$89.000**
+
+#### Fix crítico: teléfonos sin normalizar en `appointments` — IA no encontraba citas
+
+**Síntoma:** Clientas con citas confirmadas recibían "no tengo una cita agendada para usted" al consultar por WhatsApp (caso detectado: Maritza Urrutia, cita de hoy a las 18:00).
+
+**Causa raíz:** Las citas creadas manualmente desde el dashboard guardaban el teléfono en formato raw de YCloud (`+56 9 6735 6592`). El webhook normaliza con `normalizePhone()` que hace `replace(/\D/g, '')` → `56967356592`. El `.eq("phone_number", normalizedPhone)` nunca coincidía con el valor almacenado con `+` y espacios.
+
+**Fix DB (aplicado en producción):**
+1. Normalización masiva: `UPDATE appointments SET phone_number = regexp_replace(phone_number, '[^0-9]', '', 'g') WHERE phone_number ~ '[^0-9]'` — afectó 40 de 135 citas en Elizabeth
+2. Trigger permanente `trg_normalize_phone` en `appointments` — normaliza automáticamente en cualquier INSERT o UPDATE, independientemente de la fuente (frontend, webhook, script)
+
+**Regla permanente:** `appointments.phone_number` siempre debe ser solo dígitos (ej: `56967356592`). El trigger lo garantiza en adelante.
+
+#### Fix: regla anti-alucinación en webhook — re-check de disponibilidad post-reserva
+
+**Síntoma (caso Carolina Gaona +56 9 5405 7457):** La IA creó correctamente un `pending_deposit` para las 4 PM del viernes 12 de junio (bloqueando el slot). Cuando la clienta dijo "Okey voy a transferir", el webhook procesó el mensaje como nueva consulta, llamó `check_availability` de nuevo, encontró las 4 PM bloqueadas (por su propia reserva) y ofreció otros horarios, contradiciendo la reserva previa. Terminó diciendo "no hay disponibilidad para el viernes" y saltando al lunes. La clienta se fue sin cita.
+
+**Fix en el prompt (`ycloud-whatsapp-webhook`):**
+- Nueva "REGLA CRÍTICA ANTI-ALUCINACIÓN" insertada en el paso `e)` del flujo `require_deposit_first`: una vez enviados los datos de pago, la IA NUNCA puede llamar `check_availability` para ese cliente. Si dice "okey", "entendido" o cualquier confirmación verbal → responder únicamente "Perfecto, quedo esperando tu comprobante 🌿✨"
+- Deployado a producción
+
+**Estado Carolina Gaona:** no tiene cita en la DB. Elizabeth debe contactarla manualmente para reagendar.
+
+#### Logo Citenly generado con IA
+
+**Generación:** `gpt-image-1` (OpenAI) vía `VITE_OPENAI_API_KEY` del `.env` local.
+
+**Archivos en `public/`:**
+- `citenly-icon.png` — ícono cuadrado 1024×1024, gradiente pink `#FF2E88` → violet `#9333EA`, rayo + chat bubble fusionados en blanco. Fondo PNG transparente (se ve sobre dark o claro).
+- `citenly-logo-dark.png` — lockup horizontal con wordmark (variante)
+
+**Cambios en `Landing.tsx`:**
+- Navbar y footer: reemplazado `<div gradient><Sparkles/></div>` por `<img src="/citenly-icon.png">`
+- Menú hamburguesa móvil agregado: botón `Menu`/`X` visible solo en `< md`, despliega dropdown con links de navegación + "Iniciar sesión" + botón "Agendar Demo". Se cierra automáticamente al tocar cualquier enlace.
+
+**Cambios en `index.html`:**
+- Favicon: `favicon.svg` → `citenly-icon.png`
+- Agregado `<link rel="apple-touch-icon" href="/citenly-icon.png" />`
+- `theme-color` cambiado de `#F8F6F2` a `#0A0A0F` (barra del navegador en móvil)
+
+**Cambios en `public/micropigmentadoras.html`:**
+- `.nav-logo` actualizado de texto plano `Citenly.` a `<img> + <span>Citenly</span>`
+- El logo es clickeable y lleva a `citenly.com`
+- Estilos responsivos: 36px desktop, 30px móvil
+
+**Nota sobre generación de imágenes:**
+- `GOOGLE_AI_API_KEY` del `.env` está suspendida (revisar billing en Google Cloud Console)
+- `VITE_OPENAI_API_KEY` funciona para generación con `gpt-image-1`
+- Para logos con texto preciso, Ideogram 3.0 tiene mejor renderizado tipográfico
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 16)
 
 #### Landing vertical piloto — `/micropigmentadoras`
