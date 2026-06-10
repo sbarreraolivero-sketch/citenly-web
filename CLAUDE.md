@@ -640,6 +640,30 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
 
+### Cambios realizados — junio 2026 (sesión 18)
+
+#### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos
+
+**Síntoma:** La IA seguía diciendo "el precio normal es $99.000, oferta especial $79.000 válida hasta el 31 de mayo" aunque los documentos de la KB ya habían sido limpiados en la sesión 17.
+
+**Causa raíz:** El campo `clinic_settings.ai_behavior_rules` tenía instrucciones explícitas en el system prompt que ordenaban mencionar la oferta. El system prompt tiene precedencia sobre la KB, por eso el agente ignoraba los documentos actualizados.
+
+**Problemas encontrados en `ai_behavior_rules` (clínica `1ab32091-...`):**
+- Regla 2: instruía a siempre mencionar "Valor Normal + Oferta/Promoción si hay alguna activa" → el modelo inventaba $99.000 como "precio normal" para poder poner la oferta encima
+- Regla 4 d) para los 3 servicios: decía literalmente `"la oferta que está activa hasta el 31 de Mayo a $79.000 sin retoque con cupos limitados"`
+- Regla 3 y 4: seguía listando "Micropigmentación de Labios" como servicio activo
+
+**Fix aplicado** (PATCH REST directo a `clinic_settings`):
+1. Regla 2: eliminado el frame "Valor Normal + Oferta". Reemplazado por "Menciona el precio vigente del servicio directamente. No hay ofertas activas actualmente."
+2. Regla 3: "Micropigmentación de labios" removida de servicios activos; nota: si consultan, indicar no disponible
+3. Regla 4 d) Microblading: `"Menciona el valor actual: $89.000 (no incluye retoques)."`
+4. Regla 4 Micropigmentación de Labios: flujo completo reemplazado por "indica que no está disponible por el momento"
+5. Regla 4 d) Micropigmentación de Ojos: `"Menciona el valor actual: $89.000."`
+
+**Regla aprendida:** Si la IA repite información incorrecta pese a tener la KB actualizada, revisar SIEMPRE `clinic_settings.ai_behavior_rules` — ese campo forma parte del system prompt y tiene precedencia sobre los documentos de la KB.
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 17)
 
 #### KB Elizabeth Microblading — limpieza completa de precios y servicios
