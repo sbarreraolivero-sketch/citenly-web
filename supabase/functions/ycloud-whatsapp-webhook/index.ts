@@ -413,14 +413,15 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
         const dayConfig = clinicWorkingHours?.[dow];
         const lunch = dayConfig?.lunch_break;
 
-        // Compute current time in clinic timezone to filter out past slots when checking today
+        // Compute current time in clinic timezone to filter out past/too-soon slots when checking today
         const nowUTC = new Date();
         const todayInTz = nowUTC.toLocaleDateString("en-CA", { timeZone: timezone });
         const isToday = targetDate === todayInTz;
         let nowMinutesWithBuffer = 0;
         if (isToday) {
             const nowLocal = new Date(nowUTC.toLocaleString("en-US", { timeZone: timezone }));
-            nowMinutesWithBuffer = nowLocal.getHours() * 60 + nowLocal.getMinutes() + 30; // 30 min buffer
+            const bufferHours = clinicObj?.same_day_buffer_hours ?? 2; // default 2h, configurable per clinic
+            nowMinutesWithBuffer = nowLocal.getHours() * 60 + nowLocal.getMinutes() + (bufferHours * 60);
         }
 
         const availableSlots = slots
