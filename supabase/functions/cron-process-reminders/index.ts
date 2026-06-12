@@ -6,6 +6,47 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Cache de placeholders por plantilla (clave: apiKey+nombre). Vive lo que dura la ejecución del cron.
+const templateParamCache = new Map<string, number[] | null>()
+
+// Devuelve los números de placeholder ({{N}}) presentes en el body de la plantilla, orden ascendente.
+// Las plantillas de Citenly usan numeración semántica fija: 1=paciente, 2=especialista, 3=fecha, 4=servicio, 5=clínica,
+// pero no todas incluyen todos los placeholders (ej: recordatorio_oficial_24hrs no tiene {{2}}).
+// Enviar siempre 5 parámetros hace que WhatsApp rechace el envío con error 132000 (param count mismatch).
+const getTemplatePlaceholders = async (apiKey: string, tplName: string): Promise<number[] | null> => {
+    const cacheKey = `${apiKey}:${tplName}`
+    if (templateParamCache.has(cacheKey)) return templateParamCache.get(cacheKey) ?? null
+    try {
+        const resp = await fetch('https://api.ycloud.com/v2/whatsapp/templates?limit=100', {
+            headers: { 'X-API-Key': apiKey }
+        })
+        if (!resp.ok) throw new Error(`templates fetch ${resp.status}`)
+        const json = await resp.json()
+        const tpl = (json.items || []).find((t: any) => t.name === tplName)
+        const body = tpl?.components?.find((c: any) => c.type === 'BODY')
+        if (!body?.text) {
+            templateParamCache.set(cacheKey, null)
+            return null
+        }
+        const nums = [...new Set([...body.text.matchAll(/{{(\d+)}}/g)].map(m => parseInt(m[1])))].sort((a, b) => a - b)
+        templateParamCache.set(cacheKey, nums)
+        return nums
+    } catch (e) {
+        console.error(`[getTemplatePlaceholders] ${tplName}:`, e)
+        templateParamCache.set(cacheKey, null)
+        return null
+    }
+}
+
+// Construye el array de parámetros del body según los placeholders reales de la plantilla.
+// values: mapa semántico {1: paciente, 2: especialista, 3: fecha, 4: servicio, 5: clínica}.
+// Si no se pudo leer la plantilla, cae al comportamiento histórico (5 parámetros en orden 1..5).
+const buildTemplateParams = async (apiKey: string, tplName: string, values: Record<number, string>) => {
+    const placeholders = await getTemplatePlaceholders(apiKey, tplName)
+    const nums = placeholders && placeholders.length > 0 ? placeholders : [1, 2, 3, 4, 5]
+    return nums.map(n => ({ type: 'text', text: values[n] || '' }))
+}
+
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
@@ -191,13 +232,14 @@ Deno.serve(async (req) => {
                             components: [
                                 {
                                     type: 'body',
-                                    parameters: [
-                                        { type: 'text', text: appt.patient_name }, // {{1}} Paciente
-                                        { type: 'text', text: clinic.clinic_name }, // {{2}} Clínica (originalmente {{5}})
-                                        { type: 'text', text: appt.service || 'consulta' }, // {{3}} Servicio (originalmente {{4}})
-                                        { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora (originalmente {{3}})
-                                        { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista (originalmente {{2}})
-                                    ]
+                                    // Numeración semántica: 1=paciente, 2=especialista, 3=fecha, 4=servicio, 5=clínica
+                                    parameters: await buildTemplateParams(clinic.ycloud_api_key, tplName, {
+                                        1: appt.patient_name,
+                                        2: 'nuestro equipo',
+                                        3: `${formattedDate} a las ${formattedTime}`,
+                                        4: appt.service || 'consulta',
+                                        5: clinic.clinic_name
+                                    })
                                 }
                             ]
                         }
@@ -359,13 +401,14 @@ Deno.serve(async (req) => {
                                 components: [
                                     {
                                         type: 'body',
-                                        parameters: [
-                                            { type: 'text', text: appt.patient_name }, // {{1}} Paciente
-                                            { type: 'text', text: clinic.clinic_name }, // {{2}} Clínica
-                                            { type: 'text', text: appt.service || 'consulta' }, // {{3}} Servicio
-                                            { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora
-                                            { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista
-                                        ]
+                                        // Numeración semántica: 1=paciente, 2=especialista, 3=fecha, 4=servicio, 5=clínica
+                                        parameters: await buildTemplateParams(clinic.ycloud_api_key, tplName2h, {
+                                            1: appt.patient_name,
+                                            2: 'nuestro equipo',
+                                            3: `${formattedDate} a las ${formattedTime}`,
+                                            4: appt.service || 'consulta',
+                                            5: clinic.clinic_name
+                                        })
                                     }
                                 ]
                             }
@@ -512,13 +555,14 @@ Deno.serve(async (req) => {
                                 components: [
                                     {
                                         type: 'body',
-                                        parameters: [
-                                            { type: 'text', text: appt.patient_name }, // {{1}} Paciente
-                                            { type: 'text', text: clinic.clinic_name }, // {{2}} Clínica
-                                            { type: 'text', text: appt.service || 'consulta' }, // {{3}} Servicio
-                                            { type: 'text', text: `${formattedDate} a las ${formattedTime}` }, // {{4}} Fecha/Hora
-                                            { type: 'text', text: 'nuestro equipo' } // {{5}} Especialista
-                                        ]
+                                        // Numeración semántica: 1=paciente, 2=especialista, 3=fecha, 4=servicio, 5=clínica
+                                        parameters: await buildTemplateParams(clinic.ycloud_api_key, tplName1h, {
+                                            1: appt.patient_name,
+                                            2: 'nuestro equipo',
+                                            3: `${formattedDate} a las ${formattedTime}`,
+                                            4: appt.service || 'consulta',
+                                            5: clinic.clinic_name
+                                        })
                                     }
                                 ]
                             }

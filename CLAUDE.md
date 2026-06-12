@@ -640,6 +640,42 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
 
+### Cambios realizados — junio 2026 (sesión 19) — Auditoría incidente Bárbara Orellana
+
+#### Incidente 1: la IA canceló la cita de Bárbara Orellana por iniciativa propia
+- Mensaje "Hola sabes que estoy afuera pero está cerrado" (clienta llegando a su cita de las 12:00) fue manejado por **gpt-4o-mini (Tier 1)** — ninguna keyword lo subía de tier
+- El mini interpretó "no podrá asistir", llamó `confirm_appointment(no)` 3 veces y alucinó "su cita ha sido cancelada ya que la clínica está cerrada"
+- **Fixes:** regla 9.5 reescrita — cancelación en DOS PASOS (preguntar "¿Confirmas que deseas cancelar...?" y solo cancelar tras "sí" explícito); nueva regla 9.6 anti-invención (nunca afirmar estados del local, derivar con `escalate_to_human`); descripciones del tool `confirm_appointment` endurecidas (ambas variantes); keywords de cancelación/retraso agregadas a `n2Keywords` para que nunca las maneje el mini
+
+#### Incidente 2: cita de Carolina Gaona cancelada por keyword-matching ciego
+- Audio transcrito contenía la pregunta "¿Voy a tener que cancelarla ahora?" mientras intentaba llegar → el substring `"cancelar"` disparó la auto-cancelación silenciosa de sesión 15 (`requires_human` + keywords)
+- **Fix:** auto-cancelación ELIMINADA. En modo humano ya NUNCA se cancela automáticamente — si hay señales de cancelación se inserta una notificación `possible_cancellation` para que la clínica decida
+
+#### Incidente 3: comprobante de $89.000 (tratamiento completo) rechazado como "monto no coincide"
+- El prompt ordenaba rechazar montos distintos al abono — Bárbara pagó el tratamiento completo y fue rechazada
+- **Fix (regla de negocio confirmada por el fundador):** monto IGUAL al abono → agradecer + `confirm_appointment(yes)`; monto MAYOR → SOLO agradecer + `escalate_to_human` interno (nunca rechazar ni mencionar que no coincide); monto MENOR → pedir completar el abono
+- **Red de seguridad en `cron-cancel-pending-deposits`:** si el cliente envió una imagen (probable comprobante) después de crear la cita, NO se cancela — se notifica `deposit_review` para verificación manual
+
+#### Incidente 4: recordatorios 24h NUNCA llegaban (marcados como "enviados")
+- La plantilla `recordatorio_oficial_24hrs` tiene **4 placeholders** ({{1}},{{3}},{{4}},{{5}} — sin {{2}}) pero el cron enviaba **5 params hardcodeados** → WhatsApp rechazaba con error 132000. YCloud responde 200 al POST y el fallo llega después por evento `whatsapp.message.updated` que el webhook ignoraba → todo quedaba como "sent"
+- Además los recordatorios 2h/confirmación que SÍ llegaban salían con el texto desordenado (params posicionales en orden equivocado)
+- **Fix cron:** helper `buildTemplateParams()` — lee la plantilla real vía API YCloud, extrae sus placeholders y los llena con numeración semántica (1=paciente, 2=especialista, 3=fecha, 4=servicio, 5=clínica). Aplicado a los 3 bloques (24h/2h/1h)
+- **Fix webhook:** nuevo handler de `whatsapp.message.updated` con `status: failed` — marca `messages.ycloud_status = 'failed'`, corrige `reminder_logs` y notifica `reminder_failed` a la clínica
+
+#### Incidente 5: inconsistencia de precios $99.000 vs $89.000
+- **Causa:** los precios viven en TRES lugares y la sesión 17/18 solo limpió dos. La tabla `services` seguía con "Microblading de cejas" a $99.000, ofertas de mayo expiradas y servicios descontinuados — y esa tabla se inyecta al system prompt y fija el `price` de las citas en `createAppt`
+- **Fix datos (producción):** Microblading de cejas y Micropigmentación de Ojos → $89.000; eliminados los 4 servicios obsoletos (3 "Oferta ... Mayo" + "Micropigmentación de labios") y sus filas en `service_professionals`; cita de Ester Godoy corregida a $89.000
+- **REGLA PERMANENTE:** los precios viven en `services` (tabla) + `knowledge_base` + `ai_behavior_rules`. Cualquier cambio de precio DEBE actualizar los tres. La tabla `services` es la que manda en el prompt y en el price de las citas
+
+#### Limitación documentada: borrar mensajes de la IA "para todos" en WhatsApp
+- No es bug de Citenly: los mensajes enviados vía API (YCloud) no se pueden revocar "para todos" desde la app de WhatsApp Business (solo "eliminar para mí"). El "antes se podía" correspondía a mensajes enviados manualmente desde la app dentro de la ventana de ~2,5 días
+
+**Deployadas:** `ycloud-whatsapp-webhook`, `cron-process-reminders`, `cron-cancel-pending-deposits`
+
+**Acciones manuales pendientes (Elizabeth):** contactar a Bárbara Orellana (pagó $89.000 y quedó sin cita — reagendar y registrar pago) y a Carolina Gaona (cita cancelada por el sistema mientras intentaba llegar)
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 18)
 
 #### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos

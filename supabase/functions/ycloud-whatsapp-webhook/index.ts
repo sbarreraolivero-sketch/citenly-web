@@ -94,6 +94,7 @@ const classifyMessage = (body: string, isImage: boolean): number => {
     // N2: Standard - GPT-5.4. Gestión de agendamientos y ventas.
     const n2Keywords = [
         "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
+        "cancelar", "cancelo", "reagendar", "no podré", "no podre", "no puedo ir", "no voy", "cerrado", "afuera", "atrasada", "atrasado", "esperando",
         "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
         "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ];
@@ -147,8 +148,8 @@ const getFunctions = (requireDepositFirst: boolean = false) => {
     {
         name: "confirm_appointment",
         description: isElizabeth
-            ? "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. CRÍTICO Y ESTRICTO PARA CONFIRMAR: Úsala para confirmar SÓLO si el usuario ha enviado o adjuntado una IMAGEN del comprobante de transferencia. Si el usuario dice que ya pagó pero NO ha enviado una imagen, EXIGE la imagen antes de usar esta función con 'yes'. Úsala con 'no' si el usuario indica que no podrá asistir — ya sea respondiendo a un recordatorio O de forma proactiva (ej: 'voy a cancelar', 'ya no voy', 'no podré asistir')."
-            : "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy. Úsala con 'no' si el usuario indica que no podrá asistir — ya sea por un recordatorio O de forma proactiva.",
+            ? "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. CRÍTICO Y ESTRICTO PARA CONFIRMAR: Úsala para confirmar SÓLO si el usuario ha enviado o adjuntado una IMAGEN del comprobante de transferencia. Si el usuario dice que ya pagó pero NO ha enviado una imagen, EXIGE la imagen antes de usar esta función con 'yes'. Úsala con 'no' SOLO si el usuario pidió cancelar de forma explícita Y ya respondió afirmativamente a tu pregunta de confirmación '¿Confirmas que deseas cancelar tu cita?'. NUNCA la uses con 'no' por retrasos, problemas para llegar, dudas o mensajes ambiguos — en esos casos usa 'escalate_to_human'."
+            : "Confirma (yes) o cancela (no) una cita que el paciente ya tiene agendada. Úsala SIEMPRE que el usuario responda a un recordatorio de cita o diga 'Sí, confirmo', incluso si la cita es para hoy. Úsala con 'no' SOLO si el usuario pidió cancelar de forma explícita Y ya respondió afirmativamente a tu pregunta de confirmación '¿Confirmas que deseas cancelar tu cita?'. NUNCA la uses con 'no' por retrasos, problemas para llegar, dudas o mensajes ambiguos — en esos casos usa 'escalate_to_human'.",
         parameters: { type: "object", properties: { response: { type: "string", enum: ["yes", "no"] } }, required: ["response"] }
     },
     {
@@ -1699,8 +1700,47 @@ Deno.serve(async (req) => {
 
         // Check event type
         if (p.type !== "whatsapp.inbound_message.received") {
-            // Optional: log reason?
-            // await debugLog(sb, `Ignored: Wrong type`, { type: p.type });
+            // Fallos asíncronos de mensajes salientes (ej: plantilla rechazada por WhatsApp con error 132000).
+            // YCloud acepta el POST con 200 y el rechazo llega después por este evento. Sin este bloque,
+            // los recordatorios fallidos quedan como "enviados" y nadie se entera (incidente 12-jun-2026).
+            if (p.type === "whatsapp.message.updated") {
+                const wm = (p as any).whatsappMessage;
+                if (wm?.status === "failed" && wm?.to) {
+                    const failedPhone = normalizePhone(wm.to);
+                    const { data: failClinic } = await sb.from("clinic_settings")
+                        .select("id, clinic_name")
+                        .eq("ycloud_phone_number", wm.from)
+                        .maybeSingle();
+                    if (failClinic) {
+                        if (wm.id) {
+                            await sb.from("messages").update({ ycloud_status: "failed" })
+                                .eq("clinic_id", failClinic.id)
+                                .eq("ycloud_message_id", wm.id);
+                        }
+                        if (wm.type === "template") {
+                            // reminder_logs no guarda el id de YCloud: se corrige el envío reciente a ese número
+                            await sb.from("reminder_logs")
+                                .update({ status: "failed", error_message: wm.errorMessage || wm.errorCode || "failed" })
+                                .eq("clinic_id", failClinic.id)
+                                .eq("phone_number", failedPhone)
+                                .eq("status", "sent")
+                                .gte("sent_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+                            await sb.from("notifications").insert({
+                                clinic_id: failClinic.id,
+                                type: "reminder_failed",
+                                title: "Recordatorio NO entregado ⚠️",
+                                message: `WhatsApp rechazó el mensaje para ${failedPhone} (plantilla "${wm.template?.name || "?"}"): ${wm.errorMessage || wm.errorCode || "error desconocido"}. El cliente NO recibió el mensaje.`,
+                                link: `/app/messages?phone=${failedPhone}`
+                            });
+                        }
+                        await debugLog(sb, `Mensaje saliente FALLÓ para ${failedPhone}`, {
+                            error: wm.errorMessage || wm.errorCode,
+                            template: wm.template?.name,
+                            ycloud_id: wm.id
+                        });
+                    }
+                }
+            }
             return new Response(JSON.stringify({ status: "ignored" }), { headers: corsHeaders });
         }
 
@@ -1855,12 +1895,20 @@ Deno.serve(async (req) => {
 
         if (prospect?.requires_human) {
             await debugLog(sb, `IA silenciosa: Handoff a humano activo para ${from}`, { phone: from });
-            // Auto-cancel appointment silently if client explicitly signals cancellation
+            // NUNCA cancelar automáticamente en modo humano (incidente Carolina Gaona 12-jun-2026:
+            // el substring "cancelar" dentro de una pregunta canceló una cita válida sin avisar).
+            // Si el mensaje sugiere cancelación, solo se notifica a la clínica para que un humano decida.
             const bodyLower = body.toLowerCase();
             const cancelKeywords = ["cancelar", "no podré asistir", "no voy", "no puedo ir", "cancelo", "anular", "no me presento", "no iré"];
             if (cancelKeywords.some(k => bodyLower.includes(k))) {
-                const cancelResult = await confirmAppt(sb, clinic.id, from, "no");
-                await debugLog(sb, `Auto-cancelación silenciosa para ${from}`, { body, result: cancelResult });
+                await sb.from("notifications").insert({
+                    clinic_id: clinic.id,
+                    type: "possible_cancellation",
+                    title: "Posible cancelación — revisar ⚠️",
+                    message: `El cliente ${from} (en atención humana) envió un mensaje que podría indicar cancelación de su cita. Revísalo y decide manualmente: "${body.slice(0, 300)}"`,
+                    link: `/app/messages?phone=${from}`
+                });
+                await debugLog(sb, `Posible cancelación en modo humano — notificada (NO se canceló) para ${from}`, { body });
             }
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
         }
@@ -2029,7 +2077,11 @@ ${lagRule}
 7. NUNCA digas que una cita está confirmada si no has recibido 'success: true' de la función 'create_appointment'.
 8. REGLA ESTRICTA DE MINUTOS: Las citas SOLO se pueden agendar en intervalos de 15 minutos (:00, :15, :30, :45). NUNCA agendes en minutos como :08, :12, :23, etc. Si detectas que un horario disponible tiene minutos irregulares (por arrastre de citas antiguas), redondea siempre al intervalo de 15 minutos más cercano para proponerlo al paciente.
 9. OBTENCIÓN DE DATOS: Asegúrate de tener el NOMBRE del paciente antes de agendar o verifica su identidad.
-9.5. REGLA CRÍTICA DE CANCELACIONES: Cuando el paciente indique que quiere cancelar su cita — "no podré asistir", "voy a cancelar", "ya no voy", "cancelo la hora" u otra variación — DEBES llamar a 'confirm_appointment' con 'response: no' ANTES de responder. NUNCA uses frases como "procederé a cancelar", "cancelaré tu cita" o similares sin haber llamado primero a la herramienta. Si el resultado indica que no hay cita activa, comunícaselo honestamente.
+9.5. REGLA CRÍTICA DE CANCELACIONES (DOS PASOS OBLIGATORIOS): Una cancelación SOLO procede ante una petición explícita e inequívoca del paciente de cancelar su cita.
+   - PASO 1: Cuando el paciente exprese que quiere cancelar ("voy a cancelar", "no podré asistir", "ya no voy", "cancelo la hora"), PREGUNTA primero: "¿Confirmas que deseas cancelar tu cita del [fecha] a las [hora]?". NO llames a ninguna herramienta todavía.
+   - PASO 2: SOLO cuando el paciente responda afirmativamente a esa pregunta, llama a 'confirm_appointment' con 'response: no'. NUNCA uses frases como "procederé a cancelar" o "tu cita ha sido cancelada" sin haber completado AMBOS pasos. Si el resultado indica que no hay cita activa, comunícaselo honestamente.
+   - NUNCA SON CANCELACIONES: avisos de retraso, problemas para llegar ("se me quedó la batería", "estoy atrasada"), dudas ("¿tendré que cancelar?"), o mensajes de llegada ("estoy afuera", "está cerrado", "no hay nadie"). En esos casos NO toques la cita: llama a 'escalate_to_human' y responde que notificarás al equipo de inmediato para que lo resuelva.
+9.6. REGLA ANTI-INVENCIÓN ABSOLUTA: NUNCA afirmes hechos que no puedes saber con seguridad: si la clínica está abierta o cerrada en este momento, si alguien está o no en el local, si una cita "fue cancelada" por la clínica, o motivos operativos de cualquier tipo. Si el paciente reporta una situación física del local (puerta cerrada, nadie atiende), NO inventes una explicación ni canceles nada — llama a 'escalate_to_human' y di que avisarás al equipo de inmediato.
 10. FLUJO DE RESERVA Y COBRO (ORDEN OBLIGATORIO):
    a) Franja Horaria PRIMERO (regla universal para todas las clínicas): ANTES de llamar a 'check_availability', asegúrate de saber si el paciente prefiere mañana o tarde. Esto es especialmente importante en servicios cortos (evaluaciones, consultas) donde hay muchos horarios disponibles.
       - Si NO lo mencionó, PREGUNTA: "¿Prefieres un horario en la mañana o en la tarde?"
@@ -2051,10 +2103,11 @@ ${lagRule}
       3. ESPERA a que el cliente envíe una IMAGEN (comprobante). Si solo dice "ya pagué" o "listo" sin imagen, EXIGE la imagen antes de continuar.
       4. Cuando recibas la imagen, analízala visualmente con estos criterios ESTRICTOS EN ESTE ORDEN:
          a) ¿Es un comprobante bancario real y legible? Si no lo es, pide que vuelva a enviar.
-         b) ¿El MONTO del comprobante coincide con el monto del abono que solicitaste en el paso 2? El monto correcto es el que aparece en los datos de transferencia que le enviaste al cliente. COMPARA el número en el comprobante contra ese monto exacto.
-            - Si el monto ES DIFERENTE al abono (por ejemplo, pagaron el valor del tratamiento completo en vez del abono): NO llames a 'confirm_appointment'. Responde: "Recibí tu comprobante, pero el monto es distinto al abono de reserva solicitado. Si corresponde a otro concepto, nuestro equipo lo revisará. Para confirmar tu turno, necesitas enviar el comprobante del abono indicado."
-            - Si el monto COINCIDE: pasa al criterio c).
-         c) Solo si AMBAS condiciones se cumplen (comprobante real + monto correcto), llama a 'confirm_appointment' con response='yes'.
+         b) Compara el MONTO del comprobante contra el monto del abono indicado en los datos de transferencia del paso 2:
+            - Si el monto es IGUAL al abono: pasa al criterio c).
+            - Si el monto es MAYOR al abono (por ejemplo, pagaron el valor del tratamiento completo): SOLO AGRADECE el pago con calidez ("¡Muchas gracias por tu pago! Quedó registrado para tu cita 🌿✨") y NADA MÁS hacia el cliente. NUNCA digas que "el monto no coincide", NUNCA rechaces el comprobante, NO canceles ni modifiques nada. Acto seguido llama a 'escalate_to_human' (es interno, el cliente no lo ve) para que el equipo verifique el pago y confirme la cita manualmente.
+            - Si el monto es MENOR al abono: indica amablemente que el abono de reserva corresponde al monto indicado en los datos de transferencia y pide completarlo.
+         c) Solo si el comprobante es real y el monto es igual al abono, llama a 'confirm_appointment' con response='yes'.
       5. NUNCA uses 'confirm_appointment' con 'yes' si no has visto una imagen en este mismo chat.`
         : clinic.transfer_details
         ? `NUNCA envíes los datos de transferencia ANTES de que 'create_appointment' devuelva 'success: true'. Una vez agendada, envía los datos de pago:\n      ${clinic.transfer_details}`

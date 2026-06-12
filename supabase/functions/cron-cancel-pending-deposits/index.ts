@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     const { data: expired, error: fetchError } = await supabase
       .from('appointments')
-      .select('id, clinic_id, patient_name, service, appointment_date, created_at')
+      .select('id, clinic_id, patient_name, service, appointment_date, created_at, phone_number')
       .eq('status', 'pending_deposit')
       .lt('created_at', cutoff)
 
@@ -46,14 +46,48 @@ Deno.serve(async (req) => {
       })
     }
 
-    const ids = expired.map((a: { id: string }) => a.id)
+    // Red de seguridad: si el cliente envió una imagen (probable comprobante) después de
+    // crear la cita, NO cancelar automáticamente — notificar a la clínica para verificación manual.
+    const ids: string[] = []
+    for (const appt of expired as Array<{ id: string; clinic_id: string; patient_name: string; phone_number?: string; created_at: string }>) {
+      const phone = appt.phone_number
+      let hasImage = false
+      if (phone) {
+        const { data: img } = await supabase
+          .from('messages')
+          .select('id')
+          .eq('clinic_id', appt.clinic_id)
+          .eq('phone_number', phone)
+          .eq('direction', 'inbound')
+          .eq('message_type', 'image')
+          .gte('created_at', appt.created_at)
+          .limit(1)
+        hasImage = !!(img && img.length > 0)
+      }
 
-    const { error: updateError } = await supabase
-      .from('appointments')
-      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-      .in('id', ids)
+      if (hasImage) {
+        await supabase.from('notifications').insert({
+          clinic_id: appt.clinic_id,
+          type: 'deposit_review',
+          title: 'Comprobante sin verificar 💰',
+          message: `${appt.patient_name} envió una imagen (posible comprobante) pero su cita sigue pendiente de abono. Verifica el pago y confirma o cancela manualmente.`,
+          link: `/app/messages?phone=${phone}`
+        })
+        console.log(`[cron-cancel-pending-deposits] Cita ${appt.id} NO cancelada: hay imagen del cliente — notificada para revisión manual`)
+        continue
+      }
 
-    if (updateError) throw updateError
+      ids.push(appt.id)
+    }
+
+    if (ids.length > 0) {
+      const { error: updateError } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .in('id', ids)
+
+      if (updateError) throw updateError
+    }
 
     console.log(`[cron-cancel-pending-deposits] Canceladas ${ids.length} citas sin abono:`, ids)
 
