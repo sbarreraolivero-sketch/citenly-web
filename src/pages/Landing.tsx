@@ -190,7 +190,7 @@ const TESTIMONIALS: { name: string; role: string; location: string; initials: st
         role: 'Especialista en Microblading y Micropigmentación',
         location: 'Linares, Chile',
         initials: 'EH',
-        photo: '/elizabeth%20hernandez.png',
+        photo: '/elizabeth.jpeg',
         paragraphs: [
             'Antes perdía dos o tres tardes al mes porque las clientas confirmaban y luego simplemente no llegaban. Sin avisar, sin cancelar — nada. Yo esperaba con todo listo, y nada.',
             'Desde que uso Citenly, pedir el abono antes lo cambió todo. Las clientas saben que para separar el horario hay que confirmar con un pago. Y las que no están dispuestas... de todas formas tampoco iban a llegar.',
