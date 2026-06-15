@@ -183,10 +183,44 @@ const PLANS = [
     },
 ]
 
-const TESTIMONIALS = [
-    { quote: 'Antes perdía 3 horas diarias respondiendo WhatsApp. Ahora Citenly lo hace todo y yo me enfoco en mis clientes.', name: 'Valentina Morales', role: 'Dueña · Centro de Estética Bella', initials: 'VM' },
-    { quote: 'Mis ausencias bajaron un 70% con los recordatorios automáticos. No puedo creer que antes lo hacía a mano.', name: 'Daniela Fuentes', role: 'Esteticista · Salón DeLux', initials: 'DF' },
-    { quote: 'El agente IA agenda citas mientras duermo. Llegué al trabajo y ya tenía 4 citas nuevas confirmadas.', name: 'Camila Herrera', role: 'Directora · Clínica Radiante', initials: 'CH' },
+type QuotePara = string | [string, string, string]
+const TESTIMONIALS: { name: string; role: string; location: string; initials: string; paragraphs: QuotePara[] }[] = [
+    {
+        name: 'Elizabeth Hernández',
+        role: 'Especialista en Microblading y Micropigmentación',
+        location: 'Linares, Chile',
+        initials: 'EH',
+        paragraphs: [
+            'Antes perdía dos o tres tardes al mes porque las clientas confirmaban y luego simplemente no llegaban. Sin avisar, sin cancelar — nada. Yo esperaba con todo listo, y nada.',
+            'Desde que uso Citenly, pedir el abono antes lo cambió todo. Las clientas saben que para separar el horario hay que confirmar con un pago. Y las que no están dispuestas... de todas formas tampoco iban a llegar.',
+            ['Pero lo que más me sorprendió fue algo que no esperaba: ', 'el asistente empezó a avisarles a mis clientas que les tocaba el retoque.', ' Tenía chicas que llevaban más de un año sin aparecer y de repente me escribían porque les llegó el mensaje. Eso no lo planifiqué — simplemente pasó solo.'],
+            'Ahora mi agenda la maneja Citenly. Yo me dedico a trabajar.',
+        ],
+    },
+    {
+        name: 'Carla Cabello',
+        role: 'Especialista en Depilación Láser',
+        location: 'San Felipe, Chile',
+        initials: 'CC',
+        paragraphs: [
+            'Antes pasaba horas confirmando citas por WhatsApp y aún así había muchas que no llegaban.',
+            ['Desde que uso Citenly, ', 'mis recordatorios se envían solos y las clientas confirman antes de reservar.', ''],
+            'He reducido las ausencias, tengo la agenda siempre organizada y puedo enfocarme en lo que realmente importa: mis clientas.',
+            'Citenly me dio orden, tiempo y tranquilidad. 💗',
+        ],
+    },
+    {
+        name: 'Fabiola Olivares',
+        role: 'Especialista en Tratamientos Corporales',
+        location: 'Puente Alto, Santiago',
+        initials: 'FO',
+        paragraphs: [
+            ['Citenly es una ', 'gran inversión.', ' No solo me permite liberar mi tiempo del WhatsApp, sino que he podido recuperar dinero que antes se perdía.'],
+            ['Sus ', 'funcionalidades de marketing', ' no las he visto en ningún otro software.'],
+            ['', 'Gran alivio', ' haber encontrado a Citenly.'],
+            ['', 'Los recomiendo sin duda.', ''],
+        ],
+    },
 ]
 
 const FAQS = [
@@ -281,9 +315,9 @@ export default function Landing() {
             </nav>
 
             {/* ── Hero ─────────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden pt-16 pb-24 px-6">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FF2E88]/8 rounded-full blur-[120px] pointer-events-none pulse-glow" />
-                <div className="absolute top-40 left-0 w-[400px] h-[400px] bg-violet-600/6 rounded-full blur-[100px] pointer-events-none" />
+            <section className="relative overflow-hidden pt-16 pb-24 px-6 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FF2E88]/12 rounded-full blur-[120px] pointer-events-none pulse-glow" />
+                <div className="absolute top-40 left-0 w-[400px] h-[400px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="relative max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
                     {/* Left — copy */}
@@ -314,7 +348,7 @@ export default function Landing() {
                         <div className="flex items-center gap-6 mt-8">
                             <div className="flex -space-x-2">
                                 {['VM','DF','CH'].map(i => (
-                                    <div key={i} className="w-8 h-8 bg-gradient-to-br from-[#FF2E88] to-violet-500 rounded-full border-2 border-[#0A0A0F] flex items-center justify-center text-[9px] font-black text-white">{i}</div>
+                                    <div key={i} className="w-8 h-8 bg-gradient-to-br from-[#FF2E88] to-violet-500 rounded-full border-2 border-[#1a1030] flex items-center justify-center text-[9px] font-black text-white">{i}</div>
                                 ))}
                             </div>
                             <p className="text-sm text-white/50">
@@ -511,11 +545,20 @@ export default function Landing() {
             </section>
 
             {/* ── Cómo funciona ─────────────────────────────────────────── */}
-            <section id="como-funciona" className="px-6 py-24">
-                <div className="max-w-5xl mx-auto">
+            <section id="como-funciona" className="px-6 py-24 bg-[#FEF6F2] relative overflow-hidden">
+                <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-[#FF2E88]/15 to-transparent rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-[#4B9EE8]/12 to-transparent rounded-full blur-[100px] pointer-events-none" />
+                <div className="max-w-5xl mx-auto relative">
                     <div className="text-center mb-16 reveal">
-                        <div className="inline-block px-3 py-1 bg-white/5 border border-white/10 text-white/50 rounded-full text-xs font-black uppercase tracking-widest mb-4">Cero esfuerzo manual</div>
-                        <h2 className="text-4xl font-black text-white">Tres pasos para automatizar tu centro</h2>
+                        <div className="w-16 h-16 mx-auto mb-6 p-[2px] rounded-full" style={{background:'linear-gradient(135deg,#FF2E88,#4B9EE8)'}}>
+                            <div className="w-full h-full rounded-full bg-[#FEF6F2] flex items-center justify-center">
+                                <Zap className="w-7 h-7 text-[#FF2E88]" />
+                            </div>
+                        </div>
+                        <h2 className="text-4xl font-black text-gray-900">
+                            Tres pasos para <span className="text-[#FF2E88]">automatizar</span> tu centro
+                        </h2>
+                        <div className="w-16 h-0.5 mx-auto mt-4 rounded" style={{background:'linear-gradient(to right,#FF2E88,#4B9EE8)'}} />
                     </div>
                     <div className="grid md:grid-cols-3 gap-6">
                         {[
@@ -523,10 +566,10 @@ export default function Landing() {
                             { step: '02', title: 'La IA atiende y agenda', desc: 'Tu agente responde consultas, confirma citas y maneja objeciones — 24/7 sin intervención.' },
                             { step: '03', title: 'Tú creces sin fricción', desc: 'Más citas, menos ausencias, clientas felices. Todo visible en tu dashboard en tiempo real.' },
                         ].map((s, i) => (
-                            <div key={i} className={`reveal reveal-delay-${i + 1} bg-white/[0.03] border border-white/10 rounded-2xl p-7`}>
-                                <p className="text-5xl font-black text-[#FF2E88]/30 mb-4">{s.step}</p>
-                                <h3 className="text-lg font-bold text-white mb-3">{s.title}</h3>
-                                <p className="text-white/60 text-sm leading-relaxed">{s.desc}</p>
+                            <div key={i} className={`reveal reveal-delay-${i + 1} bg-white rounded-2xl p-7 shadow-sm border border-rose-100`}>
+                                <p className="text-5xl font-black text-[#FF2E88]/20 mb-4">{s.step}</p>
+                                <h3 className="text-lg font-bold text-gray-900 mb-3">{s.title}</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -594,27 +637,76 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* ── Testimonios ───────────────────────────────────────────── */}
-            <section className="px-6 py-24">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16 reveal">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-xs font-black uppercase tracking-widest mb-4">
-                            <Star className="w-3 h-3" /> Historias reales
+            {/* ── Resultados reales (Testimonios) ──────────────────────── */}
+            <section className="px-6 py-24 bg-[#FEF6F2] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-[#FF2E88]/12 to-transparent rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-[#4B9EE8]/12 to-transparent rounded-full blur-[120px] pointer-events-none" />
+                {/* Decorative arcs top-left */}
+                <div className="absolute top-8 left-8 opacity-10 pointer-events-none">
+                    {[1,2,3].map(n => <div key={n} className="border border-[#FF2E88] rounded-full absolute" style={{width:n*80,height:n*80,top:'50%',left:'50%',transform:'translate(-50%,-50%)'}} />)}
+                </div>
+
+                <div className="max-w-5xl mx-auto relative">
+                    {/* Header */}
+                    <div className="text-center mb-20 reveal">
+                        <div className="w-16 h-16 mx-auto mb-6 p-[2px] rounded-full" style={{background:'linear-gradient(135deg,#FF2E88,#4B9EE8)'}}>
+                            <div className="w-full h-full rounded-full bg-[#FEF6F2] flex items-center justify-center">
+                                <Star className="w-6 h-6 text-[#FF2E88] fill-[#FF2E88]" />
+                            </div>
                         </div>
-                        <h2 className="text-4xl font-black text-white">Lo que dicen nuestras clínicas</h2>
+                        <h2 className="text-5xl font-black text-gray-900 leading-tight mb-2">
+                            Resultados<br /><span className="text-[#FF2E88]">reales.</span>
+                        </h2>
+                        <div className="w-16 h-0.5 mx-auto my-4 rounded" style={{background:'linear-gradient(to right,#FF2E88,#4B9EE8)'}} />
+                        <p className="text-gray-600 text-lg">
+                            De <span className="text-[#FF2E88] font-semibold">profesionales</span> reales.
+                        </p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-6">
+
+                    {/* Testimonials — alternating layout */}
+                    <div className="space-y-24">
                         {TESTIMONIALS.map((t, i) => (
-                            <div key={i} className={`reveal reveal-delay-${i + 1} bg-white/[0.03] border border-white/10 rounded-2xl p-6`}>
-                                <div className="flex mb-4 gap-0.5">
-                                    {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                            <div key={i} className={`reveal flex flex-col ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-10 items-center`}>
+                                {/* Avatar side */}
+                                <div className="w-full md:w-5/12 shrink-0">
+                                    <div className="relative">
+                                        <div className="w-full aspect-[4/5] rounded-3xl overflow-hidden" style={{background:'linear-gradient(135deg,#FFE4EF,#EEE8FF)'}}>
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-[#FF2E88] to-violet-500 flex items-center justify-center text-white font-black text-5xl shadow-xl">
+                                                    {t.initials}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="absolute bottom-4 left-4 bg-[#1a1a2e] text-white rounded-2xl px-4 py-3 shadow-xl max-w-[80%]">
+                                            <p className="font-bold text-sm">{t.name}</p>
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FF2E88] to-violet-500 shrink-0" />
+                                                <p className="text-white/60 text-xs">{t.role}</p>
+                                            </div>
+                                            <p className="text-[#FF2E88] text-xs mt-1.5 flex items-center gap-1">
+                                                <span>📍</span> {t.location}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p className="text-white/80 text-sm leading-relaxed mb-6 italic">"{t.quote}"</p>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-[#FF2E88] to-violet-500 rounded-full flex items-center justify-center text-white font-black text-xs">{t.initials}</div>
-                                    <div>
-                                        <p className="text-white font-bold text-sm">{t.name}</p>
-                                        <p className="text-white/40 text-xs">{t.role}</p>
+
+                                {/* Quote card */}
+                                <div className="flex-1">
+                                    <div className="bg-white rounded-2xl p-8 shadow-sm border border-rose-100">
+                                        <span className="text-6xl text-[#FF2E88] font-serif leading-none block mb-2" style={{fontFamily:'Georgia,serif'}}>"</span>
+                                        <div className="flex gap-0.5 mb-5">
+                                            {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                                        </div>
+                                        <div className="space-y-3">
+                                            {t.paragraphs.map((p, pi) =>
+                                                typeof p === 'string'
+                                                    ? <p key={pi} className="text-gray-700 text-sm leading-relaxed">{p}</p>
+                                                    : <p key={pi} className="text-gray-700 text-sm leading-relaxed">{p[0]}<strong className="text-[#FF2E88]">{p[1]}</strong>{p[2]}</p>
+                                            )}
+                                        </div>
+                                        <div className="mt-6 pt-5 border-t border-gray-100">
+                                            <div className="w-16 h-0.5 rounded" style={{background:'linear-gradient(to right,#FF2E88,#4B9EE8)'}} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
