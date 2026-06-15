@@ -652,6 +652,16 @@
 
     /* Hero entry */
     @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none} }
+    @keyframes pulseGlow { 0%,100%{opacity:.4} 50%{opacity:.8} }
+
+    /* ── Testimonios responsive ── */
+    .t-grid-ltr, .t-grid-rtl { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; align-items: center; width: 100%; }
+    .t-grid-rtl { grid-template-columns: 1.3fr 1fr; }
+    @media (max-width: 700px) {
+      .t-grid-ltr, .t-grid-rtl { grid-template-columns: 1fr; }
+      .t-grid-rtl > div:first-child { order: 2; }
+      .t-grid-rtl > div:last-child  { order: 1; }
+    }
     .ha1 { animation: fadeUp .7s cubic-bezier(.16,1,.3,1) both; }
     .ha2 { animation: fadeUp .7s .12s cubic-bezier(.16,1,.3,1) both; }
     .ha3 { animation: fadeUp .7s .24s cubic-bezier(.16,1,.3,1) both; }
@@ -899,15 +909,12 @@
 </head>
 <body>
 
-<!-- TRUST BAR -->
-<div class="trust-bar">
-  <strong>Citenly</strong>
-  <span class="trust-sep">·</span>
-  <span>Implementación <strong>gratis</strong></span>
-  <span class="trust-sep">·</span>
-  <span>Soporte 24/7</span>
-  <span class="trust-sep">·</span>
-  <span class="trust-badge">Garantía 7 días</span>
+<!-- TRUST BAR (blanco, igual que landing principal) -->
+<div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+  <p style="margin:0;font-size:13.5px;color:#374151;font-weight:500;text-align:center;">
+    🚀 <strong style="font-weight:700;color:#111827;">Implementación GRATIS incluida</strong> — el equipo de Citenly configura todo.
+  </p>
+  <a href="https://citenly.com/demo" style="font-size:13px;font-weight:700;color:#FF2E88;text-decoration:none;white-space:nowrap;">Ver planes →</a>
 </div>
 
 <!-- NAV -->
@@ -933,7 +940,7 @@
         <div class="hero-pill ha1"><span class="pill-dot"></span> Para micropigmentadoras</div>
 
         <h1 class="ha2">
-          Deja de perder horas<br>por clientas que<br><em>no llegan.</em>
+          Deja de perder horas<br>por clientas que<br><em style="font-style:normal;background:linear-gradient(90deg,#FF2E88,#4B9EE8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">no llegan.</em>
         </h1>
 
         <p class="hero-sub ha3">
@@ -1221,28 +1228,48 @@
 </section>
 
 <!-- ══════════════ ROI ══════════════ -->
-<section id="roi">
-  <div class="blob" style="width:500px;height:400px;background:radial-gradient(ellipse,rgba(201,168,124,0.06),transparent);top:-60px;right:-160px;"></div>
-  <div class="wrap-narrow">
-    <div class="reveal"><div class="section-label">El número que importa</div></div>
-    <div class="reveal"><h2>Una cita recuperada<br>puede <em>pagarlo todo.</em></h2></div>
-    <div class="reveal"><p class="section-sub">Haz la cuenta tú misma.</p></div>
+<section id="roi" style="background:#FEF6F2;border-bottom:none;position:relative;overflow:hidden;">
+  <div style="position:absolute;bottom:0;right:0;width:500px;height:500px;background:radial-gradient(ellipse,rgba(255,46,136,0.13),transparent 70%);border-radius:50%;pointer-events:none;"></div>
+  <div style="position:absolute;top:0;left:0;width:500px;height:500px;background:radial-gradient(ellipse,rgba(75,158,232,0.1),transparent 70%);border-radius:50%;pointer-events:none;"></div>
+  <div class="wrap-narrow" style="position:relative;z-index:1;">
 
-    <div class="reveal">
-      <table class="roi-table">
-        <thead><tr><th>Si Citenly evita o recupera…</th><th>Valor recuperado</th></tr></thead>
-        <tbody>
-          <tr><td>1 clienta que dejó de llegar a última hora</td><td>$80.000 – $200.000</td></tr>
-          <tr><td>2 clientas que no habían vuelto para el retoque</td><td>$160.000 – $400.000</td></tr>
-          <tr><td>1 clienta nueva agendada de noche mientras dormías</td><td>$80.000 – $200.000</td></tr>
-        </tbody>
-      </table>
+    <!-- Icon + título -->
+    <div style="text-align:center;margin-bottom:52px;" class="reveal">
+      <div style="width:64px;height:64px;margin:0 auto 20px;padding:2px;border-radius:50%;background:linear-gradient(135deg,#FF2E88,#4B9EE8);">
+        <div style="width:100%;height:100%;border-radius:50%;background:#FEF6F2;display:flex;align-items:center;justify-content:center;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF2E88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+      <h2 style="color:#1a1a2e;font-size:clamp(28px,4vw,40px);font-weight:900;line-height:1.15;margin-bottom:12px;">
+        Una cita recuperada<br>puede <span style="color:#FF2E88;">pagarlo todo.</span>
+      </h2>
+      <div style="width:64px;height:3px;background:linear-gradient(to right,#FF2E88,#4B9EE8);border-radius:4px;margin:16px auto 0;"></div>
     </div>
 
-    <div class="roi-callout reveal">
-      <p>Citenly Starter cuesta <strong>$97 USD al mes.</strong></p>
-      <p style="margin-top:12px;">Si evita una sola cancelación de última hora al mes, <strong>ya se pagó solo.</strong> Si recupera dos retoques olvidados, estás en ganancia desde la primera semana.</p>
-      <a href="https://citenly.com/demo" class="btn-primary" style="margin-top:24px;font-size:14px;display:inline-flex;">
+    <!-- Cards (estilo "Tres pasos") -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:36px;">
+      <div class="reveal" style="background:#fff;border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.05);border:1px solid #fce7ef;">
+        <p style="font-size:40px;font-weight:900;color:rgba(255,46,136,0.18);margin-bottom:12px;line-height:1;">01</p>
+        <h3 style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:8px;">1 cancelación evitada</h3>
+        <p style="font-size:14px;color:#6b7280;line-height:1.6;">Clienta que no avisa y no llega → <strong style="color:#059669;">$80.000 – $200.000</strong> recuperados</p>
+      </div>
+      <div class="reveal" style="background:#fff;border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.05);border:1px solid #fce7ef;">
+        <p style="font-size:40px;font-weight:900;color:rgba(255,46,136,0.18);margin-bottom:12px;line-height:1;">02</p>
+        <h3 style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:8px;">2 retoques recuperados</h3>
+        <p style="font-size:14px;color:#6b7280;line-height:1.6;">Clientas que no habían vuelto → <strong style="color:#059669;">$160.000 – $400.000</strong> en ingresos</p>
+      </div>
+      <div class="reveal" style="background:#fff;border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.05);border:1px solid #fce7ef;">
+        <p style="font-size:40px;font-weight:900;color:rgba(255,46,136,0.18);margin-bottom:12px;line-height:1;">03</p>
+        <h3 style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:8px;">1 cita nueva en la noche</h3>
+        <p style="font-size:14px;color:#6b7280;line-height:1.6;">Agendada mientras dormías → <strong style="color:#059669;">$80.000 – $200.000</strong> sin esfuerzo</p>
+      </div>
+    </div>
+
+    <!-- Callout -->
+    <div class="reveal" style="background:#fff;border:1px solid #fce7ef;border-radius:20px;padding:28px 32px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+      <p style="font-size:16px;color:#1a1a2e;line-height:1.7;">Citenly Starter cuesta <strong style="color:#FF2E88;">$97 USD al mes.</strong></p>
+      <p style="font-size:15px;color:#4b5563;line-height:1.72;margin-top:10px;">Si evita una sola cancelación al mes, <strong style="color:#1a1a2e;">ya se pagó solo.</strong></p>
+      <a href="https://citenly.com/demo" class="btn-primary" style="margin-top:22px;font-size:14px;display:inline-flex;">
         Quiero ver cómo funciona <span class="btn-arr">→</span>
       </a>
     </div>
@@ -1331,41 +1358,102 @@
   </div>
 </section>
 
-<!-- ══════════════ TESTIMONIO ══════════════ -->
-<section id="testimonio">
-  <div class="blob" style="width:500px;height:500px;background:radial-gradient(ellipse,rgba(255,46,136,0.06),transparent);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
-  <div class="wrap-narrow" style="text-align:center;position:relative;z-index:1;">
-    <div class="reveal"><div class="section-label">Testimonio real</div></div>
-    <div class="reveal"><h2 style="margin-bottom:48px;">No tienes que creerle a Citenly.<br><em>Créele a ella.</em></h2></div>
+<!-- ══════════════ TESTIMONIOS "Resultados reales" ══════════════ -->
+<section id="testimonio" style="background:#FEF6F2;border-bottom:none;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:0;right:0;width:600px;height:600px;background:radial-gradient(ellipse,rgba(255,46,136,0.12),transparent 70%);border-radius:50%;pointer-events:none;"></div>
+  <div style="position:absolute;bottom:0;left:0;width:600px;height:600px;background:radial-gradient(ellipse,rgba(75,158,232,0.1),transparent 70%);border-radius:50%;pointer-events:none;"></div>
 
-    <div class="t-card reveal-scale">
+  <div class="wrap-narrow" style="position:relative;z-index:1;">
 
-      <!-- Columna izquierda: imagen -->
-      <div class="t-img-col">
-        <img src="elizabeth.jpeg" alt="Elizabeth Hernández, Micropigmentadora" />
-        <div class="t-img-badge">
-          <div class="t-name">Elizabeth Hernández</div>
-          <div class="t-role">Micropigmentadora · Chile</div>
-          <a href="https://instagram.com/elizabeth.microblading" target="_blank" rel="noopener" class="t-ig">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            @elizabeth.microblading
-          </a>
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:72px;" class="reveal">
+      <div style="width:64px;height:64px;margin:0 auto 20px;padding:2px;border-radius:50%;background:linear-gradient(135deg,#FF2E88,#4B9EE8);">
+        <div style="width:100%;height:100%;border-radius:50%;background:#FEF6F2;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF2E88" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
       </div>
-
-      <!-- Columna derecha: texto -->
-      <div class="t-text-col">
-        <span class="t-quote">"</span>
-        <div class="t-stars">★★★★★</div>
-        <div class="t-text">
-          <p>Antes perdía dos o tres tardes al mes porque las clientas confirmaban y luego simplemente no llegaban. Sin avisar, sin cancelar — nada. Yo esperaba con todo listo, y nada.</p>
-          <p>Desde que uso Citenly, pedir el abono antes lo cambió todo. Las clientas saben que para separar el horario hay que confirmar con un pago. Y las que no están dispuestas... de todas formas tampoco iban a llegar.</p>
-          <p>Pero lo que más me sorprendió fue algo que no esperaba: <strong>el asistente empezó a avisarles a mis clientas que les tocaba el retoque.</strong> Tenía chicas que llevaban más de un año sin aparecer y de repente me escribían porque les llegó el mensaje. Eso no lo planifiqué — simplemente pasó solo.</p>
-          <p>Ahora mi agenda la maneja Citenly. Yo me dedico a trabajar.</p>
-        </div>
-      </div>
-
+      <h2 style="color:#1a1a2e;font-size:clamp(32px,5vw,52px);font-weight:900;line-height:1.1;margin-bottom:8px;">
+        Resultados<br><span style="color:#FF2E88;">reales.</span>
+      </h2>
+      <div style="width:64px;height:3px;background:linear-gradient(to right,#FF2E88,#4B9EE8);border-radius:4px;margin:16px auto;"></div>
+      <p style="font-size:17px;color:#4b5563;">De <span style="color:#FF2E88;font-weight:600;">profesionales</span> reales.</p>
     </div>
+
+    <!-- Testimonio 1: Elizabeth (foto izquierda) -->
+    <div class="reveal" style="display:flex;flex-direction:column;gap:32px;align-items:center;margin-bottom:72px;" class="t-row-left">
+      <div style="display:flex;flex-direction:column;gap:32px;align-items:center;width:100%;">
+        <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:40px;align-items:center;width:100%;" class="t-grid-ltr">
+          <!-- Foto -->
+          <div style="position:relative;">
+            <div style="width:100%;aspect-ratio:4/5;border-radius:24px;overflow:hidden;">
+              <img src="elizabeth.jpeg" alt="Elizabeth Hernández" style="width:100%;height:100%;object-fit:cover;object-position:center top;" />
+            </div>
+            <div style="position:absolute;bottom:16px;left:16px;background:#1a1a2e;color:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:80%;">
+              <p style="font-size:13px;font-weight:700;margin:0 0 3px;">Elizabeth Hernández</p>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#FF2E88,#8B5CF6);flex-shrink:0;"></div>
+                <p style="font-size:11px;color:rgba(255,255,255,0.55);margin:0;">Microblading y Micropigmentación</p>
+              </div>
+              <p style="font-size:11px;color:#FF2E88;margin:0;">📍 Linares, Chile</p>
+            </div>
+          </div>
+          <!-- Quote -->
+          <div style="background:#fff;border-radius:20px;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,0.05);border:1px solid #fce7ef;">
+            <span style="font-size:52px;line-height:0.8;color:#FF2E88;font-family:Georgia,serif;display:block;margin-bottom:10px;opacity:0.5;">"</span>
+            <div style="display:flex;gap:3px;margin-bottom:18px;">
+              <span style="color:#FBBF24;font-size:16px;">★★★★★</span>
+            </div>
+            <div style="font-size:14.5px;color:#374151;line-height:1.8;">
+              <p>Antes perdía dos o tres tardes al mes porque las clientas confirmaban y luego simplemente no llegaban. Sin avisar, sin cancelar — nada. Yo esperaba con todo listo, y nada.</p>
+              <p style="margin-top:12px;">Desde que uso Citenly, pedir el abono antes lo cambió todo. Las clientas saben que para separar el horario hay que confirmar con un pago.</p>
+              <p style="margin-top:12px;">Pero lo que más me sorprendió fue algo que no esperaba: <strong style="color:#FF2E88;">el asistente empezó a avisarles a mis clientas que les tocaba el retoque.</strong> Tenía chicas que llevaban más de un año sin aparecer. Eso no lo planifiqué — simplemente pasó solo.</p>
+              <p style="margin-top:12px;">Ahora mi agenda la maneja Citenly. Yo me dedico a trabajar.</p>
+            </div>
+            <div style="margin-top:22px;padding-top:18px;border-top:1px solid #f3f4f6;">
+              <div style="width:56px;height:3px;background:linear-gradient(to right,#FF2E88,#4B9EE8);border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testimonio 2: Fiorella (foto derecha) -->
+    <div class="reveal">
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center;" class="t-grid-rtl">
+        <!-- Quote -->
+        <div style="background:#fff;border-radius:20px;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,0.05);border:1px solid #fce7ef;">
+          <span style="font-size:52px;line-height:0.8;color:#FF2E88;font-family:Georgia,serif;display:block;margin-bottom:10px;opacity:0.5;">"</span>
+          <div style="display:flex;gap:3px;margin-bottom:18px;">
+            <span style="color:#FBBF24;font-size:16px;">★★★★★</span>
+          </div>
+          <div style="font-size:14.5px;color:#374151;line-height:1.8;">
+            <p>Citenly es una <strong style="color:#FF2E88;">gran inversión.</strong> Me da una <strong style="color:#FF2E88;">tranquilidad</strong> que otros sistemas no entregan.</p>
+            <div style="width:40px;height:2px;background:linear-gradient(to right,#FF2E88,#4B9EE8);border-radius:4px;margin:16px 0;"></div>
+            <p>Había contratado otro sistema similar, pero ni comparado con Citenly. Ellos me <strong style="color:#FF2E88;">configuraron el asistente digital</strong> exactamente como quería que atendiera a mis clientas.</p>
+            <div style="width:40px;height:2px;background:linear-gradient(to right,#FF2E88,#4B9EE8);border-radius:4px;margin:16px 0;"></div>
+            <p>Me <strong style="color:#FF2E88;">libera</strong> demasiado tiempo que ahora dedico a la familia.</p>
+          </div>
+          <div style="margin-top:22px;padding-top:18px;border-top:1px solid #f3f4f6;">
+            <div style="width:56px;height:3px;background:linear-gradient(to right,#FF2E88,#4B9EE8);border-radius:4px;"></div>
+          </div>
+        </div>
+        <!-- Foto -->
+        <div style="position:relative;">
+          <div style="width:100%;aspect-ratio:4/5;border-radius:24px;overflow:hidden;">
+            <img src="/fiorella-testimonio.png" alt="Fiorella Vásquez" style="width:100%;height:100%;object-fit:cover;object-position:center top;" />
+          </div>
+          <div style="position:absolute;bottom:16px;left:16px;background:#1a1a2e;color:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:85%;">
+            <p style="font-size:13px;font-weight:700;margin:0 0 3px;"><span style="color:#fff;">Fiorella</span> <span style="color:#FF2E88;">Vásquez</span></p>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#FF2E88,#8B5CF6);flex-shrink:0;"></div>
+              <p style="font-size:11px;color:rgba(255,255,255,0.55);margin:0;">Especialista en Armonización Facial</p>
+            </div>
+            <p style="font-size:11px;color:#FF2E88;margin:0;">📍 Maupú, Santiago</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1405,17 +1493,28 @@
 </section>
 
 <!-- ══════════════ CTA FINAL ══════════════ -->
-<section id="cta-final">
-  <div class="blob" style="width:700px;height:700px;background:radial-gradient(ellipse,rgba(255,46,136,0.08),transparent);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
-  <div class="wrap">
-    <div class="cta-card reveal-scale">
-      <div class="section-label" style="text-align:center;margin-bottom:14px;">Sin compromiso</div>
-      <h2>¿Quieres ver cómo funciona<br>para tu <em>micropigmentación?</em></h2>
-      <p>Agenda una reunión de 20 minutos. Te mostramos cómo quedaría configurado para tus servicios, tu WhatsApp y tu agenda.</p>
-      <a href="https://citenly.com/demo" class="btn-primary" style="font-size:15px;">
-        Agendar mi reunión gratuita <span class="btn-arr">→</span>
-      </a>
-      <div class="cta-micro">
+<section id="cta-final" style="background:linear-gradient(135deg,rgba(255,46,136,0.18) 0%,#0A0A0F 50%,rgba(139,92,246,0.18) 100%);position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:rgba(255,46,136,0.04);animation:pulseGlow 4s ease-in-out infinite;pointer-events:none;"></div>
+  <div class="wrap" style="position:relative;z-index:1;text-align:center;padding-top:0;padding-bottom:0;">
+    <div class="reveal-scale" style="max-width:680px;margin:0 auto;">
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:rgba(255,46,136,0.1);border:1px solid rgba(255,46,136,0.2);color:#FF4DA6;border-radius:100px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px;">
+        ✦ Empieza hoy
+      </div>
+      <h2 style="color:#fff;font-size:clamp(32px,5vw,52px);font-weight:900;letter-spacing:-0.03em;line-height:1.1;margin-bottom:20px;">
+        Tu agenda merece<br><span style="background:linear-gradient(90deg,#FF2E88,#FF80C0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">trabajar sola.</span>
+      </h2>
+      <p style="font-size:18px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:36px;">
+        Implementación gratis. Sin contratos. Operativa en menos de 48 horas.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;">
+        <a href="https://citenly.com/demo" class="btn-primary" style="font-size:15px;padding:14px 28px;border-radius:16px;box-shadow:0 8px 32px rgba(255,46,136,0.35);">
+          Agendar Reunión Demo <span class="btn-arr">→</span>
+        </a>
+        <a href="https://citenly.com/#planes" style="display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#fff;padding:14px 28px;border-radius:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);text-decoration:none;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+          Ver todos los planes
+        </a>
+      </div>
+      <div class="cta-micro" style="margin-top:24px;">
         <span>Implementación gratis</span>
         <span>Llave en mano</span>
         <span>Soporte 24/7</span>

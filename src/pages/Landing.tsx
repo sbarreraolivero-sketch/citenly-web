@@ -184,12 +184,13 @@ const PLANS = [
 ]
 
 type QuotePara = string | [string, string, string]
-const TESTIMONIALS: { name: string; role: string; location: string; initials: string; paragraphs: QuotePara[] }[] = [
+const TESTIMONIALS: { name: string; role: string; location: string; initials: string; photo?: string; paragraphs: QuotePara[] }[] = [
     {
         name: 'Elizabeth Hernández',
         role: 'Especialista en Microblading y Micropigmentación',
         location: 'Linares, Chile',
         initials: 'EH',
+        photo: '/elizabeth%20hernandez.png',
         paragraphs: [
             'Antes perdía dos o tres tardes al mes porque las clientas confirmaban y luego simplemente no llegaban. Sin avisar, sin cancelar — nada. Yo esperaba con todo listo, y nada.',
             'Desde que uso Citenly, pedir el abono antes lo cambió todo. Las clientas saben que para separar el horario hay que confirmar con un pago. Y las que no están dispuestas... de todas formas tampoco iban a llegar.',
@@ -202,6 +203,7 @@ const TESTIMONIALS: { name: string; role: string; location: string; initials: st
         role: 'Especialista en Depilación Láser',
         location: 'San Felipe, Chile',
         initials: 'CC',
+        photo: '/carla-cabello.png',
         paragraphs: [
             'Antes pasaba horas confirmando citas por WhatsApp y aún así había muchas que no llegaban.',
             ['Desde que uso Citenly, ', 'mis recordatorios se envían solos y las clientas confirman antes de reservar.', ''],
@@ -214,11 +216,24 @@ const TESTIMONIALS: { name: string; role: string; location: string; initials: st
         role: 'Especialista en Tratamientos Corporales',
         location: 'Puente Alto, Santiago',
         initials: 'FO',
+        photo: '/fabiola-olivares-testimonio.png',
         paragraphs: [
             ['Citenly es una ', 'gran inversión.', ' No solo me permite liberar mi tiempo del WhatsApp, sino que he podido recuperar dinero que antes se perdía.'],
             ['Sus ', 'funcionalidades de marketing', ' no las he visto en ningún otro software.'],
             ['', 'Gran alivio', ' haber encontrado a Citenly.'],
             ['', 'Los recomiendo sin duda.', ''],
+        ],
+    },
+    {
+        name: 'Fiorella Vásquez',
+        role: 'Especialista en Armonización Facial',
+        location: 'Maupú, Santiago',
+        initials: 'FV',
+        photo: '/fiorella-testimonio.png',
+        paragraphs: [
+            ['Citenly es una ', 'gran inversión.', ' Me da una tranquilidad que otros sistemas no entregan.'],
+            ['Había contratado otro sistema similar, pero ni comparado con Citenly. Ellos me ', 'configuraron el asistente digital', ' exactamente como quería que atendiera a mis clientas.'],
+            ['Me ', 'libera', ' demasiado tiempo que ahora dedico a la familia.'],
         ],
     },
 ]
@@ -671,11 +686,15 @@ export default function Landing() {
                                 <div className="w-full md:w-5/12 shrink-0">
                                     <div className="relative">
                                         <div className="w-full aspect-[4/5] rounded-3xl overflow-hidden" style={{background:'linear-gradient(135deg,#FFE4EF,#EEE8FF)'}}>
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-[#FF2E88] to-violet-500 flex items-center justify-center text-white font-black text-5xl shadow-xl">
-                                                    {t.initials}
+                                            {t.photo ? (
+                                                <img src={t.photo} alt={t.name} className="w-full h-full object-cover object-top" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-36 h-36 rounded-full bg-gradient-to-br from-[#FF2E88] to-violet-500 flex items-center justify-center text-white font-black text-5xl shadow-xl">
+                                                        {t.initials}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                         <div className="absolute bottom-4 left-4 bg-[#1a1a2e] text-white rounded-2xl px-4 py-3 shadow-xl max-w-[80%]">
                                             <p className="font-bold text-sm">{t.name}</p>
