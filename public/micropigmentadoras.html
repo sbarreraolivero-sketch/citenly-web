@@ -677,11 +677,11 @@
     /* Tablet */
     @media (max-width: 960px) {
       .hero-inner { grid-template-columns: 1fr; gap: 40px; }
-      .hero-left { text-align: center; }
-      .hero-left .hero-pill { margin: 0 auto 22px; display: inline-flex; }
-      .hero-sub { margin-left: auto; margin-right: auto; }
-      .hero-microcopy { justify-content: center; }
-      .niche-tags { justify-content: center; }
+      .hero-left { text-align: left; }
+      .hero-left .hero-pill { margin: 0 0 22px; display: inline-flex; }
+      .hero-sub { margin-left: 0; margin-right: 0; }
+      .hero-microcopy { justify-content: flex-start; }
+      .niche-tags { justify-content: flex-start; }
       .hero-right { order: 2; }
       .phone-frame { width: 240px; }
       .pain-grid { grid-template-columns: 1fr; }
@@ -708,11 +708,11 @@
 
       /* Hero */
       #hero { padding: 56px 0 48px; }
-      h1 { font-size: 42px; line-height: 1.06; }
+      h1 { font-size: 48px; line-height: 1.04; }
       .hero-sub { font-size: 17px; }
       .phone-frame { width: 220px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
-      .hero-microcopy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; justify-items: start; margin-left: auto; margin-right: auto; width: fit-content; }
+      .hero-microcopy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; justify-items: start; width: fit-content; }
 
       /* Dolores */
       .pain-card { padding: 22px 18px; }
@@ -761,7 +761,7 @@
 
     /* Mobile pequeño — 400px */
     @media (max-width: 400px) {
-      h1 { font-size: 26px; }
+      h1 { font-size: 40px; }
       h2 { font-size: 23px; }
       .trust-bar { flex-wrap: wrap; gap: 5px 8px; font-size: 11.5px; }
       .trust-sep { display: none; }
