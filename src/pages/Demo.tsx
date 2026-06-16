@@ -99,6 +99,9 @@ export default function Demo() {
 
         setLoading(false)
         if (!error) {
+            if (typeof window !== 'undefined' && (window as any).fbq) {
+                (window as any).fbq('track', 'CompleteRegistration')
+            }
             setSubmitted(true)
         }
     }
