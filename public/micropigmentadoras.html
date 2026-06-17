@@ -102,7 +102,7 @@
     }
     .hero-inner {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 64px; align-items: center; position: relative; z-index: 1;
+      gap: 48px; align-items: center; position: relative; z-index: 1;
     }
     .hero-pill {
       display: inline-flex; align-items: center; gap: 8px;
@@ -115,12 +115,12 @@
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
     h1 {
-      font-size: clamp(44px, 5.5vw, 64px); font-weight: 900;
-      line-height: 1.05; letter-spacing: -0.04em; color: #fff; margin-bottom: 20px;
+      font-size: clamp(32px, 3.2vw, 46px); font-weight: 900;
+      line-height: 1.07; letter-spacing: -0.04em; color: #fff; margin-bottom: 20px;
     }
     h1 em { font-style: normal; color: var(--pink); }
     .hero-sub {
-      font-size: clamp(17px, 2vw, 21px); color: var(--muted);
+      font-size: clamp(15px, 1.6vw, 18px); color: var(--muted);
       line-height: 1.72; margin-bottom: 36px; max-width: 440px;
     }
     .hero-sub strong { color: var(--text); font-weight: 600; }
@@ -153,12 +153,12 @@
     /* ── Phone & chat ── */
     .hero-right { display: flex; justify-content: center; align-items: center; position: relative; }
     .hero-right-glow {
-      position: absolute; width: 360px; height: 360px;
+      position: absolute; width: 440px; height: 440px;
       background: radial-gradient(ellipse, rgba(255,46,136,0.16), transparent 70%);
       filter: blur(40px); pointer-events: none;
     }
     .phone-frame {
-      position: relative; width: 296px;
+      position: relative; width: 348px;
       background: #0d0d1c; border: 1.5px solid rgba(255,255,255,0.11);
       border-radius: 42px; overflow: hidden; z-index: 1;
       box-shadow: 0 0 0 6px rgba(255,255,255,0.025), 0 32px 80px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06);
@@ -717,9 +717,9 @@
       /* Hero */
       #hero { padding: 56px 0 48px; }
       .hero-inner { grid-template-columns: 1fr; gap: 32px; }
-      h1 { font-size: 44px; line-height: 1.04; }
-      .hero-sub { font-size: 18px; }
-      .phone-frame { width: 280px; }
+      h1 { font-size: 36px; line-height: 1.06; }
+      .hero-sub { font-size: 16px; }
+      .phone-frame { width: 300px; }
       .chat-body { height: 270px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
       .hero-microcopy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; justify-items: start; width: fit-content; }
@@ -771,7 +771,7 @@
 
     /* Mobile pequeño — 400px */
     @media (max-width: 400px) {
-      h1 { font-size: 40px; }
+      h1 { font-size: 32px; }
       h2 { font-size: 23px; }
       .trust-bar { flex-wrap: wrap; gap: 5px 8px; font-size: 11.5px; }
       .trust-sep { display: none; }
