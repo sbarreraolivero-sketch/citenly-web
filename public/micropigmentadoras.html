@@ -30,7 +30,7 @@
       --border-soft: rgba(255,255,255,0.04);
       --muted: rgba(210,210,235,0.5);
       --text: #EDEDF8;
-      --max: 1100px;
+      --max: 1200px;
       --narrow: 740px;
     }
 
@@ -79,9 +79,12 @@
     /* ── Nav ── */
     nav {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(7,7,15,0.85); backdrop-filter: blur(20px);
+      background: rgba(10,10,15,0.92); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 32px;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
     }
     .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .nav-logo img { width: 36px; height: 36px; border-radius: 10px; }
@@ -101,7 +104,7 @@
       background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     }
     .hero-inner {
-      display: grid; grid-template-columns: 1fr 1fr;
+      display: grid; grid-template-columns: 1.15fr 1fr;
       gap: 48px; align-items: center; position: relative; z-index: 1;
     }
     .hero-pill {
@@ -153,12 +156,12 @@
     /* ── Phone & chat ── */
     .hero-right { display: flex; justify-content: center; align-items: center; position: relative; }
     .hero-right-glow {
-      position: absolute; width: 440px; height: 440px;
+      position: absolute; width: 500px; height: 500px;
       background: radial-gradient(ellipse, rgba(255,46,136,0.16), transparent 70%);
       filter: blur(40px); pointer-events: none;
     }
     .phone-frame {
-      position: relative; width: 348px;
+      position: relative; width: 390px;
       background: #0d0d1c; border: 1.5px solid rgba(255,255,255,0.11);
       border-radius: 42px; overflow: hidden; z-index: 1;
       box-shadow: 0 0 0 6px rgba(255,255,255,0.025), 0 32px 80px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06);
@@ -190,7 +193,7 @@
         radial-gradient(ellipse at 20% 10%, rgba(255,46,136,0.04), transparent 50%),
         radial-gradient(ellipse at 80% 90%, rgba(139,92,246,0.04), transparent 50%);
       padding: 12px 10px;
-      height: 330px;
+      height: 370px;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: none;
@@ -691,7 +694,8 @@
       .hero-microcopy { justify-content: flex-start; }
       .niche-tags { justify-content: flex-start; }
       .hero-right { order: 2; }
-      .phone-frame { width: 240px; }
+      .phone-frame { width: 300px; }
+      .chat-body { height: 300px; }
       .pain-grid { grid-template-columns: 1fr; }
       .sol-grid { grid-template-columns: 1fr; }
       .module-grid { grid-template-columns: 1fr 1fr; }
@@ -705,7 +709,7 @@
       /* Layout */
       section { padding: 64px 0; }
       .wrap, .wrap-narrow { padding: 0 18px; }
-      nav { padding: 12px 18px; }
+      .nav-inner { padding: 0 18px; height: 56px; }
 
       /* Sticky CTA */
       .sticky-cta { display: none; }
@@ -719,8 +723,8 @@
       .hero-inner { grid-template-columns: 1fr; gap: 32px; }
       h1 { font-size: 36px; line-height: 1.06; }
       .hero-sub { font-size: 16px; }
-      .phone-frame { width: 300px; }
-      .chat-body { height: 270px; }
+      .phone-frame { width: 320px; }
+      .chat-body { height: 290px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
       .hero-microcopy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; justify-items: start; width: fit-content; }
 
@@ -775,7 +779,7 @@
       h2 { font-size: 23px; }
       .trust-bar { flex-wrap: wrap; gap: 5px 8px; font-size: 11.5px; }
       .trust-sep { display: none; }
-      nav { padding: 11px 14px; }
+      .nav-inner { padding: 0 14px; height: 52px; }
       .nav-logo img { width: 30px; height: 30px; }
       .nav-logo span { font-size: 17px; }
       .nav-cta { font-size: 12px; padding: 8px 16px; }
@@ -950,11 +954,13 @@
 
 <!-- NAV -->
 <nav>
-  <a href="https://citenly.com" class="nav-logo">
-    <img src="/citenly-icon.png" alt="Citenly" />
-    <span>Citenly</span>
-  </a>
-  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="nav-cta">Agendar reunión gratis</a>
+  <div class="nav-inner">
+    <a href="https://citenly.com" class="nav-logo">
+      <img src="/citenly-icon.png" alt="Citenly" />
+      <span>Citenly</span>
+    </a>
+    <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="nav-cta">Agendar Reunión Demo →</a>
+  </div>
 </nav>
 
 <!-- ══════════════ HERO ══════════════ -->
@@ -979,7 +985,7 @@
         </p>
 
         <div class="ha4">
-          <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary">Agendar reunión gratis <span class="btn-arr">→</span></a>
+          <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary">Agendar Reunión Demo <span class="btn-arr">→</span></a>
           <div class="hero-microcopy">
             <span>Implementación gratis</span>
             <span>Soporte 24/7</span>
@@ -1129,7 +1135,7 @@
   <p style="font-size:16px;color:#1a1a2e;font-weight:600;margin-bottom:6px;">¿Quieres ver todo esto funcionando en tu negocio?</p>
   <p style="font-size:14px;color:#6b7280;margin-bottom:22px;">Una reunión de 30 min. Sin compromiso. El equipo lo configura todo por ti.</p>
   <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary" style="font-size:14px;padding:13px 28px;background:#FF2E88;color:#fff;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-weight:800;">
-    Agendar reunión gratis <span>→</span>
+    Agendar Reunión Demo <span>→</span>
   </a>
 </div>
 
@@ -1466,8 +1472,8 @@
   <div class="reveal" style="max-width:520px;margin:0 auto;">
     <p style="font-size:18px;font-weight:800;color:#1a1a2e;margin-bottom:8px;">¿Quieres resultados como estos?</p>
     <p style="font-size:15px;color:#6b7280;margin-bottom:24px;">Una reunión de 30 min. El equipo configura todo. Garantía de 7 días.</p>
-    <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" style="display:inline-flex;align-items:center;gap:8px;background:#FF2E88;color:#fff;font-size:15px;font-weight:800;padding:14px 32px;border-radius:100px;text-decoration:none;box-shadow:0 0 32px rgba(255,46,136,0.35);">
-      Agendar reunión gratis <span>→</span>
+    <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" style="display:inline-flex;align-items:center;gap:8px;background:#FF2E88;color:#fff;font-size:15px;font-weight:800;padding:14px 32px;border-radius:14px;text-decoration:none;box-shadow:0 0 32px rgba(255,46,136,0.35);">
+      Agendar Reunión Demo <span>→</span>
     </a>
   </div>
 </div>
@@ -1631,7 +1637,7 @@
 
 <!-- Sticky mobile CTA -->
 <div class="sticky-cta">
-  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')">Agendar reunión gratis →</a>
+  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')">Agendar Reunión Demo →</a>
 </div>
 
 <script>
