@@ -300,7 +300,7 @@ export default function Landing() {
                     </div>
                     <div className="flex items-center gap-3">
                         <Link to="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors hidden md:block">Iniciar sesión</Link>
-                        <Link to="/demo" className="flex items-center gap-1.5 bg-[#FF2E88] text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-[#e0007a] transition-colors">
+                        <Link to="/demo" onClick={() => (window as any).fbq?.("track","Lead")} className="flex items-center gap-1.5 bg-[#FF2E88] text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-[#e0007a] transition-colors">
                             <span className="hidden sm:inline">Agendar Reunión Demo</span>
                             <span className="sm:hidden">Agendar Demo</span>
                             <ArrowRight className="w-4 h-4" />
@@ -322,7 +322,7 @@ export default function Landing() {
                         <a href="#planes"        onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">Precios</a>
                         <a href="#como-funciona" onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">Cómo funciona</a>
                         <Link to="/login"        onClick={() => setMobileMenuOpen(false)} className="py-3 text-sm font-medium text-white/70 hover:text-white transition-colors border-b border-white/5">Iniciar sesión</Link>
-                        <Link to="/demo"         onClick={() => setMobileMenuOpen(false)} className="mt-2 flex items-center justify-center gap-1.5 bg-[#FF2E88] text-white text-sm font-bold px-4 py-3 rounded-xl hover:bg-[#e0007a] transition-colors">
+                        <Link to="/demo"         onClick={() => { setMobileMenuOpen(false); (window as any).fbq?.("track","Lead"); }} className="mt-2 flex items-center justify-center gap-1.5 bg-[#FF2E88] text-white text-sm font-bold px-4 py-3 rounded-xl hover:bg-[#e0007a] transition-colors">
                             Agendar Reunión Demo <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
@@ -351,7 +351,7 @@ export default function Landing() {
                             Un agente IA responde por WhatsApp, agenda citas y reactiva clientas inactivas — todo en automático, las 24 horas.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <Link to="/demo" className="flex items-center justify-center gap-2 bg-[#FF2E88] text-white font-bold px-7 py-4 rounded-2xl hover:bg-[#e0007a] transition-all shadow-lg shadow-[#FF2E88]/25 text-base">
+                            <Link to="/demo" onClick={() => (window as any).fbq?.("track","Lead")} className="flex items-center justify-center gap-2 bg-[#FF2E88] text-white font-bold px-7 py-4 rounded-2xl hover:bg-[#e0007a] transition-all shadow-lg shadow-[#FF2E88]/25 text-base">
                                 <span className="hidden sm:inline">Agendar Reunión Demo</span>
                                 <span className="sm:hidden">Agendar Demo</span>
                                 <ArrowRight className="w-5 h-5" />
@@ -360,14 +360,12 @@ export default function Landing() {
                                 Ver cómo funciona <ChevronDown className="w-5 h-5" />
                             </a>
                         </div>
-                        <div className="flex items-center gap-6 mt-8">
-                            <div className="flex -space-x-2">
-                                {['VM','DF','CH'].map(i => (
-                                    <div key={i} className="w-8 h-8 bg-gradient-to-br from-[#FF2E88] to-violet-500 rounded-full border-2 border-[#1a1030] flex items-center justify-center text-[9px] font-black text-white">{i}</div>
-                                ))}
+                        <div className="flex items-center gap-3 mt-8">
+                            <div className="flex items-center gap-0.5 text-lg leading-none">
+                                <span>🇨🇱</span><span>🇲🇽</span><span>🇨🇴</span><span>🇦🇷</span><span>🇵🇪</span>
                             </div>
                             <p className="text-sm text-white/50">
-                                <strong className="text-white">+120 centros</strong> ya automatizados en Chile y Latinoamérica
+                                Operativo en <strong className="text-white">Chile y LATAM</strong>
                             </p>
                         </div>
                     </div>
@@ -913,7 +911,7 @@ export default function Landing() {
                         Implementación gratis. Sin contratos. Operativa en menos de 48 horas.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link to="/demo" className="flex items-center justify-center gap-2 bg-[#FF2E88] text-white font-bold px-8 py-4 rounded-2xl hover:bg-[#e0007a] transition-all shadow-xl shadow-[#FF2E88]/30 text-base">
+                        <Link to="/demo" onClick={() => (window as any).fbq?.("track","Lead")} className="flex items-center justify-center gap-2 bg-[#FF2E88] text-white font-bold px-8 py-4 rounded-2xl hover:bg-[#e0007a] transition-all shadow-xl shadow-[#FF2E88]/30 text-base">
                             Agendar Reunión Demo <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link to="/pricing" className="flex items-center justify-center gap-2 bg-white/10 border border-white/15 text-white font-bold px-8 py-4 rounded-2xl hover:bg-white/20 transition-all text-base">

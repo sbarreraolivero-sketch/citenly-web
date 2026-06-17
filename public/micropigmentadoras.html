@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/citenly-icon.png" />
+  <link rel="apple-touch-icon" href="/citenly-icon.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -87,11 +89,11 @@
     .nav-cta {
       background: var(--pink); color: #fff;
       font-size: 13px; font-weight: 700; padding: 9px 22px;
-      border-radius: 100px; text-decoration: none;
-      transition: transform 0.2s, box-shadow 0.2s;
+      border-radius: 12px; text-decoration: none;
+      transition: background 0.2s, box-shadow 0.2s;
       box-shadow: 0 0 20px rgba(255,46,136,0.3);
     }
-    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(255,46,136,0.48); }
+    .nav-cta:hover { background: #e0007a; box-shadow: 0 0 32px rgba(255,46,136,0.48); }
 
     /* ════ HERO ════ */
     #hero {
@@ -105,20 +107,20 @@
     .hero-pill {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--pink-dim); border: 1px solid var(--pink-border);
-      color: var(--pink); font-size: 11px; font-weight: 800;
-      padding: 5px 14px; border-radius: 100px;
-      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 22px;
+      color: var(--pink); font-size: 15px; font-weight: 700;
+      padding: 8px 18px; border-radius: 100px;
+      letter-spacing: 0.02em; text-transform: none; margin-bottom: 22px;
     }
     .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--pink); display: inline-block; animation: blink 2s ease infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
     h1 {
-      font-size: clamp(28px, 3.5vw, 48px); font-weight: 900;
-      line-height: 1.07; letter-spacing: -0.04em; color: #fff; margin-bottom: 20px;
+      font-size: clamp(44px, 5.5vw, 64px); font-weight: 900;
+      line-height: 1.05; letter-spacing: -0.04em; color: #fff; margin-bottom: 20px;
     }
     h1 em { font-style: normal; color: var(--pink); }
     .hero-sub {
-      font-size: clamp(15px, 1.7vw, 17px); color: var(--muted);
+      font-size: clamp(17px, 2vw, 21px); color: var(--muted);
       line-height: 1.72; margin-bottom: 36px; max-width: 440px;
     }
     .hero-sub strong { color: var(--text); font-weight: 600; }
@@ -127,7 +129,7 @@
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--pink); color: #fff;
       font-size: 15px; font-weight: 800; padding: 15px 32px;
-      border-radius: 100px; text-decoration: none;
+      border-radius: 14px; text-decoration: none;
       transition: transform 0.2s, box-shadow 0.2s;
       box-shadow: 0 0 48px rgba(255,46,136,0.38);
     }
@@ -187,9 +189,15 @@
       background-image:
         radial-gradient(ellipse at 20% 10%, rgba(255,46,136,0.04), transparent 50%),
         radial-gradient(ellipse at 80% 90%, rgba(139,92,246,0.04), transparent 50%);
-      padding: 12px 10px; min-height: 330px;
+      padding: 12px 10px;
+      height: 330px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       display: flex; flex-direction: column; gap: 6px;
     }
+    .chat-body::-webkit-scrollbar { display: none; }
     .chat-time-label {
       font-size: 10px; color: rgba(255,255,255,0.22);
       text-align: center; padding: 2px 0 4px; letter-spacing: 0.03em;
@@ -708,9 +716,11 @@
 
       /* Hero */
       #hero { padding: 56px 0 48px; }
-      h1 { font-size: 48px; line-height: 1.04; }
-      .hero-sub { font-size: 17px; }
-      .phone-frame { width: 220px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      h1 { font-size: 44px; line-height: 1.04; }
+      .hero-sub { font-size: 18px; }
+      .phone-frame { width: 280px; }
+      .chat-body { height: 270px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
       .hero-microcopy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; justify-items: start; width: fit-content; }
 
@@ -958,7 +968,7 @@
 
       <!-- LEFT -->
       <div class="hero-left">
-        <div class="hero-pill ha1"><span class="pill-dot"></span> Para micropigmentadoras</div>
+        <div class="hero-pill ha1"><span class="pill-dot"></span> Agente IA para Micropigmentistas</div>
 
         <h1 class="ha2">
           Deja de regalar tardes enteras<br>a clientas que<br><em style="font-style:normal;background:linear-gradient(90deg,#FF2E88,#4B9EE8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">no avisan.</em>
@@ -1118,7 +1128,7 @@
 <div style="background:#fff;border-top:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6;padding:48px 24px;text-align:center;">
   <p style="font-size:16px;color:#1a1a2e;font-weight:600;margin-bottom:6px;">¿Quieres ver todo esto funcionando en tu negocio?</p>
   <p style="font-size:14px;color:#6b7280;margin-bottom:22px;">Una reunión de 30 min. Sin compromiso. El equipo lo configura todo por ti.</p>
-  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary" style="font-size:14px;padding:13px 28px;background:#FF2E88;color:#fff;border-radius:100px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-weight:800;">
+  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary" style="font-size:14px;padding:13px 28px;background:#FF2E88;color:#fff;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-weight:800;">
     Agendar reunión gratis <span>→</span>
   </a>
 </div>
