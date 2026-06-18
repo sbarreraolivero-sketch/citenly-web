@@ -31,7 +31,7 @@ const TESTIMONIALS = [
         role: 'PMU Artist',
         tag: 'PMU · TEMUCO',
         quote: 'Me sorprendió desde el primer momento la calidad de las respuestas. Agenda, cancela, reagenda y recuerda los mensajes de mis clientas de manera eficiente. Nada que ver con otro sistema que probé. No los cambiaría tan fácilmente.',
-        photo: '/carolina-rojas-paineman.png',
+        photo: '/carolina-rojas-paineman-2.jpg',
         gradient: 'from-[#0d001a] via-[#1a0033] to-[#0d0d1a]',
     },
     {
