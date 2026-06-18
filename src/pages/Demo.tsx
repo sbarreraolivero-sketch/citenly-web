@@ -331,7 +331,7 @@ export default function Demo() {
                         return (
                             <button key={opt} onClick={() => !animating && selectSingle(opt)} disabled={animating}
                                 className={cn(
-                                    'flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all duration-150',
+                                    'flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all duration-150 whitespace-normal',
                                     selected
                                         ? 'border-[#FF2E88]/60 bg-[#FF2E88]/[0.12] text-white'
                                         : 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white hover:bg-white/[0.06]'
@@ -359,7 +359,7 @@ export default function Demo() {
                             return (
                                 <button key={opt} onClick={() => toggleMulti(opt)}
                                     className={cn(
-                                        'flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all duration-150',
+                                        'flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all duration-150 whitespace-normal',
                                         selected
                                             ? 'border-[#FF2E88]/60 bg-[#FF2E88]/[0.12] text-white'
                                             : 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white hover:bg-white/[0.06]'
@@ -544,13 +544,13 @@ export default function Demo() {
     // ─────────────────────────────────────────────────────────────────────────
 
     return (
-        <div className="min-h-screen bg-[#0A0A0F] flex">
+        <div className="min-h-screen bg-[#0A0A0F] overflow-x-hidden lg:flex">
 
             {/* ── Left panel — testimonios (solo desktop) ── */}
             {LeftPanel}
 
             {/* ── Right panel — formulario ── */}
-            <div className="flex-1 flex flex-col min-h-screen">
+            <div className="w-full lg:flex-1 flex flex-col min-h-screen">
 
                 {/* Mobile nav */}
                 <nav className="lg:hidden sticky top-0 z-50 bg-[#0A0A0F]/95 backdrop-blur-md border-b border-white/[0.07]">
@@ -604,13 +604,15 @@ export default function Demo() {
 
                 {/* ── Mobile testimonials (debajo del formulario) ── */}
                 <div className="lg:hidden border-t border-white/[0.06] mt-6">
-                    <div className="px-5 pt-6 pb-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">
+                    <div className="pt-6 pb-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 px-5">
                             Lo que dicen nuestras clientas
                         </p>
-                        <div className="flex gap-3 overflow-x-auto pb-3 -mx-5 px-5 snap-x snap-mandatory scrollbar-none">
+                        {/* Carrusel: overflow-x-auto SIN negative margin para evitar body overflow */}
+                        <div className="overflow-x-auto scrollbar-none pb-3">
+                            <div className="flex gap-3 snap-x snap-mandatory px-5 w-max">
                             {TESTIMONIALS.map((t, i) => (
-                                <div key={i} className="shrink-0 w-[82vw] max-w-[300px] snap-start rounded-2xl overflow-hidden border border-white/[0.08]">
+                                <div key={i} className="shrink-0 w-[78vw] max-w-[280px] snap-start rounded-2xl overflow-hidden border border-white/[0.08]">
                                     {/* Mini photo header */}
                                     <div className="relative h-24 bg-gradient-to-br from-[#1a0010] to-[#0d0d1a]">
                                         {t.photo && (
@@ -632,8 +634,9 @@ export default function Demo() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </div>
+                            </div>{/* end flex w-max */}
+                        </div>{/* end overflow-x-auto */}
+                    </div>{/* end pt-6 wrapper */}
 
                     {/* Stats strip mobile */}
                     <div className="grid grid-cols-3 border-t border-white/[0.06]">
