@@ -793,6 +793,48 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 
 ---
 
+### Cambios realizados — junio 2026 (sesión 22)
+
+#### Página `/demo` — rediseño progresivo + optimización móvil
+
+**`src/pages/Demo.tsx` (reescrito en sesión 20, pulido en sesión 22):**
+
+**Logo y visual:**
+- Logo `citenly-icon.png` reemplaza el ícono Sparkles (panel izquierdo + nav móvil)
+- Badge "30 min · sin compromiso": `text-white bg-black/30 border-white/30` — visible sobre fotos
+- Tag especialidad testimonios: `text-[#FF2E88]` sólido + `bg-[#FF2E88]/20 border-[#FF2E88]/50`
+
+**Optimización móvil:**
+- Wrapper raíz: `flex` → `lg:flex overflow-x-hidden` (evita body overflow horizontal)
+- Right panel: `flex-1` → `w-full lg:flex-1` (ancho explícito en móvil)
+- Nav móvil: `h-12` compacto, contador en pill centrado, texto "Ingresar →"
+- Progress bar: `pt-3` (antes `pt-5`)
+- Form area: `px-5 pt-5` sin max-width en móvil
+- Grid tipo negocio: `grid-cols-1 sm:grid-cols-2` (antes siempre 2 cols = apretado en móvil)
+- Botones opción: `py-3 whitespace-normal` — `whitespace-normal` necesario porque iOS Safari aplica `white-space: nowrap` a `<button>` en su user-agent stylesheet
+- Header pregunta: `text-xl mb-5` (más compacto)
+- Carrusel testimonios móvil: elimina `-mx-5` que causaba overflow horizontal. Nuevo patrón: `overflow-x-auto > div.flex.w-max.px-5` sin negative margin
+- Fotos testimonios: altura `h-44` (antes `h-24`), `object-[center_15%]` para mostrar el rostro
+
+**Fotos testimonios actualizadas:**
+- Sofia: `sofia%20ibañez.png` → `sofia-yanez-3.jpg` (nombre sin `ñ` — macOS guarda en NFD, URL esperaba NFC → imagen no cargaba)
+- Carolina: `carolina-rojas-paineman.png` → `carolina-rojas-paineman-2.jpg`
+
+**Regla permanente — imágenes con caracteres especiales:** macOS guarda `ñ`, `á`, `é` etc. en NFD (descompuesto). Los navegadores y servidores Linux esperan NFC. Para evitar que imágenes no carguen en producción, **siempre usar nombres de archivo sin caracteres especiales** (sin tildes, ñ, espacios). Si el archivo original tiene ñ, copiarlo con nombre ASCII antes de commitear.
+
+**`public/micropigmentadoras.html`:**
+- Logo actualizado a `<img src="/citenly-icon.png">`
+- Foto Sofia → `sofia-yanez-3.jpg`
+- Foto Carolina → `carolina-rojas-paineman-2.jpg`
+
+**`src/components/layout/DashboardLayout.tsx`:**
+- Badge "IA Activa" en sidebar ahora es dinámico — consulta DB cada 60s
+- Estado `active` (rosa pulsante) / `paused` (ámbar) / `no_credits` (rojo)
+- Lógica: `ai_auto_respond === false` → paused; `ai_credits_unlimited` → active; créditos agotados → no_credits
+- Resuelve `parent_clinic_id` para sucursales (lee créditos del pool padre)
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 18)
 
 #### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos
