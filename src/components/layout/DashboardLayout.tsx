@@ -137,6 +137,7 @@ export default function DashboardLayout() {
     const [showMobileMenu, setShowMobileMenu] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light')
+    const [aiStatus, setAiStatus] = useState<'active' | 'paused' | 'no_credits'>('active')
 
     // Theme management
     useEffect(() => {
@@ -216,6 +217,54 @@ export default function DashboardLayout() {
         const interval = setInterval(fetchNotifications, 30000)
         return () => clearInterval(interval)
     }, [profile?.clinic_id, notificationsLimit])
+
+    // Fetch AI status (auto_respond + credits)
+    useEffect(() => {
+        const fetchAiStatus = async () => {
+            if (!profile?.clinic_id) return
+            try {
+                const { data } = await (supabase as any)
+                    .from('clinic_settings')
+                    .select('ai_auto_respond,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_unlimited,parent_clinic_id')
+                    .eq('id', profile.clinic_id)
+                    .single()
+
+                if (!data) return
+
+                if (data.ai_auto_respond === false) {
+                    setAiStatus('paused')
+                    return
+                }
+
+                // Resolve credit pool (sucursal → padre)
+                let pool = data
+                if (data.parent_clinic_id) {
+                    const { data: parent } = await (supabase as any)
+                        .from('clinic_settings')
+                        .select('ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_unlimited')
+                        .eq('id', data.parent_clinic_id)
+                        .single()
+                    if (parent) pool = parent
+                }
+
+                if (pool.ai_credits_unlimited) {
+                    setAiStatus('active')
+                    return
+                }
+
+                const extraExpired = pool.ai_credits_extra_expires_at && new Date(pool.ai_credits_extra_expires_at) < new Date()
+                const extra = extraExpired ? 0 : (pool.ai_credits_extra || 0)
+                const limit = (pool.ai_credits_limit || 0) + extra
+                setAiStatus((pool.ai_credits_used || 0) >= limit ? 'no_credits' : 'active')
+            } catch {
+                // fail silently — no bloquear la carga del layout
+            }
+        }
+
+        fetchAiStatus()
+        const interval = setInterval(fetchAiStatus, 60000)
+        return () => clearInterval(interval)
+    }, [profile?.clinic_id])
 
     const handleLoadMore = async (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -359,20 +408,30 @@ export default function DashboardLayout() {
         )
     }
 
-    const sidebarFooter = (collapsed: boolean) => (
-        <div className="p-3 border-t border-white/[0.06] shrink-0">
-            <div className={cn(
-                'flex items-center gap-3 rounded-xl bg-[#FF2E88]/[0.12] border border-[#FF2E88]/25 transition-all duration-200',
-                collapsed ? 'p-2 justify-center' : 'px-3 py-3'
-            )}>
-                <div className="shrink-0 w-2 h-2 bg-[#FF2E88] rounded-full animate-pulse" />
-                <div className={cn('min-w-0 overflow-hidden transition-all duration-200', collapsed ? 'w-0 opacity-0' : 'opacity-100')}>
-                    <p className="text-[13px] font-semibold text-white leading-tight">IA Activa</p>
-                    <p className="text-[11px] text-white/40">Respondiendo 24/7</p>
+    const aiStatusConfig = {
+        active:     { dot: 'bg-[#FF2E88] animate-pulse', bg: 'bg-[#FF2E88]/[0.12]', border: 'border-[#FF2E88]/25', label: 'IA Activa',    sub: 'Respondiendo 24/7' },
+        paused:     { dot: 'bg-amber-400',               bg: 'bg-amber-400/[0.12]',  border: 'border-amber-400/25', label: 'IA en Pausa',  sub: 'Reactivar en Ajustes IA' },
+        no_credits: { dot: 'bg-red-500',                 bg: 'bg-red-500/[0.12]',    border: 'border-red-500/25',   label: 'IA Apagada',   sub: 'Créditos agotados' },
+    }
+
+    const sidebarFooter = (collapsed: boolean) => {
+        const cfg = aiStatusConfig[aiStatus]
+        return (
+            <div className="p-3 border-t border-white/[0.06] shrink-0">
+                <div className={cn(
+                    'flex items-center gap-3 rounded-xl border transition-all duration-200',
+                    cfg.bg, cfg.border,
+                    collapsed ? 'p-2 justify-center' : 'px-3 py-3'
+                )}>
+                    <div className={cn('shrink-0 w-2 h-2 rounded-full', cfg.dot)} />
+                    <div className={cn('min-w-0 overflow-hidden transition-all duration-200', collapsed ? 'w-0 opacity-0' : 'opacity-100')}>
+                        <p className="text-[13px] font-semibold text-white leading-tight">{cfg.label}</p>
+                        <p className="text-[11px] text-white/40">{cfg.sub}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    )
+        )
+    }
 
     return (
         <div className="flex h-screen bg-primary-theme text-primary-theme overflow-hidden transition-colors duration-200">
