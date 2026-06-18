@@ -614,12 +614,12 @@ export default function Demo() {
                             {TESTIMONIALS.map((t, i) => (
                                 <div key={i} className="shrink-0 w-[78vw] max-w-[280px] snap-start rounded-2xl overflow-hidden border border-white/[0.08]">
                                     {/* Mini photo header */}
-                                    <div className="relative h-24 bg-gradient-to-br from-[#1a0010] to-[#0d0d1a]">
+                                    <div className="relative h-44 bg-gradient-to-br from-[#1a0010] to-[#0d0d1a]">
                                         {t.photo && (
                                             <img src={t.photo} alt={t.name}
-                                                className="absolute inset-0 w-full h-full object-cover object-top opacity-70" />
+                                                className="absolute inset-0 w-full h-full object-cover object-[center_15%] opacity-80" />
                                         )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                                         <span className="absolute bottom-2 left-3 text-[9px] font-black uppercase tracking-widest text-[#FF2E88] bg-black/50 backdrop-blur-sm border border-[#FF2E88]/40 rounded-full px-2 py-0.5">
                                             {t.tag}
                                         </span>
