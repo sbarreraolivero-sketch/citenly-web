@@ -23,7 +23,7 @@ const TESTIMONIALS = [
         role: 'Micropigmentista',
         tag: 'MICROPIGMENTACIÓN · CONCEPCIÓN',
         quote: 'La IA de Citenly atiende mucho mejor que una persona real. Antes tenía que atender todos los mensajes yo misma — las personas esperaban horas. Ahora solo me dedico a lo mío y mi asistente digital me llena la agenda.',
-        photo: '/sofia%20iba%C3%B1ez.png',
+        photo: '/Sofia-ya%C3%B1ez-3.jpg',
         gradient: 'from-[#001a1a] via-[#002626] to-[#0d0d1a]',
     },
     {
