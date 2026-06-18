@@ -147,6 +147,17 @@ Deno.serve(async (req) => {
                 }
                 await supabaseClient.from('campaigns').update({ status: 'completed' }).eq('id', cid);
 
+                // 4. Descontar créditos de campaña realmente enviados (1 crédito = 1 mensaje)
+                if (doneCount > 0) {
+                    const { data: sub } = await supabaseClient
+                        .from('subscriptions')
+                        .select('campaign_credits_balance')
+                        .eq('clinic_id', campaign.clinic_id)
+                        .single();
+                    const newBal = Math.max(0, ((sub as any)?.campaign_credits_balance ?? 0) - doneCount);
+                    await supabaseClient.from('subscriptions').update({ campaign_credits_balance: newBal }).eq('clinic_id', campaign.clinic_id);
+                }
+
             } catch (err: any) {
                 console.error(`[WORKER_FATAL] ${err.message}`);
                 await supabaseClient.from('campaigns').update({ status: 'failed', error_log: err.message }).eq('id', cid);

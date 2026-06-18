@@ -130,6 +130,7 @@ export const PLANS = {
             '8.000 créditos IA incluidos/mes',
             'Recordatorios automáticos (250/mes)',
             'Encuestas de satisfacción',
+            'Motor de Retención de Ingresos (IA)',
             'Soporte prioritario',
         ],
         upsells: [

@@ -964,7 +964,7 @@ const RetentionEngine = () => {
                         <div>
                             <p className="text-xs text-primary-theme/50 uppercase tracking-wider font-medium">Ingresos Recuperados por Citenly AI</p>
                             <PremiumFeature requiredPlan="pro" fallback={
-                                <p className="text-xl font-bold text-primary-theme/30">Disponible en Radiance+</p>
+                                <p className="text-xl font-bold text-primary-theme/30">Disponible en Pro+</p>
                             }>
                                 <p className="text-2xl font-bold text-primary-theme">{formatCurrency(stats?.revenue_recovered_month || 0)}</p>
                             </PremiumFeature>

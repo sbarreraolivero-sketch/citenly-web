@@ -157,7 +157,7 @@ const PLANS = [
         gradient: 'from-[#FF2E88] to-[#c0236a]',
         highlight: true,
         badge: 'Más Popular',
-        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', '8.000 créditos IA/mes', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de retención activa', 'Encuestas de satisfacción', 'Soporte prioritario'],
+        features: ['5 usuarios · 5 agendas', 'Todo lo de Starter', '8.000 créditos IA/mes', 'Citas con IA ilimitadas', '250 recordatorios/mes', 'Motor de Retención de Ingresos (IA)', 'Encuestas de satisfacción', 'Soporte prioritario'],
         cta: 'Agendar Implementación',
     },
     {

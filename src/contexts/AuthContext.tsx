@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database'
 import { type ClinicMember } from '@/services/teamService'
+import { normalizePlanId } from '@/lib/mercadopago'
 
 interface UserProfile {
     id: string
@@ -152,9 +153,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             if (!error && data) {
-                console.log('✅ Fresh Subscription Loaded:', data)
-                localStorage.setItem(SUBSCRIPTION_STORAGE_KEY, JSON.stringify(data))
-                return data as Subscription
+                // Mapea SOLO IDs de plan legacy (essence/radiance/prestige/freemium) a los
+                // actuales (starter/pro/enterprise/core) para que el nombre, el precio y el
+                // gating premium funcionen en clínicas antiguas. Deja intactos 'trial'/null
+                // y los IDs ya vigentes para no afectar a usuarios en prueba.
+                const LEGACY_PLAN_IDS = ['essence', 'radiance', 'prestige', 'freemium']
+                const normalized = (data.plan && LEGACY_PLAN_IDS.includes(data.plan))
+                    ? ({ ...data, plan: normalizePlanId(data.plan) } as Subscription)
+                    : (data as Subscription)
+                console.log('✅ Fresh Subscription Loaded:', normalized)
+                localStorage.setItem(SUBSCRIPTION_STORAGE_KEY, JSON.stringify(normalized))
+                return normalized
             }
             return null
         } catch (error) {

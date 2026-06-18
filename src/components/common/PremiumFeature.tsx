@@ -2,6 +2,7 @@
 import { ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Link } from 'react-router-dom'
+import { normalizePlanId } from '@/lib/mercadopago'
 
 interface PremiumFeatureProps {
     children: ReactNode
@@ -14,7 +15,9 @@ export function PremiumFeature({ children, fallback, requiredPlan = 'starter', s
     const { subscription } = useAuth()
 
     const plans = ['core', 'starter', 'pro', 'enterprise']
-    const currentPlan = subscription?.plan || 'core'
+    // Normaliza IDs legacy (prestige/radiance/essence) para que clínicas antiguas
+    // no queden bloqueadas por un indexOf(-1).
+    const currentPlan = subscription?.plan ? normalizePlanId(subscription.plan) : 'core'
 
     const meetsRequirement = () => {
         if (!subscription) return false

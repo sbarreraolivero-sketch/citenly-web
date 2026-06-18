@@ -116,6 +116,13 @@ export default function Loyalty() {
         const amount = parseInt(amountStr || '0');
         if (!profile?.clinic_id || amount <= 0) return;
 
+        // Bloquear saldo negativo: no se puede quitar más de lo disponible (incluye ajustes pendientes ya reflejados en el estado local)
+        const currentBalance = patients.find(p => p.id === patientId)?.loyalty_points || 0;
+        if (!isAdding && amount > currentBalance) {
+            toast.error(`No puedes quitar ${amount}. Saldo disponible: ${currentBalance}.`);
+            return;
+        }
+
         const finalAmount = isAdding ? amount : -amount;
 
         // 1. UPDATE LOCAL UI IMMEDIATELY (Live Sum)

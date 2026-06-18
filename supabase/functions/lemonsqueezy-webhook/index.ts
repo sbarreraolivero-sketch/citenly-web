@@ -28,10 +28,11 @@ interface LemonSqueezyWebhookPayload {
         event_name: string;
         custom_data?: {
             clinic_id?: string;
-            type?: string;      // 'subscription' | 'ai_credits'
+            type?: string;      // 'subscription' | 'ai_credits' | 'campaign_credits'
             plan?: string;      // 'essence' | 'radiance' | 'prestige'
             credits?: string;   // '500' | '1500' | '4000'
             model?: string;     // 'mini' | '4o'
+            quantity?: string;  // campaign_credits / reminders quantity
         };
     };
     data: {
@@ -143,6 +144,45 @@ Deno.serve(async (req: Request) => {
 
             console.log(`[LS] AI Credits (${model}) for ${clinicId}: +${creditsToAdd} → Total: ${newBalance}`);
             return new Response("Credits OK", { status: 200 });
+        }
+
+        // ─── Campaign Credits Purchase (créditos de envío de campañas) ───
+        if (purchaseType === 'campaign_credits') {
+            if (eventName !== 'order_created') {
+                console.log(`Ignoring ${eventName} for campaign_credits`);
+                return new Response("OK", { status: 200 });
+            }
+
+            const creditsToAdd = parseInt(customData.quantity || '0');
+            if (creditsToAdd <= 0) {
+                console.error("Invalid campaign credits amount:", creditsToAdd);
+                return new Response("Invalid credits", { status: 400 });
+            }
+
+            const { data: sub, error: fetchError } = await supabase
+                .from('subscriptions')
+                .select('campaign_credits_balance')
+                .eq('clinic_id', clinicId)
+                .single();
+
+            if (fetchError) {
+                console.error("Error fetching subscription:", fetchError);
+                return new Response("DB fetch error", { status: 500 });
+            }
+
+            const newBalance = ((sub as any)?.campaign_credits_balance || 0) + creditsToAdd;
+            const { error: updateError } = await supabase
+                .from('subscriptions')
+                .update({ campaign_credits_balance: newBalance })
+                .eq('clinic_id', clinicId);
+
+            if (updateError) {
+                console.error("Error updating campaign credits:", updateError);
+                return new Response("DB update error", { status: 500 });
+            }
+
+            console.log(`[LS] Campaign Credits for ${clinicId}: +${creditsToAdd} → Total: ${newBalance}`);
+            return new Response("Campaign Credits OK", { status: 200 });
         }
 
         // ─── Subscription Events ───

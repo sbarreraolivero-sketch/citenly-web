@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
     Calendar,
     MessageSquare,
@@ -10,20 +10,31 @@ import {
     Target,
     ArrowUpRight,
     ArrowDownRight,
-    Bell,
-    Sparkles
+    Minus,
+    ChevronLeft,
+    ChevronRight,
+    CalendarRange,
+    X,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import {
+    startOfDay, endOfDay,
+    startOfMonth, endOfMonth,
+    getDay, addDays, addMonths, subMonths,
+    isSameDay, isBefore, isAfter,
+    differenceInCalendarDays, subDays, subWeeks, subYears,
+    format as dateFnsFormat,
+} from 'date-fns'
+import { es as esLocale } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClinicTimezone } from '@/hooks/useClinicTimezone'
 import { Link } from 'react-router-dom'
 
 interface DashboardStats {
-    scheduledAppointments: number
-    newProspects: number
-    aiMessagesSent: number
-    remindersSent: number
+    appointmentsToday: number
+    messagesToday: number
+    activePatients: number
+    confirmationRate: number
 }
 
 interface Appointment {
@@ -31,7 +42,7 @@ interface Appointment {
     patient_name: string
     service: string
     appointment_date: string
-    status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'pending_deposit'
 }
 
 interface Message {
@@ -40,9 +51,6 @@ interface Message {
     content: string
     created_at: string
     direction: 'inbound' | 'outbound'
-    status: string
-    ai_generated?: boolean
-    ai_model?: string
 }
 
 interface ServiceRanking {
@@ -55,13 +63,33 @@ interface ServiceRanking {
 export default function Dashboard() {
     const { user, profile } = useAuth()
     const [loading, setLoading] = useState(true)
-    const [filterRange, setFilterRange] = useState<'day' | 'week' | 'month' | 'year'>('month')
     const [stats, setStats] = useState<DashboardStats>({
-        scheduledAppointments: 0,
-        newProspects: 0,
-        aiMessagesSent: 0,
-        remindersSent: 0
+        appointmentsToday: 0,
+        messagesToday: 0,
+        activePatients: 0,
+        confirmationRate: 0
     })
+
+    const [prevStats, setPrevStats] = useState({
+        appointments: 0,
+        prospects: 0,
+        aiMessages: 0,
+        reminders: 0,
+        cancelled: 0
+    })
+
+    // New metrics
+    const [extraStats, setExtraStats] = useState({
+        remindersSent: 0,
+        newProspects: 0,
+        cancelledAppointments: 0,
+        aiMessages: 0,
+    })
+
+    const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'year' | 'custom'>('month')
+    const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null)
+    const [showDatePicker, setShowDatePicker] = useState(false)
+    const datePickerRef = useRef<HTMLDivElement>(null)
     const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([])
     const [recentMessages, setRecentMessages] = useState<Message[]>([])
 
@@ -73,411 +101,623 @@ export default function Dashboard() {
         lost: 0,
         rate: 0
     })
-    const [satisfactionStats] = useState({
+    const [satisfactionStats, setSatisfactionStats] = useState({
         sent: 0,
         responded: 0,
         nps: 0,
         average: 0
     })
-    const [trends, setTrends] = useState<Record<string, string>>({
-        appointments: '0%',
-        prospects: '0%',
-        aiMessages: '0%',
-        reminders: '0%'
-    })
-    const [isTrendsUp, setIsTrendsUp] = useState<Record<string, boolean>>({
-        appointments: true,
-        prospects: true,
-        aiMessages: true,
-        reminders: true
-    })
 
-    const { getDateRange } = useClinicTimezone()
+    const { getDateRange, toUTC } = useClinicTimezone()
+
+    // Citenly: useClinicTimezone no expone getPreviousDateRange, así que lo derivamos
+    // desplazando el rango actual una unidad hacia atrás.
+    const getPreviousDateRange = (tr: 'day' | 'week' | 'month' | 'year') => {
+        const { start, end } = getDateRange(tr)
+        switch (tr) {
+            case 'day':   return { start: subDays(start, 1),   end: subDays(end, 1) }
+            case 'week':  return { start: subWeeks(start, 1),  end: subWeeks(end, 1) }
+            case 'month': return { start: subMonths(start, 1), end: subMonths(end, 1) }
+            case 'year':  return { start: subYears(start, 1),  end: subYears(end, 1) }
+        }
+    }
+
+    // Cerrar el picker al hacer clic fuera
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+                setShowDatePicker(false)
+            }
+        }
+        document.addEventListener('mousedown', handler)
+        return () => document.removeEventListener('mousedown', handler)
+    }, [])
 
     useEffect(() => {
+        let cancelled = false
+
         const fetchDashboardData = async () => {
             if (!user || !profile?.clinic_id) return
+            if (timeRange === 'custom' && !customRange) return
 
             setLoading(true)
+
             try {
-                // Get range boundaries in UTC for queries
-                const { start: rangeStart, end: rangeEnd } = getDateRange(filterRange)
-                const startStr = rangeStart.toISOString()
-                const endStr = rangeEnd.toISOString()
-                const clinicId = profile.clinic_id
+                // Use clinic timezone for all date boundaries
+                const { start: monthStart } = getDateRange('month')
+                const startOfMonthIso = monthStart.toISOString()
 
-                // 1. Parallel Fetching of Independent Data (with 15s timeout)
-                const [
-                    { data: clinicStats },
-                    { data: upcoming },
-                    { data: recentMsgs },
-                    { data: rankingData },
-                ] = await Promise.race([
-                    Promise.all([
-                        // A. All pre-calculated stats for this clinic
-                        supabase.from('clinic_stats').select('*').eq('clinic_id', clinicId),
+                // Calcular rango del período seleccionado
+                let startOfStats: string, endOfStats: string, startOfPrev: string, endOfPrev: string
 
-                        // B. Upcoming Appointments (Next 5)
-                        supabase.from('appointments')
-                            .select('id, patient_name, service, appointment_date, status')
-                            .eq('clinic_id', clinicId)
-                            .in('status', ['pending', 'confirmed', 'pending_deposit'])
-                            .gte('appointment_date', new Date().toISOString())
-                            .order('appointment_date', { ascending: true })
-                            .limit(5),
-
-                        // C. Recent Messages (Last 3)
-                        supabase.from('messages')
-                            .select('id, phone_number, content, created_at, direction, status')
-                            .eq('clinic_id', clinicId)
-                            .order('created_at', { ascending: false })
-                            .limit(3),
-
-                        // D. Service Ranking (Month to Date)
-                        supabase.from('appointments')
-                            .select('service')
-                            .eq('clinic_id', clinicId)
-                            .gte('appointment_date', getDateRange(filterRange).start.toISOString()),
-                    ]),
-                    new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error('Dashboard timeout')), 15000))
-                ])
-
-                // 2. Process Stats (Primary: clinic_stats table)
-                // Check specifically for the current period — not just any row
-                const periodStats = clinicStats?.filter((s: any) => s.period === filterRange)
-                if (periodStats && periodStats.length > 0) {
-                    const findStat = (type: string) => periodStats.find((s: any) => s.stat_type === type)?.value || 0
-                    const appointmentsCount = findStat('appointments')
-                    const uniqueContacts = findStat('unique_contacts')
-                    const prospectsCount = findStat('prospects')
-                    const aiMessagesCount = findStat('ai_messages')
-                    const remindersCount = findStat('reminders')
-
-                    setStats({
-                        scheduledAppointments: appointmentsCount,
-                        newProspects: prospectsCount,
-                        aiMessagesSent: aiMessagesCount,
-                        remindersSent: remindersCount
-                    })
-
-                    // Update conversion stats - Use max of contacts or prospects to be more realistic
-                    const totalLeads = Math.max(uniqueContacts, prospectsCount, appointmentsCount)
-                    setConversionStats({
-                        consultations: totalLeads,
-                        converted: appointmentsCount,
-                        lost: Math.max(0, totalLeads - appointmentsCount),
-                        rate: totalLeads > 0 ? Math.round((appointmentsCount / totalLeads) * 100) : 0
-                    });
-
-                    // 2.1 Fetch Previous Period for Trends
-                    const prevRange = {
-                        start: new Date(rangeStart),
-                        end: new Date(rangeStart)
-                    }
-                    if (filterRange === 'day') prevRange.start.setDate(prevRange.start.getDate() - 1)
-                    else if (filterRange === 'week') prevRange.start.setDate(prevRange.start.getDate() - 7)
-                    else if (filterRange === 'month') prevRange.start.setMonth(prevRange.start.getMonth() - 1)
-                    else if (filterRange === 'year') prevRange.start.setFullYear(prevRange.start.getFullYear() - 1)
-
-                    const prevStartStr = prevRange.start.toISOString()
-                    const prevEndStr = prevRange.end.toISOString()
-
-                    const [
-                        { count: prevAppts },
-                        { count: prevPros },
-                        { count: prevMsgs },
-                        { count: prevRems }
-                    ] = await Promise.all([
-                        supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).in('status', ['pending', 'confirmed']).gte('appointment_date', prevStartStr).lt('appointment_date', prevEndStr),
-                        supabase.from('crm_prospects').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).gte('created_at', prevStartStr).lt('created_at', prevEndStr),
-                        supabase.from('messages').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('ai_generated', true).eq('direction', 'outbound').gte('created_at', prevStartStr).lt('created_at', prevEndStr),
-                        supabase.from('reminder_logs').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('status', 'sent').gte('sent_at', prevStartStr).lt('sent_at', prevEndStr)
-                    ])
-
-                    const calculateTrend = (curr: number, prev: number | null) => {
-                        const p = prev || 0
-                        if (p === 0) return { label: curr > 0 ? '+100%' : '0%', isUp: curr > 0 }
-                        const diff = ((curr - p) / p) * 100
-                        return { 
-                            label: `${diff >= 0 ? '+' : ''}${Math.round(diff)}%`, 
-                            isUp: diff >= 0 
-                        }
-                    }
-
-                    const tAppts = calculateTrend(appointmentsCount, prevAppts)
-                    const tPros = calculateTrend(prospectsCount, prevPros)
-                    const tMsgs = calculateTrend(aiMessagesCount, prevMsgs)
-                    const tRems = calculateTrend(remindersCount, prevRems)
-
-                    setTrends({
-                        appointments: tAppts.label,
-                        prospects: tPros.label,
-                        aiMessages: tMsgs.label,
-                        reminders: tRems.label
-                    })
-                    setIsTrendsUp({
-                        appointments: tAppts.isUp,
-                        prospects: tPros.isUp,
-                        aiMessages: tMsgs.isUp,
-                        reminders: tRems.isUp
-                    })
-
+                if (timeRange === 'custom' && customRange) {
+                    startOfStats = toUTC(startOfDay(customRange.start)).toISOString()
+                    endOfStats   = toUTC(endOfDay(customRange.end)).toISOString()
+                    const days   = differenceInCalendarDays(customRange.end, customRange.start) + 1
+                    startOfPrev  = toUTC(startOfDay(subDays(customRange.start, days))).toISOString()
+                    endOfPrev    = toUTC(endOfDay(subDays(customRange.end, days))).toISOString()
                 } else {
-                    // Fallback to real-time counts if stats unavailable for this period
-                    // @ts-ignore
-                    supabase.rpc('refresh_clinic_stats', { target_clinic_id: clinicId })
-
-                    
-                    const [ { count: appts }, { count: pros }, { count: rems } ] = await Promise.all([
-                        supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).in('status', ['pending', 'confirmed']).gte('appointment_date', startStr).lte('appointment_date', endStr),
-                        supabase.from('crm_prospects').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).gte('created_at', startStr).lte('created_at', endStr),
-                        supabase.from('reminder_logs').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId).eq('status', 'sent').gte('sent_at', startStr).lte('sent_at', endStr)
-                    ])
-                    const totalLeads = Math.max(appts || 0, pros || 0)
-                    setStats({
-                        scheduledAppointments: appts || 0,
-                        newProspects: pros || 0,
-                        aiMessagesSent: 0, // Fallback for messages is too heavy, skip it
-                        remindersSent: rems || 0
-                    })
-                    setConversionStats({
-                        consultations: totalLeads,
-                        converted: appts || 0,
-                        lost: Math.max(0, totalLeads - (appts || 0)),
-                        rate: totalLeads > 0 ? Math.round(((appts || 0) / totalLeads) * 100) : 0
-                    })
+                    const range  = getDateRange(timeRange as 'day' | 'week' | 'month' | 'year')
+                    startOfStats = range.start.toISOString()
+                    endOfStats   = range.end.toISOString()
+                    const prev   = getPreviousDateRange(timeRange as 'day' | 'week' | 'month' | 'year')!
+                    startOfPrev  = prev.start.toISOString()
+                    endOfPrev    = prev.end.toISOString()
                 }
 
-                // 3. Process Secondary Data
-                if (upcoming) setUpcomingAppointments(upcoming)
-                if (recentMsgs) setRecentMessages(recentMsgs as Message[])
+                // ⚡ PERFORMANCE: Run ALL queries in parallel instead of sequential
+                const [
+                    appointmentsCountRes,
+                    messagesCountRes,
+                    appointmentsRes,
+                    messagesRes,
+                    monthAppointmentsRes,
+                    inboundMessagesRes,
+                    surveysRes,
+                    remindersCountRes,
+                    prospectsRes,
+                    cancelledCountRes,
+                    aiMessagesCountRes,
+                    // Previous period counts
+                    prevAppointmentsRes,
+                    prevProspectsRes,
+                    prevAiMessagesRes,
+                    prevRemindersRes,
+                    prevCancelledRes
+                ] = await Promise.all([
+                    // 1. Appointments created in period (Performance of IA)
+                    supabase
+                        .from('appointments')
+                        .select('*', { count: 'exact', head: true })
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id),
+                    // 2. Messages count in period
+                    supabase
+                        .from('messages')
+                        .select('*', { count: 'exact', head: true })
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id),
+                    // 3. Upcoming appointments (excluye canceladas)
+                    supabase
+                        .from('appointments')
+                        .select('id, patient_name, service, appointment_date, status')
+                        .gte('appointment_date', new Date().toISOString())
+                        .in('status', ['pending', 'confirmed', 'pending_deposit'])
+                        .eq('clinic_id', profile.clinic_id)
+                        .order('appointment_date', { ascending: true })
+                        .limit(5),
+                    // 4. Recent messages
+                    supabase
+                        .from('messages')
+                        .select('id, phone_number, content, created_at, direction')
+                        .eq('clinic_id', profile.clinic_id)
+                        .order('created_at', { ascending: false })
+                        .limit(3),
+                    // 5. Appointments in period (for service ranking)
+                    (supabase as any)
+                        .from('appointments')
+                        .select('service')
+                        .gte('appointment_date', startOfStats)
+                        .lte('appointment_date', endOfStats)
+                        .eq('clinic_id', profile.clinic_id)
+                        .limit(1000),
+                    // 6. Inbound messages in period (for conversion rate)
+                    (supabase as any)
+                        .from('messages')
+                        .select('phone_number')
+                        .eq('direction', 'inbound')
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id)
+                        .limit(1000),
+                    // 7. Satisfaction surveys (always month — métrica lenta)
+                    (supabase as any)
+                        .from('satisfaction_surveys')
+                        .select('id, status, rating, created_at')
+                        .gte('created_at', startOfMonthIso)
+                        .eq('clinic_id', profile.clinic_id),
+                    // 8. Reminders sent (using reminder_logs for accuracy)
+                    supabase
+                        .from('reminder_logs')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'sent')
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id),
+                    // 9. New Prospects (Unique inbound contacts in period)
+                    supabase
+                        .from('messages')
+                        .select('phone_number')
+                        .eq('direction', 'inbound')
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id),
+                    // 10. Cancelled Appointments (by created_at — no updated_at column)
+                    supabase
+                        .from('appointments')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'cancelled')
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id),
+                    // 11. AI Messages (Outbound from clinic)
+                    supabase
+                        .from('messages')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('direction', 'outbound')
+                        .gte('created_at', startOfStats)
+                        .lte('created_at', endOfStats)
+                        .eq('clinic_id', profile.clinic_id),
 
-                // Ranking Logic
-                if (rankingData && rankingData.length > 0) {
+                    // PREVIOUS PERIOD QUERIES
+                    supabase.from('appointments').select('*', { count: 'exact', head: true })
+                        .gte('created_at', startOfPrev).lte('created_at', endOfPrev).eq('clinic_id', profile.clinic_id),
+                    supabase.from('messages').select('phone_number')
+                        .eq('direction', 'inbound').gte('created_at', startOfPrev).lte('created_at', endOfPrev).eq('clinic_id', profile.clinic_id),
+                    supabase.from('messages').select('*', { count: 'exact', head: true })
+                        .eq('direction', 'outbound').gte('created_at', startOfPrev).lte('created_at', endOfPrev).eq('clinic_id', profile.clinic_id),
+                    supabase.from('reminder_logs').select('*', { count: 'exact', head: true })
+                        .eq('status', 'sent').gte('created_at', startOfPrev).lte('created_at', endOfPrev).eq('clinic_id', profile.clinic_id),
+                    supabase.from('appointments').select('*', { count: 'exact', head: true })
+                        .eq('status', 'cancelled').gte('created_at', startOfPrev).lte('created_at', endOfPrev).eq('clinic_id', profile.clinic_id),
+                ])
+
+                // Si el filtro cambió mientras esperábamos, descartar estos resultados
+                if (cancelled) return
+
+                // Process results
+                const appointments = appointmentsRes.data
+                const messages = messagesRes.data
+                const monthAppointments = monthAppointmentsRes.data
+                const inboundMessages = inboundMessagesRes.data
+                const surveys = surveysRes.data
+
+                setStats({
+                    appointmentsToday: appointmentsCountRes.count || 0,
+                    messagesToday: messagesCountRes.count || 0,
+                    activePatients: 0,
+                    confirmationRate: 0
+                })
+
+                const currentProspectsCount = new Set(prospectsRes.data?.map((m: any) => m.phone_number)).size
+                const prevProspectsCount = new Set(prevProspectsRes.data?.map((m: any) => m.phone_number)).size
+
+                setExtraStats({
+                    remindersSent: remindersCountRes.count || 0,
+                    newProspects: currentProspectsCount,
+                    cancelledAppointments: cancelledCountRes.count || 0,
+                    aiMessages: aiMessagesCountRes.count || 0,
+                })
+
+                setPrevStats({
+                    appointments: prevAppointmentsRes.count || 0,
+                    prospects: prevProspectsCount,
+                    aiMessages: prevAiMessagesRes.count || 0,
+                    reminders: prevRemindersRes.count || 0,
+                    cancelled: prevCancelledRes.count || 0
+                })
+
+                if (appointments) setUpcomingAppointments(appointments as any)
+                if (messages) setRecentMessages(messages as any)
+
+                // Service Ranking
+                if (monthAppointments && monthAppointments.length > 0) {
                     const serviceCounts: Record<string, number> = {}
-                    rankingData.forEach((appt: any) => {
+                    monthAppointments.forEach((appt: any) => {
                         const service = appt.service || 'General'
                         serviceCounts[service] = (serviceCounts[service] || 0) + 1
                     })
-                    const total = rankingData.length
-                    setServicesRanking(Object.entries(serviceCounts)
-                        .map(([name, count]) => ({ name, count, percentage: Math.round((count / total) * 100), trend: 'stable' as const }))
-                        .sort((a, b) => b.count - a.count)
-                        .slice(0, 5))
+                    const totalAppts = monthAppointments.length
+                    setServicesRanking(
+                        Object.entries(serviceCounts)
+                            .map(([name, count]) => ({
+                                name, count,
+                                percentage: Math.round((count / totalAppts) * 100),
+                                trend: 'stable' as const
+                            }))
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 5)
+                    )
                 }
 
-                // Overall Conversion Stats (Approximate using monthly Data)
-                if (rankingData) {
-                    // This is a rough estimate: appointments this month vs unique incoming contacts (not easily available here without full month fetch, skipping for now to favor speed)
-                    // For now, keep conversionStats at 0 or update based on a new stat_type if needed.
+                // Conversion Rate
+                const uniqueContacts = new Set(inboundMessages?.map((m: any) => m.phone_number)).size
+                const monthApptsCount = monthAppointments?.length || 0
+                setConversionStats({
+                    consultations: uniqueContacts,
+                    converted: monthApptsCount,
+                    lost: Math.max(0, uniqueContacts - monthApptsCount),
+                    rate: uniqueContacts > 0 ? Math.round((monthApptsCount / uniqueContacts) * 100) : 0
+                })
+
+                // Satisfaction (NPS)
+                if (surveys) {
+                    const sent = surveys.length
+                    const responded = surveys.filter((s: any) => s.status === 'responded').length
+                    const ratings = surveys.filter((s: any) => s.status === 'responded' && s.rating).map((s: any) => s.rating!)
+                    const average = ratings.length > 0
+                        ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
+                        : 0
+                    let nps = 0
+                    if (ratings.length > 0) {
+                        const promoters = ratings.filter((r: number) => r === 5).length
+                        const detractors = ratings.filter((r: number) => r <= 3).length
+                        nps = Math.round(((promoters - detractors) / ratings.length) * 100)
+                    }
+                    setSatisfactionStats({ sent, responded, nps, average })
                 }
 
-            } catch (error: any) {
-                console.error('Error fetching dashboard data:', error?.message || error)
+            } catch (error) {
+                if (!cancelled) console.error('Error fetching dashboard data:', error)
             } finally {
-                setLoading(false)
+                if (!cancelled) setLoading(false)
             }
         }
 
         fetchDashboardData()
-    }, [user, profile?.clinic_id, filterRange])
+        return () => { cancelled = true }
+    }, [user, profile?.clinic_id, timeRange, customRange])
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
             </div>
         )
     }
 
-    const filterOptions = [
-        { id: 'day', label: 'Hoy' },
-        { id: 'week', label: 'Esta Semana' },
-        { id: 'month', label: 'Este Mes' },
-        { id: 'year', label: 'Este Año' }
-    ]
+    // Tiempo ahorrado: basado en lo que tardaría un humano en hacer cada tarea
+    // 3 min/mensaje IA · 5 min/cita agendada · 2 min/recordatorio
+    const minutosAhorradosTotal =
+        (extraStats.aiMessages * 3) +
+        (stats.appointmentsToday * 5) +
+        (extraStats.remindersSent * 2);
+    const horasAhorradas = Math.floor(minutosAhorradosTotal / 60);
+    const minutosAhorrados = minutosAhorradosTotal % 60;
+    const tiempoAhorradoStr = horasAhorradas > 0 ? `${horasAhorradas}h ${minutosAhorrados}m` : `${minutosAhorrados}m`;
 
-    const getProgress = (val: number, type: 'appointments' | 'prospects' | 'aiMessages' | 'reminders') => {
-        const goals: any = {
-            day: { appointments: 10, prospects: 5, aiMessages: 50, reminders: 10 },
-            week: { appointments: 50, prospects: 25, aiMessages: 250, reminders: 50 },
-            month: { appointments: 200, prospects: 100, aiMessages: 1000, reminders: 200 },
-            year: { appointments: 2000, prospects: 1000, aiMessages: 10000, reminders: 2000 }
-        }
-        const goal = goals[filterRange][type] || 100
-        return Math.min(100, (val / goal) * 100)
+    // Percentage calculation helper — null significa "sin datos comparables"
+    const calculatePercentage = (current: number, previous: number): number | null => {
+        if (previous === 0) return current > 0 ? null : 0
+        return Math.round(((current - previous) / previous) * 100)
     }
+
+    const compareLabel = timeRange === 'custom' && customRange
+        ? `vs. ${differenceInCalendarDays(customRange.end, customRange.start) + 1}d ant.`
+        : ({ day: 'vs. ayer', week: 'vs. sem. ant.', month: 'vs. mes ant.', year: 'vs. año ant.' } as Record<string, string>)[timeRange] ?? 'vs. ant.'
 
     const statCards = [
         {
-            id: 'appointments',
-            name: 'CITAS AGENDADAS',
-            value: stats.scheduledAppointments,
+            name: 'CITAS AGENDADAS POR IA',
+            value: stats.appointmentsToday.toString(),
             icon: Calendar,
-            trend: trends.appointments,
-            isUp: isTrendsUp.appointments,
-            gradient: 'from-[#FF2E88] to-[#c0236a]',
-            lightText: 'text-pink-200',
+            color: 'text-teal-500',
+            bg: 'bg-teal-500/10',
+            change: calculatePercentage(stats.appointmentsToday, prevStats.appointments)
         },
         {
-            id: 'prospects',
-            name: 'NUEVOS PROSPECTOS',
-            value: stats.newProspects,
+            name: 'CONVERSACIONES ÚNICAS',
+            value: extraStats.newProspects.toString(),
             icon: Target,
-            trend: trends.prospects,
-            isUp: isTrendsUp.prospects,
-            gradient: 'from-violet-500 to-violet-700',
-            lightText: 'text-violet-200',
+            color: 'text-fuchsia-500',
+            bg: 'bg-fuchsia-500/10',
+            change: calculatePercentage(extraStats.newProspects, prevStats.prospects)
         },
         {
-            id: 'aiMessages',
             name: 'MENSAJES DE IA',
-            value: stats.aiMessagesSent,
+            value: extraStats.aiMessages.toString(),
             icon: MessageSquare,
-            trend: trends.aiMessages,
-            isUp: isTrendsUp.aiMessages,
-            gradient: 'from-sky-500 to-sky-700',
-            lightText: 'text-sky-200',
+            color: 'text-sky-500',
+            bg: 'bg-sky-500/10',
+            change: calculatePercentage(extraStats.aiMessages, prevStats.aiMessages)
         },
         {
-            id: 'reminders',
             name: 'RECORDATORIOS',
-            value: stats.remindersSent,
-            icon: Bell,
-            trend: trends.reminders,
-            isUp: isTrendsUp.reminders,
-            gradient: 'from-emerald-500 to-emerald-700',
-            lightText: 'text-emerald-200',
+            value: extraStats.remindersSent.toString(),
+            icon: Clock,
+            color: 'text-amber-500',
+            bg: 'bg-amber-500/10',
+            change: calculatePercentage(extraStats.remindersSent, prevStats.reminders)
         },
+        {
+            name: 'CITAS CANCELADAS',
+            value: extraStats.cancelledAppointments.toString(),
+            icon: Minus,
+            color: 'text-amber-500',
+            bg: 'bg-amber-500/10',
+            change: calculatePercentage(extraStats.cancelledAppointments, prevStats.cancelled)
+        },
+        {
+            name: 'TIEMPO AHORRADO',
+            value: tiempoAhorradoStr,
+            icon: TrendingUp,
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-500/10',
+            change: null as number | null
+        }
     ]
 
-    return (
-        <div className="space-y-8 animate-fade-in">            {/* Welcome Banner and Filter Row */}
-            <div className="flex flex-col gap-6">
-            {/* Banner — Principal */}
-            <div className="rounded-2xl border border-[#FF2E88]/30 shadow-soft-sm overflow-hidden">
-                <div className="p-6 sm:p-8">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                            <p className="text-xs font-black uppercase tracking-widest text-[#FF2E88]/70 mb-2">Principal</p>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary-theme">
-                                ¡Hola, {profile?.full_name?.split(' ')[0]}! 👋
-                            </h1>
-                            <p className="text-sm text-secondary-theme font-light mt-1">Tu asistente IA está activo y listo para gestionar tus citas. Aquí tienes el resumen de hoy.</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="hidden lg:flex flex-col items-end bg-[#FF2E88]/5 px-5 py-2.5 rounded-xl border border-[#FF2E88]/20">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2E88]/70 mb-1">Sistema</p>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span className="text-xs font-bold text-primary-theme">IA Operativa</span>
-                                </div>
-                            </div>
-                            <div className="w-12 h-12 bg-[#FF2E88]/10 rounded-2xl flex items-center justify-center shrink-0 border border-[#FF2E88]/20">
-                                <Sparkles className="w-6 h-6 text-[#FF2E88]" />
-                            </div>
-                        </div>
-                    </div>
+    const ChangeBadge = ({ change }: { change: number | null }) => {
+        if (change === null) return (
+            <div className="flex flex-col items-end gap-0.5">
+                <div className="flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-silk-beige/50 text-charcoal/30">
+                    –
                 </div>
+                <span className="text-[9px] text-charcoal/25 font-medium pr-0.5">{compareLabel}</span>
             </div>
+        )
+        const isPositive = change > 0
+        const isNeutral = change === 0
+        return (
+            <div className="flex flex-col items-end gap-0.5">
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
+                    isNeutral ? 'bg-silk-beige/50 text-charcoal/40' :
+                    isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                }`}>
+                    {isNeutral ? null :
+                     isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {Math.abs(change)}%
+                </div>
+                <span className="text-[9px] text-charcoal/25 font-medium pr-0.5">{compareLabel}</span>
+            </div>
+        )
+    }
 
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black text-secondary-theme uppercase tracking-[0.2em]">Resumen de Rendimiento</p>
-                    </div>
-                    
-                    <div className="flex items-center gap-1 p-1 bg-secondary-theme/50 rounded-xl border border-theme w-full md:w-auto">
-                        {filterOptions.map((opt) => (
+    // ── Mini calendario de rango ──────────────────────────────────────────
+    function MiniCalendar() {
+        const [calMonth, setCalMonth] = useState(() => customRange?.start ?? new Date())
+        const [selecting, setSelecting] = useState<Date | null>(customRange?.start ?? null)
+        const [hovered, setHovered] = useState<Date | null>(null)
+
+        const days = useMemo(() => {
+            const first = startOfMonth(calMonth)
+            const last  = endOfMonth(calMonth)
+            const pad   = (getDay(first) + 6) % 7 // lunes primero
+            const grid: (Date | null)[] = Array(pad).fill(null)
+            let d = new Date(first)
+            while (d <= last) { grid.push(new Date(d)); d = addDays(d, 1) }
+            while (grid.length % 7 !== 0) grid.push(null)
+            return grid
+        }, [calMonth])
+
+        const rangeEnd = selecting ? (hovered ?? null) : null
+
+        const inRange = (d: Date) => {
+            if (!selecting || !rangeEnd) return false
+            const [a, b] = isBefore(selecting, rangeEnd) ? [selecting, rangeEnd] : [rangeEnd, selecting]
+            return !isBefore(d, a) && !isAfter(d, b)
+        }
+
+        const isStart = (d: Date) => !!selecting && isSameDay(d, selecting)
+        const isEnd   = (d: Date) => !!rangeEnd && isSameDay(d, rangeEnd)
+        const isToday = (d: Date) => isSameDay(d, new Date())
+
+        const handleDay = (d: Date) => {
+            if (!selecting) {
+                setSelecting(d)
+            } else {
+                const [s, e] = isBefore(d, selecting) ? [d, selecting] : [selecting, d]
+                setCustomRange({ start: s, end: e })
+                setTimeRange('custom')
+                setShowDatePicker(false)
+            }
+        }
+
+        const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+
+        return (
+            <div className="p-3 w-72">
+                {/* Navegación de mes */}
+                <div className="flex items-center justify-between mb-3">
+                    <button onClick={() => setCalMonth(m => subMonths(m, 1))} className="p-1 hover:bg-silk-beige rounded-lg transition-colors">
+                        <ChevronLeft className="w-4 h-4 text-charcoal/60" />
+                    </button>
+                    <span className="text-sm font-bold text-charcoal capitalize">
+                        {dateFnsFormat(calMonth, 'MMMM yyyy', { locale: esLocale })}
+                    </span>
+                    <button onClick={() => setCalMonth(m => addMonths(m, 1))} className="p-1 hover:bg-silk-beige rounded-lg transition-colors">
+                        <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                    </button>
+                </div>
+                {/* Cabecera días */}
+                <div className="grid grid-cols-7 mb-1">
+                    {weekDays.map((w, i) => (
+                        <div key={i} className="text-center text-[10px] font-bold text-charcoal/30 py-1">{w}</div>
+                    ))}
+                </div>
+                {/* Grid de días */}
+                <div className="grid grid-cols-7">
+                    {days.map((d, i) => {
+                        if (!d) return <div key={i} />
+                        const start = isStart(d)
+                        const end   = isEnd(d)
+                        const range = inRange(d)
+                        const today = isToday(d)
+                        return (
                             <button
-                                key={opt.id}
-                                onClick={() => setFilterRange(opt.id as any)}
-                                className={cn(
-                                    "px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all",
-                                    filterRange === opt.id 
-                                        ? "bg-[#FF2E88] text-white shadow-[0_0_15px_rgba(255,46,136,0.3)]"
-                                        : "text-secondary-theme hover:text-white"
-                                )}
+                                key={i}
+                                onMouseEnter={() => selecting && setHovered(d)}
+                                onMouseLeave={() => setHovered(null)}
+                                onClick={() => handleDay(d)}
+                                className={`
+                                    relative h-8 text-xs font-medium transition-colors
+                                    ${start || end ? 'bg-teal-500 text-white rounded-lg z-10' : ''}
+                                    ${range && !start && !end ? 'bg-teal-100 text-teal-700' : ''}
+                                    ${!start && !end && !range ? 'hover:bg-silk-beige text-charcoal rounded-lg' : ''}
+                                    ${today && !start && !end ? 'font-extrabold' : ''}
+                                `}
                             >
-                                {opt.label}
+                                {today && !start && !end && (
+                                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-teal-400 rounded-full" />
+                                )}
+                                {d.getDate()}
                             </button>
-                        ))}
+                        )
+                    })}
+                </div>
+                {/* Hint */}
+                <p className="text-center text-[10px] text-charcoal/30 mt-3">
+                    {selecting ? 'Selecciona la fecha de fin' : 'Selecciona la fecha de inicio'}
+                </p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            {/* Page Header — limpio y moderno */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-silk-beige">
+                <div>
+                    <h1 className="text-2xl font-extrabold tracking-tight text-charcoal">
+                        ¡Hola, {profile?.full_name?.split(' ')[0]}! 👋
+                    </h1>
+                    <p className="text-sm text-charcoal/50 mt-1">
+                        Tu asistente IA está activo y respondiendo 24/7.
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                        <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+                        Agente activo
+                    </div>
+                    {/* Filtro de período */}
+                    <div className="flex items-center gap-2">
+                        <div className="bg-white border border-silk-beige p-1 rounded-xl flex gap-1">
+                            {([
+                                { id: 'day',   label: 'Hoy' },
+                                { id: 'week',  label: 'Sem.' },
+                                { id: 'month', label: 'Mes' },
+                                { id: 'year',  label: 'Año' },
+                            ] as const).map((r) => (
+                                <button
+                                    key={r.id}
+                                    onClick={() => { setTimeRange(r.id); setShowDatePicker(false) }}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                                        timeRange === r.id
+                                        ? 'bg-teal-500 text-white shadow-sm'
+                                        : 'text-charcoal/50 hover:text-charcoal hover:bg-zinc-50'
+                                    }`}
+                                >
+                                    {r.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Selector de rango personalizado */}
+                        <div className="relative" ref={datePickerRef}>
+                            <button
+                                onClick={() => setShowDatePicker(v => !v)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all duration-200 ${
+                                    timeRange === 'custom'
+                                    ? 'bg-teal-500 text-white border-teal-500 shadow-sm'
+                                    : 'bg-white border-silk-beige text-charcoal/50 hover:text-charcoal'
+                                }`}
+                            >
+                                <CalendarRange className="w-3.5 h-3.5" />
+                                {timeRange === 'custom' && customRange
+                                    ? `${dateFnsFormat(customRange.start, 'd MMM', { locale: esLocale })} – ${dateFnsFormat(customRange.end, 'd MMM', { locale: esLocale })}`
+                                    : 'Rango'
+                                }
+                                {timeRange === 'custom' && customRange && (
+                                    <span
+                                        onClick={(e) => { e.stopPropagation(); setTimeRange('month'); setCustomRange(null) }}
+                                        className="ml-0.5 hover:opacity-70"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </span>
+                                )}
+                            </button>
+
+                            {showDatePicker && (
+                                <div className="absolute right-0 top-full mt-2 bg-white border border-silk-beige rounded-2xl shadow-xl z-50">
+                                    <MiniCalendar />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 {statCards.map((stat) => (
-                    <div key={stat.name} className="card-premium overflow-hidden hover:-translate-y-0.5 transition-transform duration-200 shadow-md">
-                        {/* Gradient Header */}
-                        <div className={`bg-gradient-to-br ${stat.gradient} p-4 sm:p-5 text-white relative overflow-hidden`}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl pointer-events-none" />
-                            <div className="flex items-start justify-between relative z-10">
-                                <div>
-                                    <p className={`text-[9px] font-black uppercase tracking-widest ${stat.lightText} mb-2`}>{stat.name}</p>
-                                    <stat.icon className="w-7 h-7 text-white" />
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg bg-white/20 text-white">
-                                    {stat.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                                    {stat.trend}
-                                </div>
+                    <div key={stat.name} className="bg-white p-5 rounded-xl border border-silk-beige shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`w-9 h-9 ${stat.bg} rounded-lg flex items-center justify-center`}>
+                                <stat.icon className={`w-4.5 h-4.5 ${stat.color}`} />
                             </div>
+                            <ChangeBadge change={stat.change} />
                         </div>
-                        {/* Body */}
-                        <div className="p-5 pb-8 relative">
-                            <p className="text-4xl font-black text-primary-theme tracking-tight leading-none">{stat.value}</p>
-                            <div className="absolute bottom-0 left-5 right-5 h-1.5 bg-secondary-theme/50 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full bg-gradient-to-r ${stat.gradient} rounded-full transition-all duration-1000`}
-                                    style={{ width: `${getProgress(stat.value, stat.id as any)}%` }}
-                                />
-                            </div>
-                        </div>
+                        <p className="text-3xl font-extrabold text-charcoal tracking-tight">{stat.value}</p>
+                        <p className="text-xs text-charcoal/40 mt-1 font-medium">{stat.name}</p>
                     </div>
                 ))}
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Upcoming Appointments */}
-                <div className="lg:col-span-2 card-premium overflow-hidden">
-                    <div className="bg-gradient-to-br from-[#FF2E88] to-[#c0236a] px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-white" />
-                            <h3 className="text-sm font-black text-white tracking-tight uppercase">Próximas Citas</h3>
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-silk-beige shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div className="bg-gradient-to-br from-teal-500 to-teal-700 p-5 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-teal-200 mb-1">Agenda</p>
+                                <h3 className="text-lg font-extrabold tracking-tight text-white">Próximas Citas</h3>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Link to="/app/appointments" className="text-xs text-teal-200 hover:text-white font-semibold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">
+                                    Ver todas →
+                                </Link>
+                                <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                                    <Calendar className="w-5 h-5 text-white" />
+                                </div>
+                            </div>
                         </div>
-                        <Link to="/app/appointments" className="text-[10px] font-black uppercase tracking-widest text-pink-200 hover:text-white transition-colors">
-                            Ver todas →
-                        </Link>
                     </div>
-                    <div className="p-6">
-
-                    <div className="space-y-3">
+                    <div className="p-5 space-y-2">
                         {upcomingAppointments.length === 0 ? (
-                            <p className="text-secondary-theme text-center py-4">No hay próximas citas agendadas.</p>
+                            <p className="text-charcoal/40 text-center py-8 text-sm">No hay próximas citas agendadas.</p>
                         ) : (
                             upcomingAppointments.map((appointment) => (
-                                <div
-                                    key={appointment.id}
-                                    className="flex items-center gap-4 p-4 bg-secondary-theme rounded-soft hover:bg-[var(--glow)] transition-colors border border-theme"
-                                >
-                                    <div className="w-12 h-12 bg-primary-theme rounded-full flex items-center justify-center shadow-soft">
-                                        <Clock className="w-5 h-5 text-[var(--accent-primary)]" />
+                                <div key={appointment.id} className="flex items-center gap-4 p-3.5 rounded-xl hover:bg-ivory transition-colors">
+                                    <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+                                        <Clock className="w-4.5 h-4.5 text-teal-600" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-primary-theme truncate">{appointment.patient_name}</p>
-                                        <p className="text-sm text-secondary-theme">{appointment.service}</p>
+                                        <p className="font-semibold text-charcoal text-sm truncate">{appointment.patient_name}</p>
+                                        <p className="text-xs text-charcoal/50 truncate">{appointment.service}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-medium text-primary-theme">
+                                    <div className="text-right shrink-0">
+                                        <p className="font-bold text-charcoal text-sm">
                                             {new Date(appointment.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </p>
-                                        <span
-                                            className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full ${appointment.status === 'confirmed'
-                                                ? 'bg-emerald-500/10 text-emerald-500'
-                                                : 'bg-amber-500/10 text-amber-500'
-                                                }`}
-                                        >
+                                        <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${
+                                            appointment.status === 'confirmed'
+                                            ? 'bg-emerald-100 text-emerald-700'
+                                            : 'bg-amber-100 text-amber-700'
+                                        }`}>
                                             {appointment.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
                                         </span>
                                     </div>
@@ -485,197 +725,171 @@ export default function Dashboard() {
                             ))
                         )}
                     </div>
-                    </div>{/* end p-6 */}
                 </div>
 
                 {/* Recent Messages */}
-                <div className="card-premium overflow-hidden">
-                    <div className="bg-gradient-to-br from-sky-500 to-sky-700 px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <MessageSquare className="w-5 h-5 text-white" />
-                            <h3 className="text-sm font-black text-white tracking-tight uppercase">Mensajes Recientes</h3>
+                <div className="bg-white rounded-2xl border border-silk-beige shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div className="bg-gradient-to-br from-sky-500 to-sky-700 p-5 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-sky-200 mb-1">WhatsApp IA</p>
+                                <h3 className="text-lg font-extrabold tracking-tight text-white">Mensajes Recientes</h3>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Link to="/app/messages" className="text-xs text-sky-200 hover:text-white font-semibold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors">
+                                    Ver todos →
+                                </Link>
+                                <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                                    <MessageSquare className="w-5 h-5 text-white" />
+                                </div>
+                            </div>
                         </div>
-                        <Link to="/app/messages" className="text-[10px] font-black uppercase tracking-widest text-sky-200 hover:text-white transition-colors">
-                            Ver todos →
-                        </Link>
                     </div>
-                    <div className="p-6">
-
-                    <div className="space-y-4">
+                    <div className="p-5 space-y-3">
                         {recentMessages.length === 0 ? (
-                            <p className="text-secondary-theme text-center py-4">No hay mensajes recientes.</p>
+                            <p className="text-charcoal/40 text-center py-8 text-sm">No hay mensajes recientes.</p>
                         ) : (
                             recentMessages.map((message) => (
-                                <div
-                                    key={message.id}
-                                    className="p-4 rounded-soft transition-colors hover:bg-secondary-theme cursor-pointer border border-transparent hover:border-theme"
-                                    onClick={() => window.location.href = `/app/messages`}
-                                >
+                                <div key={message.id} className="p-3 rounded-xl hover:bg-ivory transition-colors cursor-pointer" onClick={() => window.location.href = `/app/messages`}>
                                     <div className="flex items-start gap-3">
-                                        <div className="w-10 h-10 bg-secondary-theme rounded-full flex items-center justify-center flex-shrink-0 border border-theme">
-                                            <span className="text-sm font-medium text-primary-theme">
-                                                <MessageSquare className="w-4 h-4" />
-                                            </span>
+                                        <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+                                            <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="font-medium text-primary-theme truncate">{message.phone_number}</p>
-                                                <span className="text-xs text-secondary-theme flex-shrink-0">
+                                            <div className="flex items-center justify-between gap-1">
+                                                <p className="font-semibold text-charcoal text-xs truncate">{message.phone_number}</p>
+                                                <span className="text-[10px] text-charcoal/40 shrink-0">
                                                     {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-secondary-theme mt-1 line-clamp-2">{message.content}</p>
+                                            <p className="text-xs text-charcoal/50 mt-1 line-clamp-2">{message.content}</p>
                                         </div>
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
-                    </div>{/* end p-6 */}
                 </div>
             </div>
 
-            {/* Services Ranking */}
-            <div className="card-premium overflow-hidden">
-                <div className="bg-gradient-to-br from-amber-500 to-amber-700 px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Crown className="w-5 h-5 text-white" />
-                        <div>
-                            <h3 className="text-sm font-black text-white tracking-tight uppercase">Ranking de Servicios</h3>
-                            <p className="text-[10px] text-amber-200 font-medium">
-                                {filterRange === 'day' ? 'Hoy' : filterRange === 'week' ? 'Esta semana' : filterRange === 'month' ? 'Este mes' : 'Este año'}
-                            </p>
+            {/* Bottom Row: Ranking + Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Services Ranking */}
+                <div className="lg:col-span-1 bg-white rounded-2xl border border-silk-beige shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div className="bg-gradient-to-br from-amber-500 to-amber-700 p-5 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-200 mb-1">
+                                    {({ day: 'Hoy', week: 'Esta semana', month: 'Este mes', year: 'Este año', custom: 'Período' } as Record<string,string>)[timeRange]}
+                                </p>
+                                <h3 className="text-lg font-extrabold tracking-tight text-white">Top Servicios</h3>
+                            </div>
+                            <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                                <Crown className="w-5 h-5 text-white" />
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="p-6 pb-8">
-
-                <div className="space-y-4">
-                    {servicesRanking.length === 0 ? (
-                        <p className="text-charcoal/50 text-center py-6">
-                            Aún no hay datos suficientes este mes.
-                        </p>
-                    ) : (
-                        servicesRanking.map((service, index) => (
-                            <div key={service.name} className="flex items-center gap-4">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${index === 0 ? 'bg-amber-500 text-white' :
-                                    index === 1 ? 'bg-gray-400 text-white' :
-                                        index === 2 ? 'bg-amber-700 text-white' :
-                                            'bg-secondary-theme text-secondary-theme border border-theme'
-                                    }`}>
-                                    {index + 1}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <p className="font-medium text-primary-theme text-sm">{service.name}</p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm text-secondary-theme">{service.count} citas</span>
-                                            <TrendingUp className={`w-4 h-4 ${service.trend === 'up' ? 'text-emerald-500' :
-                                                service.trend === 'down' ? 'text-red-500 rotate-180' :
-                                                    'text-charcoal/30'
-                                                }`} />
+                    <div className="p-5 space-y-3.5">
+                        {servicesRanking.length === 0 ? (
+                            <p className="text-charcoal/40 text-center py-6 text-sm">Sin datos en el período.</p>
+                        ) : (
+                            servicesRanking.map((service, index) => (
+                                <div key={service.name} className="flex items-center gap-3">
+                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                                        index === 0 ? 'bg-amber-100 text-amber-700' :
+                                        index === 1 ? 'bg-silk-beige text-charcoal/60' :
+                                        index === 2 ? 'bg-orange-100 text-orange-700' :
+                                        'bg-ivory text-charcoal/40'
+                                    }`}>{index + 1}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <p className="text-xs font-semibold text-charcoal truncate">{service.name}</p>
+                                            <span className="text-xs text-charcoal/40 shrink-0 ml-2">{service.count}</span>
+                                        </div>
+                                        <div className="h-1.5 bg-silk-beige/50 rounded-full overflow-hidden">
+                                            <div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{ width: `${service.percentage}%` }} />
                                         </div>
                                     </div>
-                                    <div className="h-2 bg-secondary-theme/30 rounded-full overflow-hidden border border-theme/50">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-[#FF2E88] to-[#FF4DA6] rounded-full shadow-[0_0_10px_rgba(255,46,136,0.4)] transition-all duration-1000"
-                                            style={{ width: `${service.percentage}%` }}
-                                        />
-                                    </div>
                                 </div>
-                            </div>
-                        ))
-                    )}
+                            ))
+                        )}
+                    </div>
                 </div>
-                </div>{/* end p-6 pb-8 */}
-            </div>
 
-            {/* Analytics Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Conversion Rate Card */}
-                <div className="card-premium overflow-hidden">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Target className="w-5 h-5 text-white" />
+                {/* Conversion Rate */}
+                <div className="bg-white rounded-2xl border border-silk-beige shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-5 text-white">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm font-black text-white tracking-tight uppercase">Tasa de Conversión</h3>
-                                <p className="text-[10px] text-emerald-200 font-medium">Consultas vs Citas Agendadas</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-emerald-200 mb-1">IA Efectividad</p>
+                                <h3 className="text-lg font-extrabold tracking-tight text-white">Conversión</h3>
+                            </div>
+                            <div className="w-14 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                                <span className="text-xl font-extrabold">{conversionStats.rate}<span className="text-sm font-bold opacity-80">%</span></span>
                             </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-200">
-                            {filterRange === 'day' ? 'Hoy' : filterRange === 'week' ? 'Semana' : filterRange === 'month' ? 'Mes' : 'Año'}
-                        </span>
                     </div>
-                    <div className="p-6">
-
-                    <div className="relative py-10 flex flex-col items-center justify-center">
-                        <p className="text-5xl font-black text-primary-theme tracking-tighter relative z-10">{conversionStats.rate}%</p>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-theme mt-3 relative z-10">
-                            De efectividad este {filterRange === 'day' ? 'día' : filterRange === 'week' ? 'periodo' : filterRange === 'month' ? 'mes' : 'año'}
+                    <div className="p-5">
+                        <p className="text-xs text-charcoal/40 text-center mb-4">
+                            contactos que agendaron cita {({ day: 'hoy', week: 'esta semana', month: 'este mes', year: 'este año', custom: 'en el período' } as Record<string,string>)[timeRange]}
                         </p>
+                        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-silk-beige/50">
+                            <div className="text-center">
+                                <p className="text-base font-bold text-charcoal">{conversionStats.consultations}</p>
+                                <p className="text-xs text-charcoal/40">Contactos</p>
+                            </div>
+                            <div className="text-center border-x border-silk-beige/50">
+                                <p className="text-base font-bold text-emerald-600">{conversionStats.converted}</p>
+                                <p className="text-xs text-charcoal/40">Citas</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-base font-bold text-charcoal">{conversionStats.lost}</p>
+                                <p className="text-xs text-charcoal/40">Sin cita</p>
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4 pt-6 border-t border-theme/50">
-                        <div className="text-center">
-                            <p className="text-xl font-bold text-primary-theme">{conversionStats.consultations}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Contactos</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-xl font-bold text-primary-theme">{conversionStats.converted}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Citas</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-xl font-bold text-primary-theme">{conversionStats.lost}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Sin Cita</p>
-                        </div>
-                    </div>
-                    </div>{/* end p-6 */}
                 </div>
 
-                {/* Satisfaction Surveys Card */}
-                <div className="card-premium overflow-hidden">
-                    <div className="bg-gradient-to-br from-violet-500 to-violet-700 px-6 py-4 flex items-center gap-3">
-                        <Star className="w-5 h-5 text-white" />
-                        <div>
-                            <h3 className="text-sm font-black text-white tracking-tight uppercase">Satisfacción (NPS)</h3>
-                            <p className="text-[10px] text-violet-200 font-medium">Calidad de servicio</p>
+                {/* Satisfaction NPS */}
+                <div className="bg-white rounded-2xl border border-silk-beige shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div className="bg-gradient-to-br from-violet-500 to-violet-700 p-5 text-white">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-violet-200 mb-1">Post-cita</p>
+                                <h3 className="text-lg font-extrabold tracking-tight text-white">Satisfacción NPS</h3>
+                            </div>
+                            <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                                <Star className="w-5 h-5 text-white fill-white/60" />
+                            </div>
                         </div>
                     </div>
-                    <div className="p-6">
-
-                    <div className="text-center py-6 flex flex-col items-center">
-                        <div className="flex justify-center gap-1.5 mb-4">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                    key={star}
-                                    className={`w-7 h-7 ${star <= Math.round(satisfactionStats.average) ? 'text-[#FF2E88] fill-[#FF2E88]' : 'text-secondary-theme/20'}`}
-                                />
-                            ))}
+                    <div className="p-5">
+                        <div className="text-center py-3">
+                            <div className="flex justify-center gap-1 mb-2">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star key={star} className={`w-5 h-5 ${star <= Math.round(satisfactionStats.average) ? 'text-amber-400 fill-amber-400' : 'text-silk-beige'}`} />
+                                ))}
+                            </div>
+                            <p className="text-3xl font-extrabold text-charcoal tracking-tight">{satisfactionStats.average.toFixed(1)}<span className="text-base text-charcoal/30">/5.0</span></p>
+                            <p className="text-xs text-charcoal/40 mt-1">{satisfactionStats.responded} respuestas</p>
                         </div>
-                        <p className="text-4xl font-black text-primary-theme tracking-tighter">{satisfactionStats.average.toFixed(1)} / 5.0</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme mt-2">Basado en {satisfactionStats.responded} respuestas</p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4 pt-8 border-t border-theme/50">
-                        <div className="text-center">
-                            <p className="text-xl font-bold text-primary-theme">{satisfactionStats.sent}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Enviadas</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-xl font-bold text-primary-theme">{satisfactionStats.responded}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">Respondidas</p>
-                        </div>
-                        <div className="text-center">
-                            <p className={cn(
-                                "text-xl font-bold",
-                                satisfactionStats.nps > 0 ? 'text-emerald-500' : 'text-primary-theme'
-                            )}>
-                                {satisfactionStats.nps > 0 ? '+' : ''}{satisfactionStats.nps}
-                            </p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-secondary-theme">NPS</p>
+                        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-silk-beige/50">
+                            <div className="text-center">
+                                <p className="text-base font-bold text-charcoal">{satisfactionStats.sent}</p>
+                                <p className="text-xs text-charcoal/40">Enviadas</p>
+                            </div>
+                            <div className="text-center border-x border-silk-beige/50">
+                                <p className="text-base font-bold text-charcoal">{satisfactionStats.responded}</p>
+                                <p className="text-xs text-charcoal/40">Respondidas</p>
+                            </div>
+                            <div className="text-center">
+                                <p className={`text-base font-bold ${satisfactionStats.nps > 0 ? 'text-emerald-600' : 'text-charcoal'}`}>
+                                    {satisfactionStats.nps > 0 ? '+' : ''}{satisfactionStats.nps}
+                                </p>
+                                <p className="text-xs text-charcoal/40">NPS</p>
+                            </div>
                         </div>
                     </div>
-                    </div>{/* end p-6 */}
                 </div>
             </div>
         </div>
