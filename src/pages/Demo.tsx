@@ -37,7 +37,7 @@ const TESTIMONIALS = [
 ]
 
 const STATS = [
-    { value: '+200', label: 'clínicas activas' },
+    { value: '+50h', label: 'ahorradas al mes' },
     { value: '−70%', label: 'inasistencias' },
     { value: '48h',  label: 'para implementar' },
 ]
