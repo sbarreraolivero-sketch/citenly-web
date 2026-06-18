@@ -63,6 +63,7 @@ interface ServiceRanking {
 export default function Dashboard() {
     const { user, profile } = useAuth()
     const [loading, setLoading] = useState(true)
+    const [aiStatus, setAiStatus] = useState<'active' | 'paused' | 'no_credits'>('active')
     const [stats, setStats] = useState<DashboardStats>({
         appointmentsToday: 0,
         messagesToday: 0,
@@ -121,6 +122,39 @@ export default function Dashboard() {
             case 'year':  return { start: subYears(start, 1),  end: subYears(end, 1) }
         }
     }
+
+    // AI status — refleja auto_respond + créditos en tiempo real
+    useEffect(() => {
+        const fetchAiStatus = async () => {
+            if (!profile?.clinic_id) return
+            try {
+                const { data } = await (supabase as any)
+                    .from('clinic_settings')
+                    .select('ai_auto_respond,ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_unlimited,parent_clinic_id')
+                    .eq('id', profile.clinic_id)
+                    .single()
+                if (!data) return
+                if (data.ai_auto_respond === false) { setAiStatus('paused'); return }
+                let pool = data
+                if (data.parent_clinic_id) {
+                    const { data: parent } = await (supabase as any)
+                        .from('clinic_settings')
+                        .select('ai_credits_used,ai_credits_limit,ai_credits_extra,ai_credits_extra_expires_at,ai_credits_unlimited')
+                        .eq('id', data.parent_clinic_id)
+                        .single()
+                    if (parent) pool = parent
+                }
+                if (pool.ai_credits_unlimited) { setAiStatus('active'); return }
+                const extraExpired = pool.ai_credits_extra_expires_at && new Date(pool.ai_credits_extra_expires_at) < new Date()
+                const extra = extraExpired ? 0 : (pool.ai_credits_extra || 0)
+                const limit = (pool.ai_credits_limit || 0) + extra
+                setAiStatus((pool.ai_credits_used || 0) >= limit ? 'no_credits' : 'active')
+            } catch { /* fail silently */ }
+        }
+        fetchAiStatus()
+        const interval = setInterval(fetchAiStatus, 60000)
+        return () => clearInterval(interval)
+    }, [profile?.clinic_id])
 
     // Cerrar el picker al hacer clic fuera
     useEffect(() => {
@@ -598,10 +632,24 @@ export default function Dashboard() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                        <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-                        Agente activo
-                    </div>
+                    {aiStatus === 'active' && (
+                        <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+                            IA Activa
+                        </div>
+                    )}
+                    {aiStatus === 'paused' && (
+                        <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                            IA en Pausa
+                        </div>
+                    )}
+                    {aiStatus === 'no_credits' && (
+                        <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            <span className="w-2 h-2 bg-red-500 rounded-full" />
+                            IA Apagada
+                        </div>
+                    )}
                     {/* Filtro de período */}
                     <div className="flex items-center gap-2">
                         <div className="bg-white border border-silk-beige p-1 rounded-xl flex gap-1">
