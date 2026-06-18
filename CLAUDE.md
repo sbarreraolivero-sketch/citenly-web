@@ -827,11 +827,12 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - Foto Sofia → `sofia-yanez-3.jpg`
 - Foto Carolina → `carolina-rojas-paineman-2.jpg`
 
-**`src/components/layout/DashboardLayout.tsx`:**
-- Badge "IA Activa" en sidebar ahora es dinámico — consulta DB cada 60s
-- Estado `active` (rosa pulsante) / `paused` (ámbar) / `no_credits` (rojo)
+**`src/components/layout/DashboardLayout.tsx` y `src/pages/Dashboard.tsx`:**
+- Badge "IA Activa" dinámico en sidebar Y en el header del Dashboard — consulta DB cada 60s
+- Estado `active` (teal/rosa pulsante) / `paused` (ámbar) / `no_credits` (rojo)
 - Lógica: `ai_auto_respond === false` → paused; `ai_credits_unlimited` → active; créditos agotados → no_credits
 - Resuelve `parent_clinic_id` para sucursales (lee créditos del pool padre)
+- Al refrescar la página el estado se refleja inmediatamente (fetch en mount, no solo en el interval de 60s)
 
 ---
 
