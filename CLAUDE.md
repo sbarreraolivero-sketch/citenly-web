@@ -594,10 +594,15 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 
 ## Tareas pendientes
 
+### Alta prioridad — pasos manuales bloqueantes (sesión 20)
+- [ ] **`LS_VARIANT_CAMPAIGN_CREDITS` secret** — el botón "Comprar créditos de campaña" llama a LemonSqueezy con un variant de precio variable. Necesita que el variant ID esté seteado: `supabase secrets set LS_VARIANT_CAMPAIGN_CREDITS=<variant_id> --project-ref hubjqllcmbzoojyidgcu` y luego `supabase functions deploy lemonsqueezy-create-checkout --project-ref hubjqllcmbzoojyidgcu`
+- [ ] **`LEMONSQUEEZY_WEBHOOK_SECRET` en producción** — el `lemonsqueezy-webhook` falla cerrado sin este secret (fix sesión 13). Verificar que esté seteado: `supabase secrets list --project-ref hubjqllcmbzoojyidgcu`. Si no está: `supabase secrets set LEMONSQUEEZY_WEBHOOK_SECRET=<valor> --project-ref hubjqllcmbzoojyidgcu`
+- [ ] **`CRON_SECRET` en producción** — guard `x-cron-secret` para `cron-cancel-pending-deposits` implementado en sesión 13 pero nunca activado. Pasos: (1) `supabase secrets set CRON_SECRET=<valor> --project-ref hubjqllcmbzoojyidgcu`, (2) actualizar Job ID 17 en pg_cron para incluir `"x-cron-secret":"<valor>"` en el `headers` JSON, (3) `supabase functions deploy cron-cancel-pending-deposits --project-ref hubjqllcmbzoojyidgcu`
+- [ ] **Créditos de campaña vía MercadoPago (clínicas CLP)** — actualmente solo se pueden comprar créditos de campaña vía LemonSqueezy (USD). Elizabeth y clínicas chilenas necesitan un path en MercadoPago. Implementar en `mercadopago-webhook` y agregar botón de compra en `Campaigns.tsx` cuando `paymentProvider === 'mercadopago'`
+
 ### Media prioridad — monetización
 - [ ] **Subscription `manually_active`** — columna para clínicas que pagan por transferencia bancaria (`UPDATE subscriptions SET manually_active = true WHERE clinic_id = '...'`)
 - [ ] **CRM auto-cierre** — `pg_cron` que mueve prospectos con `appointment_date < NOW()` al stage "Cerrado" (diariamente 06:00 UTC)
-- [ ] **Packs de créditos de campaña** — sistema de compra via LemonSqueezy (`campaign_credits_balance` en subscriptions); la función `redirectToLemonCampaignCreditsCheckout` ya existe en `lemonsqueezy.ts`, falta el balance en DB
 
 ### Media prioridad — seguridad
 - [ ] **`mercadopago-webhook` sin verificación de firma** — `x-signature` se lee pero nunca se valida. MP usa formato `ts=...,v1=...`; implementar HMAC SHA-256 con `MERCADOPAGO_WEBHOOK_SECRET`. Sin esto, cualquier actor puede forjar pagos apuntando a un `clinic_id` conocido.
@@ -639,6 +644,118 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - `send-whatsapp-message` — imports modernizados
 - `send-whatsapp-campaign` — imports modernizados
 - `chat-agent` — imports modernizados
+
+### Cambios realizados — junio 2026 (sesión 21)
+
+#### Elizabeth Microblading — fix `ai_behavior_rules`: regla retoque y métodos de abono
+
+**Cambio 1 — Retoque: obligatorio preguntar tiempo transcurrido antes de cotizar**
+
+**Problema:** cuando una clienta decía "yo ya me hice el tratamiento", el agente asumía automáticamente que aplica retoque y cotizaba $50.000 sin preguntar cuánto tiempo hacía. Caso reportado: clienta con tratamiento de hace 4 años cobrada a $50.000 en vez de $89.000.
+
+**Causa raíz:** la Regla 2 "REGLA IMPORTANTE DE TRABAJOS PREVIOS" describía qué precio aplicar según el tiempo, pero no instruía al agente a **preguntar** primero — el modelo infería el precio sin datos.
+
+**Fix en `ai_behavior_rules`:**
+- Regla 2: agregado "**PASO OBLIGATORIO — PREGUNTAR ANTES DE COTIZAR**": el agente DEBE preguntar "¿Hace cuánto tiempo te realizaste el tratamiento?" antes de mencionar cualquier precio. Solo después de la respuesta determina retoque ($50.000, menos de 1 año) o sesión inicial ($89.000, más de 1 año).
+- Regla 4 Microblading paso b): cuando NO es primera vez → preguntar cuánto tiempo lleva antes de cotizar.
+- Regla 4 Micropigmentación de Ojos paso b): ídem.
+
+**Cambio 2 — Abono: solo transferencia o CajaVecina, nunca en persona**
+
+**Problema:** cuando clientas decían que no podían o no sabían hacer transferencias, el agente respondía "no hay ningún problema" — implicando que podían pagar en la oficina al llegar.
+
+**Fix en `ai_behavior_rules`:**
+- Regla 6: agregado bloque "**MÉTODOS DE PAGO DEL ABONO — REGLA ESTRICTA**": el abono se acepta ÚNICAMENTE por transferencia bancaria o depósito en CajaVecina (nombre "Elizabeth Hernández" / RUT 18.342.131-k). NUNCA indicar que puede pagarse en la clínica al llegar. Si la clienta no sabe transferir → ofrecer CajaVecina y guiarla.
+
+**Aplicado directamente en producción** vía PATCH REST a `clinic_settings` (sin deploy de edge functions necesario).
+
+---
+
+### Cambios realizados — junio 2026 (sesión 20)
+
+#### Normalización de planes legacy — fix múltiple síntoma
+
+**Problema (3 síntomas, 1 causa):** Elizabeth Microblading mostraba "Plan Prestige", precio "US$USD/mes" vacío, y el Revenue Control Center bloqueado con badge Premium, todo a la vez.
+
+**Causa raíz:** `subscription.plan` llegaba de la DB como `'prestige'` (ID legacy) y nunca se normalizaba. `PremiumFeature` hacía `plans.indexOf('prestige')` → `-1` → bloqueaba todo. Settings.tsx no encontraba el plan en el mapeo de precios → precio vacío.
+
+**DB — migración `20260618120000_normalize_subscription_plans.sql` (aplicada en producción):**
+- Extendió CHECK constraint `subscriptions_plan_check` para incluir IDs nuevos (`core`, `starter`, `pro`, `enterprise`) junto a los legacy
+- Migró datos: `prestige→enterprise`, `radiance→pro`, `essence→starter`, `freemium→core`
+- Verificado: Elizabeth quedó con `plan = 'enterprise'`
+
+**`src/contexts/AuthContext.tsx`:**
+- Importa `normalizePlanId` de `@/lib/mercadopago`
+- En `fetchSubscription()`, normaliza solo si el plan es legacy (`LEGACY_PLAN_IDS = ['essence', 'radiance', 'prestige', 'freemium']`); planes válidos y `trial` se dejan intactos
+- Fix impacta automáticamente: Settings (nombre + precio), PremiumFeature (bloqueos), RetentionEngine (Revenue Control Center)
+
+**`src/components/common/PremiumFeature.tsx`:**
+- Normaliza defensivamente con `normalizePlanId()` antes de hacer `indexOf`
+
+**`src/pages/RetentionEngine.tsx`:**
+- Texto fallback cambiado de "Disponible en Radiance+" → "Disponible en Pro+"
+- `PremiumFeature requiredPlan="pro"` — Motor de Retención ahora accesible desde Pro (antes solo Enterprise)
+
+**Listas de features de planes actualizadas** (`mercadopago.ts`, `lemonsqueezy.ts`, `Pricing.tsx`, `Landing.tsx`):
+- Plan Pro: agregado `'Motor de Retención de Ingresos (IA)'`
+
+#### Fix Fidelización — doble conteo de puntos y bonos de referido muertos
+
+**Problema:** al sumar +500 puntos el saldo subía +1000; al restar −500 bajaba −1000. Los bonos de referido (acreditar al referente y al nuevo cliente) nunca se ejecutaban pese a estar configurados.
+
+**DB — migración `20260618130000_fix_loyalty_balance_and_referral.sql` (aplicada en producción):**
+- Eliminó trigger duplicado `trg_loyalty_balance_sync` que corría en paralelo con `trg_sync_loyalty_log_to_patient`, causando doble aplicación
+- Nueva función `award_referral_bonus()` y triggers `trg_award_referral_bonus_ins` / `trg_award_referral_bonus_upd` sobre `patients`: acredita `loyalty_referral_bonus` al referente + incrementa `referral_count` + acredita `loyalty_welcome_bonus` al referido
+
+**`src/pages/Loyalty.tsx`:**
+- Guard de saldo negativo en `handleAdjustPoints`: bloquea quitar más puntos de los disponibles con `toast.error`
+
+**Nota sobre saldos históricos:** los balances previos al fix quedaron inflados por el doble conteo. No se recalcularon automáticamente — hacerlo requeriría revisar caso por caso ya que parte de los puntos vienen de fuentes sin transacción registrada.
+
+#### Campañas — habilitación completa (paridad con Vetly)
+
+**DB — migración `20260618140000_campaign_credits_balance.sql` (aplicada en producción):**
+- Columna `campaign_credits_balance INTEGER NOT NULL DEFAULT 0` en `subscriptions`
+
+**`supabase/functions/send-whatsapp-campaign/index.ts` (deployado):**
+- Bloque de deducción de créditos al final del loop de envío: descuenta `doneCount` del `campaign_credits_balance` de la suscripción
+
+**`supabase/functions/lemonsqueezy-webhook/index.ts` (deployado):**
+- Handler para `purchaseType === 'campaign_credits'` en `order_created`: lee saldo actual, suma `customData.quantity`, actualiza `subscriptions.campaign_credits_balance`
+
+**`src/pages/Campaigns.tsx` (reescrito completamente):**
+- Eliminado placeholder "Motor de Campañas 2.0"
+- Estado `campaignCredits` cargado desde `subscriptions.campaign_credits_balance`
+- `handleBuyCredits()` usa `redirectToLemonCampaignCreditsCheckout` (USD, LemonSqueezy)
+- Detecta `?payment=success` en URL para refrescar créditos post-compra
+- Validación antes de lanzar: si `campaign.total_target > campaignCredits` → warning + botón deshabilitado
+- Modal 2 pasos: paso 1 (nombre + tags inclusión/exclusión + estimador de audiencia), paso 2 (selector de plantilla)
+- Tags por texto (patrón Citenly, no UUIDs como Vetly)
+- Cards con badge de estado, estadísticas de entrega, botón "Ver Reporte" → modal con `campaign_deliveries`
+
+**⚠️ Pasos manuales requeridos para que las compras funcionen:**
+1. `supabase secrets set LS_VARIANT_CAMPAIGN_CREDITS=<variant_id> --project-ref hubjqllcmbzoojyidgcu`
+2. Deploy `lemonsqueezy-create-checkout` si se modificó el variant
+3. Clínicas CLP (MercadoPago) no tienen path de compra aún — ver Tareas pendientes
+
+#### Dashboard — réplica exacta de Vetly (teal)
+
+**`supabase/migrations/20260618150000_create_satisfaction_surveys.sql` (aplicada en producción):**
+- Tabla `satisfaction_surveys` con RLS scopeada por clínica (`clinic_members WHERE status = 'active'`)
+- Triggers `update_satisfaction_surveys_updated_at`, índices por `appointment_id`, `patient_id`, `clinic_id`
+- Reemplaza la tabla anterior que nunca se aplicó a producción y rompía el `Promise.all` del Dashboard
+
+**`src/pages/Dashboard.tsx` (reescrito completamente):**
+- **6 stat-cards teal:** Citas Agendadas por IA (`Calendar`), Conversaciones Únicas (`Target`), Mensajes de IA (`MessageSquare`), Recordatorios (`Clock`), Citas Canceladas (`Minus`), Tiempo Ahorrado (`TrendingUp`)
+- **`ChangeBadge`:** componente inline que muestra % vs período anterior con flechas de color
+- **`MiniCalendar`:** selector de rango personalizado con hover highlighting y colores teal
+- **16 queries en paralelo** en `Promise.all`: período actual + período anterior para 5 métricas comparables
+- **`getPreviousDateRange()` local:** helper que replica la lógica de `getDateRange` para el período previo (Citenly's `useClinicTimezone` no lo expone)
+- **Cards analytics:** Próximas Citas (`from-teal-500 to-teal-700`), Mensajes Recientes (sky), Top Servicios (amber + Crown), Conversión (emerald), NPS/Satisfacción (violet + Star)
+- **Adaptaciones Citenly vs Vetly:** `phone_number` (no `contact_phone`), `patients` (no `tutors`), sin columna `status` en `messages`, filtro `status IN ('pending','confirmed','pending_deposit')` en upcoming
+- Build verificado: `✓ built in 13.31s`, 0 errores TypeScript
+
+---
 
 ### Cambios realizados — junio 2026 (sesión 19) — Auditoría incidente Bárbara Orellana
 
