@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-    Sparkles, Clock, User, Building2, Mail, Phone,
+    Clock, User, Building2, Mail, Phone,
     CheckCircle2, Loader2, ArrowRight, ChevronLeft, ChevronRight, Check,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -240,12 +240,10 @@ export default function Demo() {
                 {/* Top: logo + badge */}
                 <div className="flex items-center justify-between">
                     <Link to="/" className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF2E88]/30">
-                            <Sparkles className="w-4 h-4 text-white" />
-                        </div>
+                        <img src="/citenly-icon.png" alt="Citenly" className="w-8 h-8 rounded-xl" />
                         <span className="text-base font-black tracking-tight text-white">Citenly</span>
                     </Link>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40 border border-white/10 rounded-full px-3 py-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white bg-black/30 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1">
                         30 min · sin compromiso
                     </span>
                 </div>
@@ -262,7 +260,7 @@ export default function Demo() {
 
                 {/* Bottom: testimonial card */}
                 <div className="bg-white/[0.06] backdrop-blur-md border border-white/10 rounded-2xl p-6">
-                    <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#FF2E88]/80 bg-[#FF2E88]/10 border border-[#FF2E88]/20 rounded-full px-3 py-1 mb-4">
+                    <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#FF2E88] bg-[#FF2E88]/20 border border-[#FF2E88]/50 rounded-full px-3 py-1 mb-4">
                         {testimonial.tag}
                     </span>
                     <p className="text-white/90 text-sm leading-relaxed font-medium mb-5">
@@ -558,8 +556,8 @@ export default function Demo() {
                 <nav className="lg:hidden sticky top-0 z-50 bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/5">
                     <div className="px-6 h-14 flex items-center justify-between">
                         <Link to="/" className="flex items-center gap-2">
-                            <div className="w-7 h-7 bg-gradient-to-br from-[#FF2E88] to-[#c0236a] rounded-lg flex items-center justify-center">
-                                <Sparkles className="w-3.5 h-3.5 text-white" />
+                            <div className="w-7 h-7">
+                                <img src="/citenly-icon.png" alt="Citenly" className="w-7 h-7 rounded-lg" />
                             </div>
                             <span className="text-sm font-black tracking-tight text-white">Citenly</span>
                         </Link>
