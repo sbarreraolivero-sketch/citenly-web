@@ -221,6 +221,14 @@
 
 @layer utilities {
 
+  /* Hide scrollbar */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Smooth scrollbar */
   .scrollbar-soft {
     scrollbar-width: thin;

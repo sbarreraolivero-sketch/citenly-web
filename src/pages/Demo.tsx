@@ -292,7 +292,7 @@ export default function Demo() {
 
     /** Progress bar segments */
     const ProgressBar = (
-        <div className="flex gap-1 px-6 md:px-10 pt-5 pb-1">
+        <div className="flex gap-1 px-5 md:px-10 pt-3 pb-0">
             {QUESTIONS.map((_, i) => (
                 <div key={i} className="flex-1 h-1 rounded-full overflow-hidden bg-white/[0.08]">
                     <div
@@ -313,25 +313,25 @@ export default function Demo() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
         )}>
             {/* Header */}
-            <div className="mb-7">
-                <p className="text-xs font-black uppercase tracking-widest text-[#FF2E88]/70 mb-2">
+            <div className="mb-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2E88]/70 mb-1.5">
                     Paso {currentQ + 1} de {QUESTIONS.length}
                 </p>
-                <h2 className="text-2xl md:text-[1.75rem] font-black text-white tracking-tight leading-tight">
+                <h2 className="text-xl md:text-[1.75rem] font-black text-white tracking-tight leading-tight">
                     {q.title}
                 </h2>
-                <p className="text-white/40 mt-1.5 text-sm">{q.subtitle}</p>
+                <p className="text-white/40 mt-1 text-sm">{q.subtitle}</p>
             </div>
 
             {/* ── Single select ── */}
             {q.type === 'single' && (
-                <div className={cn('grid gap-2', (q as SingleQ).cols === 2 ? 'grid-cols-2' : 'grid-cols-1')}>
+                <div className={cn('grid gap-2', (q as SingleQ).cols === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1')}>
                     {(q as SingleQ).options.map(opt => {
                         const selected = answers[q.id] === opt
                         return (
                             <button key={opt} onClick={() => !animating && selectSingle(opt)} disabled={animating}
                                 className={cn(
-                                    'flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left text-sm font-medium transition-all duration-150',
+                                    'flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all duration-150',
                                     selected
                                         ? 'border-[#FF2E88]/60 bg-[#FF2E88]/[0.12] text-white'
                                         : 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white hover:bg-white/[0.06]'
@@ -359,7 +359,7 @@ export default function Demo() {
                             return (
                                 <button key={opt} onClick={() => toggleMulti(opt)}
                                     className={cn(
-                                        'flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left text-sm font-medium transition-all duration-150',
+                                        'flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all duration-150',
                                         selected
                                             ? 'border-[#FF2E88]/60 bg-[#FF2E88]/[0.12] text-white'
                                             : 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white hover:bg-white/[0.06]'
@@ -553,19 +553,19 @@ export default function Demo() {
             <div className="flex-1 flex flex-col min-h-screen">
 
                 {/* Mobile nav */}
-                <nav className="lg:hidden sticky top-0 z-50 bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/5">
-                    <div className="px-6 h-14 flex items-center justify-between">
-                        <Link to="/" className="flex items-center gap-2">
-                            <div className="w-7 h-7">
-                                <img src="/citenly-icon.png" alt="Citenly" className="w-7 h-7 rounded-lg" />
-                            </div>
+                <nav className="lg:hidden sticky top-0 z-50 bg-[#0A0A0F]/95 backdrop-blur-md border-b border-white/[0.07]">
+                    <div className="px-5 h-12 flex items-center justify-between gap-3">
+                        <Link to="/" className="flex items-center gap-2 shrink-0">
+                            <img src="/citenly-icon.png" alt="Citenly" className="w-6 h-6 rounded-lg" />
                             <span className="text-sm font-black tracking-tight text-white">Citenly</span>
                         </Link>
-                        <span className="text-xs text-white/30 font-medium tabular-nums">
-                            {currentQ + 1} / {QUESTIONS.length}
-                        </span>
-                        <Link to="/login" className="text-xs font-medium text-white/40 hover:text-white transition-colors">
-                            Ya tengo cuenta →
+                        <div className="flex-1 flex justify-center">
+                            <span className="text-[11px] font-bold text-white/50 tabular-nums bg-white/[0.05] rounded-full px-2.5 py-0.5">
+                                {currentQ + 1} / {QUESTIONS.length}
+                            </span>
+                        </div>
+                        <Link to="/login" className="text-[11px] font-medium text-white/35 hover:text-white transition-colors shrink-0">
+                            Ingresar →
                         </Link>
                     </div>
                 </nav>
@@ -584,12 +584,12 @@ export default function Demo() {
                 {ProgressBar}
 
                 {/* Form area */}
-                <div className="flex-1 flex flex-col justify-start px-6 md:px-10 py-8 max-w-lg w-full mx-auto lg:mx-0 lg:max-w-none">
+                <div className="flex-1 flex flex-col justify-start px-5 md:px-10 pt-5 pb-8 w-full mx-auto lg:mx-0">
 
                     {/* Back button */}
                     {currentQ > 0 && (
                         <button onClick={back} disabled={animating}
-                            className="flex items-center gap-1 text-sm text-white/30 hover:text-white/60 transition-colors mb-6 group w-fit"
+                            className="flex items-center gap-1 text-sm text-white/30 hover:text-white/60 transition-colors mb-4 group w-fit"
                         >
                             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
                             Volver
@@ -597,27 +597,38 @@ export default function Demo() {
                     )}
 
                     {/* Question */}
-                    <div className="max-w-md w-full">
+                    <div className="w-full sm:max-w-md">
                         {FormContent}
                     </div>
                 </div>
 
                 {/* ── Mobile testimonials (debajo del formulario) ── */}
-                <div className="lg:hidden border-t border-white/[0.06] mt-4">
-                    <div className="px-6 py-8">
-                        <p className="text-xs font-black uppercase tracking-widest text-white/25 mb-5">
-                            Lo que dicen nuestras clínicas
+                <div className="lg:hidden border-t border-white/[0.06] mt-6">
+                    <div className="px-5 pt-6 pb-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">
+                            Lo que dicen nuestras clientas
                         </p>
-                        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
+                        <div className="flex gap-3 overflow-x-auto pb-3 -mx-5 px-5 snap-x snap-mandatory scrollbar-none">
                             {TESTIMONIALS.map((t, i) => (
-                                <div key={i} className="shrink-0 w-72 snap-start bg-white/[0.04] border border-white/[0.07] rounded-2xl p-5">
-                                    <span className="inline-block text-[9px] font-black uppercase tracking-widest text-[#FF2E88]/70 bg-[#FF2E88]/10 border border-[#FF2E88]/20 rounded-full px-2.5 py-0.5 mb-3">
-                                        {t.tag}
-                                    </span>
-                                    <p className="text-white/80 text-sm leading-relaxed mb-4">"{t.quote}"</p>
-                                    <div>
-                                        <p className="text-white font-black text-sm">{t.name}</p>
-                                        <p className="text-white/35 text-xs mt-0.5">{t.role}</p>
+                                <div key={i} className="shrink-0 w-[82vw] max-w-[300px] snap-start rounded-2xl overflow-hidden border border-white/[0.08]">
+                                    {/* Mini photo header */}
+                                    <div className="relative h-24 bg-gradient-to-br from-[#1a0010] to-[#0d0d1a]">
+                                        {t.photo && (
+                                            <img src={t.photo} alt={t.name}
+                                                className="absolute inset-0 w-full h-full object-cover object-top opacity-70" />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                                        <span className="absolute bottom-2 left-3 text-[9px] font-black uppercase tracking-widest text-[#FF2E88] bg-black/50 backdrop-blur-sm border border-[#FF2E88]/40 rounded-full px-2 py-0.5">
+                                            {t.tag}
+                                        </span>
+                                    </div>
+                                    {/* Card body */}
+                                    <div className="bg-white/[0.04] p-4">
+                                        <p className="text-white/80 text-sm leading-relaxed mb-3 line-clamp-3">"{t.quote}"</p>
+                                        <div>
+                                            <p className="text-white font-black text-sm">{t.name}</p>
+                                            <p className="text-white/35 text-xs mt-0.5">{t.role}</p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
