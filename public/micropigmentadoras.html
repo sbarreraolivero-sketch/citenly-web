@@ -86,15 +86,6 @@
     .tb-link { font-size: 13px; font-weight: 700; color: #FF2E88; text-decoration: none; white-space: nowrap; }
     .tb-link:hover { text-decoration: underline; }
 
-    /* ── Nav links (estructura Landing) ── */
-    .nav-links { display: flex; align-items: center; gap: 26px; }
-    .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: color .2s; }
-    .nav-links a:hover { color: #fff; }
-    .nav-right { display: flex; align-items: center; gap: 14px; }
-    .nav-login { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: color .2s; }
-    .nav-login:hover { color: #fff; }
-    @media (max-width: 860px) { .nav-links, .nav-login { display: none; } }
-
     /* ── Nav ── */
     nav {
       position: sticky; top: 0; z-index: 100;
@@ -159,15 +150,8 @@
     .btn-arr { transition: transform 0.2s; }
     .btn-primary:hover .btn-arr { transform: translateX(4px); }
 
-    /* ── CTA row + secundario + banderas (estructura Landing) ── */
+    /* ── CTA row + banderas (estructura Landing) ── */
     .hero-cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
-      color: #fff; font-size: 15px; font-weight: 700; padding: 15px 28px;
-      border-radius: 14px; text-decoration: none; transition: background 0.2s;
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
     .hero-flags { display: flex; align-items: center; gap: 12px; margin-top: 30px; }
     .hero-flags .flags { display: flex; gap: 3px; font-size: 19px; line-height: 1; }
     .hero-flags p { margin: 0; font-size: 14px; color: rgba(255,255,255,0.55); }
@@ -760,7 +744,6 @@
       .chat-body { height: 430px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
       .hero-cta-row { width: 100%; }
-      .btn-secondary { width: 100%; justify-content: center; }
       .hero-flags { margin-top: 24px; }
 
       /* Trust banner en una sola línea */
@@ -966,6 +949,15 @@
       .module-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <!-- Microsoft Clarity -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "x9mkqjwvdy");
+  </script>
+  <!-- End Microsoft Clarity -->
   <!-- Meta Pixel Code -->
   <script>
   !function(f,b,e,v,n,t,s)
@@ -997,19 +989,11 @@
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <a href="https://citenly.com" class="nav-logo">
+    <a href="#hero" class="nav-logo">
       <img src="/citenly-icon.png" alt="Citenly" />
       <span>Citenly</span>
     </a>
-    <div class="nav-links">
-      <a href="#todo">El Producto</a>
-      <a href="#solucion">Cómo funciona</a>
-      <a href="#testimonio">Testimonios</a>
-    </div>
-    <div class="nav-right">
-      <a href="https://citenly.com/login" class="nav-login">Iniciar sesión</a>
-      <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="nav-cta">Agendar Reunión Demo →</a>
-    </div>
+    <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="nav-cta">Agendar Reunión Demo →</a>
   </div>
 </nav>
 
@@ -1039,7 +1023,6 @@
 
         <div class="ha4 hero-cta-row">
           <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary">Agendar Reunión Demo <span class="btn-arr">→</span></a>
-          <a href="#solucion" class="btn-secondary">Ver cómo funciona ⌄</a>
         </div>
 
         <div class="hero-flags ha4">
