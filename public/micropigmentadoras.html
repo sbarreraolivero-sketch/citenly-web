@@ -76,6 +76,25 @@
       padding: 2px 10px; border-radius: 100px; letter-spacing: 0.06em; text-transform: uppercase;
     }
 
+    /* ── Trust banner (blanco · estructura Landing · 1 línea en móvil) ── */
+    .trust-banner {
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      padding: 10px 24px; display: flex; align-items: center; justify-content: center; gap: 16px;
+    }
+    .trust-banner-text { margin: 0; font-size: 13.5px; color: #374151; font-weight: 500; white-space: nowrap; }
+    .trust-banner-text strong { font-weight: 700; color: #111827; }
+    .tb-link { font-size: 13px; font-weight: 700; color: #FF2E88; text-decoration: none; white-space: nowrap; }
+    .tb-link:hover { text-decoration: underline; }
+
+    /* ── Nav links (estructura Landing) ── */
+    .nav-links { display: flex; align-items: center; gap: 26px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: color .2s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .nav-login { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: color .2s; }
+    .nav-login:hover { color: #fff; }
+    @media (max-width: 860px) { .nav-links, .nav-login { display: none; } }
+
     /* ── Nav ── */
     nav {
       position: sticky; top: 0; z-index: 100;
@@ -118,13 +137,13 @@
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
     h1 {
-      font-size: clamp(32px, 3.2vw, 46px); font-weight: 900;
-      line-height: 1.07; letter-spacing: -0.04em; color: #fff; margin-bottom: 20px;
+      font-size: clamp(38px, 4.6vw, 58px); font-weight: 900;
+      line-height: 1.05; letter-spacing: -0.04em; color: #fff; margin-bottom: 22px;
     }
     h1 em { font-style: normal; color: var(--pink); }
     .hero-sub {
-      font-size: clamp(15px, 1.6vw, 18px); color: var(--muted);
-      line-height: 1.72; margin-bottom: 36px; max-width: 440px;
+      font-size: clamp(16px, 1.6vw, 19px); color: rgba(236,237,250,0.85);
+      line-height: 1.7; margin-bottom: 36px; max-width: 460px;
     }
     .hero-sub strong { color: var(--text); font-weight: 600; }
 
@@ -139,6 +158,20 @@
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 64px rgba(255,46,136,0.52); }
     .btn-arr { transition: transform 0.2s; }
     .btn-primary:hover .btn-arr { transform: translateX(4px); }
+
+    /* ── CTA row + secundario + banderas (estructura Landing) ── */
+    .hero-cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; font-size: 15px; font-weight: 700; padding: 15px 28px;
+      border-radius: 14px; text-decoration: none; transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    .hero-flags { display: flex; align-items: center; gap: 12px; margin-top: 30px; }
+    .hero-flags .flags { display: flex; gap: 3px; font-size: 19px; line-height: 1; }
+    .hero-flags p { margin: 0; font-size: 14px; color: rgba(255,255,255,0.55); }
+    .hero-flags p strong { color: #fff; font-weight: 700; }
 
     .hero-microcopy {
       margin-top: 14px; font-size: 12px; color: var(--muted);
@@ -726,7 +759,14 @@
       .phone-frame { width: min(340px, calc(100vw - 40px)); }
       .chat-body { height: 430px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
-      .hero-microcopy { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; justify-items: start; width: fit-content; }
+      .hero-cta-row { width: 100%; }
+      .btn-secondary { width: 100%; justify-content: center; }
+      .hero-flags { margin-top: 24px; }
+
+      /* Trust banner en una sola línea */
+      .trust-banner { padding: 8px 14px; gap: 10px; }
+      .trust-banner-text { font-size: 12px; }
+      .tb-extra { display: none; }
 
       /* Dolores */
       .pain-card { padding: 22px 18px; }
@@ -946,12 +986,12 @@
 </head>
 <body>
 
-<!-- TRUST BAR (blanco, igual que landing principal) -->
-<div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-  <p style="margin:0;font-size:13.5px;color:#374151;font-weight:500;text-align:center;">
-    🚀 <strong style="font-weight:700;color:#111827;">Implementación GRATIS incluida</strong> — el equipo de Citenly configura todo.
+<!-- TRUST BANNER (blanco · estructura Landing · 1 línea en móvil) -->
+<div class="trust-banner">
+  <p class="trust-banner-text">
+    🚀 <strong>Implementación GRATIS incluida</strong><span class="tb-extra"> — el equipo de Citenly configura todo.</span>
   </p>
-  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" style="font-size:13px;font-weight:700;color:#FF2E88;text-decoration:none;white-space:nowrap;">Ver planes →</a>
+  <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="tb-link">Ver planes →</a>
 </div>
 
 <!-- NAV -->
@@ -961,7 +1001,15 @@
       <img src="/citenly-icon.png" alt="Citenly" />
       <span>Citenly</span>
     </a>
-    <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="nav-cta">Agendar Reunión Demo →</a>
+    <div class="nav-links">
+      <a href="#todo">El Producto</a>
+      <a href="#solucion">Cómo funciona</a>
+      <a href="#testimonio">Testimonios</a>
+    </div>
+    <div class="nav-right">
+      <a href="https://citenly.com/login" class="nav-login">Iniciar sesión</a>
+      <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="nav-cta">Agendar Reunión Demo →</a>
+    </div>
   </div>
 </nav>
 
@@ -976,24 +1024,27 @@
 
       <!-- LEFT -->
       <div class="hero-left">
-        <div class="hero-pill ha1"><span class="pill-dot"></span> Agente IA para Micropigmentistas</div>
+        <div class="hero-pill ha1">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9l-5.6 1.9L12 16.5l-1.9-5.6L4.5 9l5.6-1.4L12 2z"/></svg>
+          Agente IA para Micropigmentistas
+        </div>
 
         <h1 class="ha2">
-          Deja de regalar tardes enteras<br>a clientas que<br><em style="font-style:normal;background:linear-gradient(90deg,#FF2E88,#4B9EE8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">no avisan.</em>
+          Deja de regalar tardes enteras a clientas que <em style="font-style:normal;background:linear-gradient(90deg,#FF2E88,#4B9EE8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">no avisan.</em>
         </h1>
 
         <p class="hero-sub ha3">
           Citenly cobra el abono antes de separar el horario, responde tu WhatsApp mientras trabajas, agenda y <strong>recuerda a tus clientas cuándo toca el retoque</strong>. Tú solo llegas a trabajar.
         </p>
 
-        <div class="ha4">
+        <div class="ha4 hero-cta-row">
           <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary">Agendar Reunión Demo <span class="btn-arr">→</span></a>
-          <div class="hero-microcopy">
-            <span>Implementación gratis</span>
-            <span>Soporte 24/7</span>
-            <span>Llave en mano</span>
-            <span>7 días de garantía</span>
-          </div>
+          <a href="#solucion" class="btn-secondary">Ver cómo funciona ⌄</a>
+        </div>
+
+        <div class="hero-flags ha4">
+          <span class="flags">🇨🇱 🇲🇽 🇨🇴 🇦🇷 🇵🇪</span>
+          <p>Operativo en <strong>Chile y LATAM</strong></p>
         </div>
 
         <div class="niche-tags ha5">

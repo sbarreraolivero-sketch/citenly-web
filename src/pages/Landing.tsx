@@ -278,11 +278,11 @@ export default function Landing() {
 
             {/* ── Banner top ───────────────────────────────────────────── */}
             <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-center gap-3">
-                    <p className="text-sm text-gray-800 font-medium text-center">
-                        🚀 <strong>Implementación GRATIS incluida</strong> — el equipo de Citenly configura todo.
+                <div className="max-w-7xl mx-auto px-6 py-2 sm:py-2.5 flex items-center justify-center gap-2 sm:gap-3">
+                    <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-nowrap">
+                        🚀 <strong>Implementación GRATIS incluida</strong><span className="hidden sm:inline"> — el equipo de Citenly configura todo.</span>
                     </p>
-                    <a href="#planes" className="text-sm font-bold text-[#FF2E88] hover:underline whitespace-nowrap">Ver planes →</a>
+                    <a href="#planes" className="text-xs sm:text-sm font-bold text-[#FF2E88] hover:underline whitespace-nowrap">Ver planes →</a>
                 </div>
             </div>
 
