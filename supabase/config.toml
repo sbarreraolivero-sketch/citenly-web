@@ -19,6 +19,9 @@ verify_jwt = false
 [functions.chat-agent]
 verify_jwt = false
 
+[functions.handle-demo-request]
+verify_jwt = false
+
 [functions.ai-simulator]
 verify_jwt = false
 

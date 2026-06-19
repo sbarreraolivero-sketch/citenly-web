@@ -4,7 +4,6 @@ import {
     Clock, User, Building2, Mail, Phone,
     CheckCircle2, Loader2, ArrowRight, ChevronLeft, ChevronRight, Check,
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 // ─── Testimonios ──────────────────────────────────────────────────────────────
@@ -152,8 +151,9 @@ export default function Demo() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
     const [selectedTime, setSelectedTime] = useState('')
     const [calendarOffset, setCalendarOffset] = useState(0)
-    const [loading, setLoading]   = useState(false)
+    const [loading, setLoading]    = useState(false)
     const [submitted, setSubmitted] = useState(false)
+    const [submitError, setSubmitError] = useState('')
 
     // Build next 14 business days (skip sundays)
     const availableDays: Date[] = []
@@ -193,20 +193,38 @@ export default function Demo() {
     const handleSubmit = async () => {
         if (!selectedDate || !selectedTime || loading) return
         setLoading(true)
-        const db = supabase as any
-        const { error } = await db.from('demo_requests').insert({
-            name, clinic_name: clinicName, email, phone,
-            clinic_type: answers.clinic_type || '',
-            needs: Array.isArray(answers.goals) ? (answers.goals as string[]).join(', ') : '',
-            role: answers.role || '',
-            scheduled_at: `${formatDateISO(selectedDate)}T${selectedTime}:00`,
-            status: 'pending',
-        })
-        setLoading(false)
-        if (!error) {
-            if (typeof window !== 'undefined' && (window as any).fbq)
-                (window as any).fbq('track', 'CompleteRegistration')
-            setSubmitted(true)
+        setSubmitError('')
+        try {
+            const res = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-demo-request`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        clinicName,
+                        email,
+                        phone,
+                        clinicType: answers.clinic_type || '',
+                        challenge:  answers.challenge   || '',
+                        goals:      Array.isArray(answers.goals) ? (answers.goals as string[]).join(', ') : '',
+                        role:       answers.role        || '',
+                        scheduledAt: `${formatDateISO(selectedDate)}T${selectedTime}:00`,
+                    }),
+                }
+            )
+            const json = await res.json()
+            if (!res.ok || json.error) {
+                setSubmitError(json.error || 'No pudimos registrar tu demo. Inténtalo de nuevo.')
+            } else {
+                if (typeof window !== 'undefined' && (window as any).fbq)
+                    (window as any).fbq('track', 'CompleteRegistration')
+                setSubmitted(true)
+            }
+        } catch {
+            setSubmitError('Error de conexión. Verifica tu internet e inténtalo de nuevo.')
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -506,6 +524,9 @@ export default function Demo() {
                             : <>Confirmar Demo <ArrowRight className="w-4 h-4" /></>
                         }
                     </button>
+                    {submitError && (
+                        <p className="text-red-400 text-sm text-center mt-2">{submitError}</p>
+                    )}
                 </div>
             )}
         </div>
