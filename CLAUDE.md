@@ -836,6 +836,65 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 
 ---
 
+### Cambios realizados — junio 2026 (sesión 23)
+
+#### `confirmAppt` — nueva máquina de estados para abono verificado
+
+**Cambio:** cuando una clienta envía el comprobante de abono y el agente llama `confirm_appointment(yes)` sobre una cita en `status = 'pending_deposit'`, la cita ahora pasa a **`pending`** (NO a `confirmed`).
+
+**Razón de negocio (confirmada por el fundador):** el abono solo aparta el cupo en el calendario. La confirmación definitiva (`confirmed`) o la cancelación (`cancelled`) la hace el **template de confirmación de 24h** (`confirmacion_cita` con botones), que es el único responsable de mover la cita a su estado final. A la clienta se le comunica igualmente "¡Cita confirmada! 😊" — esa confirmación de palabra significa que se le apartó el espacio, no que la cita esté en `confirmed`.
+
+**Máquina de estados en `confirmAppt` ([ycloud-whatsapp-webhook](supabase/functions/ycloud-whatsapp-webhook/index.ts)):**
+- `response === "no"` → `cancelled`
+- `response === "yes"` y `appt.status === "pending_deposit"` → **`pending`** (abono recién verificado, espera template de 24h)
+- `response === "yes"` en cualquier otro caso (`pending` / `confirmed`, p.ej. respuesta al botón de confirmación) → `confirmed`
+
+**Supersede a:** sesión 11 paso e) y sesión 19 incidente 3, que documentaban `confirm_appointment(yes)` sobre abono → `confirmed`. Ese ya NO es el comportamiento.
+
+**Dependencia crítica del diseño:** para que la cita salga de `pending` alguna vez, la clínica DEBE tener `reminder_settings.request_confirmation = true` y `template_confirmation` configurado. Si no, la cita pagada queda atascada en `pending` permanentemente (ningún recordatorio le envía el flujo de botones). Verificado en producción: Elizabeth tiene `request_confirmation = true` + `template_confirmation = 'confirmacion_cita'` + los 3 recordatorios activos. **Antes de activar `require_deposit_first` en cualquier otra clínica, verificar que tenga `request_confirmation` activo.**
+
+**Riesgo residual conocido (no corregido por decisión):** reservas con abono el mismo día a <1h de la cita pueden quedar en `pending` si ningún recordatorio (24h/2h/1h) alcanza a dispararse o la clienta no toca el botón. Borde poco frecuente — se dejó como está.
+
+#### Precios del anuncio de Meta — el agente repetía ofertas obsoletas ($79.000 / $109.000)
+
+**Síntoma:** el agente de Elizabeth cotizaba precios distintos en chats del mismo día ($79.000, $89.000, $109.000), pese a que las 3 fuentes de precio (`services`, `knowledge_base`, `ai_behavior_rules`) estaban limpias y correctas en $89.000.
+
+**Causa raíz (CUARTA fuente de facto de precios):** el webhook inyecta el **cuerpo completo del anuncio de Meta** como texto del mensaje entrante ([ycloud-whatsapp-webhook/index.ts:1866-1871](supabase/functions/ycloud-whatsapp-webhook/index.ts#L1866-L1871)): `[Mensaje desde Anuncio: "..." - <body>]`. El creativo de Meta seguía promocionando una oferta vencida ("Precio Normal: $109.000 / Precio Final: $79.000"). Ese copy entra al historial de la conversación y el modelo lo repite. Verificado en DB: los contactos cuyo payload de anuncio traía la oferta recibieron "$79.000"; el que no la traía recibió correctamente "$89.000".
+
+**Fix (regla en el prompt, PATCH a `ai_behavior_rules`, sin deploy):** se agregó a la Regla 2 (Precios) el bloque **"PRECIOS DEL ANUNCIO — IGNORAR SIEMPRE"**: el agente nunca cotiza precios que aparezcan dentro de `[Mensaje desde Anuncio: ...]`; el único precio válido es el de la KB ($89.000 / $50.000 / $10.000). Ignora cualquier "$79.000", "$109.000" u "oferta/descuento" del texto del anuncio.
+
+**Extiende la regla de sesión 19 incidente 5:** los precios no solo viven en `services` + `knowledge_base` + `ai_behavior_rules` — el copy del anuncio de Meta es una **cuarta fuente de facto** que llega por el contexto del mensaje entrante. NO está en la DB de Citenly: se corrige con la regla del prompt **y** actualizando/pausando el creativo en Meta (acción del fundador).
+
+---
+
+### Cambios realizados — junio 2026 (sesión 24) — Landing micropigmentistas + tracking para ads
+
+#### `public/micropigmentadoras.html` — primera sección portada a la estructura de `Landing.tsx`
+- **Banner blanco** (`.trust-banner`) reemplaza el trust-bar oscuro; mismo look que la landing principal.
+- **Hero estilo Landing:** badge con ícono Sparkles, h1 más grande (`clamp(38–58px)`), `.hero-sub` con color más visible (`var(--muted)` 0.5 → `rgba(236,237,250,0.85)`), trust line con banderas LATAM. Se conservó el simulador de WhatsApp animado (columna derecha) y los `niche-tags`.
+
+#### Banner de anuncio en una sola línea en móvil (ambas páginas) — patrón
+- **Regla:** el banner blanco superior debe quedar en **1 sola línea en móvil** (en 2 líneas abarcaba mucho espacio).
+- `micropigmentadoras.html`: `.trust-banner-text` con `white-space:nowrap`; en ≤640px se oculta la cola larga (`.tb-extra`) y baja a 12px.
+- `Landing.tsx`: `text-xs sm:text-sm` + `whitespace-nowrap`; la cola "— el equipo de Citenly configura todo." pasa a `hidden sm:inline`.
+
+#### Nav sin fugas para landing de tráfico pago (CRO) — regla permanente
+- Una landing que recibe **tráfico pago de Meta** no debe tener fugas del embudo. En `micropigmentadoras.html` el navbar quedó **solo logo (→ `#hero`, no sale del sitio) + CTA "Agendar Reunión Demo"**.
+- Removidos: links del nav (El Producto / Cómo funciona / Testimonios), "Iniciar sesión" y el botón secundario "Ver cómo funciona". CSS muerto limpiado.
+- Todos los CTA siguen apuntando a `citenly.com/demo` (conversión = agendar demo, evento `fbq('track','Lead')`).
+
+#### Microsoft Clarity (heatmaps + grabaciones) — solo marketing
+- Snippet en el `<head>` de `index.html` y `public/micropigmentadoras.html`. **Project ID `x9mkqjwvdy`** (un solo proyecto).
+- **Gate de privacidad en `index.html`:** envuelto en `if (!window.location.pathname.startsWith('/app')) { ... }` para **NO inicializar Clarity dentro del panel logueado `/app/*`** (datos de pacientes). Corre solo en marketing público (`/`, `/demo`, `/login`).
+- `micropigmentadoras.html` lo carga sin condición (100% marketing).
+- Ver heatmap de la landing del ad: Clarity → Heatmaps → `https://citenly.com/micropigmentadoras`; filtrar grabaciones por URL para aislar el tráfico del anuncio.
+
+#### Estrategia del anuncio Meta (definida, pendiente de ejecutar)
+- **Ángulo del creativo:** dolor del **no-show que roba la tarde** + diferenciador **abono antes de separar la hora**. El hook del ad debe ≈ el headline del hero para message match. Conecta con la regla de sesión 18: el copy del anuncio entra al prompt — mantener precios fuera del creativo.
+- **Slide-in de captura de WhatsApp (exit/abandon):** PENDIENTE a propósito — se evaluará con datos de Clarity si hay drop alto sin conversión. Mecánica: trigger por tiempo+scroll (no exit-intent clásico, no aplica en móvil) + oferta step-down (capturar WhatsApp, no repetir "agenda demo").
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 18)
 
 #### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos
