@@ -1410,6 +1410,10 @@ const getKnowledgeSummary = async (sb: ReturnType<typeof createClient>, clinicId
 // ════════════════════════════════════════════════════════════════
 const HQ_ID = "00000000-0000-0000-0000-000000000000";
 const HQ_NOTIFY_PHONE = Deno.env.get("DEMO_NOTIFY_PHONE");
+// Conversions API de Meta para anuncios Click-to-WhatsApp (CTWA).
+// Reporta conversiones reales del chat (lead/agenda) a Meta para que optimice el anuncio.
+const META_CAPI_TOKEN = Deno.env.get("META_CAPI_ACCESS_TOKEN");
+const META_CAPI_DATASET = Deno.env.get("META_CAPI_DATASET_ID");
 
 const getSalesFunctions = () => ([
     {
@@ -1507,9 +1511,49 @@ const notifyFounder = async (clinic: any, lines: string[]) => {
     await sendWA(clinic.ycloud_api_key, HQ_NOTIFY_PHONE, clinic.ycloud_phone_number, msg).catch((e: any) => console.error("notifyFounder error:", e));
 };
 
+// Envía un evento de conversión a Meta (Conversions API para CTWA).
+// Busca el ctwa_clid guardado en el primer mensaje del anuncio y lo reporta.
+// Se omite silenciosamente si no hay credenciales o si el lead no vino de un anuncio.
+const sendMetaCAPI = async (sb: ReturnType<typeof createClient>, phone: string, eventName: string) => {
+    if (!META_CAPI_TOKEN || !META_CAPI_DATASET) return;
+    try {
+        const { data: rows } = await sb.from("messages")
+            .select("payload")
+            .eq("clinic_id", HQ_ID)
+            .or(`phone_number.eq.${phone},phone_number.eq.+${phone}`)
+            .eq("direction", "inbound")
+            .order("created_at", { ascending: false })
+            .limit(25);
+        let ctwaClid: string | undefined;
+        let wabaId: string | undefined;
+        for (const r of (rows || [])) {
+            const ref = (r as any).payload?.referral;
+            if (ref?.ctwa_clid) { ctwaClid = ref.ctwa_clid; wabaId = (r as any).payload?.wabaId; break; }
+        }
+        if (!ctwaClid) return; // no vino de un anuncio CTWA → nada que reportar
+        const event: Record<string, unknown> = {
+            event_name: eventName,
+            event_time: Math.floor(Date.now() / 1000),
+            event_id: `${eventName}_${phone}_${new Date().toISOString().slice(0, 10)}`,
+            action_source: "business_messaging",
+            messaging_channel: "whatsapp",
+            user_data: { ctwa_clid: ctwaClid, ...(wabaId ? { whatsapp_business_account_id: wabaId } : {}) },
+        };
+        const res = await fetch(`https://graph.facebook.com/v21.0/${META_CAPI_DATASET}/events?access_token=${META_CAPI_TOKEN}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: [event] }),
+        });
+        if (!res.ok) console.error("Meta CAPI error:", await res.text());
+    } catch (e) {
+        console.error("sendMetaCAPI error:", e);
+    }
+};
+
 const registrarLead = async (sb: ReturnType<typeof createClient>, phone: string, args: any) => {
     const needs = [args.interest ? `Interés: ${args.interest}` : "", args.notes ? `Notas: ${args.notes}` : ""].filter(Boolean).join(" | ");
     await findOrCreateLead(sb, phone, { name: args.name || "Lead WhatsApp", clinic_name: args.business_name, clinic_type: args.business_type, needs });
+    await sendMetaCAPI(sb, phone, "Lead");
     return { success: true, message: "Lead registrado en el CRM de HQ." };
 };
 
@@ -1523,6 +1567,7 @@ const agendarVideollamada = async (sb: ReturnType<typeof createClient>, phone: s
         `📱 ${phone}`,
         args.notes ? `📝 ${args.notes}` : "",
     ]);
+    await sendMetaCAPI(sb, phone, "Schedule");
     return { success: true, message: "Videollamada agendada con el fundador Sebastián Barrera. El equipo fue notificado.", con: "Sebastián Barrera (fundador de Citenly)", scheduled: args.preferred_datetime || "por coordinar" };
 };
 
