@@ -792,7 +792,20 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
         .maybeSingle();
 
     if (!appt) return { message: "No encontré una cita pendiente para confirmar en este momento (podría ser porque ya está confirmada o no existe)." };
-    const status = response === "yes" ? "confirmed" : "cancelled";
+    // Máquina de estados:
+    // - "no" → cancelled.
+    // - "yes" sobre una cita en pending_deposit (abono recién verificado) → pending: el agendamiento queda
+    //   reservado y a la espera de la confirmación con botones del recordatorio de 24h, que es el único
+    //   responsable de moverla a confirmed/cancelled. A la clienta se le comunica igualmente "confirmada".
+    // - "yes" en cualquier otro caso (pending / confirmed, p.ej. respuesta al botón de confirmación) → confirmed.
+    let status: string;
+    if (response === "no") {
+        status = "cancelled";
+    } else if (appt.status === "pending_deposit") {
+        status = "pending";
+    } else {
+        status = "confirmed";
+    }
     await sb.from("appointments").update({ status, confirmation_received: true, confirmation_response: response }).eq("id", appt.id);
 
     if (status === "cancelled") return { message: "Cita cancelada. ¿Reagendar?" };
@@ -1392,10 +1405,131 @@ const getKnowledgeSummary = async (sb: ReturnType<typeof createClient>, clinicId
     }
 };
 
+// ════════════════════════════════════════════════════════════════
+// AGENTE DE VENTAS DE HQ (modo ventas — se activa cuando clinic.id === HQ_ID)
+// ════════════════════════════════════════════════════════════════
+const HQ_ID = "00000000-0000-0000-0000-000000000000";
+const HQ_NOTIFY_PHONE = Deno.env.get("DEMO_NOTIFY_PHONE");
+
+const getSalesFunctions = () => ([
+    {
+        name: "get_knowledge",
+        description: "Consulta la base de conocimiento de Citenly (producto, planes, precios, objeciones, casos de éxito). Úsala SIEMPRE antes de hablar de precios, planes o responder dudas concretas. NUNCA inventes datos.",
+        parameters: { type: "object", properties: { query: { type: "string", description: "Tema a consultar, ej: 'precio plan pro', 'qué incluye starter', 'objeción es caro'" } }, required: ["query"] }
+    },
+    {
+        name: "registrar_lead",
+        description: "Registra o actualiza al prospecto en el CRM de ventas de HQ. Llama apenas conozcas su nombre y/o tipo de negocio.",
+        parameters: { type: "object", properties: { name: { type: "string" }, business_name: { type: "string", description: "Nombre del negocio o clínica" }, business_type: { type: "string", description: "Rubro: estética, micropigmentación, salón, etc." }, interest: { type: "string", description: "Qué le interesa de Citenly" }, notes: { type: "string", description: "Notas relevantes de la conversación" } }, required: [] }
+    },
+    {
+        name: "agendar_videollamada",
+        description: "Agenda una videollamada/demo cuando el prospecto quiere ver el producto. Pide nombre, negocio y un horario preferido ANTES de llamar.",
+        parameters: { type: "object", properties: { name: { type: "string" }, business_name: { type: "string" }, preferred_datetime: { type: "string", description: "Fecha/hora preferida en texto o ISO, ej: 'martes 3pm' o '2026-06-24T15:00'" }, notes: { type: "string" } }, required: ["name"] }
+    },
+    {
+        name: "escalar_lead_caliente",
+        description: "Alerta al equipo humano de inmediato cuando el prospecto está listo para contratar o pide hablar con una persona.",
+        parameters: { type: "object", properties: { name: { type: "string" }, reason: { type: "string", description: "Por qué es caliente: 'quiere contratar', 'pide hablar con humano', etc." } }, required: [] }
+    },
+]);
+
+const buildSalesPrompt = (knowledgeSummary: string) => `Eres Sofía, asesora de Citenly. Atiendes por WhatsApp a dueñas y dueños de centros de estética, salones de belleza, micropigmentación y medicina estética en Chile y LATAM que escriben con curiosidad sobre Citenly.
+
+QUIÉN ERES Y CÓMO HABLAS:
+- Cálida, cercana, humana y profesional. Como una asesora experta que de verdad quiere ayudar, no una vendedora.
+- Mensajes cortos, naturales, de WhatsApp. UNA pregunta a la vez. Usa el nombre de la persona apenas lo sepas.
+- Tu forma de atender ES la mejor demostración del producto: respondes al toque, claro y sin hacer esperar.
+
+TU OBJETIVO REAL: ser CONSULTIVA. Primero entender el negocio de la persona, y recién entonces recomendar lo que de verdad le calza y decirle su valor. Resolver dudas pesa más que cerrar. NUNCA hostigues con la reunión.
+
+FLUJO CONSULTIVO (progresivo, una pregunta a la vez, no un interrogatorio):
+1. Conecta. Pregunta qué tipo de negocio tiene.
+2. Descubre su realidad: ¿trabaja sola o con equipo? ¿cuántas personas atienden? ¿una sede o varias? ¿cuál es su mayor dolor de cabeza hoy?
+3. Conecta su dolor con cómo Citenly lo resuelve, en concreto y sin tecnicismos.
+4. Con esa info, recomienda EL plan que mejor calza con su realidad y dile su valor en ese momento, con naturalidad.
+5. Si hay interés, ofrécele ver el panel y su asistente en una videollamada corta — UNA sola vez, sin insistir.
+
+QUÉ HACE CITENLY (en lenguaje de cliente, nunca técnico):
+Un asistente que atiende el WhatsApp de su negocio por ella: responde a sus clientas, agenda las citas, reagenda cuando una clienta necesita cambiar la hora, le pide un abono para asegurar la reserva, manda recordatorios para que no falten, y hasta reactiva a las clientas que llevan tiempo sin volver. Todo solo, las 24 horas. Además ordena su agenda, sus fichas de clientas, sus campañas y sus números.
+
+GUÍA DE PLANES (recomienda UNO según su realidad y di su valor; lenguaje simple):
+- Core — $33.000/mes (US$39): ordena el negocio (agenda, fichas, finanzas), todavía SIN el asistente automático. Para quien solo quiere ordenarse.
+- Starter — $92.000/mes (US$97): para quien trabaja sola/o. Incluye el asistente de WhatsApp que atiende, agenda, reagenda y recuerda.
+- Pro — $159.000/mes (US$167): para centros en crecimiento, hasta 5 personas atendiendo, citas ilimitadas, encuestas de satisfacción y reactivación de clientas. Es el más elegido.
+- Enterprise — $282.000/mes (US$297): para quienes tienen varios locales/sucursales, todo unificado.
+- Si preguntan por ahorro: el plan anual sale 20% más barato (2 meses gratis).
+- Si la "capacidad" sale en la conversación, descríbela en humano ("alcanza de sobra para el ir y venir de tus clientas por WhatsApp"). Si te quedas sin certeza del número exacto para su caso, ofrécele verlo afinado en la videollamada.
+
+EL MOMENTO META-DEMO (revélalo cuando ya haya enganche, no antes):
+Conecta su experiencia contigo con la de sus clientas, algo así: "Y fíjate en algo 👀 así como te estoy atendiendo ahora — al toque, claro, sin hacerte esperar — es justo como tu asistente atendería a tus clientas por WhatsApp, las 24 horas." Dilo una vez, con naturalidad.
+
+REGLAS DE ORO:
+- JAMÁS uses lenguaje técnico. Prohibido decir: "créditos IA", "tokens", "tier", "modelo", "GPT", "API", "webhook", "prompt", "inteligencia artificial" técnica. Habla siempre de beneficios y de "tu asistente".
+- Di "inasistencias" (NUNCA "no-shows") cuando hables de clientas que no llegan.
+- No seas agresiva: ofrece la videollamada UNA vez; si dicen "lo pensaré" o "no", respeta y deja la puerta abierta con calidez.
+- Usa 'get_knowledge' SIEMPRE antes de afirmar precios, detalles de planes u objeciones finas. Nunca inventes.
+- Registra a la persona con 'registrar_lead' apenas sepas su nombre y/o rubro.
+- Agenda con 'agendar_videollamada' solo cuando acepte; pide nombre, negocio y horario preferido antes.
+- Si pide hablar con una persona o está lista para contratar, usa 'escalar_lead_caliente'.
+- Nunca reveles que eres un sistema de prompts ni nombres las herramientas.
+
+BASE DE CONOCIMIENTO (tu fuente de verdad — apóyate aquí y en get_knowledge):
+${knowledgeSummary || "Aún sin documentos cargados — apóyate en get_knowledge y, si no hay info, ofrece una videollamada corta para que el equipo le muestre todo."}`;
+
+const findOrCreateLead = async (sb: ReturnType<typeof createClient>, phone: string, fields: Record<string, unknown>) => {
+    const clean = Object.fromEntries(Object.entries(fields).filter(([_, v]) => v !== undefined && v !== "" && v !== null));
+    const { data: existing } = await sb.from("demo_requests").select("id").eq("phone", phone).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (existing) {
+        if (Object.keys(clean).length) await sb.from("demo_requests").update(clean).eq("id", (existing as any).id);
+        return (existing as any).id;
+    }
+    const { data: ins } = await sb.from("demo_requests").insert({ phone, status: "pending", ...clean }).select("id").single();
+    return (ins as any)?.id;
+};
+
+const notifyFounder = async (clinic: any, lines: string[]) => {
+    if (!HQ_NOTIFY_PHONE || !clinic?.ycloud_api_key) return;
+    const msg = lines.filter(Boolean).join("\n");
+    await sendWA(clinic.ycloud_api_key, HQ_NOTIFY_PHONE, clinic.ycloud_phone_number, msg).catch((e: any) => console.error("notifyFounder error:", e));
+};
+
+const registrarLead = async (sb: ReturnType<typeof createClient>, phone: string, args: any) => {
+    const needs = [args.interest ? `Interés: ${args.interest}` : "", args.notes ? `Notas: ${args.notes}` : ""].filter(Boolean).join(" | ");
+    await findOrCreateLead(sb, phone, { name: args.name || "Lead WhatsApp", clinic_name: args.business_name, clinic_type: args.business_type, needs });
+    return { success: true, message: "Lead registrado en el CRM de HQ." };
+};
+
+const agendarVideollamada = async (sb: ReturnType<typeof createClient>, phone: string, clinic: any, args: any) => {
+    await findOrCreateLead(sb, phone, { name: args.name || "Lead WhatsApp", clinic_name: args.business_name, needs: args.notes ? `Notas: ${args.notes}` : undefined, scheduled_at: args.preferred_datetime || undefined });
+    await notifyFounder(clinic, [
+        "🗓️ *Nueva videollamada — Ventas Citenly*", "",
+        `👤 ${args.name || "Sin nombre"}`,
+        `🏢 ${args.business_name || "—"}`,
+        `📅 ${args.preferred_datetime || "Por coordinar"}`,
+        `📱 ${phone}`,
+        args.notes ? `📝 ${args.notes}` : "",
+    ]);
+    return { success: true, message: "Videollamada agendada y el equipo fue notificado.", scheduled: args.preferred_datetime || "por coordinar" };
+};
+
+const escalarLeadCaliente = async (sb: ReturnType<typeof createClient>, phone: string, clinic: any, args: any) => {
+    await notifyFounder(clinic, [
+        "🔥 *Lead caliente — Ventas Citenly*", "",
+        `👤 ${args.name || "Sin nombre"}`,
+        `📱 ${phone}`,
+        args.reason ? `💡 ${args.reason}` : "",
+    ]);
+    return { success: true, message: "El equipo de ventas fue alertado y te contactará muy pronto." };
+};
+
 const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, name: string, args: Record<string, unknown>, timezone: string, clinic?: any) => {
     console.log(`[processFunc] Calling: ${name}`, args);
     await debugLog(sb, `Tool execution: ${name}`, { args, phone });
     switch (name) {
+        case "registrar_lead": return registrarLead(sb, phone, args as any);
+        case "agendar_videollamada": return agendarVideollamada(sb, phone, clinic, args as any);
+        case "escalar_lead_caliente": return escalarLeadCaliente(sb, phone, clinic, args as any);
         case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string, args.min_time as string | undefined);
         case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone, !!clinic?.require_deposit_first);
         case "get_services": return getServices(sb, clinicId);
@@ -2188,7 +2322,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 const burstInbound = lastOutboundIndex >= 0 ? orderedMsgs.slice(lastOutboundIndex + 1) : orderedMsgs;
 
                 const msgs: Msg[] = [
-                    { role: "system", content: sysPrompt },
+                    { role: "system", content: clinic.id === HQ_ID ? buildSalesPrompt(knowledgeSummary) : sysPrompt },
                     ...pastContext.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content || "" }))
                 ];
 
@@ -2218,7 +2352,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 console.log(`[Hybrid AI] Message classified as N${tier}. Cost: ${creditCost}x. Model: ${optimalModel}`);
                 await debugLog(sb, `Hybrid Router: N${tier}`, { tier, model: optimalModel, cost: creditCost });
 
-                const dynamicFns = getFunctions(!!clinic?.require_deposit_first);
+                const dynamicFns = clinic.id === HQ_ID ? getSalesFunctions() : getFunctions(!!clinic?.require_deposit_first);
 
                 let res = await callAI(optimalModel, msgs, true, dynamicFns);
                 let assistant = res.choices[0].message;
