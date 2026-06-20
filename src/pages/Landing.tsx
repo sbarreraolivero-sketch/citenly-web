@@ -145,7 +145,7 @@ const PLANS = [
         description: 'Infraestructura empresarial para controlar hasta 2 sucursales desde un solo panel. Más sucursales, contactar ventas.',
         gradient: 'from-[#1a1a2e] to-[#0f0f23]',
         highlight: false,
-        features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', 'Conversaciones ilimitadas', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
+        features: ['Usuarios y agendas ilimitados', 'Todo lo de Pro', '20.000 créditos IA/mes', 'Recordatorios ilimitados', 'Multi-sucursal unificado', 'IA personalizada por servicio', 'Super Administrador', 'Soporte 24/7 dedicado'],
         cta: 'Agendar Implementación',
     },
     {

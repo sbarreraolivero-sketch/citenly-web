@@ -21,7 +21,7 @@ const plans = [
             'Todo lo de Pro, más:',
             'Usuarios y agendas ilimitados',
             'Multi-sucursal con dashboard unificado',
-            'Conversaciones ilimitadas',
+            '20.000 créditos IA incluidos/mes',
             'Recordatorios ilimitados',
             'IA personalizada por servicio',
             'Super Administrador',

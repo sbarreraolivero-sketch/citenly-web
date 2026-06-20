@@ -168,7 +168,7 @@ Deno.serve(async (req: Request) => {
             .insert({
                 clinic_name: clinic_name,
                 subscription_plan: selected_plan,
-                ai_credits_limit: ['enterprise','prestige'].includes(selected_plan) ? 16000 : ['pro','radiance'].includes(selected_plan) ? 8000 : ['starter','essence'].includes(selected_plan) ? 4000 : 500,
+                ai_credits_limit: ['enterprise','prestige'].includes(selected_plan) ? 20000 : ['pro','radiance'].includes(selected_plan) ? 8000 : ['starter','essence'].includes(selected_plan) ? 4000 : 500,
                 max_users: ['enterprise','prestige'].includes(selected_plan) ? 1000000 : ['pro','radiance'].includes(selected_plan) ? 5 : 2,
                 services: [
                     { id: "svc-1", name: "Consulta General", duration: 30, price: 500 },

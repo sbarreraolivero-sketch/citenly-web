@@ -165,8 +165,10 @@ Citenly usa `core` / `starter` / `pro` / `enterprise` como IDs de plan en el fro
 |---|---|---|---|---|
 | Core | $39 | $33.000 | — | 0 |
 | Starter | $97 | $92.000 | $931 | 4.000 |
-| Pro | $167 | $159.000 | $1.603 | ilimitados |
-| Enterprise | $297 | $282.000 | $2.851 | ilimitados |
+| Pro | $167 | $159.000 | $1.603 | 8.000 |
+| Enterprise | $297 | $282.000 | $2.851 | 20.000 |
+
+**Créditos vs citas (aclaración del fundador, sesión 25):** los **créditos IA son finitos** en todos los planes (Starter 4.000 · Pro 8.000 · Enterprise 20.000). Lo **ilimitado en Pro/Enterprise son las CITAS** (`monthlyAppointmentsMonthly: -1`), no los créditos. NO usar "Conversaciones ilimitadas" en el copy de Enterprise — consume créditos finitos. Única excepción de créditos ilimitados: clínicas con `ai_credits_unlimited = true` seteado manualmente (ej: Elizabeth).
 
 **Orden de presentación en UI:** Enterprise → Pro → Starter → Core (efecto de anclaje).
 **Descuento anual:** 20% (2 meses gratis). `getPrice()` usa `base * 0.8` para el mensual en modo anual.

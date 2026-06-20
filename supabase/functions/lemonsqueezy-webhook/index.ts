@@ -215,7 +215,7 @@ Deno.serve(async (req: Request) => {
                         payment_provider: 'lemonsqueezy',
                         lemonsqueezy_customer_id: String(payload.data.attributes.customer_id || ''),
                         max_users: maxUsers,
-                        ai_credits_limit: ['enterprise','prestige'].includes(plan) ? 16000 : ['pro','radiance'].includes(plan) ? 8000 : ['starter','essence'].includes(plan) ? 4000 : 500,
+                        ai_credits_limit: ['enterprise','prestige'].includes(plan) ? 20000 : ['pro','radiance'].includes(plan) ? 8000 : ['starter','essence'].includes(plan) ? 4000 : 500,
                     })
                     .eq('id', clinicId);
 

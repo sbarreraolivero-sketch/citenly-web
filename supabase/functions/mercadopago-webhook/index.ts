@@ -171,7 +171,7 @@ Deno.serve(async (req: Request) => {
                 .from("clinic_settings")
                 .update({
                     subscription_plan: plan,
-                    ai_credits_limit: ['enterprise','prestige'].includes(plan) ? 16000 : ['pro','radiance'].includes(plan) ? 8000 : ['starter','essence'].includes(plan) ? 4000 : 500,
+                    ai_credits_limit: ['enterprise','prestige'].includes(plan) ? 20000 : ['pro','radiance'].includes(plan) ? 8000 : ['starter','essence'].includes(plan) ? 4000 : 500,
                     max_users: ['enterprise','prestige'].includes(plan) ? 1000000 : ['pro','radiance'].includes(plan) ? 5 : 2,
                 })
                 .eq("id", clinicId);
