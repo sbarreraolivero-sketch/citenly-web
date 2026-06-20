@@ -92,7 +92,7 @@ export default function AdminKnowledge() {
     )
 
     return (
-        <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                 <div>

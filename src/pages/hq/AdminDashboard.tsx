@@ -214,65 +214,65 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-amber-500" />
+            <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-amber-400" />
                         Activaciones Pendientes ({clinics.length})
                     </h2>
                     <div className="relative w-full sm:w-auto">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                         <input
                             type="text"
                             placeholder="Buscar clínica o email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full sm:w-72 pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            className="w-full sm:w-72 pl-9 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF2E88]"
                         />
                     </div>
                 </div>
 
                 {loading ? (
                     <div className="p-12 flex justify-center">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                        <Loader2 className="w-8 h-8 animate-spin text-[#FF2E88]" />
                     </div>
                 ) : filteredClinics.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500">
+                    <div className="p-12 text-center text-gray-400">
                         No hay clínicas pendientes de activación en este momento.
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600">
-                            <thead className="bg-gray-50 border-b border-gray-200 text-gray-900 uppercase">
+                        <table className="w-full text-left text-sm text-gray-300">
+                            <thead className="bg-gray-900/50 border-b border-gray-700 text-gray-400 uppercase text-xs">
                                 <tr>
-                                    <th className="px-6 py-4 font-medium">Clínica</th>
-                                    <th className="px-6 py-4 font-medium">Usuario (Owner)</th>
-                                    <th className="px-6 py-4 font-medium">Plan</th>
-                                    <th className="px-6 py-4 font-medium">Fecha de Registro</th>
-                                    <th className="px-6 py-4 font-medium text-right">Acción</th>
+                                    <th className="px-4 sm:px-6 py-4 font-medium">Clínica</th>
+                                    <th className="px-4 sm:px-6 py-4 font-medium">Usuario (Owner)</th>
+                                    <th className="px-4 sm:px-6 py-4 font-medium">Plan</th>
+                                    <th className="px-4 sm:px-6 py-4 font-medium whitespace-nowrap">Fecha de Registro</th>
+                                    <th className="px-4 sm:px-6 py-4 font-medium text-right">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-gray-700">
                                 {filteredClinics.map((clinic) => (
-                                    <tr key={clinic.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4">
+                                    <tr key={clinic.id} className="hover:bg-gray-700/30 transition-colors">
+                                        <td className="px-4 sm:px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center text-primary-700 font-bold">
+                                                <div className="w-10 h-10 rounded-lg bg-[#FF2E88]/15 flex items-center justify-center text-[#FF2E88] font-bold shrink-0">
                                                     {clinic.clinic_name.charAt(0).toUpperCase()}
                                                 </div>
-                                                <div className="font-medium text-gray-900">{clinic.clinic_name}</div>
+                                                <div className="font-medium text-white">{clinic.clinic_name}</div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-900">{clinic.owner_name}</div>
-                                            <div className="text-gray-500 text-xs mt-0.5">{clinic.owner_email}</div>
+                                        <td className="px-4 sm:px-6 py-4">
+                                            <div className="font-medium text-white">{clinic.owner_name}</div>
+                                            <div className="text-gray-400 text-xs mt-0.5">{clinic.owner_email}</div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                                        <td className="px-4 sm:px-6 py-4">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30 capitalize">
                                                 {clinic.subscription_plan}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-400">
                                             {new Date(clinic.created_at).toLocaleDateString('es-ES', {
                                                 year: 'numeric',
                                                 month: 'short',
@@ -281,11 +281,11 @@ export default function AdminDashboard() {
                                                 minute: '2-digit'
                                             })}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-4 sm:px-6 py-4 text-right">
                                             <button
                                                 onClick={() => handleActivate(clinic.id)}
                                                 disabled={activating === clinic.id}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
                                             >
                                                 {activating === clinic.id ? (
                                                     <Loader2 className="w-4 h-4 animate-spin" />

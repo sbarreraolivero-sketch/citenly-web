@@ -175,24 +175,24 @@ export default function AdminSettings() {
     }
 
     return (
-        <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white">Configuración</h1>
+            <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">Configuración</h1>
                 <p className="text-gray-400 mt-1">Administra la configuración global de la plataforma Citenly.</p>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
+            <div className="flex gap-1 bg-gray-800 border border-gray-700 p-1 rounded-xl mb-6 w-full sm:w-fit overflow-x-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon
                     return (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id
+                                ? 'bg-gray-700 text-white shadow-sm'
+                                : 'text-gray-400 hover:text-white'
                                 }`}
                         >
                             <Icon className="w-4 h-4" />
@@ -204,7 +204,7 @@ export default function AdminSettings() {
 
             {/* Message */}
             {message && (
-                <div className={`mb-6 p-4 rounded-xl text-sm flex items-center gap-2 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                <div className={`mb-6 p-4 rounded-xl text-sm flex items-center gap-2 ${message.type === 'success' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}`}>
                     {message.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
                     {message.text}
                 </div>
@@ -214,62 +214,62 @@ export default function AdminSettings() {
             {activeTab === 'general' && (
                 <div className="space-y-6">
                     {/* Platform Stats */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                             <Globe className="w-5 h-5 text-primary-500" />
                             Resumen de la Plataforma
                         </h3>
                         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4 text-center">
+                            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
                                 <Building2 className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{stats?.totalClinics || 0}</p>
-                                <p className="text-xs text-gray-500">Clínicas Total</p>
+                                <p className="text-2xl font-bold text-white">{stats?.totalClinics || 0}</p>
+                                <p className="text-xs text-gray-400">Clínicas Total</p>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4 text-center">
+                            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
                                 <CheckCircle className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{stats?.activeClinics || 0}</p>
-                                <p className="text-xs text-gray-500">Clínicas Activas</p>
+                                <p className="text-2xl font-bold text-white">{stats?.activeClinics || 0}</p>
+                                <p className="text-xs text-gray-400">Clínicas Activas</p>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4 text-center">
+                            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
                                 <Users className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{stats?.totalMembers || 0}</p>
-                                <p className="text-xs text-gray-500">Miembros</p>
+                                <p className="text-2xl font-bold text-white">{stats?.totalMembers || 0}</p>
+                                <p className="text-xs text-gray-400">Miembros</p>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4 text-center">
+                            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
                                 <Users className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{stats?.totalPatients || 0}</p>
-                                <p className="text-xs text-gray-500">Pacientes</p>
+                                <p className="text-2xl font-bold text-white">{stats?.totalPatients || 0}</p>
+                                <p className="text-xs text-gray-400">Pacientes</p>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4 text-center">
+                            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
                                 <Calendar className="w-6 h-6 text-teal-500 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{stats?.totalAppointments || 0}</p>
-                                <p className="text-xs text-gray-500">Citas</p>
+                                <p className="text-2xl font-bold text-white">{stats?.totalAppointments || 0}</p>
+                                <p className="text-xs text-gray-400">Citas</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Current Admin Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                             <Shield className="w-5 h-5 text-primary-500" />
                             Tu Cuenta
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg">{adminUser?.email}</p>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg">{adminUser?.email}</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">Rol</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg">Super Admin</p>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg">Super Admin</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">ID</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg font-mono text-xs">{adminUser?.id}</p>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">ID</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg font-mono text-xs">{adminUser?.id}</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">Última sesión</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg">
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Última sesión</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg">
                                     {adminUser?.last_sign_in_at
                                         ? new Date(adminUser.last_sign_in_at).toLocaleString('es-ES')
                                         : 'N/A'}
@@ -284,21 +284,21 @@ export default function AdminSettings() {
             {activeTab === 'admins' && (
                 <div className="space-y-6">
                     {/* Add Admin */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                             <Users className="w-5 h-5 text-primary-500" />
                             Agregar Administrador
                         </h3>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-sm text-gray-400 mb-4">
                             El usuario debe tener una cuenta registrada en Citenly para poder agregarlo como administrador.
                         </p>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <input
                                 type="email"
                                 placeholder="email@ejemplo.com"
                                 value={newAdminEmail}
                                 onChange={(e) => setNewAdminEmail(e.target.value)}
-                                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="flex-1 px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF2E88]"
                             />
                             <button
                                 onClick={handleAddAdmin}
@@ -312,32 +312,32 @@ export default function AdminSettings() {
                     </div>
 
                     {/* Admin List */}
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100">
-                            <h3 className="text-lg font-semibold text-gray-900">
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+                        <div className="px-4 sm:px-6 py-4 border-b border-gray-700">
+                            <h3 className="text-lg font-semibold text-white">
                                 Administradores de la Plataforma ({admins.length})
                             </h3>
                         </div>
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-gray-700">
                             {admins.map((admin) => (
-                                <div key={admin.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center">
-                                            <Shield className="w-5 h-5 text-primary-600" />
+                                <div key={admin.id} className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 flex-wrap hover:bg-gray-700/30 transition-colors">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-full bg-[#FF2E88]/15 flex items-center justify-center shrink-0">
+                                            <Shield className="w-5 h-5 text-[#FF2E88]" />
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900">{admin.email}</p>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-white truncate">{admin.email}</p>
                                             <p className="text-xs text-gray-400">
                                                 Desde {new Date(admin.created_at).toLocaleDateString('es-ES')}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 font-medium capitalize">
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-medium capitalize">
                                             {admin.role?.replace('_', ' ')}
                                         </span>
                                         {admin.id === adminUser?.id && (
-                                            <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
+                                            <span className="text-xs px-2 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-medium">
                                                 Tú
                                             </span>
                                         )}
@@ -352,62 +352,62 @@ export default function AdminSettings() {
             {/* Platform Tab */}
             {activeTab === 'platform' && (
                 <div className="space-y-6">
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                             <Database className="w-5 h-5 text-primary-500" />
                             Información de la Plataforma
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">URL de Supabase</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg font-mono text-xs truncate">
+                                <label className="block text-sm font-medium text-gray-400 mb-1">URL de Supabase</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg font-mono text-xs truncate">
                                     {import.meta.env.VITE_SUPABASE_URL}
                                 </p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">Versión de la App</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg">v2.0.0</p>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Versión de la App</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg">v2.0.0</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">Ambiente</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg">
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Ambiente</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg">
                                     {import.meta.env.MODE === 'production' ? 'Producción' : 'Desarrollo'}
                                 </p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-1">Framework</label>
-                                <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2.5 rounded-lg">React + Vite + Supabase</p>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Framework</label>
+                                <p className="text-sm text-white bg-gray-900/50 border border-gray-700 px-4 py-2.5 rounded-lg">React + Vite + Supabase</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                             <Bell className="w-5 h-5 text-primary-500" />
                             Acciones Rápidas
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <button
                                 onClick={fetchData}
-                                className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                                className="flex items-center gap-3 p-4 border border-gray-700 rounded-xl hover:bg-gray-700/40 transition-colors text-left"
                             >
                                 <RefreshCw className="w-5 h-5 text-blue-500" />
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Refrescar Datos</p>
-                                    <p className="text-xs text-gray-500">Actualizar las estadísticas de la plataforma</p>
+                                    <p className="text-sm font-medium text-white">Refrescar Datos</p>
+                                    <p className="text-xs text-gray-400">Actualizar las estadísticas de la plataforma</p>
                                 </div>
                             </button>
                             <a
                                 href={`${import.meta.env.VITE_SUPABASE_URL?.replace('.supabase.co', '')}.supabase.co/project/default`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                                className="flex items-center gap-3 p-4 border border-gray-700 rounded-xl hover:bg-gray-700/40 transition-colors text-left"
                             >
                                 <Database className="w-5 h-5 text-emerald-500" />
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Panel de Supabase</p>
-                                    <p className="text-xs text-gray-500">Abrir el panel de administración de la base de datos</p>
+                                    <p className="text-sm font-medium text-white">Panel de Supabase</p>
+                                    <p className="text-xs text-gray-400">Abrir el panel de administración de la base de datos</p>
                                 </div>
                             </a>
                         </div>
