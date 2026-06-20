@@ -2085,8 +2085,11 @@ Deno.serve(async (req) => {
 
         const asyncProcess = async () => {
             try {
-                // DEBOUNCE - WAIT FOR 30 SECONDS (Reverted from 10s as requested)
-                await new Promise(r => setTimeout(r, 30000));
+                // DEBOUNCE ROLLING - espera 15s desde la llegada de ESTE mensaje.
+                // Si la persona sigue escribiendo, el mensaje más nuevo arranca su propio
+                // timer de 15s y este aborta abajo (efecto: se resetea el contador con cada
+                // mensaje nuevo y solo el último procesa).
+                await new Promise(r => setTimeout(r, 15000));
 
                 // CHECK IF A NEWER USER MESSAGE ARRIVED WHILE WE WAITED
                 const { data: latestMsg } = await sb.from("messages")
