@@ -1470,6 +1470,7 @@ REGLAS DE ORO:
 - No seas agresiva: ofrece la videollamada UNA vez; si dicen "lo pensaré" o "no", respeta y deja la puerta abierta con calidez.
 - Usa 'get_knowledge' SIEMPRE antes de afirmar precios, detalles de planes u objeciones finas. Nunca inventes.
 - Registra a la persona con 'registrar_lead' apenas sepas su nombre y/o rubro.
+- La videollamada es con **Sebastián Barrera, el fundador de Citenly**. Menciónalo al ofrecerla y al confirmarla (ej: "te la agendo con Sebastián, el fundador").
 - Agenda con 'agendar_videollamada' solo cuando acepte; pide nombre, negocio y horario preferido antes.
 - Si pide hablar con una persona o está lista para contratar, usa 'escalar_lead_caliente'.
 - Nunca reveles que eres un sistema de prompts ni nombres las herramientas.
@@ -1484,7 +1485,16 @@ const findOrCreateLead = async (sb: ReturnType<typeof createClient>, phone: stri
         if (Object.keys(clean).length) await sb.from("demo_requests").update(clean).eq("id", (existing as any).id);
         return (existing as any).id;
     }
-    const { data: ins } = await sb.from("demo_requests").insert({ phone, status: "pending", ...clean }).select("id").single();
+    // INSERT: garantizar columnas NOT NULL de demo_requests (name, clinic_name, phone, email)
+    const { data: ins, error: insErr } = await sb.from("demo_requests").insert({
+        phone,
+        status: "pending",
+        name: (fields.name as string) || "Lead WhatsApp",
+        clinic_name: (fields.clinic_name as string) || "",
+        email: (fields.email as string) || "",
+        ...clean,
+    }).select("id").single();
+    if (insErr) console.error("findOrCreateLead insert error:", insErr);
     return (ins as any)?.id;
 };
 
@@ -1510,7 +1520,7 @@ const agendarVideollamada = async (sb: ReturnType<typeof createClient>, phone: s
         `📱 ${phone}`,
         args.notes ? `📝 ${args.notes}` : "",
     ]);
-    return { success: true, message: "Videollamada agendada y el equipo fue notificado.", scheduled: args.preferred_datetime || "por coordinar" };
+    return { success: true, message: "Videollamada agendada con el fundador Sebastián Barrera. El equipo fue notificado.", con: "Sebastián Barrera (fundador de Citenly)", scheduled: args.preferred_datetime || "por coordinar" };
 };
 
 const escalarLeadCaliente = async (sb: ReturnType<typeof createClient>, phone: string, clinic: any, args: any) => {
