@@ -897,6 +897,52 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 
 ---
 
+### Cambios realizados — junio 2026 (sesión 25) — Correo de marca (Cloudflare) + Agente de ventas IA de HQ
+
+#### Fix créditos Enterprise (16.000 → 20.000) + copy correcto
+- Aclaración del fundador: los **créditos IA son finitos en todos los planes** (Starter 4.000 · Pro 8.000 · Enterprise 20.000). Lo **ilimitado en Pro/Enterprise son las CITAS** (`monthlyAppointmentsMonthly: -1`), no los créditos.
+- Enterprise estaba inconsistente: frontend `aiCreditsLimit: -1` + "Conversaciones ilimitadas", backend `16000`. Corregido a **20.000 finitos** en `signup-handler`, `mercadopago-webhook`, `lemonsqueezy-webhook` (deployados), `mercadopago.ts`, `lemonsqueezy.ts`, `Pricing.tsx`, `Landing.tsx` (reemplazado "Conversaciones ilimitadas" → "20.000 créditos IA/mes"). Pro ya estaba bien (8.000).
+- Única Enterprise en DB = Elizabeth (`ai_credits_unlimited=true`, caso especial — no se tocó). El `chat-agent` del sitio aún tiene precios viejos (Essence/Radiance/Prestige) — **pendiente** corregir.
+
+#### Burbuja de WhatsApp en `public/micropigmentadoras.html`
+- Botón flotante `.wa-bubble` (#25D366) abajo-derecha → `wa.me/56962303576` con mensaje pre-cargado + `fbq('track','Contact')`. Atendido por persona/agente de ventas. Responsive (pill desktop / ícono móvil).
+
+#### Correo de marca `ventas@citenly.com` — migración DNS a Cloudflare
+- **Dominio:** registrado en **Namecheap**; **sitio en Vercel** (A `@` → 76.76.21.21, CNAME `www` → cname.vercel-dns.com). Antes sin correo (MX vacío).
+- Se movió el **DNS (nameservers) a Cloudflare** (registrador sigue en Namecheap). NS: `chin.ns.cloudflare.com` / `tim.ns.cloudflare.com`. Registros Vercel quedaron **DNS only (gris)** — NO proxied (rompe SSL con Vercel).
+- ⚠️ **Resend ya estaba configurado** para envío de la app (MX `feedback-smtp.sa-east-1.amazonses.com` en `send.citenly.com` + DKIM `resend._domainkey` + SPF `send`) — **conservados**.
+- **Cloudflare Email Routing** activado → `ventas@citenly.com` reenvía a `citenly@gmail.com`. La regla de routing es la que publica los MX `route1/2/3.mx.cloudflare.net` (Status debe quedar **Enabled**; ojo: crear la regla NO basta, hay que activar el routing).
+- Con ese correo se creó la cuenta de **YCloud** para el número de ventas (YCloud no acepta Gmail).
+
+#### Fix diseño HQ — títulos legibles
+- `AdminDashboard.tsx` y `AdminSettings.tsx`: títulos `text-gray-900` (negros) sobre fondo oscuro → cambiados a `text-white` + subtítulos `text-gray-400`. (Los `text-gray-900` de `AdminMessages` están dentro de tarjetas blancas → se dejan.)
+
+#### Nueva sección HQ: Base de Conocimiento
+- `src/pages/hq/AdminKnowledge.tsx` (espejo enfocado de la KB de clientes, tema oscuro): CRUD sobre `knowledge_base` scopeada a `HQ_ID` + búsqueda + filtro por categoría. Ruta `/hq/knowledge`, ítem "Conocimiento" en `AdminLayout`.
+- **RLS:** política `"Platform admins manage HQ knowledge base"` en `knowledge_base` (FOR ALL, `clinic_id = HQ_ID AND auth.uid() IN (SELECT id FROM platform_admins)`). `knowledge_base.status` default `'active'` (los docs nuevos los lee el agente automáticamente).
+
+#### 🤖 Agente de ventas IA de HQ por WhatsApp (núcleo de la sesión)
+- **Número de ventas:** `+56962303576` registrado en la fila HQ (`clinic_settings` id `00000000-...`) con `ycloud_phone_number`, `ycloud_api_key` (seteada por SQL en el SQL Editor) y `ai_credits_unlimited = true` (no debe silenciarse).
+- **Webhook URL para YCloud:** `https://hubjqllcmbzoojyidgcu.supabase.co/functions/v1/ycloud-whatsapp-webhook` (mismo webhook que las clínicas).
+- **Rama de "modo ventas" en `ycloud-whatsapp-webhook`** (cambio quirúrgico y condicional por `clinic.id === HQ_ID`; el flujo de agendamiento de clínicas queda INTACTO):
+  - `buildSalesPrompt(knowledgeSummary)` — **persona "Sofía"**, consultiva: descubre la realidad del prospecto con preguntas y recomienda EL plan que calza + su valor en ese momento. **Cero tecnicismos** (lista negra: créditos IA, tokens, tier, modelo, GPT, API, webhook, prompt). No agresiva (ofrece la videollamada UNA vez). Ángulo **meta-demo** (revelar en el momento justo: "así como te atiendo, atenderá tu asistente a tus clientas"). Dice **"inasistencias"** (NUNCA "no-shows") y sabe que la IA **reagenda** citas.
+  - **Tools de ventas** (`getSalesFunctions`): `get_knowledge`, `registrar_lead`, `agendar_videollamada` (inserta en `demo_requests` + notifica al fundador vía `sendWA` a `DEMO_NOTIFY_PHONE`), `escalar_lead_caliente`. Implementados antes de `processFunc`; reúsan `callAI`, `sendWA` y el loop existentes.
+  - Condicionales en el flujo: el system prompt y `dynamicFns` cambian a versión ventas solo si `clinic.id === HQ_ID`.
+- **KB de HQ sembrada:** 16 documentos activos en `knowledge_base` (clinic_id HQ_ID), 100% lenguaje de cliente (qué es, dolores, asistente WhatsApp, agenda/reagenda, recordatorios, abono, reactivación, campañas, CRM, fidelización, finanzas, planes con precios, garantía, objeciones, demo, rubros). Editables en HQ → Conocimiento.
+- **Diseño conversacional (decisiones del fundador):** meta-demo revelado en el momento justo; precios **consultivos** (descubrir → recomendar plan + valor al instante); persona con nombre cálido ("Sofía"); jamás técnico.
+
+#### ⚠️ Issue conocido — primer mensaje al número HQ llega como "unsupported" (error 131060)
+- Al probar, el inbound al `+56962303576` llegó al webhook pero con `whatsappInboundMessage.type = "unsupported"` y error **131060 "This message is unavailable"** → el webhook lo ignora (`validTypes = [text, audio, image, interactive, button]`).
+- **Causa:** típico del **primer mensaje** tras conectar un número WABA, o mensajes reenviados / de una sola vista / no descifrables. NO es bug de código ni de OpenAI (las clínicas responden OK con el mismo webhook/keys).
+- **Fix:** reenviar un **texto plano nuevo**. Si persiste con texto plano, revisar el estado del número en YCloud (provisioning WABA). Mejora futura opcional: que el webhook responda un fallback amable ante `type: "unsupported"`.
+
+#### Pendientes Fase 2 (builds aparte)
+- **Sección Plantillas de HQ** (espejo de `Templates`).
+- **Sección Integraciones de HQ** (espejo de `Integrations`) — ahí se setearía la API key/secret por UI en vez de SQL. Hoy no bloquea (key puesta por SQL).
+- **Webhook secret (HMAC) para HQ** — la columna `ycloud_webhook_secret` NO existe en `clinic_settings`; el webhook corre permisivo sin secret. Crear columna + wiring = mejora de seguridad opcional.
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 18)
 
 #### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos
