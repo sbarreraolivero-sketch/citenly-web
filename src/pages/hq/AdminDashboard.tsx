@@ -209,8 +209,8 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Panel de Administración</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Gestiona las activaciones pendientes y cuentas de la plataforma.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Panel de Administración</h1>
+                    <p className="text-gray-400 mt-1 text-sm">Gestiona las activaciones pendientes y cuentas de la plataforma.</p>
                 </div>
             </div>
 

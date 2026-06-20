@@ -178,8 +178,8 @@ export default function AdminSettings() {
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-                <p className="text-gray-500 mt-1">Administra la configuración global de la plataforma Citenly.</p>
+                <h1 className="text-3xl font-bold text-white">Configuración</h1>
+                <p className="text-gray-400 mt-1">Administra la configuración global de la plataforma Citenly.</p>
             </div>
 
             {/* Tabs */}
