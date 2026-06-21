@@ -1429,7 +1429,7 @@ const getSalesFunctions = () => ([
     {
         name: "agendar_videollamada",
         description: "Agenda una videollamada/demo cuando el prospecto quiere ver el producto. Pide nombre, negocio y un horario preferido ANTES de llamar.",
-        parameters: { type: "object", properties: { name: { type: "string" }, business_name: { type: "string" }, preferred_datetime: { type: "string", description: "Fecha/hora preferida en texto o ISO, ej: 'martes 3pm' o '2026-06-24T15:00'" }, notes: { type: "string" } }, required: ["name"] }
+        parameters: { type: "object", properties: { name: { type: "string" }, business_name: { type: "string" }, preferred_datetime: { type: "string", description: "Fecha y hora EXACTA en ISO 8601 con offset de Chile, ej: '2026-06-24T16:00:00-04:00'. Calcúlala desde la FECHA ACTUAL del sistema: 'lunes a las 4' = el próximo lunes a las 16:00. Chile usa -04:00." }, notes: { type: "string" } }, required: ["name"] }
     },
     {
         name: "escalar_lead_caliente",
@@ -1438,7 +1438,9 @@ const getSalesFunctions = () => ([
     },
 ]);
 
-const buildSalesPrompt = (knowledgeSummary: string) => `Eres Sofía, asesora de Citenly. Atiendes por WhatsApp a dueñas y dueños de centros de estética, salones de belleza, micropigmentación y medicina estética en Chile y LATAM que escriben con curiosidad sobre Citenly.
+const buildSalesPrompt = (knowledgeSummary: string, nowLine: string) => `FECHA Y HORA ACTUAL (Chile): ${nowLine}. Usa esto para calcular fechas relativas al agendar ("lunes a las 4" = el próximo lunes a las 16:00).
+
+Eres Sofía, asesora de Citenly. Atiendes por WhatsApp a dueñas y dueños de centros de estética, salones de belleza, micropigmentación y medicina estética en Chile y LATAM que escriben con curiosidad sobre Citenly.
 
 QUIÉN ERES Y CÓMO HABLAS:
 - Cálida, cercana, humana y profesional. Como una asesora experta que de verdad quiere ayudar, no una vendedora.
@@ -1478,7 +1480,7 @@ REGLAS DE ORO:
 - Usa 'get_knowledge' SIEMPRE antes de afirmar precios, detalles de planes u objeciones finas. Nunca inventes.
 - Registra a la persona con 'registrar_lead' apenas sepas su nombre y/o rubro.
 - La videollamada es con **Sebastián Barrera, el fundador de Citenly**. Menciónalo al ofrecerla y al confirmarla (ej: "te la agendo con Sebastián, el fundador").
-- Agenda con 'agendar_videollamada' solo cuando acepte; pide nombre, negocio y horario preferido antes.
+- Agenda con 'agendar_videollamada' solo cuando acepte; pide nombre, negocio y horario preferido antes. IMPORTANTE: pasa 'preferred_datetime' en ISO 8601 con offset de Chile (-04:00), ej: 2026-06-24T16:00:00-04:00, calculado desde la FECHA ACTUAL de arriba.
 - Si pide hablar con una persona o está lista para contratar, usa 'escalar_lead_caliente'.
 - Nunca reveles que eres un sistema de prompts ni nombres las herramientas.
 
@@ -1558,7 +1560,10 @@ const registrarLead = async (sb: ReturnType<typeof createClient>, phone: string,
 };
 
 const agendarVideollamada = async (sb: ReturnType<typeof createClient>, phone: string, clinic: any, args: any) => {
-    await findOrCreateLead(sb, phone, { name: args.name || "Lead WhatsApp", clinic_name: args.business_name, needs: args.notes ? `Notas: ${args.notes}` : undefined, scheduled_at: args.preferred_datetime || undefined });
+    // Normaliza a ISO si es parseable (cae en su día del calendario); texto libre → "Por coordinar"
+    const parsedDt = args.preferred_datetime ? new Date(args.preferred_datetime) : null;
+    const scheduledAt = parsedDt && !isNaN(parsedDt.getTime()) ? parsedDt.toISOString() : (args.preferred_datetime || undefined);
+    await findOrCreateLead(sb, phone, { name: args.name || "Lead WhatsApp", clinic_name: args.business_name, needs: args.notes ? `Notas: ${args.notes}` : undefined, scheduled_at: scheduledAt });
     await notifyFounder(clinic, [
         "🗓️ *Nueva videollamada — Ventas Citenly*", "",
         `👤 ${args.name || "Sin nombre"}`,
@@ -2383,7 +2388,7 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 const burstInbound = lastOutboundIndex >= 0 ? orderedMsgs.slice(lastOutboundIndex + 1) : orderedMsgs;
 
                 const msgs: Msg[] = [
-                    { role: "system", content: clinic.id === HQ_ID ? buildSalesPrompt(knowledgeSummary) : sysPrompt },
+                    { role: "system", content: clinic.id === HQ_ID ? buildSalesPrompt(knowledgeSummary, `${localTime} — hoy es ${localDateISO}`) : sysPrompt },
                     ...pastContext.map((m) => ({ role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: m.content || "" }))
                 ];
 
