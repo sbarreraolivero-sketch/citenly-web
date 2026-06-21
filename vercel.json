@@ -5,6 +5,10 @@
             "destination": "/micropigmentadoras.html"
         },
         {
+            "source": "/estetica",
+            "destination": "/estetica.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
