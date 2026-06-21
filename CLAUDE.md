@@ -943,6 +943,46 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 
 ---
 
+### Cambios realizados — junio 2026 (sesión 26) — Agente "Sofía" consultivo, tracking Meta CTWA, calendario HQ
+
+#### Agente de ventas "Sofía" — rediseño conversacional consultivo (`buildSalesPrompt` en `ycloud-whatsapp-webhook`)
+- **Persona "Sofía"**, consultiva: descubre la realidad del prospecto con preguntas (rubro, equipo, sedes, dolor) → recomienda EL plan que calza + su valor **en ese momento**. NO agresiva (ofrece la videollamada UNA vez).
+- **Cero tecnicismos** (lista negra: créditos IA, tokens, tier, modelo, GPT, API, webhook, prompt). Dice **"inasistencias"** (nunca "no-shows"). Sabe que la IA **reagenda**.
+- **Meta-demo:** revela en el momento justo que **ella misma es una IA** ("así como te atiendo, atenderá tu asistente a tus clientas"); menciona/demuestra que **entiende notas de voz** (el webhook ya transcribe audios con Whisper, `transcribeAudioData`).
+- **Videollamada con el fundador Sebastián Barrera** (mencionado al ofrecer/confirmar; el tool `agendar_videollamada` lo devuelve).
+- **Fecha ISO exacta:** se inyecta `FECHA Y HORA ACTUAL (Chile)` al prompt; el tool pide `preferred_datetime` en ISO 8601 con offset `-04:00`; `agendarVideollamada` normaliza a ISO → cae en su día en el calendario HQ.
+- **KB sembrada:** 16 documentos activos en `knowledge_base` (clinic_id HQ_ID), lenguaje 100% de cliente. Editables en HQ → Conocimiento.
+
+#### Fixes del agente
+- **`ai_auto_respond = false` en HQ** → el agente no respondía (webhook retorna `ai_disabled`). Activado en la fila HQ. **Toggle ON/OFF agregado en HQ → Integraciones.**
+- **Leads no se guardaban:** `demo_requests` tiene `email`/`clinic_name`/`name` como **NOT NULL**; `findOrCreateLead` no los enviaba → INSERT fallaba en silencio. Corregido (incluye defaults + loguea errores). Ahora los leads de Sofía entran al CRM.
+- **Issue "unsupported" (error 131060):** el primer mensaje a un número WABA recién conectado llega como `type: "unsupported"` y el webhook lo ignora (`validTypes`). NO es bug — reenviar texto plano. Documentado.
+
+#### Nuevas secciones HQ + rediseño
+- **HQ → Integraciones** (`AdminIntegrations.tsx`): tarjeta del Asistente de Ventas WhatsApp con número + badge de estado + **toggle del agente** (`ai_auto_respond` vía REST PATCH, política "Platform admins can update clinic settings"). Ruta `/hq/integrations`.
+- **Rediseño dark** de Activaciones (`AdminDashboard`) y Configuración (`AdminSettings`): fuera cajas blancas → `bg-gray-800/border-gray-700`. Fix padding móvil (las páginas ya no duplican el `p-4 md:p-6` del `<main>` del AdminLayout).
+- **Calendario HQ** (`/hq/calendar`, antes "Demos"): nuevo `src/components/hq/HQCalendar.tsx` (vista mensual **dark responsive** — chips en desktop, puntos + agenda del día en móvil, color por estado, usa `date-fns`). `AdminCalendar.tsx` tiene **toggle Calendario/Lista** (calendario por defecto), mapea `demo_requests` + `hq_appointments` a eventos, modal de detalle con acciones de estado, y sección **"Por coordinar"** para fechas en texto libre. Menú: "Demos" → "Calendario".
+
+#### Landing micropigmentistas — WhatsApp como 2º CTA
+- Botón secundario **"Escríbenos por WhatsApp"** (verde, jerarquía bajo el primario rosa) en el hero, junto a "Agendar Reunión Demo". Justificado ahora que Sofía responde 24/7. Trackea `fbq('track','Contact')`.
+
+#### Tracking de Meta — Conversions API para Click-to-WhatsApp (CTWA)
+- **Webhook:** `sendMetaCAPI()` reporta a Meta los eventos reales del chat: `registrar_lead` → **`Lead`**, `agendar_videollamada` → **`Schedule`**. Recupera el `ctwa_clid` del primer mensaje del anuncio (guardado en `messages.payload`) y lo envía al dataset vía `graph.facebook.com/v21.0/{dataset}/events` (`action_source: business_messaging`, `messaging_channel: whatsapp`). Gated tras env vars.
+- **Setup en Meta (hecho):** dataset **"Citenly Pixel" = `1010227561873487`**; **system user "Conversions API System User"**; **app "Citenly App"** (developers.facebook.com, caso de uso "API de marketing", permiso `ads_management`); token generado del system user.
+- **Secrets en Supabase (seteados):** `META_CAPI_DATASET_ID=1010227561873487`, `META_CAPI_ACCESS_TOKEN`.
+- **Solo dispara con anuncios CTWA** (el `wa.me` de la landing NO trae `ctwa_clid`; ahí solo está el clic vía Pixel). El webhook loguea `Meta CAPI error: ...` si Meta rechaza el formato.
+
+#### Otros
+- **Debounce del webhook 30s → 15s** (rolling/auto-reset: cada mensaje espera 15s desde su llegada; el más nuevo resetea y solo el último procesa). Global (todas las clínicas).
+
+#### Pendientes (en orden)
+1. **Sección Plantillas de HQ** (espejo de `Templates`) — para mensajes proactivos/seguimiento.
+2. **HMAC (webhook secret)** — crear columna `ycloud_webhook_secret` + wiring en `verifyYCloudSignature`.
+3. **Repaso móvil** del resto de páginas HQ (Mensajes, CRM, Clínicas).
+4. (Opcional) **DST del offset de Chile** en el agendamiento ISO de Sofía (hoy hardcodeado `-04:00`, correcto en invierno; revisar en verano).
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 18)
 
 #### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos
