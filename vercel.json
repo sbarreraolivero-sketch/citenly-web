@@ -9,6 +9,10 @@
             "destination": "/estetica.html"
         },
         {
+            "source": "/tatuadores",
+            "destination": "/tatuadores.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
