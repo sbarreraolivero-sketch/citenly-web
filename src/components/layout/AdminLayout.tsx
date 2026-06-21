@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 const navigation = [
     { name: 'Activaciones', href: '/hq/dashboard', icon: Activity },
     { name: 'Mensajes',     href: '/hq/messages',  icon: MessageSquare },
-    { name: 'Demos',        href: '/hq/calendar',  icon: Calendar },
+    { name: 'Calendario',   href: '/hq/calendar',  icon: Calendar },
     { name: 'CRM',          href: '/hq/crm',       icon: Target },
     { name: 'Clínicas',     href: '/hq/clinics',   icon: Users },
     { name: 'Conocimiento', href: '/hq/knowledge', icon: BookOpen },
