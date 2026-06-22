@@ -95,6 +95,7 @@ const classifyMessage = (body: string, isImage: boolean): number => {
     const n2Keywords = [
         "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
         "cancelar", "cancelo", "reagendar", "no podré", "no podre", "no puedo ir", "no voy", "cerrado", "afuera", "atrasada", "atrasado", "esperando",
+        "confirmo", "confirmar", "confirmado", "confirmada",
         "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
         "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ];
@@ -753,7 +754,7 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
             success: true,
             status: "pending_deposit",
             appointment_id: data.id,
-            message: `Horario reservado provisionalmente.\n\n📅 ${dateLabel}\n🕐 ${timeLabel}\n💆 ${args.service_name}\n\n⚠️ El turno queda reservado por 2 horas. Para confirmarlo definitivamente necesitas recibir el comprobante de transferencia. Una vez que lo envíen y lo verifiques llama a 'confirm_appointment' con response='yes'.`
+            message: `Horario GUARDADO temporalmente por 30 minutos.\n\n📅 ${dateLabel}\n🕐 ${timeLabel}\n💆 ${args.service_name}\n\n⚠️ El cupo NO está asegurado todavía: solo se asegura cuando el cliente envíe el comprobante de transferencia. Comunícale con claridad que se lo guardas 30 minutos mientras transfiere y que si no llega el comprobante el cupo se libera. Cuando recibas el comprobante y lo verifiques, llama a 'confirm_appointment' con response='yes'.`
         };
     }
 
@@ -2010,6 +2011,9 @@ Deno.serve(async (req) => {
         let isImage = false;
         let base64ImageObj: any = null;
         let payloadExtra: any = {};
+        // True cuando el inbound es la respuesta a un BOTÓN de plantilla (confirmar/cancelar).
+        // Estas respuestas son inequívocas y se manejan de forma determinista (sin pasar por el modelo).
+        let isTemplateButtonReply = false;
 
         if (msgObj.type === "text") {
             body = msgObj.text?.body || "";
@@ -2052,11 +2056,13 @@ Deno.serve(async (req) => {
             const interactive = msgObj.interactive;
             if (interactive.type === "button_reply") {
                 body = interactive.button_reply?.title || "";
+                isTemplateButtonReply = true;
             } else if (interactive.type === "list_reply") {
                 body = interactive.list_reply?.title || "";
             }
         } else if (msgObj.type === "button" && msgObj.button) {
-            body = msgObj.button.text || "";
+            body = msgObj.button.text || msgObj.button.payload || "";
+            isTemplateButtonReply = true;
         }
 
         // Add context from Facebook Ad referral if present
@@ -2108,6 +2114,54 @@ Deno.serve(async (req) => {
                 await debugLog(sb, `Posible cancelación en modo humano — notificada (NO se canceló) para ${from}`, { body });
             }
             return new Response(JSON.stringify({ status: "saved_silently", reason: "requires_human" }), { headers: corsHeaders });
+        }
+
+        // --- MANEJO DETERMINISTA DE BOTONES DE PLANTILLA (confirmar / cancelar) ---
+        // Las respuestas a los botones de la plantilla de confirmación son inequívocas y NO deben
+        // depender del criterio del modelo (incidente 22-jun-2026: "Sí, confirmo" → la IA preguntó
+        // "¿deseas cancelar?"). Se resuelven aquí, antes de llamar a la IA y sin consumir créditos.
+        if (isTemplateButtonReply && clinic.id !== HQ_ID) {
+            const btn = body.toLowerCase();
+            const isConfirmBtn = (btn.includes("confirm") || btn.includes("sí, confirmo") || btn.includes("si, confirmo")) && !btn.includes("cancel");
+            const isCancelBtn = btn.includes("cancel") || btn.includes("no asist") || btn.includes("no podré") || btn.includes("no podre");
+
+            if (isConfirmBtn) {
+                const result = await confirmAppt(sb, clinic.id, from, "yes");
+                const reply = (result as any)?.confirmed_appointment
+                    ? `¡Tu cita de ${(result as any).confirmed_appointment.service} quedó confirmada para el ${(result as any).confirmed_appointment.date} a las ${(result as any).confirmed_appointment.time}! 😊✨ ¡Te esperamos! 🌿💖`
+                    : (result as any)?.message || "¡Cita confirmada! 😊✨";
+                await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply).catch(e => console.error("[btn confirm] sendWA error:", e));
+                await saveMsg(sb, clinic.id, from, reply, "outbound", { message_type: "text" });
+                await debugLog(sb, `Botón de confirmación manejado deterministamente para ${from}`, { body });
+                return new Response(JSON.stringify({ status: "handled", reason: "confirm_button" }), { headers: corsHeaders });
+            }
+
+            if (isCancelBtn) {
+                // No cancelamos directo: aplicamos el paso 1 de la regla 9.5 (confirmación en dos pasos).
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const { data: appt } = await sb.from("appointments")
+                    .select("appointment_date, service, status")
+                    .eq("clinic_id", clinic.id)
+                    .eq("phone_number", normalizePhone(from))
+                    .in("status", ["pending", "pending_deposit", "confirmed"])
+                    .gte("appointment_date", twentyFourHoursAgo)
+                    .order("appointment_date", { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+                let reply: string;
+                if (appt) {
+                    const d = new Date(appt.appointment_date);
+                    const dateLabel = d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric", timeZone: "America/Santiago" });
+                    const timeLabel = d.toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Santiago" });
+                    reply = `¿Confirmas que deseas cancelar tu cita del ${dateLabel} a las ${timeLabel}? Responde *Sí* para cancelarla. 🌿`;
+                } else {
+                    reply = "No encontré una cita activa a tu nombre en este momento. Si necesitas ayuda, escríbeme y con gusto te asisto. 🌿";
+                }
+                await sendWA(clinic.ycloud_api_key, from, clinic.ycloud_phone_number || to, reply).catch(e => console.error("[btn cancel] sendWA error:", e));
+                await saveMsg(sb, clinic.id, from, reply, "outbound", { message_type: "text" });
+                await debugLog(sb, `Botón de cancelación manejado deterministamente (paso 1) para ${from}`, { body });
+                return new Response(JSON.stringify({ status: "handled", reason: "cancel_button" }), { headers: corsHeaders });
+            }
         }
 
         // --- UNIFIED AI CREDIT CHECK ---
@@ -2297,8 +2351,8 @@ ${lagRule}
    d) Registro: CUANDO TENGAS EL NOMBRE REAL Y EL HORARIO, OBLIGATORIAMENTE DEBES LLAMAR a la herramienta 'create_appointment' con 'patient_name', 'date', 'time' y 'service_name'. NO ENVÍES TEXTO CONFIRMANDO LA CITA AÚN.
    e) Confirmación: ${clinic.require_deposit_first && clinic.transfer_details
         ? `FLUJO CON ABONO PREVIO OBLIGATORIO — sigue este orden estrictamente:
-      1. Una vez que 'create_appointment' devuelva 'success: true', el turno queda reservado PROVISIONALMENTE por 2 horas.
-      2. Comunica al cliente que el horario está RESERVADO (no confirmado) y que para asegurarlo debe enviar el comprobante de transferencia. Usa exactamente este mensaje de pago:\n         ${clinic.transfer_details}
+      1. Una vez que 'create_appointment' devuelva 'success: true', el turno queda GUARDADO temporalmente por 30 minutos.
+      2. SÉ TOTALMENTE CLARO con el cliente sobre cómo funciona el cupo: dile que se lo GUARDAS por 30 minutos mientras transfiere, pero que el horario queda ASEGURADO únicamente cuando recibes su comprobante de transferencia; si no llega el comprobante, el cupo se libera para otra persona. NUNCA des a entender que el horario ya está confirmado o garantizado sin el comprobante. Usa exactamente estos datos de pago:\n         ${clinic.transfer_details}
       REGLA CRÍTICA ANTI-ALUCINACIÓN: Una vez enviados los datos de pago, NUNCA vuelvas a llamar 'check_availability' para este mismo cliente. Si el cliente dice "okey", "entendido", "voy a transferir" o cualquier confirmación verbal — NO reabras el flujo de agendamiento ni ofrezcas otros horarios. El slot YA está bloqueado en la base de datos a su nombre. Responde únicamente "Perfecto, quedo esperando tu comprobante 🌿✨" y nada más.
       3. ESPERA a que el cliente envíe una IMAGEN (comprobante). Si solo dice "ya pagué" o "listo" sin imagen, EXIGE la imagen antes de continuar.
       4. Cuando recibas la imagen, analízala visualmente con estos criterios ESTRICTOS EN ESTE ORDEN:
@@ -2411,7 +2465,23 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                 }
 
                 // --- HYBRID AI ROUTING & CLASSIFICATION ---
-                const tier = classifyMessage(body, isImage);
+                let tier = classifyMessage(body, isImage);
+
+                // ESCALADA POR SELECCIÓN DE HORARIO: si el último mensaje de la IA ofreció horarios,
+                // el mensaje actual del cliente es casi siempre la selección del cupo (paso crítico de
+                // agendamiento). Frases como "a las 4 podría ser" no tienen keywords y caían en el
+                // modelo simple (Tier 1), que se saltaba 'create_appointment'. Forzamos Tier 2 para que
+                // el modelo inteligente respete el orden obligatorio (nombre → create_appointment → abono).
+                if (clinic.id !== HQ_ID && tier < 2 && !isImage) {
+                    const lastBotMsg = lastOutboundIndex >= 0 ? (orderedMsgs[lastOutboundIndex]?.content || "") : "";
+                    const botOfferedSlots = /\d{1,2}:\d{2}\s*(AM|PM)/i.test(lastBotMsg)
+                        || /horarios? disponibles|disponibilidad|tenemos.*(cupos|horarios)|podemos agendar/i.test(lastBotMsg);
+                    if (botOfferedSlots) {
+                        tier = 2;
+                        console.log("[Hybrid AI] Escalado a Tier 2: la IA acaba de ofrecer horarios (selección de cupo).");
+                    }
+                }
+
                 const optimalModel = getOptimalModel(tier, clinic.ai_strategy || 'auto');
                 const creditCost = TIER_COSTS[tier] || 1;
 
@@ -2469,7 +2539,58 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     maxCalls--;
                 }
 
-                const finalReply = assistant.content || "Error. ¿Puedes repetir?";
+                let finalReply = assistant.content || "Error. ¿Puedes repetir?";
+
+                // --- CANDADOS DE SEGURIDAD (a nivel sistema, no dependen de que la IA obedezca) ---
+                // Solo aplican a clínicas (no al agente de ventas de HQ).
+                if (clinic.id !== HQ_ID) {
+                    // ¿La respuesta está soltando los DATOS BANCARIOS de transferencia?
+                    // Detectamos si la respuesta repite alguna línea con dígitos de clinic.transfer_details.
+                    const sendingBankData = (() => {
+                        if (!clinic.transfer_details) return false;
+                        const lines = String(clinic.transfer_details)
+                            .split(/\n|•|·|-/)
+                            .map((s: string) => s.trim())
+                            .filter((s: string) => s.length > 6 && /\d/.test(s));
+                        return lines.some((l: string) => finalReply.includes(l));
+                    })();
+
+                    // ¿La respuesta AFIRMA que la cita quedó confirmada/reservada/agendada?
+                    // Usamos participios (confirmada/reservado/agendadas...) para NO confundir con los
+                    // infinitivos de una oferta ("¿quieres reservar?", "podemos agendar"). Además
+                    // excluimos frases NEGATIVAS ("no tienes ninguna cita reservada") para evitar falsos positivos.
+                    const mentionsBooked = /(confirmad|reservad|agendad)[ao]s?\b/i.test(finalReply);
+                    const isNegated = /\bno\s+(tienes|tiene|hay|existe|tengo|encontr|cuentas?\s+con|posees|registr)/i.test(finalReply);
+                    const claimsBooked = mentionsBooked && !isNegated;
+
+                    if (sendingBankData || claimsBooked) {
+                        // Fuente de verdad: ¿existe realmente una cita activa para este teléfono?
+                        const normPhone = normalizePhone(from);
+                        const { data: activeAppt } = await sb.from("appointments")
+                            .select("id, status")
+                            .eq("clinic_id", clinic.id)
+                            .eq("phone_number", normPhone)
+                            .in("status", ["pending", "pending_deposit", "confirmed"])
+                            .order("created_at", { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        // CANDADO DE ABONO: no enviar datos de transferencia si no hay cita registrada.
+                        if (sendingBankData && !activeAppt) {
+                            console.warn("[LOCK] Bloqueado envío de datos de abono sin cita registrada.");
+                            await debugLog(sb, "LOCK: abono sin reserva", { phone: from });
+                            finalReply = "¡Con gusto te aparto el horario! 🌿 Para reservarlo necesito tu *nombre completo* y el horario que prefieres. En cuanto lo registre te paso los datos para el abono. ✨";
+                        }
+                        // CANDADO DE CONFIRMACIÓN: no afirmar cita confirmada/reservada si no existe.
+                        else if (claimsBooked && !activeAppt) {
+                            console.warn("[LOCK] Bloqueada confirmación falsa: no hay cita activa.");
+                            await debugLog(sb, "LOCK: confirmación falsa", { phone: from });
+                            finalReply = "Disculpa, no logré dejar tu cita registrada en el sistema. ¿Me confirmas tu *nombre completo* y el horario que prefieres para agendarla correctamente? 🌿";
+                        }
+                    }
+                }
+                // ------------------------------------------------------------------------------------
+
                 await saveMsg(sb, clinic.id, from, finalReply, "outbound", {
                     ai_generated: true,
                     ai_model: optimalModel,

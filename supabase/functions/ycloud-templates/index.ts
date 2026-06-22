@@ -82,7 +82,27 @@ Deno.serve(async (req: Request) => {
 
       if (payload.action === 'delete') {
         if (!templateName) throw new Error('Template name required for deletion')
-        const ycloudRes = await fetch(`${YCLOUD_BASE}/${templateName}`, {
+
+        // YCloud identifica el borrado por wabaId + name (NO por name solo).
+        // El path correcto es /templates/{wabaId}/{name}; usar solo el name devuelve 404
+        // "No message available". Resolver el wabaId desde el listado de plantillas.
+        let wabaId = payload.wabaId || null
+        if (!wabaId) {
+          const listRes = await fetch(`${YCLOUD_BASE}?limit=100`, { headers: { 'X-API-Key': YCLOUD_KEY } })
+          const listData = await listRes.json().catch(() => ({}))
+          const items = listData.items || listData.data || []
+          const match = items.find((t: any) => t.name === templateName)
+          if (!match) {
+            return new Response(JSON.stringify({ error: `No se encontró la plantilla '${templateName}' en esta cuenta.`, isError: true }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200
+            })
+          }
+          wabaId = match.wabaId
+        }
+
+        // DELETE /templates/{wabaId}/{name} → borra todos los idiomas de esa plantilla
+        const ycloudRes = await fetch(`${YCLOUD_BASE}/${wabaId}/${templateName}`, {
           method: 'DELETE',
           headers: { 'X-API-Key': YCLOUD_KEY }
         })
@@ -94,8 +114,11 @@ Deno.serve(async (req: Request) => {
           catch { data = { message: responseText } }
         }
 
-        if (!ycloudRes.ok) data.isError = true
-        if (!ycloudRes.ok && data.message) data.error = data.message
+        if (!ycloudRes.ok) {
+          data.isError = true
+          // El error de YCloud viene anidado en {error:{message}} o plano en {message}
+          if (!data.error) data.error = data.message || 'No se pudo eliminar la plantilla en YCloud'
+        }
 
         return new Response(JSON.stringify(data), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

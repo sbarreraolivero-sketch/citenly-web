@@ -29,7 +29,7 @@ interface ReminderSettings {
     reminder_1h_before: boolean
     template_24h: string | null
     template_2h: string | null
-    template_1h: string | null
+    template_confirmation: string | null
 }
 
 export default function Reminders() {
@@ -41,7 +41,7 @@ export default function Reminders() {
     const [savingSettings, setSavingSettings] = useState(false)
     const [purchasingPack, setPurchasingPack] = useState<string | null>(null)
     const [paymentRegion, setPaymentRegion] = useState<'chile' | 'international'>('chile')
-    const [localTemplates, setLocalTemplates] = useState({ template_24h: '', template_2h: '', template_1h: '' })
+    const [localTemplates, setLocalTemplates] = useState({ template_24h: '', template_2h: '', template_confirmation: '' })
     const [savingTemplates, setSavingTemplates] = useState(false)
     const [templatesSaved, setTemplatesSaved] = useState(false)
 
@@ -76,7 +76,7 @@ export default function Reminders() {
             setLocalTemplates({
                 template_24h: s.template_24h || '',
                 template_2h: s.template_2h || '',
-                template_1h: s.template_1h || '',
+                template_confirmation: s.template_confirmation || '',
             })
         }
 
@@ -233,9 +233,8 @@ export default function Reminders() {
                                 <h2 className="text-base font-black text-primary-theme mb-5">Recordatorios Activos</h2>
                                 <div className="space-y-3">
                                     {[
-                                        { field: 'reminder_24h_before' as const, label: '24 horas antes', desc: 'Recuerda la cita el día anterior' },
-                                        { field: 'reminder_2h_before' as const, label: '2 horas antes', desc: 'Recordatorio de confirmación final' },
-                                        { field: 'reminder_1h_before' as const, label: 'Confirmación', desc: 'Solicita al cliente confirmar la cita' },
+                                        { field: 'reminder_24h_before' as const, label: '24 horas antes', desc: 'Recuerda la cita el día anterior y pide confirmación' },
+                                        { field: 'reminder_2h_before' as const, label: '2 horas antes', desc: 'Recordatorio final antes de la cita' },
                                     ].map(item => (
                                         <div key={item.field} className={cn(
                                             'flex items-center justify-between p-4 rounded-xl border-2 transition-all',
@@ -363,10 +362,10 @@ export default function Reminders() {
                                 </div>
                                 <div className="p-4 bg-secondary-theme/50 rounded-xl border border-theme">
                                     <TemplateSelector
-                                        label="Plantilla: Confirmación"
-                                        description="Mensaje que solicita al cliente confirmar su cita."
-                                        value={localTemplates.template_1h}
-                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_1h: val }))}
+                                        label="Plantilla: Confirmación (24h)"
+                                        description="Plantilla con botones que se envía en el recordatorio de 24h para que el cliente confirme su cita."
+                                        value={localTemplates.template_confirmation}
+                                        onChange={(val) => setLocalTemplates(p => ({ ...p, template_confirmation: val }))}
                                     />
                                 </div>
                             </div>
