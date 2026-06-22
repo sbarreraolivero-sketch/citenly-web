@@ -217,8 +217,10 @@ Deno.serve(async (req) => {
                     const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                     const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
+                    // La confirmación con botones se pide SOLO en la ventana de 24h y SOLO si la cita
+                    // aún no fue confirmada. Una vez confirmada (o en 2h/1h), se usa recordatorio plano.
                     let tplName = settings.template_24h || 'appointment_reminder'
-                    if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending') {
+                    if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending' && !appt.confirmation_received) {
                         tplName = settings.template_confirmation
                     }
 
@@ -386,10 +388,9 @@ Deno.serve(async (req) => {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
-                        let tplName2h = settings.template_2h || 'appointment_reminder'
-                        if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending') {
-                            tplName2h = settings.template_confirmation
-                        }
+                        // El recordatorio de 2h es SIEMPRE plano (sin botones de confirmación).
+                        // La confirmación se pide únicamente en la ventana de 24h.
+                        const tplName2h = settings.template_2h || 'appointment_reminder'
 
                         const messagePayload = {
                             to: appt.phone_number,
@@ -469,24 +470,16 @@ Deno.serve(async (req) => {
         }
 
         // ==========================================
-        // PART 3: 1-Hour Reminders
+        // PART 3: 1-Hour Reminders — ELIMINADO PERMANENTEMENTE
+        // Los recordatorios de 1 hora (columna `reminder_1h_before`, expuesta en la UI como el
+        // toggle "Confirmación") quedaron deshabilitados por decisión de negocio: la confirmación
+        // se solicita UNA sola vez, en la ventana de 24h. Este bloque NUNCA debe enviar, sin
+        // importar el valor de `reminder_1h_before` en la base de datos.
         // ==========================================
 
-        const { data: oneHourSettingsList, error: oneHourError } = await supabaseClient
-            .from('reminder_settings')
-            .select(`
-                *,
-                clinic_settings (
-                    id,
-                    clinic_name,
-                    timezone,
-                    ycloud_api_key,
-                    ycloud_phone_number
-                )
-            `)
-            .eq('reminder_1h_before', true)
-
-        if (!oneHourError && oneHourSettingsList?.length > 0) {
+        const oneHourError: any = null
+        const oneHourSettingsList: any[] = []
+        if (false && !oneHourError && oneHourSettingsList?.length > 0) {
             log.push(`Found ${oneHourSettingsList.length} clinics with 1h reminders enabled`)
             await debugLog('Starting 1h reminders check', { clinicsCount: oneHourSettingsList.length });
 
@@ -540,10 +533,9 @@ Deno.serve(async (req) => {
                         const formattedDate = apptDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
                         const formattedTime = apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone })
 
-                        let tplName1h = settings.template_1h || 'appointment_reminder'
-                        if (settings.request_confirmation && settings.template_confirmation && appt.status === 'pending') {
-                            tplName1h = settings.template_confirmation
-                        }
+                        // El recordatorio de 1h es SIEMPRE plano (sin botones de confirmación).
+                        // La confirmación se pide únicamente en la ventana de 24h.
+                        const tplName1h = settings.template_1h || 'appointment_reminder'
 
                         const messagePayload = {
                             to: appt.phone_number,

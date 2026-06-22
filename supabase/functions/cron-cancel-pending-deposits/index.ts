@@ -29,8 +29,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Citas con abono pendiente creadas hace más de 2 horas
-    const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+    // Citas con abono pendiente creadas hace más de 30 minutos.
+    // El cupo se "guarda" 30 min mientras el cliente transfiere; si no llega comprobante, se libera.
+    const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString()
 
     const { data: expired, error: fetchError } = await supabase
       .from('appointments')
