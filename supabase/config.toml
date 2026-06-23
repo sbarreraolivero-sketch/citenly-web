@@ -28,6 +28,9 @@ verify_jwt = false
 [functions.cron-process-reminders]
 verify_jwt = false
 
+[functions.cron-demo-reminders]
+verify_jwt = false
+
 [functions.cron-process-surveys]
 verify_jwt = false
 
