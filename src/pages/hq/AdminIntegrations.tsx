@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plug, MessageCircle, Loader2, CheckCircle2, PauseCircle, AlertCircle } from 'lucide-react'
+import { Plug, MessageCircle, Loader2, CheckCircle2, PauseCircle, AlertCircle, KeyRound, Save, ChevronDown } from 'lucide-react'
 
 const HQ_ID = '00000000-0000-0000-0000-000000000000'
 
@@ -11,6 +11,11 @@ export default function AdminIntegrations() {
     const [hasKey, setHasKey] = useState(false)
     const [active, setActive] = useState(false)
     const [error, setError] = useState('')
+    const [showConfig, setShowConfig] = useState(false)
+    const [formPhone, setFormPhone] = useState('')
+    const [formKey, setFormKey] = useState('')
+    const [savingCfg, setSavingCfg] = useState(false)
+    const [cfgMsg, setCfgMsg] = useState('')
 
     const fetchData = async () => {
         setLoading(true)
@@ -54,6 +59,40 @@ export default function AdminIntegrations() {
             setError('No se pudo actualizar. Intenta de nuevo.')
         }
         setSaving(false)
+    }
+
+    const openConfig = () => {
+        setFormPhone(phone || ''); setFormKey(''); setCfgMsg(''); setShowConfig(v => !v)
+    }
+
+    const saveConfig = async () => {
+        const payload: Record<string, string> = {}
+        if (formPhone.trim()) payload.ycloud_phone_number = formPhone.trim()
+        if (formKey.trim()) payload.ycloud_api_key = formKey.trim()
+        if (!Object.keys(payload).length) { setCfgMsg('No hay cambios para guardar.'); return }
+        setSavingCfg(true); setCfgMsg('')
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/clinic_settings?id=eq.${HQ_ID}`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+                    'Authorization': `Bearer ${session?.access_token ?? ''}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal',
+                },
+                body: JSON.stringify(payload),
+            }
+        )
+        if (res.ok) {
+            setCfgMsg('Conexión guardada ✅')
+            setFormKey('')
+            await fetchData()
+        } else {
+            setCfgMsg('No se pudo guardar. Revisa los datos e intenta de nuevo.')
+        }
+        setSavingCfg(false)
     }
 
     const connected = !!phone && hasKey
@@ -125,6 +164,36 @@ export default function AdminIntegrations() {
                         {!connected && (
                             <p className="text-amber-300/80 text-xs mt-3">Falta el número o la API key de YCloud para activar el agente.</p>
                         )}
+
+                        {/* Configurar conexión YCloud */}
+                        <div className="mt-5 pt-5 border-t border-gray-700">
+                            <button onClick={openConfig} className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
+                                <KeyRound className="w-4 h-4" /> Configurar conexión de YCloud
+                                <ChevronDown className={`w-4 h-4 transition-transform ${showConfig ? 'rotate-180' : ''}`} />
+                            </button>
+                            {showConfig && (
+                                <div className="mt-4 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1.5">Número de YCloud</label>
+                                        <input value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="+56962303576"
+                                            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF2E88]" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1.5">API key de YCloud</label>
+                                        <input type="password" value={formKey} onChange={e => setFormKey(e.target.value)}
+                                            placeholder={hasKey ? '•••• conectada — escribe una nueva para reemplazar' : 'Pega la API key del número'}
+                                            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF2E88]" />
+                                        <p className="text-[11px] text-gray-500 mt-1">{hasKey ? 'Ya hay una key guardada. Déjala vacía para no cambiarla.' : 'Necesaria para que el agente y las plantillas funcionen.'}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={saveConfig} disabled={savingCfg} className="inline-flex items-center gap-2 bg-[#FF2E88] hover:bg-[#e0007a] disabled:opacity-60 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors">
+                                            {savingCfg ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Guardar conexión
+                                        </button>
+                                        {cfgMsg && <span className="text-sm text-gray-300">{cfgMsg}</span>}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
