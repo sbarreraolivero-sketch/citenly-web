@@ -67,7 +67,7 @@ export default function AdminTemplates() {
         setSaving(true); setError('')
         try {
             const exampleArr = vars.map(v => examples[v].trim())
-            await retentionService.createRemoteTemplate(HQ_ID, cleanName, body.trim(), undefined, exampleArr)
+            await retentionService.createRemoteTemplate(HQ_ID, cleanName, body.trim(), undefined, exampleArr, undefined, category)
             setModalOpen(false)
             await fetchTemplates()
         } catch (e: any) {
