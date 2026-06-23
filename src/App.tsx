@@ -47,6 +47,7 @@ const AdminMessages = lazy(() => import('./pages/hq/AdminMessages'))
 const AdminCRM = lazy(() => import('./pages/hq/AdminCRM'))
 const AdminKnowledge = lazy(() => import('./pages/hq/AdminKnowledge'))
 const AdminIntegrations = lazy(() => import('./pages/hq/AdminIntegrations'))
+const AdminTemplates = lazy(() => import('./pages/hq/AdminTemplates'))
 const AISettings = lazy(() => import('./pages/AISettings'))
 const Integrations = lazy(() => import('./pages/Integrations'))
 
@@ -81,6 +82,7 @@ function HQRoutes() {
                             <Route path="clinics" element={<AdminClinics />} />
                             <Route path="crm" element={<AdminCRM />} />
                             <Route path="knowledge" element={<AdminKnowledge />} />
+                            <Route path="templates" element={<AdminTemplates />} />
                             <Route path="integrations" element={<AdminIntegrations />} />
                             <Route path="settings" element={<AdminSettings />} />
                         </Route>
