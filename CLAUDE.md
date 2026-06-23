@@ -596,6 +596,14 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 
 ## Tareas pendientes
 
+### ✅ RESUELTO (sesión 27) — FIX INCIDENTE CLARA DESPLEGADO
+Los 4 cambios anti-incidente se **desplegaron a producción el 23-jun-2026** (paquete `d01f7fe`):
+- [x] **`ycloud-whatsapp-webhook` v162** — candados de abono/confirmación + manejo determinista de botones + escalada a Tier 2 en selección de horario (todo scopeado a `clinic.id !== HQ_ID`)
+- [x] **`cron-cancel-pending-deposits`** — corte 2h → 30 min
+- [x] **`cron-process-reminders`** (confirmación única en 24h, 1h eliminado) + **`ycloud-templates`** (fix borrado por wabaId) — mismo paquete
+- [x] **pg_cron Job 17 en `*/15 * * * *`** (ya estaba; confirmado) → el "cupo 30 min" se respeta
+- [ ] **PENDIENTE OPERATIVO — clienta Clara Cecilia Barros Mora** (`56978916921`, RUT 12.964.503-2): pagó el abono de $10.000 por un cupo que nunca se reservó. Devolverle el dinero o reagendar + disculpa.
+
 ### Alta prioridad — pasos manuales bloqueantes (sesión 20)
 - [ ] **`LS_VARIANT_CAMPAIGN_CREDITS` secret** — el botón "Comprar créditos de campaña" llama a LemonSqueezy con un variant de precio variable. Necesita que el variant ID esté seteado: `supabase secrets set LS_VARIANT_CAMPAIGN_CREDITS=<variant_id> --project-ref hubjqllcmbzoojyidgcu` y luego `supabase functions deploy lemonsqueezy-create-checkout --project-ref hubjqllcmbzoojyidgcu`
 - [ ] **`LEMONSQUEEZY_WEBHOOK_SECRET` en producción** — el `lemonsqueezy-webhook` falla cerrado sin este secret (fix sesión 13). Verificar que esté seteado: `supabase secrets list --project-ref hubjqllcmbzoojyidgcu`. Si no está: `supabase secrets set LEMONSQUEEZY_WEBHOOK_SECRET=<valor> --project-ref hubjqllcmbzoojyidgcu`
@@ -937,9 +945,47 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 - **Fix:** reenviar un **texto plano nuevo**. Si persiste con texto plano, revisar el estado del número en YCloud (provisioning WABA). Mejora futura opcional: que el webhook responda un fallback amable ante `type: "unsupported"`.
 
 #### Pendientes Fase 2 (builds aparte)
-- **Sección Plantillas de HQ** (espejo de `Templates`).
-- **Sección Integraciones de HQ** (espejo de `Integrations`) — ahí se setearía la API key/secret por UI en vez de SQL. Hoy no bloquea (key puesta por SQL).
+- [x] **Sección Plantillas de HQ** (espejo de `Templates`) — HECHO sesión 27 (`AdminTemplates.tsx`, `/hq/templates`).
+- [x] **Sección Integraciones de HQ** — HECHO sesión 27: panel "Configurar conexión de YCloud" (número + API key por UI) en `AdminIntegrations.tsx`.
 - **Webhook secret (HMAC) para HQ** — la columna `ycloud_webhook_secret` NO existe en `clinic_settings`; el webhook corre permisivo sin secret. Crear columna + wiring = mejora de seguridad opcional.
+
+---
+
+### Cambios realizados — junio 2026 (sesión 27) — Ads en marcha: CTA WhatsApp, recordatorios de demos, deploy fix Clara
+
+#### Landings de ads — WhatsApp como CTA primario + evento Lead
+- Tras analizar **Clarity** (100 sesiones de los ads: ~50% rebote en ≤3s, ~0 clics a CTA), se diagnosticó que el rebote venía de **peso de página** (ya optimizado) + **objetivo Tráfico** (trae clics de baja intención). El fundador pausó Tráfico y movió presupuesto a **Conversiones (Lead) + Click-to-WhatsApp**.
+- **`micropigmentadoras.html`, `estetica.html`, `tatuadores.html`:** el hero invierte la jerarquía → **WhatsApp verde sólido = CTA primario** (`.btn-wa`, `order:1`), "Agendar demo" = secundario ghost (`.btn-ghost`, `order:2`). En móvil quedan apilados con WhatsApp arriba.
+- **Alineación del evento de optimización:** el botón de WhatsApp ahora dispara `fbq('track','Contact')` **+ `fbq('track','Lead')`** (hero + burbuja, las 3 landings), para que la campaña de Conversiones (optimizada por `Lead`) persiga el CTA primario real. Todo el tracking (Pixel demo+WhatsApp + CAPI de Sofía) unificado en `Lead`.
+
+#### Verificación de dominio en Meta — `citenly.com`
+- Meta etiqueta `facebook-domain-verification` (content `sz8ez3edrcg6ivmpgk59wxebek5dx6`) insertada en el `<head>` de `index.html` + las 3 landings. Dominio **verificado** en Business → Seguridad de marca → Dominios. Habilita atribución/priorización de eventos `Lead`/`Schedule`.
+- **Dataset "Citenly Pixel" `1010227561873487`:** Pixel funcionando (PageView/Lead/Contact por Navegador). CAPI (eventos de servidor) configurado pero **solo dispara con tráfico real de anuncios CTWA** (necesita `ctwa_clid`).
+
+#### Motor de Sofía — verificado end-to-end (ya guarda y agenda)
+- El bug "leads no se guardaban" (email NOT NULL) estaba **arreglado y desplegado** (commit `5111ef6`, en v160 del 22-jun). Test fallido de "Carla" (20-jun) fue **antes** del fix.
+- **Test en vivo OK:** Sofía agendó videollamada → fila en `demo_requests` con `scheduled_at` ISO correcto (normalización "mañana 4 PM" → `2026-06-24 20:00 UTC`) + notificación al fundador.
+- **`DEMO_NOTIFY_PHONE` seteado** = `56929935817` (los avisos de demo agendada llegan ahí). La función toma el secret sin redeploy.
+
+#### Sección Plantillas de HQ (`/hq/templates`, `AdminTemplates.tsx`)
+- Espejo dark de `Templates`: lista/crea/elimina plantillas de YCloud del número de ventas vía `retentionService` con `HQ_ID` (las 3 funciones `*-ycloud-template[s]` resuelven la key por `clinic_id`, `verify_jwt=false`). Detección de variables `{{n}}` + ejemplos para aprobación de Meta.
+- **Fix categoría:** el selector era cosmético — `createRemoteTemplate` no enviaba `category` → caía en `MARKETING` por defecto. Ahora el servicio acepta/reenvía `category` (y la página pasa la opción). `create-ycloud-template` ya aceptaba el campo.
+- **Plantilla `recordatorio_videollamada`** creada y **aprobada por Meta** (quedó MARKETING · ES — Meta re-clasifica por contenido; se dejó así, sirve para este volumen). Vars: `{{1}}`=nombre, `{{2}}`=fecha, `{{3}}`=hora.
+
+#### HQ → Integraciones — gestión de la conexión YCloud por UI
+- Panel "Configurar conexión de YCloud" en `AdminIntegrations.tsx`: editar **número** + **API key** (campo password; vacío = no cambiar) vía REST PATCH + política "Platform admins can update clinic settings". Ya no hace falta SQL para la key.
+
+#### Recordatorios de videollamadas — `cron-demo-reminders` (Pieza 2)
+- Nueva edge function: recuerda al **prospecto** su videollamada **24h y 2h antes** vía plantilla `recordatorio_videollamada` desde el número HQ; ping best-effort al fundador (`DEMO_NOTIFY_PHONE`).
+- **Migración** `20260623000000_demo_reminders.sql`: `reminder_24h_sent` / `reminder_2h_sent` en `demo_requests` (anti-duplicado).
+- `config.toml`: `verify_jwt=false`. **pg_cron Job 18** `*/15 * * * *`. Probado en vivo (`sent24=1`). Formato fecha/hora en `America/Santiago`.
+
+#### Fix CRM/Calendario HQ — RLS de `demo_requests`
+- **Causa:** `demo_requests` tenía RLS activa **sin políticas** → el CRM y el Calendario del HQ (leen con el JWT del admin) recibían 0 filas, pese a que el webhook (service role) sí guardaba. Por eso "Sofía no aparecía en el CRM".
+- **Fix** (`20260623000001_demo_requests_admin_rls.sql`): políticas `SELECT` y `UPDATE` para `auth.uid() IN (SELECT id FROM platform_admins)`. La tabla sigue cerrada al resto.
+
+#### Deploy deliberado del fix incidente Clara (`d01f7fe`)
+- Desplegadas las 4 funciones (`ycloud-whatsapp-webhook` v162, `cron-process-reminders`, `cron-cancel-pending-deposits`, `ycloud-templates`) tras revisar cada diff. Job 17 confirmado en `*/15`. Ver "✅ RESUELTO (sesión 27)" en Tareas pendientes.
 
 ---
 
@@ -982,6 +1028,39 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 4. (Opcional) **DST del offset de Chile** en el agendamiento ISO de Sofía (hoy hardcodeado `-04:00`, correcto en invierno; revisar en verano).
 
 ---
+
+### Cambios realizados — junio 2026 (sesión 26) — Incidente Clara Barros: abono cobrado por cupo nunca reservado
+
+> ✅ **ESTADO: DESPLEGADO a producción el 23-jun-2026 (sesión 27, webhook v162).** Los candados de abono/confirmación y el corte de 30 min ya están vivos para las clínicas. Queda solo la acción operativa con la clienta (ver "RESUELTO (sesión 27)" en Tareas pendientes).
+
+#### El incidente
+Clienta **Clara Cecilia Barros Mora** (`56978916921`) en Elizabeth Microblading. La IA le ofreció lunes 22 jun a las 4 PM, le pidió abono de $10.000, ella transfirió y envió comprobante, y luego la IA le dijo que ese horario ya estaba ocupado. Clara (que creía tener cita confirmada) se enfureció y amenazó con funar a Elizabeth.
+
+#### Causa raíz (verificada en DB de producción)
+**La IA entregó los datos de transferencia del abono SIN haber llamado antes a `create_appointment`. El cupo del lunes 22 a las 4 PM nunca se bloqueó.** Confirmado: `appointments` no tenía ninguna fila para el teléfono de Clara. El horario quedó libre y ~8h después **Ana Gaete** (cita `489b9738…`, `2026-06-18T17:00 UTC`) lo reservó legítimamente (confirmed). Cuando Clara volvió ~39h más tarde a pagar, el cupo ya estaba ocupado → conflicto.
+
+`check_availability` NO falló: cuando ofreció las 4 PM (18 jun 09:08 UTC) el cupo estaba realmente libre. El error fue prometer/confirmar sin reservar nunca.
+
+**Cadena de fallas:**
+1. **Ruteo de modelo defectuoso:** el mensaje de selección "A las 4 podría ser" no contiene ninguna keyword de `classifyMessage` (`n2Keywords`/`n3Keywords`) → cayó en **Tier 1 (gpt-4o-mini)**, que se saltó pedir nombre + `create_appointment` y fue directo a dar el abono.
+2. **Alucinaciones agravantes:** la IA dijo "horario reservado provisionalmente" (no existía cita) y luego, tras `confirm_appointment` devolver "No encontré una cita pendiente", igual respondió "Tu cita está confirmada" — violando la regla 7 del prompt.
+
+**Nota estructural:** aun reservando bien, el `cron-cancel-pending-deposits` (2h) habría liberado el cupo antes de que Clara pagara (39h después). Pero eso es comportamiento de negocio defendible si se le avisa; el daño real fue cobrar por algo nunca reservado.
+
+#### Decisión del fundador sobre el cupo
+El cupo debe quedar claro que **solo se asegura al recibir el comprobante**. Enfoque elegido: **"apartar corto + ser honesta"** → guardar el cupo 30 min (antes 2h) PERO la IA comunica explícitamente que solo queda asegurado con el comprobante y que si no llega se libera.
+
+#### Los 4 cambios implementados (en local)
+**`supabase/functions/ycloud-whatsapp-webhook/index.ts`:**
+1. **Ruteo (escalada por selección de horario)** (~L2414-2429): si el último mensaje outbound de la IA ofreció horarios (regex de horas `\d{1,2}:\d{2} AM/PM` o "disponibilidad/horarios disponibles/podemos agendar"), se fuerza `tier = 2` para el mensaje actual. Así el paso de agendamiento nunca lo maneja el mini. `const tier` → `let tier`. Guardado con `clinic.id !== HQ_ID`.
+2. **Candado de abono** (~L2519-2524): antes de enviar, si la respuesta contiene datos bancarios (detecta líneas con dígitos de `clinic.transfer_details` dentro de `finalReply`) pero NO existe cita activa en DB (`pending/pending_deposit/confirmed`) para el teléfono → bloquea y reemplaza por un mensaje que pide nombre + horario para registrar primero.
+3. **Candado de confirmación** (~L2504-2530): si la respuesta afirma "confirmada/reservada/agendada" (participios, NO infinitivos; excluye frases negativas tipo "no tienes ninguna cita reservada") pero NO hay cita activa en DB → reemplaza por mensaje honesto ("no logré dejar tu cita registrada…"). Ambos candados son a nivel sistema, no dependen de que el modelo obedezca. `const finalReply` → `let finalReply`.
+4. **Mensaje honesto + 30 min:** prompt del flujo `require_deposit_first` (~L2300-2301) y mensaje de retorno de `createAppt` para `pending_deposit` (~L756) reescritos: "GUARDADO temporalmente por 30 min, asegurado solo con el comprobante, si no llega se libera".
+
+**`supabase/functions/cron-cancel-pending-deposits/index.ts`:** cutoff 2h → **30 min** (`30 * 60 * 1000`).
+
+#### Cómo consultar la DB de Citenly (recordatorio, el MCP apunta a Vetly)
+Script Node con keys del `.env` local (`VITE_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`) y `@supabase/supabase-js`. Funcionó bien esta sesión para inspeccionar `appointments` y `messages` de Elizabeth (`1ab32091-210c-4525-a7e1-e6a7dca1c8c6`). Recordar: Chile en junio = UTC-4, así que 4 PM local = 20:00 UTC en `appointment_date`.
 
 ### Cambios realizados — junio 2026 (sesión 18)
 
