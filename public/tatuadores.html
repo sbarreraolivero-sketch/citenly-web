@@ -152,15 +152,25 @@
 
     /* ── CTA row + banderas (estructura Landing) ── */
     .hero-cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-    /* CTA secundario WhatsApp (jerarquía: secundario al primario rosa) */
+    /* CTA PRIMARIO WhatsApp (verde solido, dominante - el trafico frio convierte mejor por chat) */
     .btn-wa {
-      display: inline-flex; align-items: center; gap: 9px;
-      background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.45);
-      color: #25D366; font-size: 15px; font-weight: 700; padding: 14px 26px;
-      border-radius: 14px; text-decoration: none; transition: background 0.2s, transform 0.2s;
+      display: inline-flex; align-items: center; gap: 9px; order: 1;
+      background: #25D366; border: 1px solid #25D366;
+      color: #fff; font-size: 15px; font-weight: 800; padding: 15px 30px;
+      border-radius: 14px; text-decoration: none; transition: box-shadow 0.2s, transform 0.2s;
+      box-shadow: 0 0 48px rgba(37,211,102,0.40);
     }
-    .btn-wa:hover { background: rgba(37,211,102,0.2); transform: translateY(-2px); }
+    .btn-wa:hover { box-shadow: 0 0 64px rgba(37,211,102,0.55); transform: translateY(-2px); }
     .btn-wa svg { width: 20px; height: 20px; }
+    /* CTA secundario Demo (ghost) - debajo/al lado del WhatsApp */
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px; order: 2;
+      background: transparent; border: 1px solid rgba(255,255,255,0.28);
+      color: rgba(255,255,255,0.92); font-size: 15px; font-weight: 700; padding: 14px 28px;
+      border-radius: 14px; text-decoration: none; transition: background 0.2s, transform 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.45); transform: translateY(-2px); }
+    .btn-ghost:hover .btn-arr { transform: translateX(4px); }
     .hero-flags { display: flex; align-items: center; gap: 12px; margin-top: 30px; }
     .hero-flags .flags { display: flex; gap: 3px; font-size: 19px; line-height: 1; }
     .hero-flags p { margin: 0; font-size: 14px; color: rgba(255,255,255,0.55); }
@@ -753,6 +763,7 @@
       .chat-body { height: 430px; }
       .btn-primary { width: 100%; justify-content: center; font-size: 15px; padding: 16px 24px; }
       .btn-wa { width: 100%; justify-content: center; padding: 15px 24px; }
+      .btn-ghost { width: 100%; justify-content: center; padding: 14px 24px; }
       .hero-cta-row { width: 100%; }
       .hero-flags { margin-top: 24px; }
 
@@ -1048,7 +1059,7 @@
         </p>
 
         <div class="ha4 hero-cta-row">
-          <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-primary">Agendar Reunión Demo <span class="btn-arr">→</span></a>
+          <a href="https://citenly.com/demo" onclick="fbq('track','Lead')" class="btn-ghost">Agendar demo <span class="btn-arr">→</span></a>
           <a class="btn-wa"
              href="https://wa.me/56962303576?text=Hola%2C%20vengo%20de%20la%20p%C3%A1gina%20de%20tatuajes%20y%20quiero%20saber%20c%C3%B3mo%20funciona%20Citenly%20para%20mi%20negocio%20%E2%9C%A8"
              target="_blank" rel="noopener" onclick="fbq('track','Contact')">
