@@ -987,6 +987,12 @@ Las siguientes funciones fueron modificadas en sesión 9 — verificar si ya fue
 #### Deploy deliberado del fix incidente Clara (`d01f7fe`)
 - Desplegadas las 4 funciones (`ycloud-whatsapp-webhook` v162, `cron-process-reminders`, `cron-cancel-pending-deposits`, `ycloud-templates`) tras revisar cada diff. Job 17 confirmado en `*/15`. Ver "✅ RESUELTO (sesión 27)" en Tareas pendientes.
 
+#### Revisión de seguridad de la sesión (2 fixes aplicados + desplegados)
+- **[MEDIA — IDOR] Funciones de plantillas YCloud** (`get-ycloud-templates`, `create-ycloud-template`, `ycloud-templates`): autenticaban (usuario logueado) pero NO verificaban que el usuario perteneciera al `clinic_id` → cualquier usuario logueado podía gestionar plantillas de otra clínica (incl. `HQ_ID`, que es `0000…` adivinable: borrar `recordatorio_videollamada` o crear spam en el número de ventas). **Fix:** check de membresía tras `getUser()` en las 3 funciones — `clinic_members` para clínicas, `platform_admins` si `clinic_id === HQ_ID`. Quitado el fallback inseguro "proceeding with caution" de `get-ycloud-templates`. **Importante:** en Citenly la tabla de membresía es **`clinic_members`** (`clinic_users` NO existe — eso es de Vetly). El admin HQ (`sbarrera.olivero@gmail.com`) está en `platform_admins`.
+- **[BAJA — exposición de secreto] `ycloud_api_key` al navegador:** `AdminIntegrations` hacía `.select('… ycloud_api_key')` aunque solo usaba un booleano. **Fix:** RPC `clinic_has_ycloud_key(uuid)` (SECURITY DEFINER, devuelve solo boolean, GRANT a `authenticated`) — migración `20260623000002`. El frontend ya no trae el valor de la key.
+- **[BAJA / opcional — NO aplicado] `cron-demo-reminders` sin `CRON_SECRET`:** consistente con los otros crons; impacto bajo (idempotente, sin PII en la respuesta). Endurecimiento opcional pendiente.
+- Resto de la sesión: **limpio** (landings estáticas sin input de usuario, secrets por env vars nunca hardcodeados, código nuevo saneado, sin SQL injection).
+
 ---
 
 ### Cambios realizados — junio 2026 (sesión 26) — Agente "Sofía" consultivo, tracking Meta CTWA, calendario HQ
