@@ -1825,17 +1825,26 @@ const callAI = async (model: string, msgs: Msg[], useFns = true, customFunctions
 const sendWA = async (key: string, to: string, from: string, msg: string) => {
     const cleanTo = normalizePhone(to);
     const cleanFrom = normalizePhone(from);
-    const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": key },
-        body: JSON.stringify({ from: cleanFrom, to: cleanTo, type: "text", text: { body: msg } })
-    });
-    if (!r.ok) {
-        const errText = await r.text();
-        console.error(`[sendWA] Error sending to ${cleanTo} from ${cleanFrom}:`, errText);
-        throw new Error(errText);
+    const body = JSON.stringify({ from: cleanFrom, to: cleanTo, type: "text", text: { body: msg } });
+    let lastErr = "";
+    // Reintento: un fallo transitorio de YCloud (red/rate-limit) NO debe dejar al prospecto sin respuesta.
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+            const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": key },
+                body
+            });
+            if (r.ok) return r.json();
+            lastErr = `HTTP ${r.status}: ${await r.text()}`;
+            console.error(`[sendWA] intento ${attempt} falló a ${cleanTo}:`, lastErr);
+        } catch (e: any) {
+            lastErr = String(e?.message || e);
+            console.error(`[sendWA] intento ${attempt} excepción a ${cleanTo}:`, lastErr);
+        }
+        if (attempt === 1) await new Promise(res => setTimeout(res, 1500)); // breve espera antes del reintento
     }
-    return r.json();
+    throw new Error(lastErr);
 };
 
 // =============================================
@@ -1913,7 +1922,7 @@ Deno.serve(async (req) => {
                 if (wm?.status === "failed" && wm?.to) {
                     const failedPhone = normalizePhone(wm.to);
                     const { data: failClinic } = await sb.from("clinic_settings")
-                        .select("id, clinic_name")
+                        .select("id, clinic_name, ycloud_api_key")
                         .eq("ycloud_phone_number", wm.from)
                         .maybeSingle();
                     if (failClinic) {
@@ -1922,6 +1931,36 @@ Deno.serve(async (req) => {
                                 .eq("clinic_id", failClinic.id)
                                 .eq("ycloud_message_id", wm.id);
                         }
+
+                        // RE-ENVÍO ante fallo TRANSITORIO de entrega (ej: 131000 "Something went wrong").
+                        // Meta acepta el mensaje y luego la entrega falla por un hipo momentáneo → reintentamos
+                        // el TEXTO una vez. Códigos permanentes (ventana 24h, no entregable, tipo) NO se reintentan.
+                        // Guarda anti-loop: el re-envío lleva payload.is_resend=true; si ESE falla, no se reintenta.
+                        const failCode = String(wm.errorCode || "");
+                        const permanentCodes = ["131047", "131026", "131051", "131053", "470"];
+                        if (wm.type !== "template" && wm.id && (failClinic as any).ycloud_api_key && !permanentCodes.includes(failCode)) {
+                            const { data: origMsg } = await sb.from("messages")
+                                .select("content, payload")
+                                .eq("clinic_id", failClinic.id)
+                                .eq("ycloud_message_id", wm.id)
+                                .maybeSingle();
+                            const isResendAlready = (origMsg as any)?.payload?.is_resend === true;
+                            if (origMsg?.content && !isResendAlready) {
+                                try {
+                                    const resent = await sendWA((failClinic as any).ycloud_api_key, failedPhone, wm.from, origMsg.content);
+                                    await sb.from("messages").insert({
+                                        clinic_id: failClinic.id, phone_number: failedPhone, content: origMsg.content,
+                                        direction: "outbound", message_type: "text",
+                                        ycloud_message_id: (resent as any)?.id || null,
+                                        payload: { is_resend: true, resent_of: wm.id }
+                                    });
+                                    await debugLog(sb, `Re-enviado tras fallo transitorio ${failCode} a ${failedPhone}`, { ycloud_id: (resent as any)?.id });
+                                } catch (e: any) {
+                                    await debugLog(sb, `Re-envío FALLÓ a ${failedPhone}`, { error: String(e?.message || e) });
+                                }
+                            }
+                        }
+
                         if (wm.type === "template") {
                             // reminder_logs no guarda el id de YCloud: se corrige el envío reciente a ese número
                             await sb.from("reminder_logs")
