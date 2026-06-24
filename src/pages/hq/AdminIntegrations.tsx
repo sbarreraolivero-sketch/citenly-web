@@ -21,15 +21,17 @@ export default function AdminIntegrations() {
         setLoading(true)
         const { data } = await supabase
             .from('clinic_settings')
-            .select('ai_auto_respond, ycloud_phone_number, ycloud_api_key')
+            .select('ai_auto_respond, ycloud_phone_number')
             .eq('id', HQ_ID)
             .single()
         if (data) {
             const d = data as any
             setActive(d.ai_auto_respond !== false)
             setPhone(d.ycloud_phone_number || null)
-            setHasKey(!!d.ycloud_api_key)
         }
+        // hasKey vía RPC (NO exponer el valor de la API key al navegador)
+        const { data: keyExists } = await (supabase as any).rpc('clinic_has_ycloud_key', { p_clinic_id: HQ_ID })
+        setHasKey(!!keyExists)
         setLoading(false)
     }
 

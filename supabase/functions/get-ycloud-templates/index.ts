@@ -34,18 +34,23 @@ Deno.serve(async (req: Request) => {
         
         if (userError || !user) {
             console.error('Auth User Error:', userError)
-            // Fallback for local testing or specific issues if the token is present but getUser fails
-            if (!userError && authHeader.startsWith('Bearer ')) {
-                console.log('Token present but getUser returned no user. Proceeding with caution.')
-            } else {
-                throw new Error('Unauthorized')
-            }
+            throw new Error('Unauthorized')
         }
 
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         )
+
+        // AUTHZ: el usuario autenticado debe pertenecer a clinic_id (platform admin si es HQ).
+        const HQ = '00000000-0000-0000-0000-000000000000'
+        if (clinic_id === HQ) {
+            const { data: _pa } = await supabaseClient.from('platform_admins').select('id').eq('id', user.id).maybeSingle()
+            if (!_pa) throw new Error('Forbidden: no autorizado para HQ')
+        } else {
+            const { data: _mem } = await supabaseClient.from('clinic_members').select('clinic_id').eq('user_id', user.id).eq('clinic_id', clinic_id).maybeSingle()
+            if (!_mem) throw new Error('Forbidden: sin acceso a esta clínica')
+        }
 
         // Get API Key
         const { data: settings, error } = await supabaseClient

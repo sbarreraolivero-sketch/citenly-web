@@ -49,6 +49,16 @@ Deno.serve(async (req: Request) => {
 
     if (!clinic_id) throw new Error('clinic_id is required')
 
+    // AUTHZ: el usuario autenticado debe pertenecer a clinic_id (platform admin si es HQ).
+    const HQ = '00000000-0000-0000-0000-000000000000'
+    if (clinic_id === HQ) {
+      const { data: _pa } = await supabaseClient.from('platform_admins').select('id').eq('id', user.id).maybeSingle()
+      if (!_pa) throw new Error('Forbidden: no autorizado para HQ')
+    } else {
+      const { data: _mem } = await supabaseClient.from('clinic_members').select('clinic_id').eq('user_id', user.id).eq('clinic_id', clinic_id).maybeSingle()
+      if (!_mem) throw new Error('Forbidden: sin acceso a esta clínica')
+    }
+
     // Get Clinic YCloud Key
     const { data: clinicSettings, error: csError } = await supabaseClient
       .from('clinic_settings')
