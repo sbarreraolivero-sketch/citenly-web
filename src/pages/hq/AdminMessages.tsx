@@ -201,13 +201,21 @@ export default function AdminMessages() {
         setTogglingAI(true)
         try {
             const newStatus = !conv.requires_human
-            const { error } = await (supabase as any)
+            // Update; si el prospecto aún no tiene fila en crm_prospects, créala (toggle robusto)
+            const { data: upd, error } = await (supabase as any)
                 .from('crm_prospects')
                 .update({ requires_human: newStatus })
                 .eq('clinic_id', HQ_CLINIC_ID)
                 .eq('phone', conv.phone_number)
+                .select('phone')
 
             if (error) throw error
+            if (!upd || upd.length === 0) {
+                const { error: insErr } = await (supabase as any)
+                    .from('crm_prospects')
+                    .insert({ clinic_id: HQ_CLINIC_ID, phone: conv.phone_number, name: conv.patient_name, requires_human: newStatus })
+                if (insErr) throw insErr
+            }
             setConversations(prev => prev.map(c =>
                 c.phone_number === conv.phone_number ? { ...c, requires_human: newStatus } : c
             ))
