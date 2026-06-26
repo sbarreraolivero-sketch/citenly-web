@@ -54,7 +54,7 @@ export default function Loyalty() {
         if (!profile?.clinic_id) return
         setLoading(true)
         try {
-            const [s, pData, rData, tData, clinicData] = await Promise.all([
+            const [s, pData, rData, tData] = await Promise.all([
                 loyaltyService.getSettings(profile.clinic_id),
                 (supabase as any)
                     .from('patients')
@@ -67,16 +67,8 @@ export default function Loyalty() {
                     .select('*, patients(name)')
                     .eq('clinic_id', profile.clinic_id)
                     .order('created_at', { ascending: false })
-                    .limit(50),
-                (supabase as any)
-                    .from('clinic_settings')
-                    .select('ycloud_phone_number')
-                    .eq('id', profile.clinic_id)
-                    .single()
+                    .limit(50)
             ])
-            if (clinicData.data?.ycloud_phone_number) {
-                setClinicPhone(clinicData.data.ycloud_phone_number)
-            }
             setSettings(s)
             setPatients(pData.data || [])
             setRewards(rData || [])
