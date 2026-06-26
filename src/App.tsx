@@ -28,6 +28,7 @@ const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const Landing = lazy(() => import('./pages/Landing'))
 const ReferralRedirect = lazy(() => import('./pages/ReferralRedirect'))
+const MyAccount = lazy(() => import('./pages/MyAccount'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
@@ -104,6 +105,7 @@ function MainRoutes() {
                     <Route path="/demo" element={<Demo />} />
                     <Route path="/diagnostico" element={<DiagnosticLanding />} />
                     <Route path="/r/:code" element={<ReferralRedirect />} />
+                    <Route path="/mi/:code" element={<MyAccount />} />
                     <Route path="/" element={<Landing />} />
                     <Route path="/terminos" element={<Terms />} />
                     <Route path="/terms" element={<Navigate to="/terminos" replace />} />
