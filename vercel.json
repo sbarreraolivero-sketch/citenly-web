@@ -13,6 +13,18 @@
             "destination": "/tatuadores.html"
         },
         {
+            "source": "/blog",
+            "destination": "/blog.html"
+        },
+        {
+            "source": "/referidos-estetica",
+            "destination": "/referidos-estetica.html"
+        },
+        {
+            "source": "/historia-elizabeth",
+            "destination": "/historia-elizabeth.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
