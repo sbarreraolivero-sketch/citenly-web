@@ -19,7 +19,8 @@ import {
     Percent,
     Calculator,
     Trophy,
-    History as HistoryIcon
+    History as HistoryIcon,
+    ExternalLink
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -390,6 +391,18 @@ export default function Loyalty() {
                                             Magic Link
                                         </button>
                                         <button className="text-secondary-theme hover:text-primary-theme transition-colors font-bold">Ver Historial</button>
+                                        {patient.referral_code && (
+                                            <a
+                                                href={`/r/${patient.referral_code}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-secondary-theme hover:text-[var(--accent-primary)] transition-colors font-bold"
+                                                title="Ver la página personal de referido de esta clienta"
+                                            >
+                                                <ExternalLink className="w-3 h-3" />
+                                                Ver página
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>
