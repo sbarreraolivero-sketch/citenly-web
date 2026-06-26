@@ -1,108 +1,117 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
-import { Loader2, MessageCircle } from 'lucide-react'
 
-// Create a totally isolated client for public redirect to avoid Auth Lock conflicts
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+// Cliente público aislado (sin sesión) para la landing de referido
+const publicSupabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL || '',
+    import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+)
 
-const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false }
-})
+interface RefData {
+    referrer_name: string
+    clinic_name: string
+    clinic_phone: string
+    referral_bonus: number
+    points_name: string
+}
 
 export default function ReferralRedirect() {
     const { code } = useParams<{ code: string }>()
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const hasRun = useRef(false)
+    const [data, setData] = useState<RefData | null>(null)
+    const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
 
     useEffect(() => {
-        if (code && !hasRun.current) {
-            hasRun.current = true
-            handleRedirect()
-        }
+        if (!code) { setStatus('error'); return }
+        ;(publicSupabase as any)
+            .rpc('get_referral_link_data', { p_code: code.toUpperCase() })
+            .then(({ data: rows, error }: any) => {
+                if (error || !rows || rows.length === 0) { setStatus('error'); return }
+                setData(rows[0] as RefData)
+                setStatus('ok')
+            })
     }, [code])
 
-    const handleRedirect = async () => {
-        try {
-            const cleanCode = code?.trim().toUpperCase() || ''
-            
-            // 1. Get patient and clinic info from the referral code
-            const { data: patient, error: patientError } = await publicSupabase
-                .from('patients')
-                .select('name, clinic_id')
-                .eq('referral_code', cleanCode)
-                .maybeSingle()
+    const firstName = (data?.referrer_name || '').trim().split(' ')[0] || 'una clienta'
 
-            if (patientError) {
-                console.error('Patient lookup error:', patientError)
-                setError(`Error en la búsqueda: ${patientError.message}`)
-                setLoading(false)
-                return
-            }
-
-            if (!patient) {
-                setError('Código de referido no válido')
-                setLoading(false)
-                return
-            }
-
-            // 2. Get clinic's WhatsApp number
-            const { data: clinic, error: clinicError } = await publicSupabase
-                .from('clinic_settings')
-                .select('ycloud_phone_number, clinic_name')
-                .eq('id', (patient as any).clinic_id)
-                .maybeSingle()
-
-            if (clinicError || !clinic || !(clinic as any).ycloud_phone_number) {
-                setError('La clínica no tiene WhatsApp configurado')
-                setLoading(false)
-                return
-            }
-
-            // 3. Construct WhatsApp URL
-            const clinicData = clinic as any
-            const patientData = patient as any
-            const cleanPhone = clinicData.ycloud_phone_number.replace(/\D/g, '')
-            const message = `¡Hola! Vengo de parte de ${patientData.name} con el código de referido: ${code}. Me gustaría agendar una cita en ${clinicData.clinic_name}.`
-            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
-
-            // 4. Redirect
-            window.location.href = waUrl
-        } catch (err) {
-            console.error('Referral error:', err)
-            setError('Error al procesar el referido')
-            setLoading(false)
-        }
+    const waUrl = () => {
+        if (!data) return '#'
+        const phone = (data.clinic_phone || '').replace(/\D/g, '')
+        const msg = `¡Hola! Vengo de parte de ${data.referrer_name} 💖 Mi código de referido es *${(code || '').toUpperCase()}*. ¡Quiero agendar mi primera cita!`
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
     }
 
-    if (error) {
+    const wrap: React.CSSProperties = {
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px', fontFamily: "'Outfit', system-ui, sans-serif",
+        background: 'radial-gradient(1200px 600px at 50% -10%, #FFE6F1, #fff 60%)',
+    }
+
+    if (status === 'error') {
         return (
-            <div className="min-h-screen bg-ivory flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mb-4">
-                    <MessageCircle className="w-8 h-8" />
+            <div style={wrap}>
+                <div style={{ textAlign: 'center', maxWidth: 380 }}>
+                    <div style={{ fontSize: 44, marginBottom: 12 }}>💔</div>
+                    <h1 style={{ fontSize: 24, fontWeight: 900, color: '#1a1a2e', margin: '0 0 8px' }}>Enlace no válido</h1>
+                    <p style={{ color: '#6b7280', margin: '0 0 22px' }}>Este código de referido no existe o ya no está disponible.</p>
+                    <a href="https://citenly.com" style={{ color: '#FF2E88', fontWeight: 700, textDecoration: 'none' }}>Ir a Citenly →</a>
                 </div>
-                <h1 className="text-xl font-bold text-charcoal mb-2">Ups! Algo salió mal</h1>
-                <p className="text-charcoal/60 mb-6">{error}</p>
-                <a href="/" className="btn-primary px-6 py-2">Volver al inicio</a>
+            </div>
+        )
+    }
+
+    if (status === 'loading' || !data) {
+        return (
+            <div style={wrap}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 44, height: 44, border: '4px solid #FFC2DC', borderTopColor: '#FF2E88', borderRadius: '50%', margin: '0 auto', animation: 'spin 0.8s linear infinite' }} />
+                    <p style={{ color: '#9ca3af', marginTop: 16, fontWeight: 600 }}>Cargando tu invitación…</p>
+                    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-ivory flex flex-col items-center justify-center p-6 text-center">
-            {loading && (
-                <>
-                    <Loader2 className="w-10 h-10 animate-spin text-primary-500 mb-4" />
-                    <h1 className="text-xl font-bold text-charcoal mb-2">Validando referido...</h1>
-                    <p className="text-charcoal/60">Te estamos redirigiendo al WhatsApp de la clínica</p>
-                    <div className="mt-8 p-4 bg-white rounded-softer border border-silk-beige shadow-sm animate-pulse">
-                        <p className="text-xs font-bold text-primary-700 uppercase tracking-widest">Código detectado</p>
-                        <p className="text-2xl font-mono font-bold text-charcoal mt-1 tracking-tighter">{code}</p>
-                    </div>
-                </>
-            )}
+        <div style={wrap}>
+            <div style={{
+                width: '100%', maxWidth: 420, background: '#fff', borderRadius: 26,
+                boxShadow: '0 20px 60px rgba(255,46,136,0.15)', border: '1px solid #FFE0EE',
+                padding: '38px 28px', textAlign: 'center',
+            }}>
+                <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: '#FF2E88', marginBottom: 14 }}>✨ Una recomendación para ti</div>
+
+                <div style={{
+                    width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px',
+                    background: 'linear-gradient(135deg,#FF2E88,#9333EA)', color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 28, fontWeight: 900,
+                }}>{firstName.charAt(0).toUpperCase()}</div>
+
+                <h1 style={{ fontSize: 26, fontWeight: 900, color: '#1a1a2e', lineHeight: 1.25, margin: '0 0 6px' }}>
+                    {firstName} te recomienda<br /><span style={{ color: '#FF2E88' }}>{data.clinic_name}</span>
+                </h1>
+                <p style={{ color: '#4b5563', fontSize: 16, lineHeight: 1.6, margin: '12px 0 0' }}>
+                    Agenda tu primera cita y, como vienes recomendada, <strong style={{ color: '#1a1a2e' }}>las dos ganan {data.referral_bonus > 0 ? `${data.referral_bonus.toLocaleString('es-CL')} ${data.points_name}` : 'un beneficio de bienvenida'}</strong> 🎁
+                </p>
+
+                <a href={waUrl()} target="_blank" rel="noopener" style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    background: '#25D366', color: '#fff', fontWeight: 800, fontSize: 16.5,
+                    padding: '15px 22px', borderRadius: 16, textDecoration: 'none', margin: '26px 0 14px',
+                    boxShadow: '0 10px 30px rgba(37,211,102,0.35)',
+                }}>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.529 5.259l-.999 3.648 3.74-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.074-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                    Agendar por WhatsApp
+                </a>
+
+                <p style={{ color: '#9ca3af', fontSize: 12.5, margin: 0 }}>Te abrimos el chat con tu código ya escrito.</p>
+
+                <div style={{ marginTop: 26, paddingTop: 18, borderTop: '1px solid #f1eef2', color: '#c7c2cb', fontSize: 12, fontWeight: 600 }}>
+                    Agenda con <a href="https://citenly.com" style={{ color: '#FF2E88', textDecoration: 'none', fontWeight: 800 }}>Citenly</a>
+                </div>
+            </div>
         </div>
     )
 }
