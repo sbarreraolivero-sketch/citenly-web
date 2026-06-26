@@ -26,7 +26,6 @@ export default function MyAccount() {
     const { code } = useParams<{ code: string }>()
     const [data, setData] = useState<AccountData | null>(null)
     const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
-    const [copied, setCopied] = useState(false)
 
     useEffect(() => {
         if (!code) { setStatus('error'); return }
@@ -46,11 +45,10 @@ export default function MyAccount() {
         if (!shareUrl) return
         const text = `Te recomiendo ${data?.clinic_name} 💖 Agenda con mi link y las dos ganamos:`
         if ((navigator as any).share) {
-            try { await (navigator as any).share({ title: data?.clinic_name, text, url: shareUrl }) } catch { /* cancelado */ }
-        } else {
-            navigator.clipboard.writeText(shareUrl)
-            setCopied(true); setTimeout(() => setCopied(false), 2000)
+            try { await (navigator as any).share({ title: data?.clinic_name, text, url: shareUrl }); return } catch { /* cancelado o sin soporte → abrir /r/ */ }
         }
+        // Fallback robusto: abre su página de referido /r/:code (con el botón de WhatsApp para compartir)
+        window.open(shareUrl, '_blank', 'noopener')
     }
 
     const wrap: React.CSSProperties = {
@@ -128,7 +126,7 @@ export default function MyAccount() {
                         Comparte tu link. Cuando tu amiga agende, <strong style={{ color: '#fff' }}>las dos ganan {data.referral_bonus > 0 ? `${data.referral_bonus.toLocaleString('es-CL')} ${unit}` : 'puntos'}</strong> 💖
                     </p>
                     <button onClick={onShare} style={{ width: '100%', background: '#FF2E88', color: '#fff', border: 'none', fontWeight: 800, fontSize: 16, padding: '14px', borderRadius: 14, cursor: 'pointer', boxShadow: '0 8px 26px rgba(255,46,136,0.4)' }}>
-                        {copied ? '¡Link copiado! ✓' : 'Compartir mi link 💌'}
+                        Compartir mi link 💌
                     </button>
                     <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', margin: '12px 0 0' }}>
                         {data.referral_count > 0 ? `Ya has referido a ${data.referral_count} ${data.referral_count === 1 ? 'amiga' : 'amigas'} 🌟` : 'Tu código: ' + data.referral_code}
