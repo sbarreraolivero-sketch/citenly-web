@@ -49,7 +49,6 @@ export default function Loyalty() {
 
     const [patientAmounts, setPatientAmounts] = useState<Record<string, string>>({});
     const [pendingAdjustments, setPendingAdjustments] = useState<Record<string, number>>({});
-    const [clinicPhone, setClinicPhone] = useState<string | null>(null);
 
     const fetchData = async () => {
         if (!profile?.clinic_id) return
@@ -182,18 +181,12 @@ export default function Loyalty() {
         }
     };
 
-    const copyReferralLink = (code: string, patientName?: string) => {
-        let link: string
-        if (clinicPhone) {
-            // Genera enlace de WhatsApp con mensaje pre-escrito incluyendo el código de referido
-            const cleanPhone = clinicPhone.replace(/[^0-9]/g, '')
-            const text = encodeURIComponent(`¡Hola! Me contacto de parte de ${patientName || 'un cliente'} 🌟 Mi código de referido es *${code}*. ¡Quiero conocer sus servicios!`)
-            link = `https://wa.me/${cleanPhone}?text=${text}`
-        } else {
-            link = `${window.location.origin}/r/${code}`
-        }
+    const copyReferralLink = (code: string) => {
+        // Comparte la landing personal de referido (branded + rastreable): muestra "[clienta] te
+        // recomienda [centro]" y abre el WhatsApp con el código ya escrito.
+        const link = `${window.location.origin}/r/${code}`
         navigator.clipboard.writeText(link)
-        toast.success('¡Enlace mágico de WhatsApp copiado!')
+        toast.success('¡Magic Link copiado!')
     }
 
     if (loading) {
@@ -396,7 +389,7 @@ export default function Loyalty() {
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
-                                                copyReferralLink(patient.referral_code || '', patient.name);
+                                                copyReferralLink(patient.referral_code || '');
                                             }}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[var(--accent-primary)]/20 transition-colors"
                                             title="Copiar enlace para el paciente"
