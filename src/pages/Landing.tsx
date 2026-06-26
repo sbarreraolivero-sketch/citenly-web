@@ -935,7 +935,7 @@ export default function Landing() {
                         <div>
                             <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4">Producto</p>
                             <ul className="space-y-2">
-                                {[['El Producto','#modulos'],['Precios','#planes'],['Demo','/demo']].map(([l,h]) => (
+                                {[['El Producto','#modulos'],['Precios','#planes'],['Blog','/blog'],['Demo','/demo']].map(([l,h]) => (
                                     <li key={l}><a href={h} className="text-sm text-white/50 hover:text-white transition-colors">{l}</a></li>
                                 ))}
                             </ul>
