@@ -206,6 +206,11 @@ const getFunctions = (requireDepositFirst: boolean = false) => {
             },
             required: ["tag_name"]
         }
+    },
+    {
+        name: "get_loyalty_balance",
+        description: "Consulta el saldo de puntos de fidelización del paciente y las recompensas que puede canjear. ÚSALA cuando el paciente pregunte por sus puntos o saldo ('¿cuántos puntos tengo?', 'mi saldo', 'qué puedo canjear', 'mis recompensas') o algo similar.",
+        parameters: { type: "object", properties: {}, required: [] }
     }
     ];
 };
@@ -775,6 +780,50 @@ const getServices = async (sb: ReturnType<typeof createClient>, clinicId: string
     const svcs = data?.services || [];
     if (!svcs.length) return { message: "No hay servicios disponibles." };
     return { services: svcs, message: `Servicios:\n\n${svcs.map((s: { name: string; duration: number; price: number }) => `• ${s.name} (${s.duration}min) - $${s.price}`).join("\n")}` };
+};
+
+const getLoyaltyBalance = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string) => {
+    const normalizedPhone = normalizePhone(phone);
+    const { data: settings } = await sb.from("clinic_settings")
+        .select("loyalty_enabled, loyalty_points_name, loyalty_currency_symbol, loyalty_referral_bonus")
+        .eq("id", clinicId).single();
+    if (settings && (settings as any).loyalty_enabled === false) {
+        return { message: "Por ahora no tenemos un programa de puntos activo, pero te avisaremos cuando lo lancemos 💖" };
+    }
+    const { data: patient } = await sb.from("patients")
+        .select("name, loyalty_points, referral_code, referral_count")
+        .eq("clinic_id", clinicId).eq("phone_number", normalizedPhone).maybeSingle();
+    if (!patient) {
+        return { message: "Aún no tienes puntos acumulados con nosotros. En tu próxima visita empiezas a sumar 💖", instruction: "Comunícalo de forma cálida; no inventes un saldo." };
+    }
+    const p = patient as any;
+    const s = (settings || {}) as any;
+    const points = Math.max(0, p.loyalty_points || 0); // un saldo nunca es negativo
+    const unit = s.loyalty_currency_symbol || s.loyalty_points_name || "puntos";
+    const { data: rewards } = await sb.from("loyalty_rewards")
+        .select("name, points_cost").eq("clinic_id", clinicId).eq("is_active", true)
+        .order("points_cost", { ascending: true });
+    const rw = (rewards || []) as { name: string; points_cost: number }[];
+    const affordable = rw.filter((r) => points >= r.points_cost);
+    let msg = `Tienes *${points.toLocaleString("es-CL")} ${unit}* acumulados 💖`;
+    if (affordable.length > 0) {
+        msg += `\n\nYa puedes canjear:\n${affordable.map((r) => `• ${r.name}`).join("\n")}`;
+    } else if (rw.length > 0) {
+        const next = rw[0];
+        msg += `\n\nTe faltan ${(next.points_cost - points).toLocaleString("es-CL")} ${unit} para canjear "${next.name}".`;
+    }
+    const bonus = s.loyalty_referral_bonus || 0;
+    if (bonus > 0 && p.referral_code) {
+        msg += `\n\nY si traes a una amiga, las dos ganan ${bonus.toLocaleString("es-CL")} ${unit} más. ¿Te paso tu link? 🌟`;
+    }
+    return {
+        points,
+        unit,
+        rewards_available: affordable.map((r) => r.name),
+        referral_code: p.referral_code || null,
+        message: msg,
+        instruction: `Comunica el saldo y las recompensas usando EXACTAMENTE estos datos (NO inventes números). Si ofreces traer a una amiga y el cliente acepta, comparte su link: https://citenly.com/r/${p.referral_code || ""}`
+    };
 };
 
 const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, response: string) => {
@@ -1612,6 +1661,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
         case "escalate_to_human": return escalateToHuman(sb, clinicId, phone);
         case "reschedule_appointment": return rescheduleAppt(sb, clinicId, phone, args as { new_date: string; new_time: string }, timezone);
         case "tag_patient": return tagPatient(sb, clinicId, phone, args as { tag_name: string; tag_color?: string });
+        case "get_loyalty_balance": return getLoyaltyBalance(sb, clinicId, phone);
         default: return { error: `Unknown: ${name}` };
     }
 };
