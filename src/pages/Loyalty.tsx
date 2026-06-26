@@ -84,7 +84,8 @@ export default function Loyalty() {
             setTransactions(tData.data || [])
 
             // Calculate basic stats
-            const totalPoints = (pData.data || []).reduce((acc: number, p: any) => acc + (p.loyalty_points || 0), 0)
+            // Un saldo de fidelización nunca es negativo: cada clienta aporta como mínimo 0 al total.
+            const totalPoints = (pData.data || []).reduce((acc: number, p: any) => acc + Math.max(0, p.loyalty_points || 0), 0)
 
             setStats({
                 totalPointsDist: totalPoints,
@@ -351,7 +352,7 @@ export default function Loyalty() {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-[10px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">Saldo Actual</p>
-                                            <p className="text-xl font-black text-primary-theme">{patient.loyalty_points || 0} <span className="text-sm font-bold text-[var(--accent-primary)]">{settings?.loyalty_currency_symbol || 'pts'}</span></p>
+                                            <p className="text-xl font-black text-primary-theme">{Math.max(0, patient.loyalty_points || 0)} <span className="text-sm font-bold text-[var(--accent-primary)]">{settings?.loyalty_currency_symbol || 'pts'}</span></p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[10px] font-black text-secondary-theme uppercase tracking-widest leading-none mb-1">Referidos</p>
