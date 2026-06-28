@@ -451,9 +451,9 @@ export default function Demo() {
                     <button onClick={advance} disabled={!contactReady || animating}
                         className="w-full bg-[#FF2E88] text-white font-black py-4 rounded-xl hover:bg-[#e0266f] transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1"
                     >
-                        Agenda mi demo <ArrowRight className="w-4 h-4" />
+                        Elegir día y hora <ArrowRight className="w-4 h-4" />
                     </button>
-                    <p className="text-center text-white/25 text-xs">Sin compromiso · 30 min por videollamada</p>
+                    <p className="text-center text-white/25 text-xs">Último paso: eliges el horario de tu videollamada</p>
                 </div>
             )}
 
