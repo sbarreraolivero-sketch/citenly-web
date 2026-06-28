@@ -217,8 +217,10 @@ export default function Demo() {
             if (!res.ok || json.error) {
                 setSubmitError(json.error || 'No pudimos registrar tu demo. Inténtalo de nuevo.')
             } else {
-                if (typeof window !== 'undefined' && (window as any).fbq)
-                    (window as any).fbq('track', 'CompleteRegistration')
+                if (typeof window !== 'undefined' && (window as any).fbq) {
+                    (window as any).fbq('track', 'Lead');
+                    (window as any).fbq('track', 'CompleteRegistration');
+                }
                 setSubmitted(true)
             }
         } catch {
