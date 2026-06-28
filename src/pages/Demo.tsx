@@ -619,6 +619,20 @@ export default function Demo() {
                         </button>
                     )}
 
+                    {/* Qué verás en la reunión (solo primer paso) */}
+                    {currentQ === 0 && (
+                        <div className="w-full sm:max-w-md mb-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#FF2E88]/80 mb-3">Qué verás en estos 30 minutos</p>
+                            <ul className="space-y-2.5">
+                                <li className="flex gap-2.5 text-sm text-white/75 leading-snug"><span>🤖</span><span>Tu asistente de IA <strong className="text-white font-bold">respondiendo y agendando por WhatsApp en vivo</strong>, con el caso de tu negocio.</span></li>
+                                <li className="flex gap-2.5 text-sm text-white/75 leading-snug"><span>📅</span><span>Cómo se <strong className="text-white font-bold">llena tu agenda sola</strong>: recordatorios, confirmación y reactivación de clientas.</span></li>
+                                <li className="flex gap-2.5 text-sm text-white/75 leading-snug"><span>💡</span><span>El <strong className="text-white font-bold">plan que calza</strong> con tu negocio y cómo recuperas la inversión.</span></li>
+                                <li className="flex gap-2.5 text-sm text-white/75 leading-snug"><span>🛡️</span><span><strong className="text-white font-bold">Sin compromiso.</strong> Si te hace sentido, lo dejamos funcionando con garantía de 7 días.</span></li>
+                            </ul>
+                            <p className="text-xs text-white/40 mt-4 leading-snug">Sales sabiendo exactamente cómo se vería en tu negocio — agendes o no.</p>
+                        </div>
+                    )}
+
                     {/* Question */}
                     <div className="w-full sm:max-w-md">
                         {FormContent}
