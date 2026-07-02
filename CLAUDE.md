@@ -596,6 +596,10 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 
 ## Tareas pendientes
 
+### ✅ RESUELTO (sesión 28) — `professional_id` obligatorio en creación manual de citas
+Citas creadas desde el dashboard sin seleccionar profesional quedaban con `professional_id: NULL` y eran invisibles para el chequeo de disponibilidad (`get_professional_available_slots` filtra por `professional_id = p_member_id`), causando doble-booking. Caso real: Yasna Cancino (manual, sin profesional) vs Sofia Arcos Valencia (IA) agendadas en el mismo horario.
+- [x] `Appointments.tsx` — `handleSaveAppointment` bloquea el guardado con `toast.error` si la clínica tiene profesionales activos y no se seleccionó ninguno; select muestra asterisco + placeholder "Selecciona un profesional"
+
 ### ✅ RESUELTO (sesión 27) — FIX INCIDENTE CLARA DESPLEGADO
 Los 4 cambios anti-incidente se **desplegaron a producción el 23-jun-2026** (paquete `d01f7fe`):
 - [x] **`ycloud-whatsapp-webhook` v162** — candados de abono/confirmación + manejo determinista de botones + escalada a Tier 2 en selección de horario (todo scopeado a `clinic.id !== HQ_ID`)
@@ -1067,6 +1071,30 @@ El cupo debe quedar claro que **solo se asegura al recibir el comprobante**. Enf
 
 #### Cómo consultar la DB de Citenly (recordatorio, el MCP apunta a Vetly)
 Script Node con keys del `.env` local (`VITE_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`) y `@supabase/supabase-js`. Funcionó bien esta sesión para inspeccionar `appointments` y `messages` de Elizabeth (`1ab32091-210c-4525-a7e1-e6a7dca1c8c6`). Recordar: Chile en junio = UTC-4, así que 4 PM local = 20:00 UTC en `appointment_date`.
+
+---
+
+### Cambios realizados — julio 2026 (sesión 28) — Doble booking por `professional_id` NULL + regla de retoque olvidada
+
+#### Incidente 1: la IA agendó a Sofia Arcos Valencia en un horario ya ocupado (viernes 3 jul 5 PM)
+
+**Causa raíz (verificada en DB de Elizabeth Microblading, `1ab32091-...`):** la cita de **Yasna Cancino** para ese mismo horario ya existía (`status: confirmed`, `professional_id: NULL`, `patient_id` vinculado, `price: 0`) — todo indica que se creó **manualmente desde el dashboard** dejando el campo profesional sin asignar, no vía IA. El servicio "Microblading de cejas" sí tiene profesional asignado en `service_professionals` (Elizabeth), así que cuando la IA agendó a Sofia ~6h después, resolvió correctamente `professional_id = Elizabeth`.
+
+El motor de disponibilidad (`get_professional_available_slots`, migración `20260311180000_fix_availability_intervals_and_logic.sql:199-203`) calcula los rangos ocupados filtrando **estrictamente** `WHERE professional_id = p_member_id`. La cita de Yasna, al tener `professional_id: NULL`, **nunca contó como "ocupado" para ningún profesional** — quedó invisible para el chequeo de disponibilidad. Como Elizabeth es la única profesional activa de la clínica, cualquier cita (manual o de la IA) que quede sin `professional_id` genera un hueco fantasma en la agenda que permite doble-booking.
+
+**Pendiente (no implementado esta sesión):** hacer `professional_id` obligatorio en la creación manual de citas desde `Appointments.tsx` (o, alternativamente, que las RPC de disponibilidad traten las citas sin profesional como ocupando a *todos* los profesionales activos). Confirmado con el fundador que la dirección correcta es la primera opción.
+
+#### Incidente 2: la IA cotizó "retoque" ($50.000) a una clienta con tratamiento de hace 3 años (debía ser $89.000)
+
+**Síntoma:** clienta indicó "me hice micropigmentación hace como 3 años", el agente reconoció ">12 meses" pero igual ofreció "retoque" como opción; minutos después, ante la pregunta literal "el valor del retoque porfavor", respondió $50.000 sin volver a cruzar el dato de los 3 años.
+
+**Causa raíz:** la regla de negocio en `ai_behavior_rules` (agregada en sesión 21) estaba bien escrita, pero **ambos mensajes cayeron en Tier 1 (gpt-4o-mini)** porque `classifyMessage()` (`n2Keywords`, [index.ts:95-101](supabase/functions/ycloud-whatsapp-webhook/index.ts#L95-L101)) no incluía `"valor"` (forma más común en Chile de preguntar precio) ni `"retoque"`. El mini no sostuvo la regla condicional multi-turno.
+
+**Fixes aplicados y desplegados:**
+1. **`ycloud-whatsapp-webhook` (`n2Keywords`):** agregadas `"valor"` y `"retoque"` — cualquier mensaje de precio/retoque ahora escala a Tier 2. Deployado a producción.
+2. **`ai_behavior_rules` de Elizabeth (PATCH directo a `clinic_settings`):** nueva línea "REGLA ANTI-OLVIDO" bajo la regla de trabajos previos — si el cliente pregunta literalmente "el valor del retoque" pero ya indicó antes más de 1 año desde su tratamiento, el agente debe ignorar la palabra "retoque" de la pregunta y responder igual con el Valor Normal ($89.000).
+
+**Patrón repetido (ya visto en sesión 19 con cancelaciones y sesión 26 con selección de horario):** cualquier paso crítico de negocio (precios, cancelaciones, selección de horario/servicio) que dependa de contexto de turnos anteriores debe forzarse a Tier 2+ vía `n2Keywords`/`n3Keywords` — el mini no es confiable para lógica condicional multi-turno aunque la regla esté bien escrita en el prompt.
 
 ### Cambios realizados — junio 2026 (sesión 18)
 

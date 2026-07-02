@@ -379,6 +379,14 @@ export default function Appointments() {
                 return
             }
 
+            // Without professional_id the slot is invisible to get_professional_available_slots,
+            // which can let the AI double-book it later from WhatsApp.
+            if (professionals.length > 0 && !newAppointment.professional_id) {
+                toast.error('Debes seleccionar un profesional para esta cita')
+                setSaving(false)
+                return
+            }
+
             const [year, month, day] = dateStr.split('-').map(Number)
             const [hours, minutes] = timeStr.split(':').map(Number)
 
@@ -1734,7 +1742,7 @@ export default function Appointments() {
 
                                 <div>
                                     <label className="block text-[10px] font-black text-secondary-theme uppercase tracking-widest mb-2">
-                                        Profesional
+                                        Profesional {professionals.length > 0 && <span className="text-red-500">*</span>}
                                     </label>
                                     <div className="relative">
                                         <select
@@ -1747,7 +1755,7 @@ export default function Appointments() {
                                             }}
                                             className="input-premium w-full appearance-none"
                                         >
-                                            <option value="">Sin asignar</option>
+                                            <option value="">{professionals.length > 0 ? 'Selecciona un profesional' : 'Sin asignar'}</option>
                                             {professionals.map((prof) => (
                                                 <option key={prof.member_id} value={prof.member_id}>
                                                     {prof.first_name || ''} {prof.last_name || ''} {prof.job_title ? `(${prof.job_title})` : ''}

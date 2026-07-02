@@ -93,7 +93,8 @@ const classifyMessage = (body: string, isImage: boolean): number => {
     
     // N2: Standard - GPT-5.4. Gestión de agendamientos y ventas.
     const n2Keywords = [
-        "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
+        "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "valor", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
+        "retoque",
         "cancelar", "cancelo", "reagendar", "no podré", "no podre", "no puedo ir", "no voy", "cerrado", "afuera", "atrasada", "atrasado", "esperando",
         "confirmo", "confirmar", "confirmado", "confirmada",
         "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
