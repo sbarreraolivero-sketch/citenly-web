@@ -667,9 +667,24 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     
     if (!isTimeAvailable) {
         console.warn(`[createAppt] Specific slot ${requestedTimeLabel} not in available list:`, availResult.slots);
+
+        // No afirmar una causa sin comprobarla. Solo se le puede decir al cliente que el
+        // horario "se ocupó" si existe de verdad otra cita en ese bloque; en cualquier otro
+        // caso el mensaje se mantiene neutro en vez de inventar un motivo.
+        const { data: conflicting } = await sb.from("appointments")
+            .select("id")
+            .eq("clinic_id", clinicId)
+            .eq("appointment_date", appointmentDateWithOffset)
+            .neq("status", "cancelled")
+            .limit(1);
+        const reallyTaken = !!(conflicting && conflicting.length > 0);
+
+        const alternatives = availResult.slots.slice(0, 15).join(", ");
         return {
             success: false,
-            message: `Lo siento, el horario de las ${requestedTimeLabel} no está disponible o se acaba de ocupar. Los horarios disponibles para ese día son: ${availResult.slots.slice(0, 15).join(", ")}. ¿Te gustaría alguno de esos?`
+            message: reallyTaken
+                ? `Lo siento, el horario de las ${requestedTimeLabel} ya fue tomado. Los horarios disponibles para ese día son: ${alternatives}. ¿Te gustaría alguno de esos?`
+                : `Lo siento, no puedo tomar el horario de las ${requestedTimeLabel} para ese día. Los horarios disponibles son: ${alternatives}. ¿Te gustaría alguno de esos?`
         };
     }
     // -----------------------------
