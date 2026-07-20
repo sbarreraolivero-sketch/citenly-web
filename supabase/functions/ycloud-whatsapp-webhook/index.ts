@@ -353,7 +353,10 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
 // =============================================
 // Tool Implementations
 // =============================================
-const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicObj?: any, timeOfDay?: string, minTime?: string) => {
+// `fullList` desactiva el recorte a 15 slots. El recorte existe solo para no saturar el
+// mensaje que ve el cliente; validar una reserva contra la lista recortada rechaza horarios
+// que sí están libres (los que caen fuera de los primeros 15 del día).
+const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, date: string, serviceName?: string, timezone: string = "America/Santiago", profName?: string, clinicObj?: any, timeOfDay?: string, minTime?: string, fullList: boolean = false) => {
     // 1. Update CRM stage to "Calificado" (Interest shown)
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
@@ -471,7 +474,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     // 1. Check requested date
     const result = await checkSingleDay(date);
     if (result.available) {
-        const displaySlots = result.slots.slice(0, 15);
+        const displaySlots = fullList ? result.slots : result.slots.slice(0, 15);
         return { available: true, slots: displaySlots, message: `Disponibilidad el ${date}: ${displaySlots.join(", ")}` };
     }
 
@@ -501,7 +504,7 @@ const getOffset = (timeZone: string = "America/Santiago", date: Date) => {
     } catch (e) { console.error("getOffset error", e); return "-03:00"; }
 };
 
-const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago", requireDepositFirst: boolean = false) => {
+const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string, phone: string, args: { patient_name: string; date: string; time: string; service_name: string }, timezone: string = "America/Santiago", requireDepositFirst: boolean = false, clinicObj?: any) => {
     const normalizedPhone = normalizePhone(phone);
     let duration = 60;
     let price = 0;
@@ -641,8 +644,10 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
         return { success: true, message: "Ya registré esta solicitud y está pendiente de pago. Por favor envía el comprobante para confirmarla." };
     }
 
-    // Proactive availability check: Ensure the slot is actually free before inserting
-    const availResult = await checkAvail(sb, clinicId, normalizedPhone, args.date, args.service_name, timezone, profName);
+    // Proactive availability check: Ensure the slot is actually free before inserting.
+    // Debe usar el MISMO clinicObj y la lista completa que la consulta que se le ofreció al
+    // cliente; si no, se rechazan horarios realmente libres.
+    const availResult = await checkAvail(sb, clinicId, normalizedPhone, args.date, args.service_name, timezone, profName, clinicObj, undefined, undefined, true);
     if (!availResult.available) {
         console.warn(`[createAppt] Day no longer available: ${args.date}`);
         return { success: false, message: "Lo siento, ese día ya no tiene disponibilidad. Por favor consulta la disponibilidad nuevamente para elegir otro momento." };
@@ -662,9 +667,9 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     
     if (!isTimeAvailable) {
         console.warn(`[createAppt] Specific slot ${requestedTimeLabel} not in available list:`, availResult.slots);
-        return { 
-            success: false, 
-            message: `Lo siento, el horario de las ${requestedTimeLabel} no está disponible o se acaba de ocupar. Los horarios disponibles para ese día son: ${availResult.slots.join(", ")}. ¿Te gustaría alguno de esos?` 
+        return {
+            success: false,
+            message: `Lo siento, el horario de las ${requestedTimeLabel} no está disponible o se acaba de ocupar. Los horarios disponibles para ese día son: ${availResult.slots.slice(0, 15).join(", ")}. ¿Te gustaría alguno de esos?`
         };
     }
     // -----------------------------
@@ -850,14 +855,23 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
     //   responsable de moverla a confirmed/cancelled. A la clienta se le comunica igualmente "confirmada".
     // - "yes" en cualquier otro caso (pending / confirmed, p.ej. respuesta al botón de confirmación) → confirmed.
     let status: string;
+    let depositOnly = false;
     if (response === "no") {
         status = "cancelled";
     } else if (appt.status === "pending_deposit") {
         status = "pending";
+        depositOnly = true;
     } else {
         status = "confirmed";
     }
-    await sb.from("appointments").update({ status, confirmation_received: true, confirmation_response: response }).eq("id", appt.id);
+    // Verificar el abono NO cuenta como la confirmación del cliente: la cita queda en `pending`
+    // esperando el template de 24h con botones, y ese template solo se envía si
+    // `confirmation_received` sigue en false.
+    await sb.from("appointments").update(
+        depositOnly
+            ? { status }
+            : { status, confirmation_received: true, confirmation_response: response }
+    ).eq("id", appt.id);
 
     if (status === "cancelled") return { message: "Cita cancelada. ¿Reagendar?" };
 
@@ -1653,7 +1667,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
         case "agendar_videollamada": return agendarVideollamada(sb, phone, clinic, args as any);
         case "escalar_lead_caliente": return escalarLeadCaliente(sb, phone, clinic, args as any);
         case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string, args.min_time as string | undefined);
-        case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone, !!clinic?.require_deposit_first);
+        case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone, !!clinic?.require_deposit_first, clinic);
         case "get_services": return getServices(sb, clinicId);
         case "confirm_appointment":
         case "cancel_appointment": return confirmAppt(sb, clinicId, phone, name === "cancel_appointment" ? "no" : args.response as string);

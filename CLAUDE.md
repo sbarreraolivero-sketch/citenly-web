@@ -1096,6 +1096,42 @@ El motor de disponibilidad (`get_professional_available_slots`, migración `2026
 
 **Patrón repetido (ya visto en sesión 19 con cancelaciones y sesión 26 con selección de horario):** cualquier paso crítico de negocio (precios, cancelaciones, selección de horario/servicio) que dependa de contexto de turnos anteriores debe forzarse a Tier 2+ vía `n2Keywords`/`n3Keywords` — el mini no es confiable para lógica condicional multi-turno aunque la regla esté bien escrita en el prompt.
 
+### Cambios realizados — julio 2026 (sesión 29) — Auditoría del sistema de recordatorios + fix definitivo de "ofrece horarios y luego los rechaza"
+
+#### Incidente A (crítico, comercial): la IA ofrece horarios y al elegirlos dice "ya no está disponible"
+
+**Síntoma reportado varias veces y "arreglado" antes sin éxito.** Caso verificado: María José Muñoz (`56953363953`, 20-jul) — `check_availability` ofreció `1:15 PM … 6:15 PM`; al elegir 5:45 PM, `create_appointment` respondió "no disponible" y ofreció `10:00 AM … 1:30 PM`. La clienta escribió: *"para que dan opciones que luego inhabilitan"*.
+
+**Causa raíz (dos defectos que se suman, ambos en `createAppt`):**
+1. **Validación contra una lista truncada.** `checkAvail` recorta a 15 slots (`result.slots.slice(0, 15)`) — ese recorte existe solo para no saturar el mensaje al cliente. Pero `createAppt` reusaba esa lista recortada para validar (`isTimeAvailable`). Con servicios de 15 min (Evaluación) un día genera ~40 slots, así que **los primeros 15 llegan solo hasta la mitad del día**: cualquier reserva de la tarde se rechazaba aunque el cupo estuviera libre.
+2. **Filtros distintos a los de la oferta.** `createAppt` llamaba `checkAvail` **sin pasar `clinicObj`**, así que su re-chequeo corría sin horario de la clínica, sin colación y sin `same_day_buffer_hours`. La lista de validación no era la misma que la ofrecida.
+
+**Fix:** `checkAvail` recibe un parámetro `fullList` (desactiva el truncado); `createAppt` recibe `clinicObj` y llama `checkAvail(..., clinicObj, undefined, undefined, true)`. El mensaje de rechazo sigue mostrando máximo 15 horarios. **Regla permanente: el truncado a 15 es solo de presentación — nunca debe usarse como fuente de verdad para validar una reserva.**
+
+#### Incidente B: los recordatorios de 24h se enviaban SIN botones de confirmación
+
+**Causa raíz:** el cron usa el template con botones (`template_confirmation` = `confirmacion_cita`) solo si `appt.status === 'pending' && !appt.confirmation_received`. Pero `confirmAppt`, al verificar el abono (`pending_deposit` → `pending`), marcaba **`confirmation_received: true`**. Eso apagaba la única condición que dispara los botones → caía al template plano `recordatorio_oficial_24hrs`.
+
+Contradecía directamente el diseño de la sesión 23: la cita queda en `pending` **precisamente** para que el template de 24h con botones la mueva a `confirmed`/`cancelled`.
+
+**Fix:** verificar el abono ya no marca `confirmation_received`. Solo se marca cuando hay una decisión real del cliente (confirmar o cancelar). Además se limpiaron las citas futuras que habían quedado con el estado viejo.
+
+#### Incidente C: el 100% de los recordatorios de 2h fallaba (silenciosamente)
+
+`reminder_settings.template_2h` decía **`2hr_recordatorio_cita`** pero la plantilla real en la WABA se llama **`2hrs_recordatorio_cita`** (con "s"). YCloud respondía `403 WHATSAPP_TEMPLATE_UNAVAILABLE` en todos los envíos. Corregido en DB. Totales históricos del daño: `2h/failed: 54`, `24h/failed: 180`.
+
+#### Incidente D: citas a las :15/:30/:45 nunca recibían recordatorio de 2h
+
+El bloque de 2h filtraba por ventana (`now+90min` a `now+150min`) **y además** exigía `apptHour === targetHour`. Con el cron corriendo cada hora en punto, una cita a las 11:30 caía en la ventana de la corrida de las 10:00 pero su hora (11) no coincidía con `targetHour` (12) → descartada; y en la corrida siguiente ya no entraba en la ventana. **Nunca se enviaba.** Crítico para Elizabeth, cuyas Evaluaciones duran 15 min y caen en :15/:30/:45. **Fix:** eliminado el chequeo de hora exacta — la ventana ya define qué citas tocan, y la idempotencia por `reminder_logs` evita duplicados.
+
+#### Incidente E: los "Bloqueo de Agenda" intentaban recibir recordatorios cada hora
+
+Los bloqueos de agenda se guardan como citas con teléfono `000000000`. El cron intentaba enviarles recordatorio en cada corrida, YCloud devolvía `PARAM_INVALID` y se escribía una fila `failed` en `reminder_logs` **cada hora, indefinidamente** (la idempotencia solo salta los `status = 'sent'`). **Fix:** helper `isContactable()` que descarta teléfonos inválidos y el nombre "Bloqueo de Agenda", aplicado en los bloques de 24h y 2h.
+
+**Desplegadas:** `ycloud-whatsapp-webhook`, `cron-process-reminders`. Correcciones de datos aplicadas directo a producción (`template_2h`, citas futuras con `confirmation_received` heredado).
+
+---
+
 ### Cambios realizados — junio 2026 (sesión 18)
 
 #### Fix crítico: `ai_behavior_rules` de Elizabeth Microblading — oferta expirada y labios activos

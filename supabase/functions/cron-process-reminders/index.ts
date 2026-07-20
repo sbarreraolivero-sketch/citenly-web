@@ -47,6 +47,16 @@ const buildTemplateParams = async (apiKey: string, tplName: string, values: Reco
     return nums.map(n => ({ type: 'text', text: values[n] || '' }))
 }
 
+// Los bloqueos de agenda se guardan como citas con teléfono placeholder ("000000000").
+// Sin este filtro el cron reintenta enviarles un recordatorio cada hora y YCloud
+// responde PARAM_INVALID indefinidamente.
+const isContactable = (appt: any) => {
+    const digits = (appt.phone_number || '').replace(/\D/g, '')
+    if (digits.length < 8 || /^0+$/.test(digits)) return false
+    if ((appt.patient_name || '').trim().toLowerCase() === 'bloqueo de agenda') return false
+    return true
+}
+
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
@@ -194,6 +204,8 @@ Deno.serve(async (req) => {
             let sentCount = 0
 
             for (const appt of (appointments || [])) {
+                if (!isContactable(appt)) continue
+
                 // Verify date in clinic timezone safely
                 const apptDate = new Date(appt.appointment_date)
                 const apptDateStr = getSafeDateStr(apptDate, timeZone)
@@ -337,20 +349,10 @@ Deno.serve(async (req) => {
                 if (!clinic?.ycloud_api_key) continue
 
                 const timeZone = clinic.timezone || 'America/Mexico_City'
-                const now = new Date()
 
                 const nowUTC = new Date()
                 const startSearch = new Date(nowUTC.getTime() + 90 * 60 * 1000) // +1.5h
                 const endSearch = new Date(nowUTC.getTime() + 150 * 60 * 1000)   // +2.5h (Allowing some buffer)
-
-                // Target: Now + 2 hours safely
-                const targetTimeUTC = new Date(nowUTC.getTime() + 2 * 60 * 60 * 1000)
-                const targetHour = getSafeHour(targetTimeUTC, timeZone)
-
-                const targetDateStr = getSafeDateStr(targetTimeUTC, timeZone) // YYYY-MM-DD
-
-                // Fetch appointments for that day, then filter by hour
-                // Fetch window: Now + 1h to Now + 3h to be safe
 
                 const { data: appointments, error: apptError } = await supabaseClient
                     .from('appointments')
@@ -367,6 +369,8 @@ Deno.serve(async (req) => {
                 let sentCount = 0
 
                 for (const appt of (appointments || [])) {
+                    if (!isContactable(appt)) continue
+
                     // Idempotency: skip if 2h reminder already sent (use .limit(1), NOT .maybeSingle())
                     const { data: existingLog2h } = await supabaseClient
                         .from('reminder_logs')
@@ -377,11 +381,10 @@ Deno.serve(async (req) => {
                         .limit(1)
                     if (existingLog2h && existingLog2h.length > 0) continue
 
-                    // Strict Hour Check safely
+                    // La ventana de búsqueda (+90min a +150min) ya define qué citas tocan en esta
+                    // corrida. Un chequeo extra de hora exacta descartaba para siempre las citas
+                    // que no caen en punto (:15, :30, :45), que nunca recibían recordatorio de 2h.
                     const apptDate = new Date(appt.appointment_date)
-                    const apptHour = getSafeHour(apptDate, timeZone)
-
-                    if (apptHour !== targetHour) continue
 
                     // SEND WHATSAPP
                     try {
