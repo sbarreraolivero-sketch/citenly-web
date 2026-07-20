@@ -596,6 +596,12 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 
 ## Tareas pendientes
 
+### Pendiente de verificar en producción (sesión 29)
+- [ ] **Confirmar la cadena de agendamiento end-to-end** tras los fixes de la sesión 29: (1) una reserva de **tarde** de un servicio corto (Evaluación, 15 min) completándose sin el falso "ya no está disponible"; (2) un recordatorio de **24h llegando con botones**; (3) un recordatorio de **2h a una cita en :15/:30/:45**. Los tres estaban rotos y los fixes están desplegados, pero al cierre de la sesión ninguno se había observado ocurriendo en vivo.
+
+### Riesgo conocido no cubierto (sesión 29)
+- [ ] **La IA promete un horario antes de llamar `create_appointment`** — mismo patrón del incidente Clara (sesión 26). Los candados actuales bloquean soltar datos bancarios o afirmar "cita confirmada" sin reserva, pero no el compromiso verbal previo ("agendaremos tu cita para las 5:45, dame tu nombre"). Evaluar un candado adicional o reforzar el flujo.
+
 ### ✅ RESUELTO (sesión 28) — `professional_id` obligatorio en creación manual de citas
 Citas creadas desde el dashboard sin seleccionar profesional quedaban con `professional_id: NULL` y eran invisibles para el chequeo de disponibilidad (`get_professional_available_slots` filtra por `professional_id = p_member_id`), causando doble-booking. Caso real: Yasna Cancino (manual, sin profesional) vs Sofia Arcos Valencia (IA) agendadas en el mismo horario.
 - [x] `Appointments.tsx` — `handleSaveAppointment` bloquea el guardado con `toast.error` si la clínica tiene profesionales activos y no se seleccionó ninguno; select muestra asterisco + placeholder "Selecciona un profesional"
@@ -1116,6 +1122,14 @@ El motor de disponibilidad (`get_professional_available_slots`, migración `2026
 3. **La IA inventó horarios.** Al recibir una lista de mañana que contradecía su propia oferta de tarde, recicló su oferta anterior y presentó `4:00–5:15 PM` como disponibilidad nueva. Esos cupos **no los devolvió ninguna herramienta**.
 4. Al segundo rechazo repitió fielmente la lista de mañana → ofreció mañana sin que la clienta la pidiera nunca.
 
+#### ⚠️ REGLA ESTRUCTURAL (la lección más importante de esta sesión)
+
+**Una afirmación falsa que nace en el `return` de una herramienta NO se corrige con reglas de prompt.** Durante sesiones se atacó este síntoma endureciendo el prompt (regla anti-alucinación de la sesión 17) y el ruteo de modelo (escalada a Tier 2 de la sesión 26), y volvió a ocurrir cada vez — porque el modelo **no estaba alucinando**: repetía de buena fe el texto que `createAppt` le entregaba.
+
+Antes de escribir una regla de prompt para corregir algo que "dice mal" el agente, **verificar primero qué devolvieron las herramientas en ese turno** (`messages.ai_function_result` en la DB). Si el dato falso ya viene ahí, el bug es de código y ninguna instrucción al modelo lo va a arreglar.
+
+**Corolario:** ninguna función debe afirmar una causa que no comprobó. El mensaje de rechazo de `createAppt` daba por hecho "se acaba de ocupar" sin mirar la DB. Ahora consulta si existe realmente otra cita en ese bloque y solo entonces lo afirma; si no, usa un texto neutro que no inventa un motivo.
+
 #### Candado de horarios inventados (eslabón 3)
 
 Los eslabones 1, 2 y 4 se corrigen en la fuente de datos. El 3 es alucinación del modelo y necesita un candado a nivel sistema, como los de abono/confirmación de la sesión 26:
@@ -1148,7 +1162,17 @@ El bloque de 2h filtraba por ventana (`now+90min` a `now+150min`) **y además** 
 
 Los bloqueos de agenda se guardan como citas con teléfono `000000000`. El cron intentaba enviarles recordatorio en cada corrida, YCloud devolvía `PARAM_INVALID` y se escribía una fila `failed` en `reminder_logs` **cada hora, indefinidamente** (la idempotencia solo salta los `status = 'sent'`). **Fix:** helper `isContactable()` que descarta teléfonos inválidos y el nombre "Bloqueo de Agenda", aplicado en los bloques de 24h y 2h.
 
-**Desplegadas:** `ycloud-whatsapp-webhook`, `cron-process-reminders`. Correcciones de datos aplicadas directo a producción (`template_2h`, citas futuras con `confirmation_received` heredado).
+#### Observación adicional (no corregida): la IA promete el cupo antes de reservarlo
+
+En el mismo chat, al elegir ella las 5:45 PM, la IA respondió *"agendaremos tu evaluación para hoy a las 5:45 PM, indícame tu nombre completo"* **sin haber llamado aún a `create_appointment`**. Recién lo llamó dos mensajes después. Es el mismo patrón del incidente Clara (sesión 26): comprometer un cupo que todavía no está reservado. El candado de abono cubre el caso de soltar datos bancarios sin cita, pero **no** el de prometer verbalmente un horario antes de registrarlo. Queda como riesgo conocido.
+
+#### Despliegue y verificación
+
+**Desplegadas:** `ycloud-whatsapp-webhook` (3 veces: fix de validación, mensaje honesto, candado de horarios), `cron-process-reminders`.
+**Commits:** `b4a7b0f` (recordatorios + validación de cupos), `430f290` (no afirmar "se ocupó" sin comprobar), `0cd235d` (candado de horarios inventados).
+**Datos corregidos en producción:** `reminder_settings.template_2h` → `2hrs_recordatorio_cita`; citas futuras en `pending` con `confirmation_received` heredado del bug → limpiadas (1 fila: Victoria Luarte, 11-ago).
+
+**Estado de verificación (honesto):** el cron se ejecutó en vivo sin errores tras el fix, y el candado se validó con 8 casos incluidos los dos turnos reales de María José. Pero **al cierre de la sesión todavía no se había observado en producción** ni una reserva de tarde completándose end-to-end, ni un recordatorio de 24h llegando con botones. Casos a revisar para confirmar: la cita de Claudia Valdes (21-jul 14:30 — debería recibir 24h **con botones** y el de 2h, que antes nunca habría recibido por caer en :30).
 
 ---
 
@@ -1420,6 +1444,23 @@ Para funciones que necesiten `verify_jwt = false`, asegurarse de tener la entrad
 - `YCLOUD_API_KEY` — para funciones que envían mensajes directamente
 - `MERCADOPAGO_ACCESS_TOKEN` — webhook de pagos
 - `LEMONSQUEEZY_SECRET_KEY` — webhook de pagos internacional
+
+### Depurar "la IA dijo algo incorrecto" — orden obligatorio (sesión 29)
+
+Antes de tocar el prompt, `ai_behavior_rules` o el ruteo de tiers, **verificar qué recibió el modelo**:
+
+```sql
+-- Qué devolvieron las herramientas en ese turno
+SELECT created_at, direction, content, ai_tier, ai_function_called, ai_function_result
+FROM messages WHERE clinic_id = '<id>' AND phone_number = '<tel>' ORDER BY created_at;
+```
+
+Comparar `ai_function_result` (lo que devolvió la herramienta) contra `content` del outbound (lo que la IA dijo):
+1. **Coinciden y ambos están mal** → el bug es de **código**. Ninguna regla de prompt lo arregla. (Caso sesión 29: `createAppt` devolvía una lista de horarios truncada.)
+2. **La IA dijo algo que NO está en el resultado** → alucinación real → necesita **candado a nivel sistema** antes de enviar, no una regla de prompt. (Caso sesión 29: horarios inventados.)
+3. **Solo entonces** considerar prompt/tier — y recordar que gpt-4o-mini (Tier 1) no sostiene lógica condicional multi-turno (sesiones 19, 26, 28).
+
+Las reglas de prompt corrigen *criterio*; los candados corrigen *hechos*. Un dato falso nunca se arregla con criterio.
 
 ### Regla de negocios en KB, no en código
 Las reglas de **negocio** (precios, horarios, protocolos de servicio) van en documentos de `knowledge_base`. El campo `ai_behavior_rules` en `clinic_settings` solo debe contener reglas **técnicas a nivel app** (cómo usar tools, formato de respuesta, restricciones del sistema). No duplicar lógica de negocio entre ambos.
