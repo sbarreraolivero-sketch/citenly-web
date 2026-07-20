@@ -1108,6 +1108,26 @@ El motor de disponibilidad (`get_professional_available_slots`, migración `2026
 
 **Fix:** `checkAvail` recibe un parámetro `fullList` (desactiva el truncado); `createAppt` recibe `clinicObj` y llama `checkAvail(..., clinicObj, undefined, undefined, true)`. El mensaje de rechazo sigue mostrando máximo 15 horarios. **Regla permanente: el truncado a 15 es solo de presentación — nunca debe usarse como fuente de verdad para validar una reserva.**
 
+**Por qué solo se veía en Elizabeth y no en otras agendas:** el truncado a 15 únicamente muerde cuando el día genera **más de 15 cupos**, y la cantidad de cupos depende de la duración del servicio (`p_interval = min(duration, 60)`). Microblading (120 min) → ~9 cupos/día; Retoque (60 min) → ~10; ambos caben en 15 y la lista truncada era idéntica a la completa → sin bug. La **Evaluación de Microblading dura 15 min** → ~40 cupos/día → los primeros 15 llegan solo hasta las 13:30. **El bug afectaba exclusivamente a servicios cortos y solo en reservas de tarde.**
+
+**Cadena completa del incidente (4 eslabones, no 1):**
+1. La validación devolvió la lista equivocada (solo mañana, por el truncado + falta de filtros).
+2. El rechazo afirmó "se acaba de ocupar" — texto fijo en el código, sin comprobar nada.
+3. **La IA inventó horarios.** Al recibir una lista de mañana que contradecía su propia oferta de tarde, recicló su oferta anterior y presentó `4:00–5:15 PM` como disponibilidad nueva. Esos cupos **no los devolvió ninguna herramienta**.
+4. Al segundo rechazo repitió fielmente la lista de mañana → ofreció mañana sin que la clienta la pidiera nunca.
+
+#### Candado de horarios inventados (eslabón 3)
+
+Los eslabones 1, 2 y 4 se corrigen en la fuente de datos. El 3 es alucinación del modelo y necesita un candado a nivel sistema, como los de abono/confirmación de la sesión 26:
+
+- Antes de enviar, se extraen las menciones horarias de `finalReply` y se comparan contra un conjunto permitido.
+- **Permitido:** horas presentes en los resultados de las herramientas de ESTE turno + horas que mencionó el propio cliente en su mensaje entrante (la IA puede repetir "las 5:15 PM no están disponibles") + horario de atención y colación de `clinic.working_hours`.
+- Si aparece una hora fuera de ese conjunto → se reemplaza el mensaje por la lista real de cupos.
+- Normalización: `"4:00 PM"`, `"16:00"` y `"16:00 PM"` se resuelven al mismo valor. Las horas sin AM/PM son **ambiguas a propósito** (`"5:45"` → 5:45 o 17:45) y basta con que una lectura sea válida, para no bloquear mensajes legítimos.
+- Scopeado a `clinic.id !== HQ_ID` (no afecta a Sofía).
+
+Validado con 8 casos, incluidos los dos turnos reales de María José: el turno donde inventó `4:00–5:15 PM` se bloquea, y el turno donde repitió correctamente la lista se deja pasar.
+
 #### Incidente B: los recordatorios de 24h se enviaban SIN botones de confirmación
 
 **Causa raíz:** el cron usa el template con botones (`template_confirmation` = `confirmacion_cita`) solo si `appt.status === 'pending' && !appt.confirmation_received`. Pero `confirmAppt`, al verificar el abono (`pending_deposit` → `pending`), marcaba **`confirmation_received: true`**. Eso apagaba la única condición que dispara los botones → caía al template plano `recordatorio_oficial_24hrs`.

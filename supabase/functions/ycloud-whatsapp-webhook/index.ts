@@ -353,6 +353,40 @@ const saveMsg = async (sb: ReturnType<typeof createClient>, clinicId: string, ph
 // =============================================
 // Tool Implementations
 // =============================================
+// --- Utilidades para el candado de horarios inventados ---
+// Detecta menciones horarias del tipo "4:00 PM", "16:00", "5:45". Exige los dos puntos para
+// no confundir montos ("$10.000") ni RUTs.
+const TIME_MENTION_RE = /(\d{1,2}):(\d{2})\s*(a\.?\s?m\.?|p\.?\s?m\.?)?/gi;
+
+// Minutos desde medianoche posibles para una mención. Sin AM/PM la hora es ambigua
+// ("5:45" puede ser 5:45 o 17:45): se devuelven ambas lecturas y basta con que UNA sea
+// válida, para no bloquear mensajes legítimos.
+const timeMentionCandidates = (h: number, m: number, meridiem?: string): number[] => {
+    if (h > 23 || m > 59) return [];
+    const mer = (meridiem || "").toLowerCase().replace(/[.\s]/g, "");
+    if (mer === "pm") return [((h % 12) + 12) * 60 + m];
+    if (mer === "am") return [(h === 12 ? 0 : h) * 60 + m];
+    const out = [h * 60 + m];
+    if (h < 12) out.push((h + 12) * 60 + m);
+    return out;
+};
+
+const collectTimeMentions = (text: string): number[][] => {
+    const out: number[][] = [];
+    for (const mt of String(text || "").matchAll(TIME_MENTION_RE)) {
+        const cand = timeMentionCandidates(parseInt(mt[1]), parseInt(mt[2]), mt[3]);
+        if (cand.length) out.push(cand);
+    }
+    return out;
+};
+
+const formatMinutes = (min: number) => {
+    const h24 = Math.floor(min / 60);
+    const m = min % 60;
+    const h = h24 % 12 === 0 ? 12 : h24 % 12;
+    return `${h}:${String(m).padStart(2, "0")} ${h24 >= 12 ? "PM" : "AM"}`;
+};
+
 // `fullList` desactiva el recorte a 15 slots. El recorte existe solo para no saturar el
 // mensaje que ve el cliente; validar una reserva contra la lista recortada rechaza horarios
 // que sí están libres (los que caen fuera de los primeros 15 del día).
@@ -2713,6 +2747,53 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                             console.warn("[LOCK] Bloqueada confirmación falsa: no hay cita activa.");
                             await debugLog(sb, "LOCK: confirmación falsa", { phone: from });
                             finalReply = "Disculpa, no logré dejar tu cita registrada en el sistema. ¿Me confirmas tu *nombre completo* y el horario que prefieres para agendarla correctamente? 🌿";
+                        }
+                    }
+
+                    // CANDADO DE HORARIOS INVENTADOS: la IA solo puede nombrar horas que las
+                    // herramientas devolvieron en ESTE turno. Caso real: tras un rechazo, el modelo
+                    // reciclaba su oferta anterior y presentaba cupos que el sistema nunca entregó,
+                    // generando una segunda promesa falsa.
+                    if (allFuncResults.length > 0) {
+                        const toolText = JSON.stringify(allFuncResults);
+                        const allowed = new Set<number>();
+                        for (const cand of collectTimeMentions(toolText)) cand.forEach(v => allowed.add(v));
+                        // La IA puede repetir la hora que pidió el propio cliente (p.ej. para decirle
+                        // que no está disponible). Lo prohibido es nombrar horas que nadie mencionó.
+                        for (const cand of collectTimeMentions(body)) cand.forEach(v => allowed.add(v));
+
+                        // El horario de atención y la colación son datos legítimos de la clínica
+                        // aunque no sean cupos ofrecidos ("atendemos de 10:00 a 20:00").
+                        for (const day of Object.values((clinic.working_hours || {}) as Record<string, any>)) {
+                            for (const v of [day?.open, day?.close, day?.start, day?.end, day?.lunch_break?.start, day?.lunch_break?.end]) {
+                                if (typeof v === "string" && /^\d{1,2}:\d{2}/.test(v)) {
+                                    const [hh, mm] = v.split(":").map(Number);
+                                    allowed.add(hh * 60 + mm);
+                                }
+                            }
+                        }
+
+                        if (allowed.size > 0) {
+                            const invented = collectTimeMentions(finalReply)
+                                .filter(cand => !cand.some(v => allowed.has(v)));
+
+                            if (invented.length > 0) {
+                                // Reconstruir la oferta real: los slots que devolvieron las herramientas.
+                                const realSlots: string[] = [];
+                                for (const fr of allFuncResults) {
+                                    const r = fr.result as any;
+                                    if (Array.isArray(r?.slots)) realSlots.push(...r.slots);
+                                }
+                                const fallback = Array.from(allowed).sort((a, b) => a - b).map(formatMinutes);
+                                const opciones = (realSlots.length > 0 ? realSlots : fallback).slice(0, 15).join(", ");
+
+                                console.warn("[LOCK] Horarios inventados bloqueados:", invented.map(c => formatMinutes(c[0])));
+                                await debugLog(sb, "LOCK: horarios inventados", { phone: from, reply: finalReply });
+
+                                finalReply = opciones
+                                    ? `Disculpa, me confundí con los horarios. Los cupos que tengo realmente disponibles son: ${opciones}. ¿Cuál te acomoda? 🌿`
+                                    : "Disculpa, déjame verificar bien la disponibilidad. ¿Para qué día te gustaría agendar? 🌿";
+                            }
                         }
                     }
                 }
