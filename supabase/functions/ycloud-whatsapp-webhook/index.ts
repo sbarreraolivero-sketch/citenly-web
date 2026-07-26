@@ -95,6 +95,7 @@ const classifyMessage = (body: string, isImage: boolean): number => {
     const n2Keywords = [
         "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "valor", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
         "retoque",
+        "promo", "publicidad", "publicaci", "anuncio", "descuento", "oferta",
         "cancelar", "cancelo", "reagendar", "no podré", "no podre", "no puedo ir", "no voy", "cerrado", "afuera", "atrasada", "atrasado", "esperando",
         "confirmo", "confirmar", "confirmado", "confirmada",
         "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
@@ -825,8 +826,14 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     };
 };
 
-const getServices = async (sb: ReturnType<typeof createClient>, clinicId: string) => {
-    const { data: svcRows } = await sb.from("services").select("name, duration, price").eq("clinic_id", clinicId);
+// Servicios de precio promocional (nombre "Promo …"): se ocultan salvo que el contacto venga
+// de una promoción. Es un candado de código, no una regla de prompt: si el modelo llegara a
+// verlos en una conversación normal podría cotizar el precio promocional a cualquiera.
+const isPromoService = (name: string) => /^promo\b/i.test((name || "").trim());
+
+const getServices = async (sb: ReturnType<typeof createClient>, clinicId: string, includePromo = false) => {
+    const { data: allRows } = await sb.from("services").select("name, duration, price").eq("clinic_id", clinicId);
+    const svcRows = includePromo ? allRows : (allRows || []).filter(s => !isPromoService(s.name as string));
     if (svcRows && svcRows.length > 0) {
         const msg = `Servicios:\n\n${svcRows.map((s: { name: string; duration: number; price: number }) => `• ${s.name} (${s.duration}min) - $${s.price}`).join("\n")}`;
         return { services: svcRows, message: msg };
@@ -1016,7 +1023,9 @@ const getKnowledge = async (sb: ReturnType<typeof createClient>, clinicId: strin
         let queryBuilder = sb.from("knowledge_base")
             .select("title, content, category")
             .eq("clinic_id", clinicId)
-            .eq("status", "active");
+            .eq("status", "active")
+            // Ver nota en getKnowledgeSummary: la promoción nunca se sirve por búsqueda.
+            .neq("category", "promo_conditional");
 
         if (searchKeywords.length > 0) {
             // Search ANY of the words in title, content or category
@@ -1506,6 +1515,10 @@ const getKnowledgeSummary = async (sb: ReturnType<typeof createClient>, clinicId
             .select("title, content, category")
             .eq("clinic_id", clinicId)
             .eq("status", "active")
+            // Los documentos de promoción son de inyección condicional: se cargan aparte, solo
+            // cuando el contacto viene de una promoción. Se excluyen aquí SIEMPRE, aunque alguien
+            // los marque como activos desde la UI de la Base de Conocimiento.
+            .neq("category", "promo_conditional")
             .limit(10);
 
         if (!docs || docs.length === 0) return "";
@@ -1717,7 +1730,7 @@ const processFunc = async (sb: ReturnType<typeof createClient>, clinicId: string
         case "escalar_lead_caliente": return escalarLeadCaliente(sb, phone, clinic, args as any);
         case "check_availability": return checkAvail(sb, clinicId, phone, args.date as string, args.service_name as string, timezone, args.professional_name as string, clinic, args.time_of_day as string, args.min_time as string | undefined);
         case "create_appointment": return createAppt(sb, clinicId, phone, args as any, timezone, !!clinic?.require_deposit_first, clinic);
-        case "get_services": return getServices(sb, clinicId);
+        case "get_services": return getServices(sb, clinicId, !!(clinic as any)?._promoActive);
         case "confirm_appointment":
         case "cancel_appointment": return confirmAppt(sb, clinicId, phone, name === "cancel_appointment" ? "no" : args.response as string);
         case "upsert_prospect": return upsertProspect(sb, clinicId, phone, args as { name?: string; email?: string; service_interest?: string; notes?: string });
@@ -2412,13 +2425,112 @@ Deno.serve(async (req) => {
                 // Fetch knowledge base summary for system prompt
                 const knowledgeSummary = await getKnowledgeSummary(sb, clinic.id);
 
+                // Promoción por anuncio de Meta: reconoce a quien llegó por un ad promocional
+                // aunque haya borrado el mensaje predefinido del Click-to-WhatsApp (el referral
+                // viaja igual en el primer mensaje del chat).
+                // Se relee desde la DB en CADA turno a propósito: getHistory solo carga 15
+                // mensajes, así que en una conversación larga el mensaje del anuncio sale de la
+                // ventana de contexto y el modelo perdería el precio promocional.
+                let promoAdContext = "";
+                const promoAdIds: string[] = clinic.promo_ad_ids || [];
+                if (clinic.id !== HQ_ID) {
+                    const promoSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+                    const normFrom = normalizePhone(from);
+                    const phoneVariants = [from, normFrom, `+${normFrom}`];
+
+                    // Fuente A (verificada): llegó por un anuncio marcado como promocional.
+                    const { data: promoHit } = promoAdIds.length > 0
+                        ? await sb.from("messages")
+                            .select("created_at")
+                            .eq("clinic_id", clinic.id)
+                            .in("phone_number", phoneVariants)
+                            .in("payload->referral->>source_id", promoAdIds)
+                            .gte("created_at", promoSince)
+                            .order("created_at", { ascending: true })
+                            .limit(1)
+                            .maybeSingle()
+                        : { data: null };
+
+                    // Fuente B (indicio, NO verificado): el propio cliente nombró la promoción.
+                    // Solo aporta la fecha para calcular el plazo — nunca afirma que califica,
+                    // porque eso lo decide el modelo con sus reglas (regla de sesión 29: el
+                    // sistema no afirma lo que no comprobó).
+                    const { data: promoCandidates } = !promoHit
+                        ? await sb.from("messages")
+                            .select("created_at, content")
+                            .eq("clinic_id", clinic.id)
+                            .eq("direction", "inbound")
+                            .in("phone_number", phoneVariants)
+                            .or("content.ilike.%promoción de la publicidad%,content.ilike.%promocion de la publicidad%,content.ilike.%69.000%,content.ilike.%69000%,content.ilike.%69 mil%")
+                            .gte("created_at", promoSince)
+                            .order("created_at", { ascending: true })
+                            .limit(5)
+                        : { data: null };
+
+                    // El precio por sí solo NO basta: cualquiera podría escribir "69.000" para
+                    // pedir el descuento. Solo cuenta si viene el mensaje predefinido de la
+                    // publicidad o si el precio aparece dentro del texto del anuncio de Meta.
+                    const promoMention = (promoCandidates || []).find((m: any) => {
+                        const c = String(m.content || "");
+                        if (/promoci[oó]n de la publicidad/i.test(c)) return true;
+                        return c.includes("[Mensaje desde Anuncio:") && /69[.\s]?(000|mil)/i.test(c);
+                    }) || null;
+
+                    if (promoHit || promoMention) {
+                        // El cupo promocional dura 72h desde el PRIMER contacto con el anuncio.
+                        // Vencido no significa "el precio subió" — venció SU cupo, y la IA puede
+                        // conceder una extensión por única vez (política en ai_behavior_rules).
+                        const firstContact = new Date((promoHit || promoMention)!.created_at as string);
+                        const deadline = new Date(firstContact.getTime() + 72 * 60 * 60 * 1000);
+                        const expired = Date.now() > deadline.getTime();
+                        const fmtDate = (d: Date) => d.toLocaleString("es-CL", {
+                            timeZone: clinicTz, weekday: "long", day: "numeric", month: "long",
+                            hour: "numeric", minute: "2-digit", hour12: true
+                        });
+                        const daysAgo = Math.floor((Date.now() - firstContact.getTime()) / 86400000);
+
+                        const header = promoHit
+                            ? `### PROMOCIÓN CONFIRMADA POR EL SISTEMA (DATO VERIFICADO, NO ES UNA SUPOSICIÓN):
+Esta persona llegó por uno de los anuncios de la promoción. El sistema lo verificó con el identificador del anuncio, así que es un hecho: NO necesitas que ella lo mencione ni que escriba ningún mensaje especial.
+Aplica el precio promocional descrito en tus reglas de comportamiento durante TODA la conversación, aunque ella no vuelva a hablar de la promoción y aunque hayan pasado muchos mensajes. NUNCA le cotices el precio normal.`
+                            : `### POSIBLE PROMOCIÓN — SIN VERIFICAR (el sistema NO confirma que califique):
+Esta persona nombró la promoción en un mensaje del ${fmtDate(firstContact)}, pero el sistema NO pudo verificar que venga de un anuncio promocional. Decide TÚ si califica según los disparadores de tus reglas de comportamiento. La fecha de abajo solo sirve para saber el plazo en caso de que concluyas que sí califica.`;
+
+                        const status = expired
+                            ? `ESTADO DE SU CUPO: **VENCIDO**. Su primer contacto fue hace ${daysAgo} día(s) (${fmtDate(firstContact)}), así que el cupo de 72 horas venció el ${fmtDate(deadline)}.
+NUNCA le digas que "el precio subió" ni que la promoción se terminó: lo que venció es SU cupo reservado, porque ese valor era por esa publicación. Sigue la política de extensión de gracia descrita en tus reglas de comportamiento.`
+                            : `ESTADO DE SU CUPO: **VIGENTE hasta el ${fmtDate(deadline)}**. Menciónaselo UNA vez, con naturalidad y sin presionar, para que sepa hasta cuándo le queda reservado ese valor.`;
+
+                        // Las reglas de la promoción viven en un doc de knowledge_base con
+                        // status 'promo_conditional', que ni getKnowledgeSummary ni el tool
+                        // get_knowledge devuelven (ambos filtran status='active'). Se cargan
+                        // SOLO aquí: sin señal de promoción el modelo no tiene forma de saber
+                        // que la promo existe, así que no puede mencionarla ni insinuarla.
+                        const { data: promoDoc } = await sb.from("knowledge_base")
+                            .select("content")
+                            .eq("clinic_id", clinic.id)
+                            .eq("category", "promo_conditional")
+                            .limit(1)
+                            .maybeSingle();
+
+                        promoAdContext = `\n${header}\n${status}\n${promoDoc?.content ? `\n${promoDoc.content}\n` : ""}`;
+                    }
+                }
+
+                // Habilita los servicios "Promo …" para este turno (prompt + tool get_services).
+                (clinic as any)._promoActive = !!promoAdContext;
+
                 // Fetch REAL services from the 'services' table (not the legacy JSON field)
                 const { data: realServices } = await sb.from("services")
                     .select("name, duration, price")
                     .eq("clinic_id", clinic.id);
 
-                const servicesForPrompt = realServices && realServices.length > 0
-                    ? realServices.map(s => ({ name: s.name, duration: `${s.duration} min`, price: `$${s.price.toLocaleString('es-CL')}` }))
+                // Mismo candado que en get_services: los servicios "Promo …" solo entran al
+                // prompt si el contacto viene de una promoción.
+                const visibleServices = (realServices || []).filter(s => promoAdContext || !isPromoService(s.name as string));
+
+                const servicesForPrompt = visibleServices.length > 0
+                    ? visibleServices.map(s => ({ name: s.name, duration: `${s.duration} min`, price: `$${s.price.toLocaleString('es-CL')}` }))
                     : clinic.services || [];
 
                 // Build a readable string of hours in SPANISH to match the AI rules and context
@@ -2476,7 +2588,7 @@ Horario General de la Clínica: ${hoursSummary}
 ${calendarContext}
 
 Servicios OFICIALES (SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
-
+${promoAdContext}
 ${knowledgeSummary}
 
 IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.
@@ -2784,8 +2896,12 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                                     const r = fr.result as any;
                                     if (Array.isArray(r?.slots)) realSlots.push(...r.slots);
                                 }
-                                const fallback = Array.from(allowed).sort((a, b) => a - b).map(formatMinutes);
-                                const opciones = (realSlots.length > 0 ? realSlots : fallback).slice(0, 15).join(", ");
+                                // SOLO los cupos que devolvió una herramienta pueden ofrecerse.
+                                // NO usar aquí el set 'allowed': contiene horas de apertura, cierre y
+                                // colación, y presentarlas como cupos sería inventar horarios — el
+                                // error que este candado existe para impedir (caso María Susana, 25-jul:
+                                // el propio mensaje de reemplazo ofreció "3:59 PM" y "8:00 PM").
+                                const opciones = realSlots.slice(0, 15).join(", ");
 
                                 console.warn("[LOCK] Horarios inventados bloqueados:", invented.map(c => formatMinutes(c[0])));
                                 await debugLog(sb, "LOCK: horarios inventados", { phone: from, reply: finalReply });

@@ -135,6 +135,11 @@ En Citenly los "pacientes" son clientes humanos directos (no hay tutores). La ta
 - El webhook `tagPatient` debe insertar en `patient_tags` (no en tablas inexistentes)
 - La tabla `tags` tiene RLS habilitada — verificar que tenga políticas activas
 
+### Servicios — el nombre es funcional, no cosmético (sesión 31)
+`createAppt` y `checkAvail` resuelven el servicio con `ilike %nombre%` + `.limit(1)` **sin `order by`**. Si dos servicios de la misma clínica hacen match con el texto que pasó la IA, el elegido es **indeterminado** — y como `createAppt` toma el `price` del servicio, una cita puede quedar registrada con el precio equivocado. Al crear servicios con nombres que se solapan (variantes, promociones, duplicados por duración), **verificar el `ilike` contra producción antes de darlos por buenos**, y exigir en el prompt el nombre exacto de la lista de Servicios OFICIALES.
+
+Corolario: cualquier servicio con precio especial que no deba ofrecerse a todo el mundo necesita un **candado de código**, no solo una regla de prompt — la tabla `services` completa se inyecta al system prompt y `get_services` la devuelve entera. Ver `isPromoService()` en el webhook.
+
 ### RLS — patrón estándar
 Las políticas de RLS usan `clinic_users` (o `clinic_members` dependiendo de la tabla) para soportar multi-sucursal:
 ```sql
@@ -595,6 +600,14 @@ cron-expire-extra-credits: false     (invocado por pg_cron)
 ---
 
 ## Tareas pendientes
+
+### Acción pendiente del fundador — revertir evaluación online al pausar el anuncio (sesión 30)
+- [ ] **Elizabeth Microblading:** cuando el fundador pause el anuncio antiguo que ofrece "evaluación gratis", avisar para revertir la regla 3 de `ai_behavior_rules` y el punto 3️⃣ del documento "Servicios" (`knowledge_base`) a la versión sin modalidad online — solo evaluación presencial $10.000. Ver detalle en sesión 30. **No revertir sin que el fundador lo confirme explícitamente.**
+
+### Acción pendiente del fundador — revertir la promo $69.000 al pausar el remarketing (sesión 31)
+- [ ] **Elizabeth Microblading:** cuando se pause la campaña de remarketing, avisar para revertir: (1) `node scripts/promo-ads.cjs remove <adId>` para vaciar `promo_ad_ids`; (2) eliminar/desactivar los servicios `Promo Publicidad - Cejas` y `Promo Publicidad - Delineado de Ojos` de `services` — **verificar antes que no tengan citas futuras**; (3) quitar la regla 2.5 de `ai_behavior_rules` y las menciones al $69.000 en las reglas 2, 3 y 4 d); (4) quitar el bloque "🎁 PROMOCIÓN PUBLICIDAD" de los docs "Servicios" y "Precios/Valores" en `knowledge_base`. **No revertir sin confirmación explícita del fundador.**
+- [ ] **Observar en vivo la primera reserva con las reglas 6/9 alineadas** (sesión 31): confirmar el orden `create_appointment` → datos de transferencia → comprobante → `confirm_appointment`, y que el candado de abono ya no tenga que intervenir. Consultar con `messages.ai_function_called` / `ai_function_result` del chat.
+- [ ] **Cargar el ad ID del anuncio de remarketing** en cuanto empiece a correr: `node scripts/promo-ads.cjs list` → `node scripts/promo-ads.cjs add <adId>`. Sin eso, la detección determinista no opera y solo quedan el mensaje predefinido y el $69.000 en el copy como señales.
 
 ### Pendiente de verificar en producción (sesión 29)
 - [ ] **Confirmar la cadena de agendamiento end-to-end** tras los fixes de la sesión 29: (1) una reserva de **tarde** de un servicio corto (Evaluación, 15 min) completándose sin el falso "ya no está disponible"; (2) un recordatorio de **24h llegando con botones**; (3) un recordatorio de **2h a una cita en :15/:30/:45**. Los tres estaban rotos y los fixes están desplegados, pero al cierre de la sesión ninguno se había observado ocurriendo en vivo.
@@ -1173,6 +1186,155 @@ En el mismo chat, al elegir ella las 5:45 PM, la IA respondió *"agendaremos tu 
 **Datos corregidos en producción:** `reminder_settings.template_2h` → `2hrs_recordatorio_cita`; citas futuras en `pending` con `confirmation_received` heredado del bug → limpiadas (1 fila: Victoria Luarte, 11-ago).
 
 **Estado de verificación (honesto):** el cron se ejecutó en vivo sin errores tras el fix, y el candado se validó con 8 casos incluidos los dos turnos reales de María José. Pero **al cierre de la sesión todavía no se había observado en producción** ni una reserva de tarde completándose end-to-end, ni un recordatorio de 24h llegando con botones. Casos a revisar para confirmar: la cita de Claudia Valdes (21-jul 14:30 — debería recibir 24h **con botones** y el de 2h, que antes nunca habría recibido por caer en :30).
+
+---
+
+### Cambios realizados — julio 2026 (sesión 30) — Evaluación online (gratis) vs presencial ($10.000), Elizabeth Microblading
+
+#### Contexto
+Hay un anuncio antiguo (video) todavía circulando que ofrece "evaluación gratis" de Elizabeth. Actualmente la evaluación presencial tiene un valor de $10.000 (servicio "Evaluación de Microblading" en la tabla `services`, 15 min). Decisión del fundador: en vez de desmentir el anuncio, se habilita una modalidad online gratuita real, y se distingue claramente de la presencial (pagada).
+
+#### Cambio (aplicado directo en producción, sin deploy de edge function — es contenido, no código)
+
+**`clinic_settings.ai_behavior_rules` (regla 3, "Servicios") — clínica `1ab32091-210c-4525-a7e1-e6a7dca1c8c6`:**
+- Nueva sub-regla "EVALUACIÓN — DOS MODALIDADES": cuando el paciente pide evaluación o menciona "evaluación gratis", la IA SIEMPRE debe presentar ambas opciones para que el paciente elija:
+  - **Online (GRATIS):** el paciente envía una foto de la ceja con buena iluminación por el chat. Al recibirla, la IA agradece y llama de inmediato a `escalate_to_human` (marca `requires_human=true` + notificación en el dashboard) para que Elizabeth revise la foto y responda ella misma — la IA no diagnostica, no cotiza y no sugiere tratamiento basándose en la imagen, solo deriva y se despide.
+  - **Presencial:** $10.000 (se descuenta del abono si toma el tratamiento), más detallada, en el centro FixSalud — sigue el flujo normal de agendamiento con el servicio "Evaluación de Microblading" ya existente.
+  - Si el mensaje entrante viene de un `[Mensaje desde Anuncio: ...]` que ofrece "evaluación gratis", la IA aclara que la gratuidad aplica solo a la modalidad online.
+- No fue necesario tocar `n2Keywords`/`n3Keywords` en el webhook: `"evaluacion"` ya estaba en `n3Keywords` (escala a Tier 3), así que este flujo siempre lo maneja el modelo más capaz.
+
+**Documento "Servicios" de `knowledge_base`** (mismo clinic_id): el punto 3️⃣ actualizado con la misma distinción de dos modalidades, para que `get_knowledge` sea consistente con el prompt.
+
+#### ⚠️ Cambio TEMPORAL — condicionado al anuncio antiguo, no a una decisión de producto permanente
+El fundador fue explícito: esto se mantiene solo **mientras el anuncio viejo siga activo**. Cuando lo pause, avisará para revertir la regla 3 de `ai_behavior_rules` y el punto 3️⃣ de "Servicios" a como estaban antes (solo evaluación presencial $10.000, sin modalidad online ni derivación por foto). **No revertir por iniciativa propia** — esperar la confirmación explícita del fundador de que el anuncio ya está pausado.
+
+---
+
+### Cambios realizados — julio 2026 (sesión 31) — Promoción de remarketing $69.000, Elizabeth Microblading
+
+#### Contexto
+Campaña de remarketing en Meta (IG + FB) dirigida a quienes ya interactuaron con las páginas. El creativo ofrece **Microblading de Cejas y Micropigmentación de Ojos a $69.000 c/u** (valor normal $89.000), "sólo por medio de esta publicación". El CTA es Click-to-WhatsApp con mensaje predefinido: **"Hola! Quiero agendar para la promoción de la publicidad. Mi nombre es"**.
+
+#### Las 3 fuentes de precio actualizadas (regla de sesión 19 incidente 5)
+
+**1. Tabla `services` — dos servicios promocionales nuevos** (clínica `1ab32091-…`):
+| Servicio | Duración | Precio | ID |
+|---|---|---|---|
+| `Promo Publicidad - Cejas` | 120 min | $69.000 | `44d56178-3f64-4d20-ac80-15a7354188c0` |
+| `Promo Publicidad - Delineado de Ojos` | 180 min | $69.000 | `7f8b9b25-e4da-4a20-8dbc-90dbba1b86f4` |
+
+Ambos con fila en `service_professionals` apuntando a Elizabeth (`8924ca21-…`) — **obligatorio**, si no la cita queda con `professional_id` NULL e invisible para el chequeo de disponibilidad (sesión 28). Servicios separados (y no un descuento aplicado sobre el existente) para que `createAppt` fije el `price` correcto desde la tabla y Finanzas cuadre solo.
+
+**⚠️ Los nombres NO son cosméticos.** `createAppt` y `checkAvail` resuelven el servicio con `ilike %nombre%` + `.limit(1)` **sin `order by`** — si dos servicios matchean, el elegido es indeterminado. Los nombres se eligieron para que no haya colisión: `"Microblading de cejas"` y `"Micropigmentación de Ojos"` resuelven solo al servicio normal, y `"Promo Publicidad - …"` solo al promocional (verificado con probes contra producción). Siguen siendo ambiguas las abreviaturas (`"cejas"`, `"ojos"`) → por eso el prompt exige nombre exacto. **Al crear futuros servicios promocionales, verificar el `ilike` antes de darlos por buenos.**
+
+**2. `clinic_settings.ai_behavior_rules` — nueva regla 2.5 "PROMOCIÓN DE PUBLICIDAD (REMARKETING)"** (PATCH directo, sin deploy):
+- **Único disparador:** el mensaje predefinido de la publicidad (acepta variantes, tipeos y que venga dentro de `[Mensaje desde Anuncio: ...]`). **Persiste toda la conversación** aunque los mensajes siguientes no la mencionen.
+- **Alcance:** solo Cejas y Ojos. Retoque sigue $50.000 y Evaluación Presencial $10.000. Abono para reservar **sigue siendo $10.000**.
+- **Trabajos previos + promo:** >1 año → $69.000 (la promo reemplaza al $89.000); <1 año → Retoque $50.000, la promo no aplica.
+- **Candado inverso (importante):** prohibición explícita de mencionar la promo, el $69.000 o los servicios "Promo Publicidad" a quien NO llegó por la publicidad — incluso si pregunta "¿tienen algún descuento?". Necesario porque la lista completa de `services` se inyecta al system prompt, así que el modelo *ve* el $69.000 en todas las conversaciones.
+- Ajustada la regla **"PRECIOS DEL ANUNCIO — IGNORAR SIEMPRE"** (sesión 23) con una excepción acotada: el $69.000 es válido **por la regla 2.5**, no por aparecer escrito en el creativo. El bloqueo de $79.000 / $109.000 y de cualquier otra "oferta" del anuncio sigue intacto.
+- Reglas 4 d) de Microblading y de Ojos actualizadas con el precio promocional y el nombre de servicio a usar.
+
+**3. `knowledge_base`** — bloque "🎁 PROMOCIÓN PUBLICIDAD (REMARKETING) — $69.000" agregado a los documentos **"Servicios"** y **"Precios/Valores"**, con la misma condición de exclusividad. (El doc "Preguntas frecuentes" no contiene precios — verificado, no requirió cambios.)
+
+#### Detección por anuncio de Meta — `promo_ad_ids` (para cuando borran el mensaje predefinido)
+
+El mensaje predefinido del Click-to-WhatsApp es editable: la clienta puede borrarlo y escribir "hola" a secas. Pero Meta adjunta un objeto `referral` **al primer mensaje del chat** con el `source_id` (ID del anuncio), y ese dato llega igual. Verificado en producción: 90 de los últimos 400 inbound de Elizabeth traen `referral` completo (`source_id`, `headline`, `body`, `ctwa_clid`, `thumbnail_url`).
+
+**Migración `20260724120000_promo_ad_ids.sql`** (aplicada en producción): `promo_ad_ids text[] NOT NULL DEFAULT '{}'` en `clinic_settings`. Lista de IDs de anuncios cuya audiencia recibe precio promocional. `getClinic()` hace `select("*")` → la columna llega sin tocar el select.
+
+**Webhook (desplegado):** antes de armar el system prompt (y para toda clínica con `clinic.id !== HQ_ID`) se busca el primer mensaje promocional de ese contacto en los últimos 30 días. Si `promo_ad_ids` tiene IDs, la búsqueda va por `payload->referral->>source_id` y el resultado se trata como **verificado**; si no hay coincidencia, cae a la señal textual (ver "Dos fuentes" más abajo). Con cualquiera de las dos se inyecta el bloque de contexto de promoción y se marca `clinic._promoActive`.
+
+**Por qué se relee de la DB en cada turno y no se confía en el historial:** `getHistory` carga solo los **últimos 15 mensajes**. En una conversación larga el mensaje del anuncio sale de la ventana de contexto y el modelo perdería el precio promocional — "la promo persiste toda la conversación" es un hecho que el prompt no puede sostener por sí solo (misma lección de la sesión 29: los hechos se resuelven en código, el criterio en el prompt).
+
+**⚠️ No usar `messages.campaign_id` para esto.** `saveMsg` tiene un guard `isValidUUID` que **descarta** el valor cuando no es UUID, y el `source_id` de Meta es numérico (`120252952674660039`) → la columna queda NULL en todos los mensajes de anuncio. El ad ID vive únicamente en `payload->referral->>source_id`. El filtro JSONB (`.in("payload->referral->>source_id", ids)`) funciona vía PostgREST — verificado con caso positivo y control negativo.
+
+**Operación — `scripts/promo-ads.cjs`** (no requiere SQL ni deploy, toma efecto en el próximo mensaje):
+```bash
+node scripts/promo-ads.cjs list          # anuncios vistos en 14 días, con ID, headline, copy y nº de contactos
+node scripts/promo-ads.cjs add <adId>    # activa la promo para ese anuncio
+node scripts/promo-ads.cjs remove <adId> # la desactiva
+```
+El ID del anuncio no hay que buscarlo en Meta: aparece en `list` en cuanto llega el primer mensaje desde ese creativo.
+
+**Fallback en el prompt (regla 2.5) mientras el ad ID no esté cargado:** la promo se activa con **cualquiera de 3 señales** — (1) el bloque "PROMOCIÓN CONFIRMADA POR EL SISTEMA", (2) el mensaje predefinido, (3) el contexto `[Mensaje desde Anuncio: ...]` menciona **$69.000**. La señal 3 está acotada a ese valor: cualquier otro precio del anuncio ($79.000, $109.000) sigue ignorándose.
+
+**⚠️ Límite real — el agente NO lee el texto que está DENTRO de la imagen del creativo.** Meta manda `thumbnail_url`/`image_url` como URLs y el webhook no las procesa con visión (sería una llamada de visión extra por cada mensaje de anuncio: costo en créditos y latencia — descartado). Solo se lee el **copy del post** (`referral.body`). Consecuencia práctica: si el $69.000 aparece únicamente en la gráfica, la señal 3 no dispara y la detección depende de tener el ad ID cargado (señal 1) o del mensaje predefinido (señal 2).
+
+#### Vigencia del cupo — 72h por persona + extensión de gracia (decisión del fundador)
+
+**El problema que resuelve** (planteado por el fundador): una promo sin límite erosiona el precio de referencia — quien vio $69.000 ya no vuelve a percibir $89.000 como el precio real, y aprende a esperar la próxima baja (efecto de segundo orden). Pero retirar el precio **sin haberlo anunciado** es peor: la aversión a la pérdida motiva *antes* de perder algo, no después; un corte silencioso se lee como anzuelo y produce resentimiento, no urgencia (antecedente: incidente Clara, sesión 26).
+
+**Política elegida:** el cupo promocional es **personal y dura 72 horas desde el primer contacto**, anunciado en la conversación. Al vencer, la causa comunicada NO es "el precio subió" sino que venció *su* cupo, porque el valor era **de esa publicación** — el descuento pertenece al canal, no a la marca, y así el $89.000 sigue siendo el precio real. Si vuelve tarde con intención real, la IA concede **una única extensión** si agenda y abona el mismo día, presentada como excepción concedida y no como precio disponible (convierte sin entrenar la espera).
+
+Por qué **plazo y no cupos**: el agente no puede contar cupos, y ante "¿cuántos quedan?" solo podría inventar un número. Un plazo se sostiene con la verdad. (El creativo original decía "sólo 8 cupos"; el fundador lo cambió a "solo por tiempo limitado" en esta misma sesión para alinearlo.)
+
+**Webhook (desplegado):** la consulta toma el **primer** mensaje del anuncio (`order created_at asc`) y calcula `deadline = primer contacto + 72h`. Inyecta uno de dos bloques según el estado:
+- **VIGENTE** → "PROMOCIÓN CONFIRMADA POR EL SISTEMA" + `ESTADO DE SU CUPO: VIGENTE hasta <fecha en es-CL/America-Santiago>`, con instrucción de mencionarlo una sola vez y sin presionar.
+- **VENCIDO** → "SU CUPO YA VENCIÓ" + días transcurridos + fecha de vencimiento + prohibición explícita de decir "el precio subió", derivando a la política de gracia.
+
+La IA **nunca calcula el plazo**: el estado y las fechas vienen del sistema. La ventana de reconocimiento sigue siendo de 30 días — más allá de eso el contacto ya no se asocia al anuncio y se cotiza $89.000 normal.
+
+**Dos fuentes para la fecha del primer contacto, con honestidad distinta** (para que el plazo funcione incluso sin el ad ID cargado):
+- **Fuente A (verificada):** primer mensaje con `referral.source_id` en `promo_ad_ids` → header **"PROMOCIÓN CONFIRMADA POR EL SISTEMA"**.
+- **Fuente B (indicio, sin verificar):** primer inbound del contacto que menciona la promo en texto (`"promoción de la publicidad"`, `"69.000"`, `"69000"`) → header **"POSIBLE PROMOCIÓN — SIN VERIFICAR"**, que dice explícitamente que el sistema NO confirma que califique y deja la decisión al modelo según los disparadores de la regla 2.5. Solo aporta la fecha para calcular el plazo.
+
+La distinción es deliberada: afirmar "verificado" sobre un indicio textual sería exactamente el error de la sesión 29 (una función afirmando una causa que no comprobó). Verificado contra 30 días de historial de Elizabeth: **0 falsos positivos** de la señal textual.
+
+**`ai_behavior_rules` y KB** — misma política, más dos candados de lenguaje: prohibido insinuar que vendrá otra promoción o que conviene esperar un mejor precio (si preguntan por próximas ofertas: no hay información, el valor es $89.000), y protocolo para quien pagó $89.000 y reclama (fue una publicación puntual con cupos por tiempo limitado, no un cambio de precio; si insiste → `escalate_to_human`).
+
+#### `ycloud-whatsapp-webhook` — ruteo de tier (desplegado)
+`n2Keywords` += `"promo"`, `"publicidad"`, `"publicaci"`, `"anuncio"`, `"descuento"`, `"oferta"`. El mensaje predefinido ya escalaba a Tier 2 por contener `"agendar"`, pero si la clienta edita el texto antes de enviarlo (habitual en CTWA) caía en gpt-4o-mini — que no sostiene lógica condicional multi-turno (sesiones 19, 26, 28) y podría cotizar $89.000 a alguien que viene de la promo. `"promo"` como substring cubre promo/promoción/promocional/promociones.
+
+#### Auditoría de coherencia previa al lanzamiento — 6 contradicciones corregidas
+
+Revisión completa de las 4 capas (prompt, KB, `services`, código) antes de encender la campaña:
+
+1. **Contradicción de plazo (grave, de la promo):** la regla decía "persiste TODA la conversación, NUNCA cotices $89.000 más adelante" **y** "a las 72h vence y el valor es $89.000". Una conversación que se extendía más de 3 días (escribe el lunes, vuelve el viernes) le daba al modelo dos órdenes opuestas. → "PERSISTE **MIENTRAS SU CUPO ESTÉ VIGENTE**", con derivación explícita a la política de vencimiento.
+2. **La señal 1 no contemplaba el header "POSIBLE PROMOCIÓN — SIN VERIFICAR"** que el propio webhook puede inyectar. → ambos headers descritos, con qué hacer en cada caso.
+3. **"si la persona NO llegó con el mensaje de la publicidad, jamás menciones la promo"** era más estrecho que las 3 señales (dejaba fuera la señal del sistema, que opera sin mensaje). → "si NO se cumple ninguna de las 3 señales".
+4. **Las reglas de trabajos previos decían "indica SIEMPRE el Valor Normal ($89.000)"** — ese "SIEMPRE" anulaba la promo si el modelo lo leía literal. → puntero "(o $69.000 si aplica la promoción de la regla 2.5)" en las dos apariciones.
+5. **La KB decía que la promo se reconoce solo por el mensaje predefinido** → alineada a las 3 señales.
+6. **Candado de código para los servicios promocionales** (ver abajo).
+
+**Candado: los servicios "Promo …" ya no son visibles sin señal de promoción.** `getServices` devolvía **todos** los servicios con precio, así que cualquier clienta que preguntara "¿qué servicios tienen?" podía recibir el $69.000 — contenido solo por una regla de prompt. Ahora `isPromoService()` (`/^promo\b/i`) los filtra tanto de `servicesForPrompt` como del tool `get_services`, salvo que `clinic._promoActive` esté activo (se setea cuando `promoAdContext` no está vacío, es decir cuando alguna señal disparó). Verificado que **solo Elizabeth** tiene servicios con ese prefijo en toda la plataforma → ningún efecto en otras clínicas. El trade-off elegido es deliberado: si por algún borde no se detecta la promo, la IA cotiza $89.000 (conservador) en lugar de arriesgar regalar $20.000 por cita a cualquiera.
+
+Verificado además contra el creativo actualizado (ya no dice "8 cupos" sino "por tiempo limitado"): **cero** menciones de cupos contables en prompt y KB, y cero rastros de $99.000/$79.000/$109.000 como precios válidos (solo en la lista de "ignorar").
+
+#### ⚠️ Contradicción PREEXISTENTE corregida — reglas 6 y 9 vs. flujo de abono previo
+
+Hallazgo de la misma auditoría, **ajeno a la promo y aplicable a todas las reservas de Elizabeth**. `ai_behavior_rules` conservaba el flujo anterior a `require_deposit_first` (sesión 11) y ordenaba lo contrario al prompt del webhook:
+
+| | Reglas 6 y 9 (antes) | Prompt del webhook (`require_deposit_first`) |
+|---|---|---|
+| Crear la cita | *"**NO uses** create_appointment"*; solo con la imagen | *"**OBLIGATORIAMENTE DEBES LLAMAR** a create_appointment"* |
+| Datos de transferencia | **antes** de reservar | **después**, con el cupo bloqueado |
+| Apartado | "reservada temporalmente", sin plazo | 30 minutos explícitos |
+
+**Por qué era grave:** la regla 6 le *ordenaba* al agente exactamente la conducta que causó el incidente Clara (entregar datos de abono sin reservar el cupo). No ocurría en producción solo porque el candado de abono de la sesión 26 lo bloquea a nivel sistema — o sea, el sistema venía corrigiendo al prompt en cada reserva en lugar de que ambos dijeran lo mismo.
+
+**Corregido (decisión del fundador, esta sesión):** Paso 4 → `create_appointment` primero, con prohibición explícita de insinuar que la hora quedó tomada antes del `success: true`; Paso 5 → recién ahí los datos de transferencia, con los 30 min y "asegurado solo con el comprobante"; Paso 6 → `confirm_appointment` al verificar la imagen. La regla 9 pasó de "único disparador de cita" a "lo que deja la cita en firme", y su candado visual ahora apunta a `confirm_appointment` (no a `create_appointment`). Eliminado el estado inexistente "PENDIENTE DE APROBACIÓN". El Paso 2 aclara que ahí solo se **menciona** el abono, sin entregar datos bancarios.
+
+Solo cambió `ai_behavior_rules` (contenido, sin deploy). Prompt del webhook, candados y crons quedaron intactos. **Pendiente de observar en vivo:** una reserva completa de Elizabeth con el prompt alineado.
+
+#### 🔒 Incidente de fuga + rediseño: la promoción es de inyección CONDICIONAL (25-jul, en producción)
+
+**Lo que pasó:** una clienta que llegó por el anuncio ANTIGUO (`120252952674660039`, el de "evaluación sin costo") recibió: *"El microblading tiene un valor de $89.000, pero si vienes de una promoción específica, puede haber un precio especial. Permíteme verificar si aplicaría ese descuento para ti."* Ni calificaba ni existía forma de "verificar" nada.
+
+**Causa raíz:** la regla 2.5 vivía en `ai_behavior_rules`, que se inyecta en el system prompt de **todas** las conversaciones. El modelo sabía que la promo existe y la regla "no la menciones si no califica" no lo contuvo. Es la lección de la sesión 29 aplicada al propio trabajo de esta sesión: **un hecho no se contiene con criterio, se contiene con código.**
+
+**Rediseño aplicado:**
+- Todo el contenido promocional salió de `ai_behavior_rules` y de los docs activos de la KB. Vive en un documento con `category = 'promo_conditional'` (doc `8b974da8-…`).
+- `getKnowledgeSummary` y el tool `get_knowledge` excluyen esa categoría **siempre** (`.neq("category","promo_conditional")`), no solo por status — así, si alguien marca el doc como activo desde la UI de la Base de Conocimiento, la fuga no reaparece.
+- El webhook lo carga por categoría y lo anexa a `promoAdContext` únicamente cuando hay señal de promoción.
+- Verificado: cero rastros de "$69.000" / "Promo Publicidad" en el prompt base y en los docs servibles.
+
+**Endurecimiento de la señal textual (fuente B):** antes bastaba con que el mensaje contuviera "69.000" — cualquiera podía escribir el número para pedir el descuento. Ahora se traen candidatos y se filtra en JS: solo cuenta el **mensaje predefinido** de la publicidad, o que el precio aparezca **dentro del bloque `[Mensaje desde Anuncio: ...]`**. Validado con 7 casos (incluidos dos de abuso). El doc promocional además explica qué hacer cuando el header dice "SIN VERIFICAR".
+
+#### ⚠️ Cambio TEMPORAL — atado a la campaña
+Sin fecha de término definida **por diseño**: es remarketing a quienes interactuaron con las páginas de IG/FB en una ventana de 15 días, así que la audiencia se renueva sola y la promo vive mientras el anuncio esté activo. Al pausarlo hay que revertir las tres fuentes (ver Tareas pendientes).
+
+**El creativo se actualizó durante esta sesión:** el fundador reemplazó "sólo 8 cupos" por **"solo por tiempo limitado"**, quedando alineado con lo que el agente puede sostener con la verdad (un plazo, no un contador de cupos). Si en el futuro un creativo vuelve a prometer una cantidad de cupos, el agente **no puede contarlos** — ante "¿cuántos quedan?" solo podría inventar.
 
 ---
 
