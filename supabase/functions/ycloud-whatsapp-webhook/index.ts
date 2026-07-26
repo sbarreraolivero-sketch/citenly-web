@@ -903,7 +903,27 @@ const confirmAppt = async (sb: ReturnType<typeof createClient>, clinicId: string
         .limit(1)
         .maybeSingle();
 
-    if (!appt) return { message: "No encontré una cita pendiente para confirmar en este momento (podría ser porque ya está confirmada o no existe)." };
+    if (!appt) {
+        // Confirmar sin cita normalmente significa que llegó un comprobante de una reserva
+        // que nunca se registró. Antes esto devolvía solo un mensaje informativo y la IA
+        // seguía ofreciendo horarios como si nada (caso María Susana, 25-jul): la clienta
+        // había pagado. Se avisa a la clínica y se le prohíbe al modelo continuar de largo.
+        if (response === "yes") {
+            await sb.from("notifications").insert({
+                clinic_id: clinicId,
+                type: "deposit_review",
+                title: "Posible pago sin cita registrada 💰",
+                message: `El cliente ${phone} intentó confirmar un pago, pero no existe ninguna cita activa a su nombre. Revisa el comprobante y agenda manualmente si corresponde.`,
+                link: `/app/messages?phone=${normalizedPhone}`
+            }).then(undefined, (e: unknown) => console.error("[confirmAppt] notification failed:", e));
+
+            return {
+                message: "No hay ninguna cita registrada para este cliente.",
+                instruction: "NO ofrezcas horarios nuevos ni reinicies el agendamiento. Si el cliente acaba de enviar un comprobante, agradécele, dile que estás confirmando su hora con Elizabeth y que le escribirás enseguida. Su pago ya fue reportado al equipo para revisión manual. NUNCA le digas que su cita está confirmada."
+            };
+        }
+        return { message: "No encontré una cita pendiente para confirmar en este momento (podría ser porque ya está confirmada o no existe)." };
+    }
     // Máquina de estados:
     // - "no" → cancelled.
     // - "yes" sobre una cita en pending_deposit (abono recién verificado) → pending: el agendamiento queda
@@ -1915,39 +1935,57 @@ const callAI = async (model: string, msgs: Msg[], useFns = true, customFunctions
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 
-    // Strategy 1: OpenAI (Primary)
-    if (OPENAI_API_KEY && model.startsWith("gpt")) {
-        try {
-            return await callOpenAI(OPENAI_API_KEY, model, msgs, useFns, customFunctions);
-        } catch (e) {
-            console.error("OpenAI Error:", e.message);
-            // Fallthrough to OpenRouter
+    // Se intenta la cadena completa DOS veces: un fallo transitorio de los proveedores
+    // dejaba al cliente con "tuve un problema técnico" y la conversación se perdía
+    // (caso Claudia, 25-jul: dos turnos seguidos fallidos y la clienta se fue).
+    // Los errores de cada proveedor se acumulan y viajan en el mensaje final, porque
+    // console.error no es consultable desde aquí y quedábamos sin diagnóstico.
+    const errors: string[] = [];
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        // Strategy 1: OpenAI (Primary)
+        if (OPENAI_API_KEY && model.startsWith("gpt")) {
+            try {
+                return await callOpenAI(OPENAI_API_KEY, model, msgs, useFns, customFunctions);
+            } catch (e) {
+                console.error("OpenAI Error:", e.message);
+                errors.push(`openai#${attempt}: ${e.message}`);
+            }
         }
-    }
 
-    // Strategy 2: OpenRouter (Fallback)
-    if (OPENROUTER_API_KEY) {
-        try {
-            let orModel = model;
-            if (model.includes("gpt-4o-mini")) orModel = "openai/gpt-4o-mini";
-            else if (model.includes("gpt-4o")) orModel = "openai/gpt-4o";
-            else if (model.includes("gemini-flash")) orModel = "google/gemini-flash-1.5";
-            else if (model.includes("gemini-pro")) orModel = "google/gemini-pro-1.5";
-            
-            return await callOpenRouter(OPENROUTER_API_KEY, orModel, msgs, useFns, customFunctions);
-        } catch (e) { 
-            console.error("OpenRouter Error:", e.message);
-            // Fallthrough to Gemini
+        // Strategy 2: OpenRouter (Fallback)
+        if (OPENROUTER_API_KEY) {
+            try {
+                let orModel = model;
+                if (model.includes("gpt-4o-mini")) orModel = "openai/gpt-4o-mini";
+                else if (model.includes("gpt-4o")) orModel = "openai/gpt-4o";
+                else if (model.includes("gemini-flash")) orModel = "google/gemini-flash-1.5";
+                else if (model.includes("gemini-pro")) orModel = "google/gemini-pro-1.5";
+
+                return await callOpenRouter(OPENROUTER_API_KEY, orModel, msgs, useFns, customFunctions);
+            } catch (e) {
+                console.error("OpenRouter Error:", e.message);
+                errors.push(`openrouter#${attempt}: ${e.message}`);
+            }
         }
+
+        // Strategy 3: Gemini Direct — último recurso.
+        // Antes exigía model.startsWith("gemini"), condición que NUNCA se cumple porque el
+        // router siempre pide gpt-4o/gpt-4o-mini: el tercer respaldo estaba muerto.
+        if (GOOGLE_AI_API_KEY) {
+            try {
+                const geminiModel = model.startsWith("gemini") ? model : "gemini-1.5-flash";
+                return await callGemini(GOOGLE_AI_API_KEY, geminiModel, msgs, useFns, customFunctions);
+            } catch (e) {
+                console.warn("Gemini direct failed:", e.message);
+                errors.push(`gemini#${attempt}: ${e.message}`);
+            }
+        }
+
+        if (attempt === 1) await new Promise(r => setTimeout(r, 800));
     }
 
-    // Strategy 3: Gemini Direct
-    if (model.startsWith("gemini") && GOOGLE_AI_API_KEY) {
-        try { return await callGemini(GOOGLE_AI_API_KEY, model, msgs, useFns, customFunctions); }
-        catch (e) { console.warn("Gemini direct failed:", e.message); }
-    }
-
-    throw new Error("No AI providers available or all failed.");
+    throw new Error(`No AI providers available or all failed. [${errors.join(" | ")}]`);
 };
 
 const sendWA = async (key: string, to: string, from: string, msg: string) => {
@@ -2821,11 +2859,26 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     // Detectamos si la respuesta repite alguna línea con dígitos de clinic.transfer_details.
                     const sendingBankData = (() => {
                         if (!clinic.transfer_details) return false;
+
+                        // 1) Coincidencia literal con alguna línea de los datos guardados.
                         const lines = String(clinic.transfer_details)
                             .split(/\n|•|·|-/)
                             .map((s: string) => s.trim())
                             .filter((s: string) => s.length > 6 && /\d/.test(s));
-                        return lines.some((l: string) => finalReply.includes(l));
+                        if (lines.some((l: string) => finalReply.includes(l))) return true;
+
+                        // 2) Por SEÑALES. La comparación literal se esquiva sola en cuanto el
+                        // modelo reformatea los datos (negritas, viñetas, otro orden), que es lo
+                        // que ocurrió con María Susana el 25-jul: entregó los datos de
+                        // transferencia sin cita creada y el candado no lo vio.
+                        const hasRut = /\b\d{1,2}\.\d{3}\.\d{3}\s*[-–]\s*[\dkK]\b/.test(finalReply)
+                            || /\b\d{7,8}\s*[-–]\s*[\dkK]\b/.test(finalReply);
+                        // Número de cuenta: 7+ dígitos corridos (los montos del negocio —
+                        // 10.000 / 69.000 / 89.000 — tienen 5 y no disparan).
+                        const hasAccountNumber = /\b\d{7,}\b/.test(finalReply);
+                        const banking = /(transferenc|n[úu]mero de cuenta|cuenta vista|cuenta rut|chequera|banco estado|dep[óo]sito|caja ?vecina)/i.test(finalReply);
+
+                        return (hasRut || hasAccountNumber) && banking;
                     })();
 
                     // ¿La respuesta AFIRMA que la cita quedó confirmada/reservada/agendada?

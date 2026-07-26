@@ -627,6 +627,10 @@ Los 4 cambios anti-incidente se **desplegaron a producción el 23-jun-2026** (pa
 - [x] **pg_cron Job 17 en `*/15 * * * *`** (ya estaba; confirmado) → el "cupo 30 min" se respeta
 - [ ] **PENDIENTE OPERATIVO — clienta Clara Cecilia Barros Mora** (`56978916921`, RUT 12.964.503-2): pagó el abono de $10.000 por un cupo que nunca se reservó. Devolverle el dinero o reagendar + disculpa.
 
+### Alta prioridad — renovar la key de Google AI (sesión 31)
+- [ ] **`GOOGLE_AI_API_KEY` suspendida** (`403 … has been suspended`, verificado 25-jul). Con ella caída solo hay 2 proveedores de IA efectivos: si OpenAI y OpenRouter fallan el mismo turno, la conversación se pierde con "tuve un problema técnico" (ya costó una venta). El código para usar Gemini como tercer respaldo ya está desplegado — basta con renovar la key en Google Cloud Console y hacer `supabase secrets set GOOGLE_AI_API_KEY=<nueva>`, sin tocar código.
+- [ ] **Contactar a Claudia Ximena Muñoz Romero** (`56945445191`): quería retoque el lunes 27 a las 10:00 y se fue tras dos fallos técnicos del agente. El cupo estaba libre.
+
 ### Alta prioridad — pasos manuales bloqueantes (sesión 20)
 - [ ] **`LS_VARIANT_CAMPAIGN_CREDITS` secret** — el botón "Comprar créditos de campaña" llama a LemonSqueezy con un variant de precio variable. Necesita que el variant ID esté seteado: `supabase secrets set LS_VARIANT_CAMPAIGN_CREDITS=<variant_id> --project-ref hubjqllcmbzoojyidgcu` y luego `supabase functions deploy lemonsqueezy-create-checkout --project-ref hubjqllcmbzoojyidgcu`
 - [ ] **`LEMONSQUEEZY_WEBHOOK_SECRET` en producción** — el `lemonsqueezy-webhook` falla cerrado sin este secret (fix sesión 13). Verificar que esté seteado: `supabase secrets list --project-ref hubjqllcmbzoojyidgcu`. Si no está: `supabase secrets set LEMONSQUEEZY_WEBHOOK_SECRET=<valor> --project-ref hubjqllcmbzoojyidgcu`
@@ -1330,6 +1334,17 @@ Solo cambió `ai_behavior_rules` (contenido, sin deploy). Prompt del webhook, ca
 - Verificado: cero rastros de "$69.000" / "Promo Publicidad" en el prompt base y en los docs servibles.
 
 **Endurecimiento de la señal textual (fuente B):** antes bastaba con que el mensaje contuviera "69.000" — cualquiera podía escribir el número para pedir el descuento. Ahora se traen candidatos y se filtra en JS: solo cuenta el **mensaje predefinido** de la publicidad, o que el precio aparezca **dentro del bloque `[Mensaje desde Anuncio: ...]`**. Validado con 7 casos (incluidos dos de abuso). El doc promocional además explica qué hacer cuando el header dice "SIN VERIFICAR".
+
+#### Tres fixes de resiliencia derivados de los incidentes del 25-jul (desplegados)
+
+**1. `callAI` — el respaldo de proveedores no existía de verdad.** La cadena era OpenAI → OpenRouter → Gemini, pero la rama de Gemini exigía `model.startsWith("gemini")`, condición que **nunca se cumple** porque `getOptimalModel` siempre devuelve `gpt-4o`/`gpt-4o-mini`: el tercer respaldo estaba muerto. Con OpenAI y OpenRouter caídos el mismo turno, la conversación se perdía (**caso Claudia Ximena, 56945445191**: dos "tuve un problema técnico" seguidos y la clienta se fue — venta perdida).
+- La cadena completa ahora se intenta **dos veces** con 800 ms entre intentos.
+- Gemini entra como último recurso real (usa `gemini-1.5-flash` cuando el modelo pedido es `gpt-*`). ⚠️ **La `GOOGLE_AI_API_KEY` está SUSPENDIDA** (verificado: `403 … has been suspended`), así que hoy sigue habiendo 2 proveedores efectivos. Renovar la key en Google Cloud activa el tercero sin tocar código.
+- Los errores de cada proveedor se acumulan y viajan en el mensaje de la excepción → quedan en `debug_logs` vía el catch existente. Antes solo iban a `console.error`, ilegible sin acceso a los logs de la función (el MCP de Supabase apunta a Vetly y no tiene permiso sobre este proyecto).
+
+**2. Candado de abono — detección por señales.** `sendingBankData` comparaba el texto contra líneas literales de `clinic.transfer_details`; **basta con que el modelo reformatee** (negritas, viñetas, otro orden) para esquivarlo. Ocurrió con María Susana: entregó los datos de transferencia **sin cita creada** y el candado no intervino — el escenario Clara otra vez. Ahora, además de la comparación literal, detecta (RUT chileno **o** número de 7+ dígitos) **y** contexto bancario (transferencia / número de cuenta / chequera / Banco Estado / depósito / CajaVecina). Validado con 8 casos: detecta el mensaje real que se escapó y no dispara con precios ($10.000 / $69.000 / $89.000 tienen 5 dígitos), dirección ni teléfonos sueltos.
+
+**3. Comprobante sin cita.** `confirmAppt` devolvía solo un texto informativo cuando no hallaba cita, y la IA **seguía ofreciendo horarios** aunque la clienta acabara de pagar. Ahora, con `response === "yes"` y sin cita activa: inserta una notificación `deposit_review` ("Posible pago sin cita registrada") y devuelve una `instruction` que prohíbe reiniciar el agendamiento y obliga a decir que se está confirmando con Elizabeth. **No** se crea la cita automáticamente: el horario conversado puede estar ocupado y se generaría un doble booking (sesión 28).
 
 #### ⚠️ Cambio TEMPORAL — atado a la campaña
 Sin fecha de término definida **por diseño**: es remarketing a quienes interactuaron con las páginas de IG/FB en una ventana de 15 días, así que la audiencia se renueva sola y la promo vive mientras el anuncio esté activo. Al pausarlo hay que revertir las tres fuentes (ver Tareas pendientes).
