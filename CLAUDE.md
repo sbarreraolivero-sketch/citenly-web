@@ -1346,6 +1346,21 @@ Solo cambió `ai_behavior_rules` (contenido, sin deploy). Prompt del webhook, ca
 
 **3. Comprobante sin cita.** `confirmAppt` devolvía solo un texto informativo cuando no hallaba cita, y la IA **seguía ofreciendo horarios** aunque la clienta acabara de pagar. Ahora, con `response === "yes"` y sin cita activa: inserta una notificación `deposit_review` ("Posible pago sin cita registrada") y devuelve una `instruction` que prohíbe reiniciar el agendamiento y obliga a decir que se está confirmando con Elizabeth. **No** se crea la cita automáticamente: el horario conversado puede estar ocupado y se generaría un doble booking (sesión 28).
 
+#### Incidente del 26-jul (+56962662379) — respuestas duplicadas, bucle y un cupo que existía
+
+**Síntoma:** la clienta recibió **cuatro veces** el mismo mensaje ("no hay disponibilidad para el viernes 31… el próximo día es el lunes 3, tarde: 4, 5 y 6 PM"). Cuando escribió "12" para tomar un cupo de la mañana del lunes 3 que la IA acababa de ofrecerle, la respuesta volvió a ser el mensaje del 31 de julio. Nunca pudo agendar.
+
+**Causa 1 — el debounce solo se verifica ANTES de procesar, no antes de enviar.** Tras la espera de 15 s se comprueba "¿soy el último mensaje?", pero generar la respuesta toma varios segundos más (modelo + tools). Si en esa ventana llega otro mensaje, la respuesta ya construida se envía igual, con contexto incompleto. Verificado en los timestamps: `"3"` (23:43:52) → `"De agosto"` (23:43:56) → `"En la mañana"` (23:44:12). La ejecución de `"De agosto"` terminó su espera a las 23:44:11, **un segundo antes** de que llegara el tercer mensaje, así que respondió con el contexto a medias (consultó el 31 de julio) a las 23:44:19; la ejecución completa respondió correcto (cupos del 3 de agosto) a las 23:44:34. Dos respuestas contradictorias seguidas.
+**Fix:** segundo chequeo de debounce **justo antes de `sendWA`** — si llegó un inbound más nuevo mientras se generaba la respuesta, se descarta (la ejecución del mensaje nuevo responderá con el contexto completo).
+
+**Causa 2 — historial contaminado se retroalimenta.** Con la misma frase repetida cuatro veces en los últimos 15 mensajes, el modelo la volvió a copiar incluso ante un "12" que elegía un cupo ya ofrecido (ese turno no llamó ninguna herramienta: copió texto).
+**Fix:** candado anti-bucle — si la respuesta generada es igual a la última enviada (comparando sin mayúsculas, tildes, puntuación ni emojis), se sustituye por un mensaje que rompe el ciclo y pide día y hora.
+
+**Causa 3 — al no haber cupos en la franja pedida, se saltaba al día siguiente sin mirar el resto del mismo día.** El viernes 31 **sí tenía cupo a las 10:00 AM** (horario 10:00–20:00, colación 14:30–15:59, citas 12:00–14:00 y 16:00–19:00 → hueco de 120 min a las 10:00). Como ella pidió "tarde", `checkAvail` filtró por franja, no encontró nada y saltó al lunes 3. Insistió tres veces con el viernes y nunca se le ofreció la mañana.
+**Fix:** `checkSingleDay` acepta `ignoreTimeFilter`; cuando el día pedido no tiene cupos **en la franja**, se reintenta el mismo día sin filtro antes del look-ahead y se devuelven esos horarios con instrucción de ofrecerlos antes de proponer otro día.
+
+**Patrón:** las tres causas son de código, no de prompt — coherente con la regla estructural de la sesión 29. Ninguna regla de comportamiento habría evitado que dos ejecuciones concurrentes respondieran lo mismo, ni que la herramienta ocultara un cupo que existía.
+
 #### ⚠️ Cambio TEMPORAL — atado a la campaña
 Sin fecha de término definida **por diseño**: es remarketing a quienes interactuaron con las páginas de IG/FB en una ventana de 15 días, así que la audiencia se renueva sola y la promo vive mientras el anuncio esté activo. Al pausarlo hay que revertir las tres fuentes (ver Tareas pendientes).
 

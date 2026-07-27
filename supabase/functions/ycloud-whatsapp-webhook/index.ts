@@ -396,7 +396,7 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     await updateProspectStage(sb, clinicId, phone, "Calificado");
 
     // Internal helper to perform a single-day check without suggestion logic
-    const checkSingleDay = async (targetDate: string) => {
+    const checkSingleDay = async (targetDate: string, ignoreTimeFilter = false) => {
         const clinicWorkingHours = clinicObj?.working_hours;
         if (clinicWorkingHours) {
             const dowIdx = new Date(targetDate + 'T12:00:00').getDay();
@@ -486,14 +486,14 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
                 return !(tStart < lunch.end && tEnd > lunch.start);
             })
             .filter((s: any) => {
-                if (!timeOfDay) return true;
+                if (!timeOfDay || ignoreTimeFilter) return true;
                 const hour = parseInt(s.slot_time.substring(0, 2));
                 if (timeOfDay === 'morning') return hour < 13;
                 if (timeOfDay === 'afternoon') return hour >= 13;
                 return true;
             })
             .filter((s: any) => {
-                if (!minTime) return true;
+                if (!minTime || ignoreTimeFilter) return true;
                 // minTime is "HH:MM" in 24h — keep only slots at or after that time
                 return s.slot_time.substring(0, 5) >= minTime;
             })
@@ -511,6 +511,24 @@ const checkAvail = async (sb: ReturnType<typeof createClient>, clinicId: string,
     if (result.available) {
         const displaySlots = fullList ? result.slots : result.slots.slice(0, 15);
         return { available: true, slots: displaySlots, message: `Disponibilidad el ${date}: ${displaySlots.join(", ")}` };
+    }
+
+    // 1.b El día pedido puede tener cupos FUERA de la franja solicitada. Antes se saltaba
+    // directo al día siguiente y se perdía una venta con el cupo disponible a la vista:
+    // el 26-jul una clienta insistió tres veces con el viernes 31 por la tarde; no había
+    // en la tarde, pero sí a las 10:00 AM, y nunca se le ofreció (se le mandó al lunes 3).
+    if (timeOfDay || minTime) {
+        const sameDayAny = await checkSingleDay(date, true);
+        if (sameDayAny.available) {
+            const displaySlots = fullList ? sameDayAny.slots : sameDayAny.slots.slice(0, 15);
+            const franja = timeOfDay === "morning" ? "en la mañana" : timeOfDay === "afternoon" ? "en la tarde" : "en ese horario";
+            return {
+                available: true,
+                slots: displaySlots,
+                other_time_of_day: true,
+                message: `Ese día no hay cupos ${franja}, pero SÍ hay disponibilidad el mismo ${date} en estos horarios: ${displaySlots.join(", ")}. Ofrécelos antes de proponer otro día.`
+            };
+        }
     }
 
     // 2. Look-ahead for the next 3 days
@@ -2967,6 +2985,48 @@ ${clinic.ai_behavior_rules || "Sin reglas específicas adicionales."}`;
                     }
                 }
                 // ------------------------------------------------------------------------------------
+
+                // SEGUNDO CHEQUEO DE DEBOUNCE — antes de enviar, no solo antes de procesar.
+                // El chequeo de "¿soy el último mensaje?" ocurre al terminar la espera, pero
+                // generar la respuesta toma varios segundos más (llamada al modelo + tools).
+                // Si en esa ventana llegó otro mensaje del cliente, esta respuesta se construyó
+                // con contexto incompleto y sale duplicada o contradictoria.
+                // Caso real (26-jul, +56962662379): "3" / "De agosto" / "En la mañana" llegaron
+                // separados por segundos; una ejecución respondió con la frase del 31 de julio y
+                // otra, 15s después, con los cupos correctos del 3 de agosto. El chat quedó con
+                // cuatro repeticiones del mismo mensaje y la clienta no pudo elegir hora.
+                const { data: newerMsg } = await sb.from("messages")
+                    .select("id")
+                    .eq("clinic_id", clinic.id)
+                    .or(`phone_number.eq.${from},phone_number.eq.+${from}`)
+                    .eq("direction", "inbound")
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (newerMsg && newerMsg.id !== msgRowId) {
+                    await debugLog(sb, "Respuesta descartada: llegó un mensaje más nuevo mientras se generaba", { msgRowId, newerMsgId: newerMsg.id });
+                    return;
+                }
+
+                // ANTI-BUCLE — no repetir textualmente la última respuesta.
+                // Un historial con la misma frase repetida arrastra al modelo a repetirla otra vez
+                // (en el caso anterior contestó cuatro veces "no hay disponibilidad para el 31"
+                // hasta a un "12" que elegía un cupo ya ofrecido).
+                const { data: lastOut } = await sb.from("messages")
+                    .select("content")
+                    .eq("clinic_id", clinic.id)
+                    .or(`phone_number.eq.${from},phone_number.eq.+${from}`)
+                    .eq("direction", "outbound")
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                const normalizeReply = (s: string) => (s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+                if (lastOut?.content && normalizeReply(lastOut.content as string) === normalizeReply(finalReply)) {
+                    await debugLog(sb, "LOCK: respuesta repetida", { phone: from, reply: finalReply.slice(0, 200) });
+                    finalReply = "Perdona, creo que me repetí 🙈 Para no confundirnos: dime el día y la hora que te acomoda y lo reviso al tiro.";
+                }
 
                 await saveMsg(sb, clinic.id, from, finalReply, "outbound", {
                     ai_generated: true,
