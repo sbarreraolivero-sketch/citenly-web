@@ -135,6 +135,13 @@ En Citenly los "pacientes" son clientes humanos directos (no hay tutores). La ta
 - El webhook `tagPatient` debe insertar en `patient_tags` (no en tablas inexistentes)
 - La tabla `tags` tiene RLS habilitada — verificar que tenga políticas activas
 
+### Concurrencia — el debounce no basta por sí solo (sesión 31)
+El webhook espera 15 s antes de procesar y ahí comprueba "¿soy el último mensaje?". Pero **generar la respuesta tarda varios segundos más** (modelo + tools), y en esa ventana puede llegar otro mensaje del cliente: la respuesta ya construida se envía igual, con contexto incompleto, y aparecen dos respuestas seguidas que se contradicen. Basta 1 segundo de diferencia para que ocurra (caso `+56962662379`, 26-jul).
+
+**Regla:** toda respuesta debe re-verificar **justo antes de enviarse** que no llegó un inbound más nuevo; si llegó, se descarta y responde la ejecución que tiene el contexto completo. Cualquier trabajo asíncrono largo que termine en un envío al cliente necesita ese segundo chequeo, no solo el de entrada.
+
+**Corolario:** un historial con la misma frase repetida arrastra al modelo a repetirla otra vez, incluso ignorando lo que el cliente acaba de elegir. Por eso existe también el candado que impide reenviar un texto idéntico al último outbound: corta el bucle antes de que se realimente.
+
 ### Servicios — el nombre es funcional, no cosmético (sesión 31)
 `createAppt` y `checkAvail` resuelven el servicio con `ilike %nombre%` + `.limit(1)` **sin `order by`**. Si dos servicios de la misma clínica hacen match con el texto que pasó la IA, el elegido es **indeterminado** — y como `createAppt` toma el `price` del servicio, una cita puede quedar registrada con el precio equivocado. Al crear servicios con nombres que se solapan (variantes, promociones, duplicados por duración), **verificar el `ilike` contra producción antes de darlos por buenos**, y exigir en el prompt el nombre exacto de la lista de Servicios OFICIALES.
 
@@ -630,6 +637,10 @@ Los 4 cambios anti-incidente se **desplegaron a producción el 23-jun-2026** (pa
 ### Alta prioridad — renovar la key de Google AI (sesión 31)
 - [ ] **`GOOGLE_AI_API_KEY` suspendida** (`403 … has been suspended`, verificado 25-jul). Con ella caída solo hay 2 proveedores de IA efectivos: si OpenAI y OpenRouter fallan el mismo turno, la conversación se pierde con "tuve un problema técnico" (ya costó una venta). El código para usar Gemini como tercer respaldo ya está desplegado — basta con renovar la key en Google Cloud Console y hacer `supabase secrets set GOOGLE_AI_API_KEY=<nueva>`, sin tocar código.
 - [ ] **Contactar a Claudia Ximena Muñoz Romero** (`56945445191`): quería retoque el lunes 27 a las 10:00 y se fue tras dos fallos técnicos del agente. El cupo estaba libre.
+- [ ] **Contactar a `+56962662379`** (26-jul): insistió tres veces con el viernes 31 por la tarde y recibió cuatro respuestas repetidas sin poder agendar. **Ese día tenía cupo libre a las 10:00 AM** — la franja pedida ocultaba el resto del día (ya corregido en código).
+
+### Pendiente de verificar en vivo (sesión 31)
+- [ ] **Los seis fixes de código de la sesión no se han observado operando en producción.** Verificables así: (1) una reserva promocional completa `create_appointment` → transferencia → comprobante → `confirm_appointment`; (2) que ante una franja sin cupos se ofrezca el mismo día en otra franja en vez de saltar de día; (3) que dos mensajes seguidos del cliente produzcan **una** sola respuesta; (4) que un fallo de proveedor de IA se resuelva por reintento en vez de "tuve un problema técnico" (el detalle del error queda ahora en `debug_logs`).
 
 ### Alta prioridad — pasos manuales bloqueantes (sesión 20)
 - [ ] **`LS_VARIANT_CAMPAIGN_CREDITS` secret** — el botón "Comprar créditos de campaña" llama a LemonSqueezy con un variant de precio variable. Necesita que el variant ID esté seteado: `supabase secrets set LS_VARIANT_CAMPAIGN_CREDITS=<variant_id> --project-ref hubjqllcmbzoojyidgcu` y luego `supabase functions deploy lemonsqueezy-create-checkout --project-ref hubjqllcmbzoojyidgcu`
@@ -1650,7 +1661,8 @@ FROM messages WHERE clinic_id = '<id>' AND phone_number = '<tel>' ORDER BY creat
 Comparar `ai_function_result` (lo que devolvió la herramienta) contra `content` del outbound (lo que la IA dijo):
 1. **Coinciden y ambos están mal** → el bug es de **código**. Ninguna regla de prompt lo arregla. (Caso sesión 29: `createAppt` devolvía una lista de horarios truncada.)
 2. **La IA dijo algo que NO está en el resultado** → alucinación real → necesita **candado a nivel sistema** antes de enviar, no una regla de prompt. (Caso sesión 29: horarios inventados.)
-3. **Solo entonces** considerar prompt/tier — y recordar que gpt-4o-mini (Tier 1) no sostiene lógica condicional multi-turno (sesiones 19, 26, 28).
+3. **Respuestas duplicadas o contradictorias seguidas** → no es el modelo, son **dos ejecuciones concurrentes**. Comparar los `created_at` de los inbound con los de los outbound: si dos respuestas salen con pocos segundos de diferencia y una tiene menos contexto, el mensaje siguiente llegó mientras la primera se generaba (ver "Concurrencia — el debounce no basta por sí solo").
+4. **Solo entonces** considerar prompt/tier — y recordar que gpt-4o-mini (Tier 1) no sostiene lógica condicional multi-turno (sesiones 19, 26, 28).
 
 Las reglas de prompt corrigen *criterio*; los candados corrigen *hechos*. Un dato falso nunca se arregla con criterio.
 
