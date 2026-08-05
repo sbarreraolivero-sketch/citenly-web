@@ -96,8 +96,9 @@ const classifyMessage = (body: string, isImage: boolean): number => {
         "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "valor", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
         "retoque",
         "promo", "publicidad", "publicaci", "anuncio", "descuento", "oferta",
-        // Post-venta: decidir si algo es control gratuito o procedimiento pagado depende del
-        // historial de la clienta, y el mini no sostiene esa lógica (caso Margarita, 4-ago).
+        // Post-venta: reconocer que una consulta es sobre un trabajo ya hecho — y derivarla a
+        // Elizabeth en vez de cotizar o agendar — depende del historial de la clienta, y el
+        // mini no sostiene esa lógica (caso Margarita, 4-ago).
         "seguimiento", "control", "despigment", "disparejo", "sombreado", "cicatriz", "costra",
         "se me ve", "no me gusta", "quedo mal", "quedó mal", "me hizo", "me las hizo",
         "cancelar", "cancelo", "reagendar", "no podré", "no podre", "no puedo ir", "no voy", "cerrado", "afuera", "atrasada", "atrasado", "esperando",
@@ -804,33 +805,6 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     const isFreeService = price === 0;
-
-    // Un servicio gratuito solo corresponde a quien REALMENTE se atendió aquí hace poco.
-    // Sin este candado bastaría con que alguien dijera "me hice el tratamiento y quedó mal"
-    // — aunque se lo hubiera hecho en otro lugar — para llevarse una hora de agenda gratis.
-    if (isFreeService) {
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const { data: prior } = await sb.from("appointments")
-            .select("service")
-            .eq("clinic_id", clinicId)
-            .in("phone_number", [normalizedPhone, phone, `+${normalizedPhone}`])
-            .in("status", ["completed", "confirmed", "pending"])
-            .lte("appointment_date", new Date().toISOString())
-            .gte("appointment_date", thirtyDaysAgo)
-            .limit(8);
-
-        const hadTreatment = (prior || []).some((a: any) =>
-            !/evaluaci[oó]n|control de seguimiento|bloqueo de agenda/i.test(String(a.service || "")));
-
-        if (!hadTreatment) {
-            return {
-                success: false,
-                message: "No puedo agendar este servicio sin costo: en la agenda no hay ningún tratamiento realizado a este contacto en los últimos 30 días.",
-                instruction: "NO agendes un control gratuito. Esta persona no figura como clienta reciente — pudo haberse hecho el tratamiento en otro lugar. Con amabilidad y sin acusarla, ofrécele la evaluación presencial normal, o llama a 'escalate_to_human' si insiste en que se atendió aquí."
-            };
-        }
-    }
-
     const useDepositFlow = requireDepositFirst && !isFreeService;
     const appointmentStatus = useDepositFlow ? "pending_deposit" : "pending";
 
@@ -2637,11 +2611,11 @@ NUNCA le digas que "el precio subió" ni que la promoción se terminó: lo que v
                 // Habilita los servicios "Promo …" para este turno (prompt + tool get_services).
                 (clinic as any)._promoActive = !!promoAdContext;
 
-                // HISTORIAL REAL DEL CONTACTO — el control post-tratamiento es gratuito, así que
-                // "me hice el tratamiento y quedó mal" no puede darse por cierto: la persona pudo
-                // habérselo hecho en otro lugar. El sistema verifica contra la agenda en vez de
-                // creerle al mensaje, y de paso le da al modelo la fecha real del último trabajo
-                // (hasta ahora dependía de preguntarle a la clienta cuánto tiempo había pasado).
+                // HISTORIAL REAL DEL CONTACTO — "me hice el tratamiento y quedó mal" no puede
+                // darse por cierto: la persona pudo habérselo hecho en otro lugar. El sistema lo
+                // verifica contra la agenda en vez de creerle al mensaje, y de paso le da al
+                // modelo la fecha real del último trabajo (la regla de trabajos previos —
+                // retoque vs sesión completa — dependía de preguntarle cuánto tiempo pasó).
                 let clientHistoryContext = "";
                 if (clinic.id !== HQ_ID) {
                     const normFromH = normalizePhone(from);
@@ -2665,13 +2639,11 @@ NUNCA le digas que "el precio subió" ni que la promoción se terminó: lo que v
                         clientHistoryContext = `\n### HISTORIAL VERIFICADO POR EL SISTEMA (dato real de la agenda, no una suposición):
 Esta persona SÍ es clienta: se realizó "${lastTreatment.service}" con Elizabeth el ${whenLabel} (hace ${days} día(s)).
 Usa SIEMPRE este dato en vez de preguntarle cuánto tiempo pasó o de creer una fecha distinta que ella mencione.
-${days <= 30
-    ? "Como fue hace 30 días o menos, si consulta por el resultado de ese trabajo corresponde CONTROL DE SEGUIMIENTO GRATUITO (servicio \"Control de Seguimiento\"). No le cobres ni le pidas abono."
-    : "Como pasaron más de 30 días, NO corresponde control gratuito: aplica la regla de trabajos previos según el tiempo transcurrido."}\n`;
+Si consulta por el RESULTADO de ese trabajo, no lo resuelvas tú ni le agendes nada: deriva a Elizabeth con 'escalate_to_human' (regla 4.5).\n`;
                     } else {
                         clientHistoryContext = `\n### HISTORIAL VERIFICADO POR EL SISTEMA (dato real de la agenda, no una suposición):
 NO hay ningún tratamiento registrado a nombre de este contacto en la agenda de Elizabeth.
-Si dice que "se hizo el tratamiento", NO lo des por cierto: pudo habérselo realizado en otro lugar. Sé amable y no la acuses, pero NO le ofrezcas control de seguimiento gratuito ni la trates como clienta antigua. Si insiste en que se lo hizo aquí, usa 'escalate_to_human' para que Elizabeth lo revise.\n`;
+Si dice que "se hizo el tratamiento", NO lo des por cierto: pudo habérselo realizado en otro lugar. Sé amable y no la acuses, y no la trates como clienta antigua. Si consulta por el resultado de un trabajo previo, deriva igual con 'escalate_to_human' para que Elizabeth lo revise.\n`;
                     }
                 }
 

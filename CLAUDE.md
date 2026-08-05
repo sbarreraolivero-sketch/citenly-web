@@ -1216,12 +1216,17 @@ Margarita, clienta con **Retoque hecho el 27-jul** (una semana antes), escribió
 4. **`patient_name` quedó como `"Cliente"`** — un placeholder que el prompt prohíbe pero que nada bloqueaba en código. Aunque la cita hubiera sobrevivido, era inencontrable.
 5. Los mensajes clave ("Hoy se cumple una semana que me las hizo") cayeron en **Tier 1**: ninguna palabra los escalaba.
 
-#### Fixes aplicados (desplegados)
-- **Servicio nuevo `Control de Seguimiento`** — $0, 30 min, con Elizabeth asignada en `service_professionals` (`2d2c87dc-…`). Verificado que el `ilike` no colisiona con los demás servicios.
-- **`createAppt`: un servicio de precio 0 nunca entra al flujo de abono.** `isFreeService` → la cita se crea en `pending` aunque `require_deposit_first` esté activo, y el retorno lleva una `instruction` que prohíbe pedir abono, dar datos de transferencia o mencionar pagos. Esto es lo que corta la cadena de raíz: sin `pending_deposit`, el cron no puede cancelarla.
+#### ⚠️ Decisión final de Elizabeth: estos casos se DERIVAN, no se agendan
+La primera solución (un servicio `Control de Seguimiento` gratuito para agendar la revisión) **fue revertida el mismo día**. Elizabeth, consultada por el fundador, definió que cuando una clienta tiene dudas sobre su tratamiento **la conversación la sigue ella**, no el agente: es una evaluación profesional, no un trámite de agenda.
+
+**Estado final:** el servicio `Control de Seguimiento` fue eliminado (verificado antes que no tuviera citas asociadas), y la regla 4.5 quedó como **"DUDAS SOBRE UN TRATAMIENTO YA REALIZADO — DERIVAR SIEMPRE A ELIZABETH"**: responder con empatía, llamar a `escalate_to_human` y no seguir la conversación. Prohibido cotizar, agendar, pedir abono, opinar sobre el resultado o decir si "es normal". Si envía fotos, se agradecen y se deriva igual.
+
+**Por qué queda documentado el intento fallido:** el diagnóstico de la cadena de causas sigue siendo válido y la lección de fondo también — la IA prometía algo que el sistema no podía ejecutar. La corrección de Elizabeth cambia el destino (derivar en vez de agendar), no el análisis.
+
+#### Fixes aplicados que SÍ quedaron (desplegados)
+- **`createAppt`: un servicio de precio 0 nunca entra al flujo de abono.** `isFreeService` → la cita se crea en `pending` aunque `require_deposit_first` esté activo, y el retorno lleva una `instruction` que prohíbe pedir abono o mencionar pagos. Hoy Elizabeth no tiene servicios de $0, así que es defensivo: evita que cualquier servicio gratuito futuro repita la cita fantasma.
 - **`createAppt`: nombres genéricos resueltos contra `patients`.** Si el nombre es "Cliente"/"Paciente"/"Sin nombre"/`[...]`, se busca el nombre real del contacto por teléfono y se usa ese.
-- **`n2Keywords` += post-venta** (`seguimiento`, `control`, `despigment`, `disparejo`, `sombreado`, `cicatriz`, `costra`, `se me ve`, `no me gusta`, `quedó mal`, `me las hizo`): distinguir control gratuito de procedimiento pagado depende del historial y el mini no sostiene esa lógica (sesiones 19, 26, 28).
-- **`ai_behavior_rules` regla 4.5 "CONTROL POST-TRATAMIENTO — JAMÁS SE COBRA"**: si la clienta escribe por el resultado de un trabajo ya realizado, es control gratuito; prohibido ofrecer Evaluación $10.000, cobrar retoque o pedir abono; se agenda con `"Control de Seguimiento"`; ≤30 días desde el tratamiento = control; y **prohibición explícita de contradecirse** (si ya dijo "sin costo", no puede volver a pedir dinero).
+- **`n2Keywords` += post-venta** (`seguimiento`, `control`, `despigment`, `disparejo`, `sombreado`, `cicatriz`, `costra`, `se me ve`, `no me gusta`, `quedó mal`, `me las hizo`): reconocer que una consulta es sobre un trabajo ya hecho —y derivarla en vez de cotizar— depende del historial, y el mini no sostiene esa lógica (sesiones 19, 26, 28).
 
 **Regla general que deja este caso:** cuando la IA promete algo que el sistema no puede ejecutar (un servicio gratuito que no existe en `services`), la contradicción es inevitable y el modelo queda atrapado entre su promesa y el flujo. **Toda excepción comercial que la IA pueda ofrecer necesita existir como servicio real en la tabla.**
 
@@ -1237,9 +1242,11 @@ Margarita, clienta con **Retoque hecho el 27-jul** (una semana antes), escribió
 
 **Beneficio lateral (importante):** la fecha del último tratamiento deja de depender de preguntarle a la clienta. La regla de trabajos previos (retoque $50.000 vs sesión completa $89.000, sesiones 21 y 28) se apoyaba en que ella dijera cuánto tiempo había pasado — un dato que el sistema ya tenía y no estaba usando.
 
-**Capa 2 — candado en `createAppt`.** Un servicio de precio 0 no se puede agendar si no hay un tratamiento real del contacto en los últimos 30 días: devuelve `success: false` con una `instruction` que ofrece la evaluación normal o escalar. No depende de que el modelo respete la regla.
+**Capa 2 — candado en `createAppt`:** revertido junto con el servicio gratuito. Sin servicios de $0 no tenía nada que proteger.
 
-Verificado contra producción: Margarita (retoque hace 8 días) → control gratis ✓; un número inventado → sin tratamiento registrado ✓.
+Verificado contra producción: Margarita (retoque hace 8 días) → reconocida como clienta ✓; un número inventado → sin tratamiento registrado ✓.
+
+**Lo que este bloque resuelve más allá del caso:** la regla de trabajos previos (retoque $50.000 vs sesión completa $89.000, sesiones 21 y 28) se apoyaba en preguntarle a la clienta cuánto tiempo había pasado y creerle. Ese dato ya estaba en la agenda y ahora se usa — es el mismo defecto que causó el incidente de la sesión 28 (clienta con tratamiento de 3 años cotizada como retoque).
 
 ### Cambios realizados — julio 2026 (sesión 30) — Evaluación online (gratis) vs presencial ($10.000), Elizabeth Microblading
 
