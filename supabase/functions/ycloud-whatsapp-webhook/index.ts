@@ -96,6 +96,10 @@ const classifyMessage = (body: string, isImage: boolean): number => {
         "agendar", "cita", "hora", "disponibilidad", "servicio", "precio", "valor", "cuanto", "vale", "costo", "turno", "reserva", "donde", "ubicacion", "direccion",
         "retoque",
         "promo", "publicidad", "publicaci", "anuncio", "descuento", "oferta",
+        // Post-venta: decidir si algo es control gratuito o procedimiento pagado depende del
+        // historial de la clienta, y el mini no sostiene esa lógica (caso Margarita, 4-ago).
+        "seguimiento", "control", "despigment", "disparejo", "sombreado", "cicatriz", "costra",
+        "se me ve", "no me gusta", "quedo mal", "quedó mal", "me hizo", "me las hizo",
         "cancelar", "cancelo", "reagendar", "no podré", "no podre", "no puedo ir", "no voy", "cerrado", "afuera", "atrasada", "atrasado", "esperando",
         "confirmo", "confirmar", "confirmado", "confirmada",
         "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo",
@@ -780,7 +784,28 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
     // ---------------------------------------
 
-    const appointmentStatus = requireDepositFirst ? "pending_deposit" : "pending";
+    // Un servicio sin costo NO puede entrar al flujo de abono previo: se crearía una cita
+    // en 'pending_deposit' esperando un comprobante que nunca va a llegar, y el cron la
+    // cancela a los 30 minutos. Le pasó a Margarita Retamal (4-ago): la IA le ofreció un
+    // control de seguimiento gratuito, igual le pidió $10.000 de abono, y cuando llegó a la
+    // clínica su cita ya había sido cancelada automáticamente.
+    // La IA a veces agenda con un placeholder pese a la regla del prompt: la cita de Margarita
+    // quedó a nombre de "Cliente". Si el contacto ya está en la ficha de pacientes, se usa su
+    // nombre real — una cita con nombre genérico es inencontrable para la clínica.
+    if (/^\s*(cliente|clienta|paciente|sin nombre|nombre|usuario|\[.*\])\s*$/i.test(args.patient_name || "")) {
+        const { data: known } = await sb.from("patients")
+            .select("name")
+            .eq("clinic_id", clinicId)
+            .in("phone_number", [normalizedPhone, phone, `+${normalizedPhone}`])
+            .not("name", "is", null)
+            .limit(1)
+            .maybeSingle();
+        if (known?.name) args.patient_name = known.name as string;
+    }
+
+    const isFreeService = price === 0;
+    const useDepositFlow = requireDepositFirst && !isFreeService;
+    const appointmentStatus = useDepositFlow ? "pending_deposit" : "pending";
 
     const { data, error } = await sb.from("appointments").insert({
         clinic_id: clinicId,
@@ -828,7 +853,16 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     const dateLabel = d.toLocaleDateString("es-MX", { weekday: "long", month: "long", day: "numeric" });
     const timeLabel = `${h > 12 ? h - 12 : h}:${args.time.split(":")[1]} ${h >= 12 ? "PM" : "AM"}`;
 
-    if (requireDepositFirst) {
+    if (isFreeService) {
+        return {
+            success: true,
+            appointment_id: data.id,
+            message: `¡Cita agendada!\n\n📅 ${dateLabel}\n🕐 ${timeLabel}\n💆 ${args.service_name}`,
+            instruction: "Este servicio NO tiene costo: NO pidas abono, NO entregues datos de transferencia y NO menciones ningún pago. Confírmale la hora directamente y dile que la esperamos."
+        };
+    }
+
+    if (useDepositFlow) {
         return {
             success: true,
             status: "pending_deposit",

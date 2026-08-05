@@ -1204,6 +1204,27 @@ En el mismo chat, al elegir ella las 5:45 PM, la IA respondió *"agendaremos tu 
 
 ---
 
+### Cambios realizados — agosto 2026 (sesión 32) — Control post-tratamiento gratuito (caso Margarita Retamal)
+
+#### El incidente (4-ago, `56973323611`)
+Margarita, clienta con **Retoque hecho el 27-jul** (una semana antes), escribió porque sus cejas se veían "solo sombreado negro" y disparejas. La conversación terminó con: **cita fantasma** (le confirmaron las 19:00 de ese día, llegó a la clínica y no estaba en la agenda) y **cuatro cambios de criterio sobre el precio** — evaluación $10.000 → "sin costo" → abono $10.000 con datos de transferencia → "no necesitas abono".
+
+#### Causa raíz — una cadena, no un error suelto
+1. **No existía un servicio de control gratuito.** La IA razonó bien (ofreció una "consulta de seguimiento sin costo"), pero al agendar tuvo que elegir un servicio real de la lista y tomó **"Retoque de Microblading" ($50.000)**.
+2. **Elizabeth tiene `require_deposit_first = true`**, así que `createAppt` puso la cita en `pending_deposit` y el flujo pidió el abono de $10.000 — contradiciendo lo que la IA acababa de prometer. El modelo no se equivocó: el sistema le pidió cobrar.
+3. **Sin comprobante (era gratis), `cron-cancel-pending-deposits` la canceló a los 30 min** (creada 15:30, cancelada 16:15 UTC). Por eso desapareció de la agenda.
+4. **`patient_name` quedó como `"Cliente"`** — un placeholder que el prompt prohíbe pero que nada bloqueaba en código. Aunque la cita hubiera sobrevivido, era inencontrable.
+5. Los mensajes clave ("Hoy se cumple una semana que me las hizo") cayeron en **Tier 1**: ninguna palabra los escalaba.
+
+#### Fixes aplicados (desplegados)
+- **Servicio nuevo `Control de Seguimiento`** — $0, 30 min, con Elizabeth asignada en `service_professionals` (`2d2c87dc-…`). Verificado que el `ilike` no colisiona con los demás servicios.
+- **`createAppt`: un servicio de precio 0 nunca entra al flujo de abono.** `isFreeService` → la cita se crea en `pending` aunque `require_deposit_first` esté activo, y el retorno lleva una `instruction` que prohíbe pedir abono, dar datos de transferencia o mencionar pagos. Esto es lo que corta la cadena de raíz: sin `pending_deposit`, el cron no puede cancelarla.
+- **`createAppt`: nombres genéricos resueltos contra `patients`.** Si el nombre es "Cliente"/"Paciente"/"Sin nombre"/`[...]`, se busca el nombre real del contacto por teléfono y se usa ese.
+- **`n2Keywords` += post-venta** (`seguimiento`, `control`, `despigment`, `disparejo`, `sombreado`, `cicatriz`, `costra`, `se me ve`, `no me gusta`, `quedó mal`, `me las hizo`): distinguir control gratuito de procedimiento pagado depende del historial y el mini no sostiene esa lógica (sesiones 19, 26, 28).
+- **`ai_behavior_rules` regla 4.5 "CONTROL POST-TRATAMIENTO — JAMÁS SE COBRA"**: si la clienta escribe por el resultado de un trabajo ya realizado, es control gratuito; prohibido ofrecer Evaluación $10.000, cobrar retoque o pedir abono; se agenda con `"Control de Seguimiento"`; ≤30 días desde el tratamiento = control; y **prohibición explícita de contradecirse** (si ya dijo "sin costo", no puede volver a pedir dinero).
+
+**Regla general que deja este caso:** cuando la IA promete algo que el sistema no puede ejecutar (un servicio gratuito que no existe en `services`), la contradicción es inevitable y el modelo queda atrapado entre su promesa y el flujo. **Toda excepción comercial que la IA pueda ofrecer necesita existir como servicio real en la tabla.**
+
 ### Cambios realizados — julio 2026 (sesión 30) — Evaluación online (gratis) vs presencial ($10.000), Elizabeth Microblading
 
 #### Contexto
@@ -1376,6 +1397,37 @@ Solo cambió `ai_behavior_rules` (contenido, sin deploy). Prompt del webhook, ca
 Sin fecha de término definida **por diseño**: es remarketing a quienes interactuaron con las páginas de IG/FB en una ventana de 15 días, así que la audiencia se renueva sola y la promo vive mientras el anuncio esté activo. Al pausarlo hay que revertir las tres fuentes (ver Tareas pendientes).
 
 **El creativo se actualizó durante esta sesión:** el fundador reemplazó "sólo 8 cupos" por **"solo por tiempo limitado"**, quedando alineado con lo que el agente puede sostener con la verdad (un plazo, no un contador de cupos). Si en el futuro un creativo vuelve a prometer una cantidad de cupos, el agente **no puede contarlos** — ante "¿cuántos quedan?" solo podría inventar.
+
+---
+
+### Cambios realizados — agosto 2026 (sesión 32) — MCP de Meta Ads + exclusión automática de remarketing
+
+#### Problema de negocio
+La campaña de remarketing $69.000 (sesión 31) le seguía llegando a clientas que ya habían agendado por la publicidad principal a $89.000. Al ver el anuncio de remarketing, exigían (con justa razón) que se les respetara el precio más bajo — la campaña no distinguía entre "interactuó pero no agendó" (audiencia correcta) y "ya tiene cita" (debía excluirse).
+
+#### MCP de Meta Ads — instalado para Citenly (antes solo existía en Vetly-App)
+- El servidor `meta-ads` (`https://mcp.facebook.com/ads`, tipo `http`) estaba configurado en `~/.claude.json` únicamente bajo el proyecto `/Users/sebabarrera/Desktop/Vetly-App`. Se agregó también a Citenly con `claude mcp add --transport http meta-ads https://mcp.facebook.com/ads` (scope local, mismo patrón que Vetly).
+- **Requiere reiniciar la ventana de VSCode/Claude Code** después de agregarlo — una sesión ya abierta no recarga MCPs nuevos aunque `claude mcp list` en terminal ya lo muestre conectado.
+- Con `ads_get_ad_accounts` se confirmó acceso a la cuenta **"Elizabeth Hernández"** (`348134306061916`) dentro del Business Portfolio **"Elistic.Nuskin"** (`214858759078184`) — pero con `is_ads_mcp_enabled: false`. **Esto es un rollout gradual de Meta**, cuenta por cuenta, no un tema de permisos: la propia herramienta indica no usar ese `ad_account_id` en llamadas del MCP mientras esté así. Otras cuentas del mismo portafolio (`Vive Teoma`, `Sebastián Barrera`) y de otros negocios de Sebastián sí tienen el MCP habilitado y se pueden gestionar en vivo desde el chat.
+- **Mientras el MCP esté bloqueado para una cuenta**, la vía de trabajo es escribir Edge Functions/scripts que llamen directo a la Graph API con un token de system user (mismo patrón que `sendMetaCAPI`, ver más abajo) — no depende del rollout del MCP.
+
+#### Nuevo Edge Function `cron-sync-meta-exclusion-audience`
+- Sincroniza diariamente (pg_cron **Job ID 21**, `0 4 * * *` = medianoche Chile) los teléfonos de `appointments` de Elizabeth Microblading (clinic_id `1ab32091-...`) con estado `pending` / `pending_deposit` / `confirmed` hacia una Custom Audience de exclusión en Meta (`act_348134306061916`).
+- Auto-provisión: si la audiencia **"Elizabeth - Ya Agendaron (Excluir Remarketing)"** no existe, la crea sola (subtype `CUSTOM`, `customer_file_source: USER_PROVIDED_ONLY`) — sin paso manual en Meta más allá del setup inicial de acceso.
+- Hashea los teléfonos con SHA-256 (formato `PHONE` que exige la Custom Audiences API) y los sube en lotes de 5.000 vía `POST /{audience_id}/users`.
+- `config.toml`: `verify_jwt = false` (invocada por pg_cron, igual que los demás crons).
+- Prueba en vivo exitosa: `{"message":"Sincronizado","audience_id":"120253264638670039","synced":106}` — 106 teléfonos activos de Elizabeth cargados en la primera corrida.
+
+#### Setup manual hecho en Meta (una sola vez, dentro de Elistic.Nuskin)
+1. System user **"Sebastián Barrera"** (ya existía) con acceso "Acceso total" a la cuenta Elizabeth Hernández.
+2. Se creó una app nueva dedicada (**"Elistic Ads Sync"**, caso de uso "Crear y administrar anuncios con la API de marketing") y se vinculó al Business Portfolio — el intento de "reclamar" (transferir propiedad de) la app existente "Citenly App" falló con un error técnico de Meta; crear una app nueva y propia del portafolio fue más simple y evitó el flujo de aprobación cruzada entre negocios.
+3. Token generado con permisos **`ads_management` + `ads_read`** únicamente (principio de mínimo privilegio — no se marcaron `business_management`, `catalog_management`, etc.), expiración "Nunca".
+4. Aceptados los Términos de Servicio de Audiencias Personalizadas para esa cuenta (`https://business.facebook.com/ads/manage/customaudiences/tos/?act=348134306061916`) — Meta lo exige antes de crear una audiencia de tipo lista de clientes.
+5. Secret `META_ADS_ACCESS_TOKEN` seteado en Supabase (`supabase secrets set ... --project-ref hubjqllcmbzoojyidgcu`).
+6. Audiencia agregada como **"Excluir"** en el ad set de la campaña de remarketing, con **"Usar como sugerencia" DESMARCADO** — con esa casilla marcada, Meta puede ignorar la exclusión si su algoritmo predice mejor conversión mostrándole el anuncio igual a alguien de la lista; para este caso la exclusión debía ser estricta, sin excepciones del algoritmo.
+
+#### ⚠️ Incidente de seguridad menor (contenido en la sesión)
+El usuario pegó el token de acceso real en el chat en vez del comando completo. Se revocó de inmediato desde Meta Business Settings y se generó uno nuevo antes de continuar. **Regla para el futuro:** nunca pedir ni aceptar que un secret/token se pegue en el chat — siempre indicar al usuario que lo corra directo en su propia terminal.
 
 ---
 
@@ -1632,6 +1684,11 @@ supabase db query --linked "<SQL>"
 # Script Node.js con service role key
 node -e "require('dotenv').config({path:'.env'}); ..."
 ```
+
+### Meta Ads MCP (sesión 32)
+Servidor `meta-ads` (`https://mcp.facebook.com/ads`) — configurado por proyecto en `~/.claude.json` (no es un `.mcp.json` del repo). Si no aparece disponible en una sesión nueva, revisar si está agregado para `/Users/sebabarrera/Desktop/Citenly App` con `claude mcp list` / `claude mcp add --transport http meta-ads https://mcp.facebook.com/ads`. **Reiniciar la ventana de VSCode** tras agregarlo — no recarga en caliente.
+
+La cuenta publicitaria **"Elizabeth Hernández"** (`348134306061916`, Business Portfolio "Elistic.Nuskin" `214858759078184`) tiene `is_ads_mcp_enabled: false` — rollout gradual de Meta, no depende de permisos ni de nuestra config. Mientras dure, no usar esa cuenta con las tools del MCP; para automatizar sobre ella usar Graph API directo desde un Edge Function con un token de system user (ver `cron-sync-meta-exclusion-audience`).
 
 ### Deploy de Edge Functions
 ```bash
