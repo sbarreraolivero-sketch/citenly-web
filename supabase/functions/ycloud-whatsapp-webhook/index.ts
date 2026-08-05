@@ -804,6 +804,33 @@ const createAppt = async (sb: ReturnType<typeof createClient>, clinicId: string,
     }
 
     const isFreeService = price === 0;
+
+    // Un servicio gratuito solo corresponde a quien REALMENTE se atendió aquí hace poco.
+    // Sin este candado bastaría con que alguien dijera "me hice el tratamiento y quedó mal"
+    // — aunque se lo hubiera hecho en otro lugar — para llevarse una hora de agenda gratis.
+    if (isFreeService) {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: prior } = await sb.from("appointments")
+            .select("service")
+            .eq("clinic_id", clinicId)
+            .in("phone_number", [normalizedPhone, phone, `+${normalizedPhone}`])
+            .in("status", ["completed", "confirmed", "pending"])
+            .lte("appointment_date", new Date().toISOString())
+            .gte("appointment_date", thirtyDaysAgo)
+            .limit(8);
+
+        const hadTreatment = (prior || []).some((a: any) =>
+            !/evaluaci[oó]n|control de seguimiento|bloqueo de agenda/i.test(String(a.service || "")));
+
+        if (!hadTreatment) {
+            return {
+                success: false,
+                message: "No puedo agendar este servicio sin costo: en la agenda no hay ningún tratamiento realizado a este contacto en los últimos 30 días.",
+                instruction: "NO agendes un control gratuito. Esta persona no figura como clienta reciente — pudo haberse hecho el tratamiento en otro lugar. Con amabilidad y sin acusarla, ofrécele la evaluación presencial normal, o llama a 'escalate_to_human' si insiste en que se atendió aquí."
+            };
+        }
+    }
+
     const useDepositFlow = requireDepositFirst && !isFreeService;
     const appointmentStatus = useDepositFlow ? "pending_deposit" : "pending";
 
@@ -2610,6 +2637,44 @@ NUNCA le digas que "el precio subió" ni que la promoción se terminó: lo que v
                 // Habilita los servicios "Promo …" para este turno (prompt + tool get_services).
                 (clinic as any)._promoActive = !!promoAdContext;
 
+                // HISTORIAL REAL DEL CONTACTO — el control post-tratamiento es gratuito, así que
+                // "me hice el tratamiento y quedó mal" no puede darse por cierto: la persona pudo
+                // habérselo hecho en otro lugar. El sistema verifica contra la agenda en vez de
+                // creerle al mensaje, y de paso le da al modelo la fecha real del último trabajo
+                // (hasta ahora dependía de preguntarle a la clienta cuánto tiempo había pasado).
+                let clientHistoryContext = "";
+                if (clinic.id !== HQ_ID) {
+                    const normFromH = normalizePhone(from);
+                    const { data: pastAppts } = await sb.from("appointments")
+                        .select("service, appointment_date, status")
+                        .eq("clinic_id", clinic.id)
+                        .in("phone_number", [from, normFromH, `+${normFromH}`])
+                        .in("status", ["completed", "confirmed", "pending"])
+                        .lte("appointment_date", new Date().toISOString())
+                        .order("appointment_date", { ascending: false })
+                        .limit(8);
+
+                    // Una evaluación o un control no son tratamientos: no generan derecho a control.
+                    const lastTreatment = (pastAppts || []).find((a: any) =>
+                        !/evaluaci[oó]n|control de seguimiento|bloqueo de agenda/i.test(String(a.service || "")));
+
+                    if (lastTreatment) {
+                        const when = new Date(lastTreatment.appointment_date as string);
+                        const days = Math.floor((Date.now() - when.getTime()) / 86400000);
+                        const whenLabel = when.toLocaleDateString("es-CL", { timeZone: clinicTz, weekday: "long", day: "numeric", month: "long", year: "numeric" });
+                        clientHistoryContext = `\n### HISTORIAL VERIFICADO POR EL SISTEMA (dato real de la agenda, no una suposición):
+Esta persona SÍ es clienta: se realizó "${lastTreatment.service}" con Elizabeth el ${whenLabel} (hace ${days} día(s)).
+Usa SIEMPRE este dato en vez de preguntarle cuánto tiempo pasó o de creer una fecha distinta que ella mencione.
+${days <= 30
+    ? "Como fue hace 30 días o menos, si consulta por el resultado de ese trabajo corresponde CONTROL DE SEGUIMIENTO GRATUITO (servicio \"Control de Seguimiento\"). No le cobres ni le pidas abono."
+    : "Como pasaron más de 30 días, NO corresponde control gratuito: aplica la regla de trabajos previos según el tiempo transcurrido."}\n`;
+                    } else {
+                        clientHistoryContext = `\n### HISTORIAL VERIFICADO POR EL SISTEMA (dato real de la agenda, no una suposición):
+NO hay ningún tratamiento registrado a nombre de este contacto en la agenda de Elizabeth.
+Si dice que "se hizo el tratamiento", NO lo des por cierto: pudo habérselo realizado en otro lugar. Sé amable y no la acuses, pero NO le ofrezcas control de seguimiento gratuito ni la trates como clienta antigua. Si insiste en que se lo hizo aquí, usa 'escalate_to_human' para que Elizabeth lo revise.\n`;
+                    }
+                }
+
                 // Fetch REAL services from the 'services' table (not the legacy JSON field)
                 const { data: realServices } = await sb.from("services")
                     .select("name, duration, price")
@@ -2678,7 +2743,7 @@ Horario General de la Clínica: ${hoursSummary}
 ${calendarContext}
 
 Servicios OFICIALES (SOLO ESTOS EXISTEN): ${JSON.stringify(servicesForPrompt)}
-${promoAdContext}
+${clientHistoryContext}${promoAdContext}
 ${knowledgeSummary}
 
 IMPORTANTE SOBRE IMÁGENES: TIENES capacidad visual. Si el usuario envía una imagen, vela, analízala profesionalmente y NO digas que no puedes ver imágenes.

@@ -636,7 +636,7 @@ Los 4 cambios anti-incidente se **desplegaron a producción el 23-jun-2026** (pa
 
 ### Alta prioridad — renovar la key de Google AI (sesión 31)
 - [ ] **`GOOGLE_AI_API_KEY` suspendida** (`403 … has been suspended`, verificado 25-jul). Con ella caída solo hay 2 proveedores de IA efectivos: si OpenAI y OpenRouter fallan el mismo turno, la conversación se pierde con "tuve un problema técnico" (ya costó una venta). El código para usar Gemini como tercer respaldo ya está desplegado — basta con renovar la key en Google Cloud Console y hacer `supabase secrets set GOOGLE_AI_API_KEY=<nueva>`, sin tocar código.
-- [ ] **Contactar a Claudia Ximena Muñoz Romero** (`56945445191`): quería retoque el lunes 27 a las 10:00 y se fue tras dos fallos técnicos del agente. El cupo estaba libre.
+- [x] ~~Contactar a Claudia Ximena Muñoz Romero (`56945445191`)~~ — **resuelto solo**: pese a los dos fallos técnicos del 25-jul, quedó agendada esa misma noche (Retoque, 27-jul 14:30 UTC, creada 26-jul 00:04). Verificado en `appointments`.
 - [ ] **Contactar a `+56962662379`** (26-jul): insistió tres veces con el viernes 31 por la tarde y recibió cuatro respuestas repetidas sin poder agendar. **Ese día tenía cupo libre a las 10:00 AM** — la franja pedida ocultaba el resto del día (ya corregido en código).
 
 ### Pendiente de verificar en vivo (sesión 31)
@@ -1224,6 +1224,22 @@ Margarita, clienta con **Retoque hecho el 27-jul** (una semana antes), escribió
 - **`ai_behavior_rules` regla 4.5 "CONTROL POST-TRATAMIENTO — JAMÁS SE COBRA"**: si la clienta escribe por el resultado de un trabajo ya realizado, es control gratuito; prohibido ofrecer Evaluación $10.000, cobrar retoque o pedir abono; se agenda con `"Control de Seguimiento"`; ≤30 días desde el tratamiento = control; y **prohibición explícita de contradecirse** (si ya dijo "sin costo", no puede volver a pedir dinero).
 
 **Regla general que deja este caso:** cuando la IA promete algo que el sistema no puede ejecutar (un servicio gratuito que no existe en `services`), la contradicción es inevitable y el modelo queda atrapado entre su promesa y el flujo. **Toda excepción comercial que la IA pueda ofrecer necesita existir como servicio real en la tabla.**
+
+#### Verificación de clientela — "me lo hice aquí" no se le cree al mensaje (decisión del fundador)
+
+**El riesgo detectado:** si el control es gratuito, basta con escribir *"me hice las cejas y quedaron mal"* para llevarse una hora de agenda sin costo — aunque el tratamiento se lo haya hecho otra persona en otro lugar. La IA no tiene forma de distinguirlo preguntando: la respuesta la da la misma persona interesada.
+
+**Solución: el sistema lo verifica contra la agenda, en dos capas.**
+
+**Capa 1 — contexto verificado en el prompt.** En cada turno (toda clínica con `clinic.id !== HQ_ID`) se busca la última cita **pasada** del teléfono con status `completed`/`confirmed`/`pending`, descartando `Evaluación`, `Control de Seguimiento` y `Bloqueo de Agenda` — esos no son tratamientos y no generan derecho a control. Se inyecta un bloque **"HISTORIAL VERIFICADO POR EL SISTEMA"**:
+- **Con tratamiento:** nombre del servicio, fecha en formato local y días transcurridos, más si corresponde control gratuito (≤30 días) o si aplica la regla de trabajos previos (>30 días).
+- **Sin tratamiento:** instrucción explícita de no dar por cierto que sea clienta, no ofrecer control gratuito, ser amable sin acusarla y escalar a Elizabeth si insiste.
+
+**Beneficio lateral (importante):** la fecha del último tratamiento deja de depender de preguntarle a la clienta. La regla de trabajos previos (retoque $50.000 vs sesión completa $89.000, sesiones 21 y 28) se apoyaba en que ella dijera cuánto tiempo había pasado — un dato que el sistema ya tenía y no estaba usando.
+
+**Capa 2 — candado en `createAppt`.** Un servicio de precio 0 no se puede agendar si no hay un tratamiento real del contacto en los últimos 30 días: devuelve `success: false` con una `instruction` que ofrece la evaluación normal o escalar. No depende de que el modelo respete la regla.
+
+Verificado contra producción: Margarita (retoque hace 8 días) → control gratis ✓; un número inventado → sin tratamiento registrado ✓.
 
 ### Cambios realizados — julio 2026 (sesión 30) — Evaluación online (gratis) vs presencial ($10.000), Elizabeth Microblading
 
